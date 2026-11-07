@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dimvexa.units/1",
+  "title": "dimvexa.units/1",
+  "description": "Output of `dimvexa units --json`: every unit in the compiled table and every deliberately rejected ambiguous symbol. Adding fields is allowed within a schema version; removing or changing them requires /2.",
+  "type": "object",
+  "required": ["schema", "ok", "data_version", "units", "ambiguous"],
+  "properties": {
+    "schema": { "const": "dimvexa.units/1" },
+    "ok": { "const": true },
+    "data_version": { "type": "string", "description": "Table identifier, `v<version>+<hash>`." },
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["symbol", "aliases", "dimension", "quantity_kind", "exactness", "prefixes", "namespace", "source"],
+        "properties": {
+          "symbol": { "type": "string", "description": "Primary symbol, accepted as written in `dimvexa convert`." },
+          "aliases": { "type": "array", "items": { "type": "string" }, "description": "Alternative symbols, for example the degree-sign spelling of degC." },
+          "dimension": { "type": "array", "items": { "type": "integer" }, "minItems": 7, "maxItems": 7, "description": "Exponents of kg, m, s, A, K, mol, cd." },
+          "quantity_kind": { "enum": ["plain", "absolute_temperature", "temperature_difference"] },
+          "exactness": { "enum": ["defined", "measured"] },
+          "prefixes": { "enum": ["none", "si", "si_binary"], "description": "Which prefix families the symbol accepts." },
+          "namespace": { "type": "string" },
+          "source": { "type": "string", "description": "Primary citation of the definition." }
+        }
+      }
+    },
+    "ambiguous": {
+      "type": "array",
+      "description": "Bare symbols that are rejected with `ambiguous_symbol`; use one of the candidates.",
+      "items": {
+        "type": "object",
+        "required": ["symbol", "candidates", "planned", "note"],
+        "properties": {
+          "symbol": { "type": "string" },
+          "candidates": { "type": "array", "items": { "type": "string" }, "description": "Explicit symbols present in the table (may be empty while only planned ones exist)." },
+          "planned": { "type": "array", "items": { "type": "string" }, "description": "Explicit symbols planned but not yet in the table." },
+          "note": { "type": "string" }
+        }
+      }
+    }
+  }
+}
