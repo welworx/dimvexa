@@ -18,7 +18,13 @@ Both can use one format and one loader, so a shipped profile is a config bundled
 
 ## Decision
 
-One TOML format, loaded by the library (the CLI holds no resolution logic):
+The config layer is a separate component, the crate `dimvexa-config`, so the core stays focused
+on units and conversions. The core offers one primitive, `Registry::add_alias(alias, target)`,
+with the safety rules below (no redefinition, the target must exist, no factor). The file
+format, the content hash and the override rules live in `dimvexa-config`; the CLI only reads
+files and passes the text. The facade crate does not re-export it.
+
+One TOML format:
 
 ```toml
 [map]                        # names to existing units
@@ -77,7 +83,7 @@ Open sub-decisions (recommended default first; not implemented before the owner 
   ratio, never computed from temperature and pressure, and comes later.
 * **OPEN 4: parser.** The workspace has no dependencies (ADR-003). The shipped reader
   (`toml_lite`) lives inside the data crate and cannot be reached from core when the crates are
-  published, so step 1 has its own small reader in core (`config.rs`, `[map]` only, errors with
+  published, so step 1 has its own small reader in `dimvexa-config` (`[map]` only, errors with
   file and line). Revisit when `[[unit]]` needs the full subset: either grow that reader or move
   `toml_lite` into core.
 * **OPEN 5: names of the shipped profiles** and which symbols each one maps.
@@ -86,7 +92,7 @@ Open sub-decisions (recommended default first; not implemented before the owner 
 
 Users can fix their local vocabulary without a project change and without the shared table ever
 guessing. The refusal rules of ADR-001 and ADR-006 stay the default; a config only adds data the
-user states and takes responsibility for. It costs a public API (loader, `Config`), a parser in
-core, a schema for the config file and for the new JSON field, and tests for each rule above.
+user states and takes responsibility for. It costs a new crate (`Config`, `apply`), one core
+primitive (`add_alias`), a parser, a schema for the config file and for the new JSON field, and tests for each rule above.
 ADR-006's "profiles" become shipped configs. Nothing is read from disk unless the caller names
 the file.

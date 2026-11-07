@@ -3,7 +3,6 @@
 
 use std::collections::HashMap;
 
-use crate::config::{Config, Mapping};
 use crate::conversion::Conversion;
 use crate::error::{Error, Result};
 use crate::expr::{Expr, is_valid_symbol};
@@ -50,8 +49,6 @@ pub struct Registry {
     ambiguous: HashMap<String, Vec<String>>,
     /// Lower-cased name -> original spellings, for case-insensitive suggestions without a scan.
     lowered: HashMap<String, Vec<String>>,
-    /// Names added by user configs (ADR-009), in application order.
-    mappings: Vec<Mapping>,
 }
 
 impl Registry {
@@ -96,84 +93,59 @@ impl Registry {
         &self.units
     }
 
-    /// The names added by [`apply_config`](Self::apply_config), in application order.
-    #[must_use]
-    pub fn mappings(&self) -> &[Mapping] {
-        &self.mappings
-    }
-
-    /// Applies a user config (ADR-009): every `[map]` entry makes its name stand for an
-    /// existing unit, as if it were an alias of that unit (so prefixes work: with
-    /// `mt = "tonne"`, `kmt` is `ktonne`).
+    /// Makes `alias` another name of the registered unit `target`, so prefixes and compound
+    /// expressions work with it (`kmt` is `ktonne` once `mt` names the tonne).
     ///
-    /// A mapping may resolve a name that is declared ambiguous or unknown (`mt`, `ton`). It
-    /// can never redefine an existing symbol, alias or prefixed form (`t`, `m`, `km`), and
-    /// its target must be a symbol or alias of a registered unit. A name mapped by an earlier
-    /// config is replaced by a later one. The registry is unchanged if any entry is refused.
+    /// This is the one extension point for callers that bring their own vocabulary (see
+    /// ADR-009). It can resolve a name that is declared ambiguous or unknown (`mt`, `ton`);
+    /// it can never redefine an existing symbol, alias or prefixed form (`t`, `m`, `km`), and
+    /// it carries no factor: the alias means exactly what `target` means.
     ///
     /// # Errors
     ///
-    /// [`Error::InvalidDefinition`] (symbol `origin:line`) for a malformed name, a name that
-    /// already means a unit, or a target that is not a registered unit.
+    /// [`Error::InvalidDefinition`] if `alias` is malformed or already means a unit, or if
+    /// `target` is not a symbol or alias of a registered unit.
     ///
     /// # Examples
     ///
     /// ```
-    /// use dimvexa_core::{Config, Dim, Ratio, Registry, Unit};
+    /// use dimvexa_core::{Dim, Ratio, Registry, Unit};
     /// let mut reg = Registry::new();
     /// reg.register(Unit::linear("kg", Dim::KG, Ratio::ONE)?)?;
     /// reg.register(Unit::linear("t", Dim::KG, Ratio::from_int(1000))?)?;
-    /// let cfg = Config::parse("[map]\nmetric_ton = \"t\"\n", "my.toml")?;
-    /// reg.apply_config(&cfg)?;
+    /// reg.add_alias("metric_ton", "t")?;
     /// assert_eq!(reg.conversion("metric_ton", "kg")?.factor(), Ratio::from_int(1000));
-    /// // An existing symbol cannot be redefined.
-    /// let bad = Config::parse("[map]\nkg = \"t\"\n", "my.toml")?;
-    /// assert_eq!(reg.apply_config(&bad).unwrap_err().code(), "invalid_definition");
+    /// // An existing symbol cannot be redefined, and the target must exist.
+    /// assert_eq!(reg.add_alias("kg", "t").unwrap_err().code(), "invalid_definition");
+    /// assert_eq!(reg.add_alias("x", "nope").unwrap_err().code(), "invalid_definition");
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
-    pub fn apply_config(&mut self, config: &Config) -> Result<()> {
-        let mut staged = self.clone();
-        for m in config.mappings() {
-            staged.apply_mapping(m)?;
-        }
-        *self = staged;
-        Ok(())
-    }
-
-    fn apply_mapping(&mut self, m: &Mapping) -> Result<()> {
-        let bad = |message: String| Error::InvalidDefinition {
-            symbol: format!("{}:{}", m.origin, m.line),
+    pub fn add_alias(&mut self, alias: &str, target: &str) -> Result<()> {
+        let bad = |symbol: &str, message: String| Error::InvalidDefinition {
+            symbol: symbol.to_string(),
             message,
         };
-        if !is_valid_symbol(&m.name) {
-            return Err(bad(format!("'{}' is not a well-formed unit name", m.name)));
+        if !is_valid_symbol(alias) {
+            return Err(bad(alias, "not a well-formed unit name".to_string()));
         }
-        let previous = self.mappings.iter().position(|x| x.name == m.name);
-        if previous.is_none()
-            && (self.by_symbol.contains_key(&m.name) || self.resolve_symbol(&m.name).is_ok())
-        {
-            return Err(bad(format!(
-                "'{}' already means a unit and cannot be redefined",
-                m.name
-            )));
+        if self.by_symbol.contains_key(alias) || self.resolve_symbol(alias).is_ok() {
+            return Err(bad(
+                alias,
+                "already means a unit and cannot be redefined".to_string(),
+            ));
         }
-        let Some(&index) = self.by_symbol.get(&m.target) else {
-            return Err(bad(format!(
-                "'{}' is not a unit symbol or alias of the table",
-                m.target
-            )));
+        let Some(&index) = self.by_symbol.get(target) else {
+            return Err(bad(
+                alias,
+                format!("'{target}' is not a unit symbol or alias of the table"),
+            ));
         };
-        if let Some(p) = previous {
-            self.mappings.remove(p);
-        } else {
-            self.lowered
-                .entry(m.name.to_lowercase())
-                .or_default()
-                .push(m.name.clone());
-        }
-        self.ambiguous.remove(&m.name);
-        self.by_symbol.insert(m.name.clone(), index);
-        self.mappings.push(m.clone());
+        self.lowered
+            .entry(alias.to_lowercase())
+            .or_default()
+            .push(alias.to_string());
+        self.ambiguous.remove(alias);
+        self.by_symbol.insert(alias.to_string(), index);
         Ok(())
     }
 

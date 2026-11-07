@@ -654,7 +654,7 @@ fn config_resolves_names_the_table_refuses() {
 #[test]
 fn json_records_the_config_used() {
     let cfg = config_file("trade_json.toml", TRADE);
-    let hash = dimvexa::Config::parse(TRADE, &cfg)
+    let hash = dimvexa_config::Config::parse(TRADE, &cfg)
         .unwrap()
         .hash()
         .to_string();

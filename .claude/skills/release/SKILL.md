@@ -18,7 +18,7 @@ in `docs/PLAN.md`).
    invented.
 4. Data: if tables changed, `cargo xtask update-data-hash` has been run.
 5. Packaging: `cargo package --list -p <crate> --locked` for dimvexa-core, dimvexa-data,
-   dimvexa, dimvexa-cli; `cargo publish --dry-run -p dimvexa-core --locked`. Publish order for
-   the owner: core, data, dimvexa, cli.
+   dimvexa-config, dimvexa, dimvexa-cli; `cargo publish --dry-run -p dimvexa-core --locked`. Publish order for
+   the owner: core, data, config, dimvexa, cli.
 6. Public API diff: `cargo semver-checks` once a baseline release exists (`api-change` skill).
 7. Benchmarks and `docs/precision.md` still match the code (`benchmarks`, `precision` skills).

@@ -1,0 +1,21 @@
+[package]
+name = "dimvexa-config"
+description = "User config files for dimvexa: your own names for units (mt = \"tonne\"), never loaded implicitly. Exact factors. Loud failures. Zero guessing."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+readme = "README.md"
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+
+[dependencies]
+dimvexa-core = { workspace = true }
+
+[lints]
+workspace = true

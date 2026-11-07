@@ -29,6 +29,7 @@ doc = false
 dimvexa = { workspace = true }
 dimvexa-core = { workspace = true }
 dimvexa-data = { workspace = true }
+dimvexa-config = { workspace = true }
 
 [lints]
 workspace = true

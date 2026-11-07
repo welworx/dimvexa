@@ -24,8 +24,9 @@ Commits by `release-plz` once releases start (planned for M1).
 - ADR-009: user config files with name mappings, extra units and caller-supplied bridge
   constants such as a density. Accepted for step 1.
 - `--config FILE` (repeatable, `[map]` only): your own names for units, e.g. `mt = "tonne"`.
-  `Config` and `Registry::apply_config` in `dimvexa-core`; JSON output gains `config` (files and
-  hashes) and `dimvexa.units/1` gains `config` and `mappings`.
+  The new `dimvexa-config` crate holds `Config` and `apply`; the core only gains
+  `Registry::add_alias`. JSON output gains `config` (files and hashes) and `dimvexa.units/1`
+  gains `config` and `mappings`.
 - `Conversion::apply_exact_f64`: the correctly rounded `f64` of the exact result (0 ulp), with
   a test that proves the rounding against both neighbours.
 - `docs/precision.md`: ulps, the guarantee (linear at most 1 ulp, affine at most 2 ulp),

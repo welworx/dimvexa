@@ -21,7 +21,6 @@
 //! * [`Kind`] and [`Shape`]: quantity kinds (absolute vs difference temperature) and the
 //!   linear and affine conversion shapes,
 //! * [`Expr`]: the syntax of unit expressions with a documented, strict precedence,
-//! * [`Config`]: user name mappings (ADR-009), applied with [`Registry::apply_config`],
 //! * [`Registry`]: symbol lookup, SI and binary prefixes, rejection of ambiguous symbols,
 //! * [`Conversion`]: a prepared conversion with exact and `f64` fast paths,
 //! * [`Quantity`]: exact values with units following the kind algebra,
@@ -46,7 +45,6 @@
 //! # Ok::<(), dimvexa_core::Error>(())
 //! ```
 
-mod config;
 mod conversion;
 mod dim;
 mod error;
@@ -58,7 +56,6 @@ mod ratio;
 mod registry;
 mod unit;
 
-pub use config::{Config, Mapping};
 pub use conversion::Conversion;
 pub use dim::Dim;
 pub use error::{Error, Result};
