@@ -21,6 +21,9 @@ Commits by `release-plz` once releases start (planned for M1).
   included).
 - `xtask validate-data`.
 - ADR-001 to ADR-008, benchmark report for M0.
+- The config layer (`--config`, `dimvexa-config`) is marked beta in the README, the crate docs,
+  the CLI help and ADR-009. A property test (`config_invariant`) checks that applying a config
+  never changes what an existing name means and never hides a prefixed name.
 - `docs/known-limitations.md`: limitations we accept for now (KL-n), pinned by tests.
 - ADR-009: user config files with name mappings, extra units and caller-supplied bridge
   constants such as a density. Accepted for `[map]`, density bridges and `[[unit]]`.

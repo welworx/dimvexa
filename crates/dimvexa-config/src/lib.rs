@@ -2,6 +2,9 @@
 //! User config files for dimvexa (ADR-009): the names, units and constants the caller chooses
 //! to add.
 //!
+//! **Beta:** younger and less proven than the core; the file format and this API may still
+//! change (see `docs/known-limitations.md`). The core does not depend on it.
+//!
 //! This crate is separate from `dimvexa-core` on purpose: the file format, the content hash
 //! and the override rules are not conversion logic. It reads no files itself and loads
 //! nothing implicitly: the caller reads the text, calls [`Config::parse`] and applies the
