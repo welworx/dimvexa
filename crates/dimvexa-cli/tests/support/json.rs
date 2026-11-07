@@ -254,6 +254,9 @@ pub fn check_convert_schema(v: &V) {
 
 /// Checks a `dimvexa.units/1` document against the documented schema.
 pub fn check_units_schema(v: &V) {
+    if v.get("unit").is_some() {
+        return check_unit_detail_schema(v);
+    }
     assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
     assert!(v.get("ok").unwrap().as_bool());
     assert!(v.get("data_version").unwrap().as_str().starts_with('v'));
@@ -265,7 +268,6 @@ pub fn check_units_schema(v: &V) {
         assert!(g.get("units").unwrap().as_f64() >= 1.0);
     }
     let units = v.get("units").unwrap().as_array();
-    assert!(!units.is_empty());
     for u in units {
         for k in [
             "symbol",
@@ -301,4 +303,29 @@ pub fn check_units_schema(v: &V) {
                 || !a.get("planned").unwrap().as_array().is_empty()
         );
     }
+}
+
+fn check_unit_detail_schema(v: &V) {
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+    assert!(v.get("ok").unwrap().as_bool());
+    let u = v.get("unit").unwrap();
+    for k in [
+        "symbol",
+        "group",
+        "aliases",
+        "dimension",
+        "quantity_kind",
+        "exactness",
+        "prefixes",
+        "namespace",
+        "factor",
+        "offset",
+        "sources",
+        "note",
+    ] {
+        assert!(u.get(k).is_some(), "missing unit.{k}");
+    }
+    assert_eq!(u.get("dimension").unwrap().as_array().len(), 7);
+    assert!(u.get("factor").unwrap().as_str().contains('/'));
+    assert!(u.get("offset").unwrap().as_str().contains('/'));
 }

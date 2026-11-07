@@ -334,12 +334,6 @@ fn units_lists_every_table_entry_by_group() {
     let rows = r.stdout.lines().filter(|l| l.split('\t').count() == 6);
     assert_eq!(rows.count(), n);
     assert!(r.stdout.lines().any(|l| l == "## volume"));
-    // The listing starts with the selectable groups and their sizes.
-    assert!(
-        r.stdout
-            .starts_with("## groups (list one with: dimvexa units GROUP)\n")
-    );
-    assert!(r.stdout.lines().any(|l| l == "volume\t5"));
     assert!(r.stdout.lines().any(|l| l.starts_with("psi\t")));
     assert!(r.stdout.lines().any(|l| l.starts_with("ton\tton_short, ")));
     snapshot("units.txt", &r.stdout);
@@ -364,19 +358,91 @@ fn units_can_be_narrowed_to_a_group() {
     let v = json::parse(&dimvexa(&["units", "mass", "--json"]).stdout).unwrap();
     json::check_units_schema(&v);
     assert_eq!(v.get("group").unwrap().as_str(), "mass");
-    // A narrowed listing still names every group, and its text has no group overview.
+    // A narrowed listing still names every group in JSON.
     assert!(v.get("groups").unwrap().as_array().len() > 5);
-    assert!(!r.stdout.contains("## groups"));
     for u in v.get("units").unwrap().as_array() {
         assert_eq!(u.get("group").unwrap().as_str(), "mass");
     }
 }
 
 #[test]
+fn units_groups_lists_only_the_groups() {
+    let r = dimvexa(&["units", "--groups"]);
+    assert_eq!(r.code, 0);
+    snapshot("units_groups.txt", &r.stdout);
+    assert!(r.stdout.lines().any(|l| l == "volume\t5"));
+    assert!(!r.stdout.contains("psi\t"));
+    let v = json::parse(&dimvexa(&["units", "--groups", "--json"]).stdout).unwrap();
+    json::check_units_schema(&v);
+    assert!(v.get("units").unwrap().as_array().is_empty());
+    assert!(v.get("group").is_some());
+}
+
+#[test]
+fn units_shows_the_details_of_one_unit() {
+    let r = dimvexa(&["units", "psi"]);
+    assert_eq!(r.code, 0);
+    snapshot("units_psi.txt", &r.stdout);
+    let v = json::parse(&dimvexa(&["units", "psi", "--json"]).stdout).unwrap();
+    let u = v.get("unit").unwrap();
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+    assert_eq!(u.get("symbol").unwrap().as_str(), "psi");
+    assert_eq!(u.get("group").unwrap().as_str(), "pressure");
+    assert_eq!(
+        u.get("factor").unwrap().as_str(),
+        "8896443230521/1290320000"
+    );
+    assert_eq!(u.get("offset").unwrap().as_str(), "0/1");
+    assert_eq!(u.get("dimension").unwrap().as_array().len(), 7);
+    assert!(!u.get("sources").unwrap().as_array().is_empty());
+    // An alias finds the table unit; a prefixed unit and a compound expression resolve too.
+    let c = json::parse(&dimvexa(&["units", "\u{b0}C", "--json"]).stdout).unwrap();
+    assert_eq!(
+        c.get("unit").unwrap().get("symbol").unwrap().as_str(),
+        "degC"
+    );
+    let km = json::parse(&dimvexa(&["units", "km", "--json"]).stdout).unwrap();
+    assert_eq!(
+        km.get("unit").unwrap().get("factor").unwrap().as_str(),
+        "1000/1"
+    );
+    assert!(
+        dimvexa(&["units", "m/s"])
+            .stdout
+            .contains("group         speed")
+    );
+}
+
+#[test]
+fn units_unknown_and_ambiguous_names_are_loud_errors() {
+    for (name, code) in [("zork", "unknown_unit"), ("ton", "ambiguous_symbol")] {
+        let r = dimvexa(&["units", name, "--json"]);
+        assert_eq!(r.code, 1, "{name}");
+        let v = json::parse(&r.stdout).unwrap();
+        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+        assert!(!v.get("ok").unwrap().as_bool());
+        assert_eq!(v.get("error").unwrap().get("code").unwrap().as_str(), code);
+        assert!(
+            dimvexa(&["units", name])
+                .stderr
+                .starts_with(&format!("error[{code}]"))
+        );
+    }
+    let v = json::parse(&dimvexa(&["units", "ton", "--json"]).stdout).unwrap();
+    let s = v
+        .get("error")
+        .unwrap()
+        .get("suggestions")
+        .unwrap()
+        .as_array();
+    assert!(s.iter().any(|x| x.as_str() == "tonne"));
+}
+
+#[test]
 fn units_misuse_is_a_usage_error_in_the_units_schema() {
     for args in [
-        &["units", "nope"][..],
-        &["units", "length", "mass"],
+        &["units", "length", "mass"][..],
+        &["units", "--groups", "psi"],
         &["units", "--exact"],
     ] {
         let mut a = args.to_vec();
@@ -396,13 +462,6 @@ fn units_misuse_is_a_usage_error_in_the_units_schema() {
     let r = dimvexa(&["convert", "units"]);
     assert_eq!(r.code, 2);
     assert!(r.stderr.contains("expected VALUE FROM TO"));
-    // The unknown group lists what exists.
-    let v = json::parse(&dimvexa(&["units", "nope", "--json"]).stdout).unwrap();
-    let s = v
-        .get("error")
-        .unwrap()
-        .get("suggestions")
-        .unwrap()
-        .as_array();
-    assert!(s.iter().any(|g| g.as_str() == "volume"));
+    // --groups belongs to 'units' only.
+    assert_eq!(dimvexa(&["1", "m", "km", "--groups"]).code, 2);
 }

@@ -2,76 +2,314 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "dimvexa.units/1",
   "title": "dimvexa.units/1",
-  "description": "Output of `dimvexa units --json`: every unit in the compiled table and every deliberately rejected ambiguous symbol. Adding fields is allowed within a schema version; removing or changing them requires /2.",
+  "description": "Output of `dimvexa units --json`: the table (or one group of it, or only its group names with `--groups`), the details of one unit (`dimvexa units UNIT`), or a usage error. Adding fields is allowed within a schema version; removing or changing them requires /2.",
   "oneOf": [
     {
-  "type": "object",
-  "required": ["schema", "ok", "data_version", "group", "groups", "units", "ambiguous"],
-  "properties": {
-    "schema": { "const": "dimvexa.units/1" },
-    "ok": { "const": true },
-    "data_version": { "type": "string", "description": "Table identifier, `v<version>+<hash>`." },
-    "group": { "type": ["string", "null"], "description": "The group the listing was narrowed to (`dimvexa units GROUP`), or null for the whole table. With a group, `ambiguous` only holds the symbols that have a candidate in it." },
-    "groups": {
-      "type": "array",
-      "description": "Every group of the whole table, also when the listing is narrowed: the values `dimvexa units GROUP` accepts.",
-      "items": {
-        "type": "object",
-        "required": ["name", "units"],
-        "properties": {
-          "name": { "type": "string" },
-          "units": { "type": "integer", "minimum": 1, "description": "Number of units in the group." }
+      "type": "object",
+      "required": [
+        "schema",
+        "ok",
+        "data_version",
+        "group",
+        "groups",
+        "units",
+        "ambiguous"
+      ],
+      "properties": {
+        "schema": {
+          "const": "dimvexa.units/1"
+        },
+        "ok": {
+          "const": true
+        },
+        "data_version": {
+          "type": "string",
+          "description": "Table identifier, `v<version>+<hash>`."
+        },
+        "group": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The group the listing was narrowed to (`dimvexa units GROUP`), or null for the whole table. With a group, `ambiguous` only holds the symbols that have a candidate in it."
+        },
+        "groups": {
+          "type": "array",
+          "description": "Every group of the whole table, also when the listing is narrowed: the values `dimvexa units GROUP` accepts.",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "units"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "units": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Number of units in the group."
+              }
+            }
+          }
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "symbol",
+              "group",
+              "aliases",
+              "dimension",
+              "quantity_kind",
+              "exactness",
+              "prefixes",
+              "namespace",
+              "source"
+            ],
+            "properties": {
+              "symbol": {
+                "type": "string",
+                "description": "Primary symbol, accepted as written in `dimvexa convert`."
+              },
+              "group": {
+                "type": "string",
+                "description": "Quantity group by dimension: length, mass, time, volume, pressure, energy, ... Dimensions without a name read `dimension[<exponents>]`. The set of names may grow."
+              },
+              "aliases": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Alternative symbols, for example the degree-sign spelling of degC."
+              },
+              "dimension": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 7,
+                "maxItems": 7,
+                "description": "Exponents of kg, m, s, A, K, mol, cd."
+              },
+              "quantity_kind": {
+                "enum": [
+                  "plain",
+                  "absolute_temperature",
+                  "temperature_difference"
+                ]
+              },
+              "exactness": {
+                "enum": [
+                  "defined",
+                  "measured"
+                ]
+              },
+              "prefixes": {
+                "enum": [
+                  "none",
+                  "si",
+                  "si_binary"
+                ],
+                "description": "Which prefix families the symbol accepts."
+              },
+              "namespace": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string",
+                "description": "Primary citation of the definition."
+              }
+            }
+          }
+        },
+        "ambiguous": {
+          "type": "array",
+          "description": "Bare symbols that are rejected with `ambiguous_symbol`; use one of the candidates.",
+          "items": {
+            "type": "object",
+            "required": [
+              "symbol",
+              "candidates",
+              "planned",
+              "note"
+            ],
+            "properties": {
+              "symbol": {
+                "type": "string"
+              },
+              "candidates": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Explicit symbols present in the table (may be empty while only planned ones exist)."
+              },
+              "planned": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Explicit symbols planned but not yet in the table."
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          }
         }
-      }
-    },
-    "units": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["symbol", "group", "aliases", "dimension", "quantity_kind", "exactness", "prefixes", "namespace", "source"],
-        "properties": {
-          "symbol": { "type": "string", "description": "Primary symbol, accepted as written in `dimvexa convert`." },
-          "group": { "type": "string", "description": "Quantity group by dimension: length, mass, time, volume, pressure, energy, ... Dimensions without a name read `dimension[<exponents>]`. The set of names may grow." },
-          "aliases": { "type": "array", "items": { "type": "string" }, "description": "Alternative symbols, for example the degree-sign spelling of degC." },
-          "dimension": { "type": "array", "items": { "type": "integer" }, "minItems": 7, "maxItems": 7, "description": "Exponents of kg, m, s, A, K, mol, cd." },
-          "quantity_kind": { "enum": ["plain", "absolute_temperature", "temperature_difference"] },
-          "exactness": { "enum": ["defined", "measured"] },
-          "prefixes": { "enum": ["none", "si", "si_binary"], "description": "Which prefix families the symbol accepts." },
-          "namespace": { "type": "string" },
-          "source": { "type": "string", "description": "Primary citation of the definition." }
-        }
-      }
-    },
-    "ambiguous": {
-      "type": "array",
-      "description": "Bare symbols that are rejected with `ambiguous_symbol`; use one of the candidates.",
-      "items": {
-        "type": "object",
-        "required": ["symbol", "candidates", "planned", "note"],
-        "properties": {
-          "symbol": { "type": "string" },
-          "candidates": { "type": "array", "items": { "type": "string" }, "description": "Explicit symbols present in the table (may be empty while only planned ones exist)." },
-          "planned": { "type": "array", "items": { "type": "string" }, "description": "Explicit symbols planned but not yet in the table." },
-          "note": { "type": "string" }
-        }
-      }
-    }
-  },
-    "additionalProperties": true
+      },
+      "additionalProperties": true,
+      "description": "`dimvexa units`, `dimvexa units GROUP` and `dimvexa units --groups` (then `units` and `ambiguous` are empty)."
     },
     {
       "type": "object",
-      "required": ["schema", "ok", "error"],
+      "description": "`dimvexa units UNIT --json`: one table unit (looked up by symbol or alias), or a resolved prefixed or compound expression such as `km` or `kW.h`, for which prefixes, namespace and note are null.",
+      "required": [
+        "schema",
+        "ok",
+        "data_version",
+        "unit"
+      ],
       "properties": {
-        "schema": { "const": "dimvexa.units/1" },
-        "ok": { "const": false },
+        "schema": {
+          "const": "dimvexa.units/1"
+        },
+        "ok": {
+          "const": true
+        },
+        "data_version": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "object",
+          "required": [
+            "symbol",
+            "group",
+            "aliases",
+            "dimension",
+            "quantity_kind",
+            "exactness",
+            "prefixes",
+            "namespace",
+            "factor",
+            "offset",
+            "sources",
+            "note"
+          ],
+          "properties": {
+            "symbol": {
+              "type": "string",
+              "description": "The table symbol, or the expression as written."
+            },
+            "group": {
+              "type": "string"
+            },
+            "aliases": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "dimension": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 7,
+              "maxItems": 7,
+              "description": "Exponents of kg, m, s, A, K, mol, cd."
+            },
+            "quantity_kind": {
+              "enum": [
+                "plain",
+                "absolute_temperature",
+                "temperature_difference"
+              ]
+            },
+            "exactness": {
+              "enum": [
+                "defined",
+                "measured"
+              ]
+            },
+            "prefixes": {
+              "enum": [
+                "none",
+                "si",
+                "si_binary",
+                null
+              ]
+            },
+            "namespace": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "factor": {
+              "type": "string",
+              "pattern": "^-?[0-9]+/[0-9]+$",
+              "description": "Exact factor a in si = a * x + b (coherent SI unit of the dimension)."
+            },
+            "offset": {
+              "type": "string",
+              "pattern": "^-?[0-9]+/[0-9]+$",
+              "description": "Exact offset b in si = a * x + b."
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "note": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "dimvexa.units/1"
+        },
+        "ok": {
+          "const": false
+        },
         "error": {
           "type": "object",
-          "required": ["code", "message"],
+          "required": [
+            "code",
+            "message"
+          ],
           "properties": {
-            "code": { "type": "string", "description": "`usage` for a bad command line (unknown group, extra arguments, --exact); a library error code if the table cannot be loaded." },
-            "message": { "type": "string" },
-            "suggestions": { "type": "array", "items": { "type": "string" }, "description": "For an unknown group: the known groups." }
+            "code": {
+              "type": "string",
+              "description": "`usage` for a bad command line (extra arguments, --exact, --groups with a name); `unknown_unit` or `ambiguous_symbol` when the name is neither a group nor a unit; a library error code if the table cannot be loaded."
+            },
+            "message": {
+              "type": "string"
+            },
+            "suggestions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "For `unknown_unit` and `ambiguous_symbol`: the close matches or explicit symbols to use instead."
+            }
           }
         }
       }

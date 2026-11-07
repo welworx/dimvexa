@@ -1,0 +1,23 @@
+# columns: group, units
+length	8
+mass	7
+time	4
+electric_current	1
+temperature	8
+amount_of_substance	2
+luminous_intensity	1
+frequency	1
+force	2
+pressure	6
+energy	6
+power	3
+electric_charge	1
+voltage	1
+resistance	1
+capacitance	1
+conductance	1
+magnetic_flux	1
+magnetic_flux_density	1
+inductance	1
+volume	5
+acceleration	1
