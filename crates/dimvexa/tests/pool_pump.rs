@@ -3,7 +3,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::float_cmp)]
 
 #[path = "../../../examples/pool_pump.rs"]
-#[allow(clippy::print_stdout, dead_code, unreachable_pub, missing_docs)]
+#[allow(unreachable_pub, missing_docs)]
 mod pool_pump;
 
 use dimvexa::Ratio;
@@ -20,14 +20,14 @@ fn flagship_numbers_are_exact() {
     assert_eq!(rep.total_mj, r("950.4"));
     assert_eq!(rep.cost_eur, r("79.2"));
     // 264 kWh * 3.6e6 J/kWh / 1055.05585262 J/Btu(IT), checked against the closed form.
-    let expect_btu = 264.0 * 3.6e6 / 1055.055_852_62;
+    let expect_btu = 264.0 * 3.6e6 / 1_055.055_852_62;
     assert!(
         (rep.total_btu_it - expect_btu).abs() / expect_btu < 1e-14,
         "{}",
         rep.total_btu_it
     );
     assert!(
-        (rep.btu_per_kwh - 3412.141_633).abs() < 1e-5,
+        (rep.btu_per_kwh - 3_412.141_633).abs() < 1e-5,
         "{}",
         rep.btu_per_kwh
     );

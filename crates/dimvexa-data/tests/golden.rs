@@ -214,6 +214,6 @@ fn temperature_kinds_in_the_seed_table() {
     );
 }
 
-fn r_int(n: i128) -> Ratio {
+const fn r_int(n: i128) -> Ratio {
     Ratio::from_int(n)
 }
