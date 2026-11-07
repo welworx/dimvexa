@@ -7,7 +7,7 @@ Version 2.0 (see LICENSE-MIT and LICENSE-APACHE). You may choose either.
 Redistributions must retain this NOTICE file together with the copyright and
 licence notices, as required by Section 4 of the Apache License, Version 2.0.
 
-Data provenance: the unit table in data/units/ is built from primary
+Data provenance: the unit table in crates/dimvexa-data/data/units/ is built from primary
 definitions (BIPM SI Brochure, NIST SP 811, statutes and treaty definitions).
 No data has been copied from GNU units or rink (GPL-3.0). Each entry records
 its own source. See docs/licensing.md.

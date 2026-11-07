@@ -19,7 +19,11 @@ cargo run -p dimvexa-cli -- convert 10 m/s km/h
 ```
 
 `cargo xtask ci` is the single entry point. The GitHub workflow runs the same command, with
-warnings as errors, so a green run on your machine is a green run in CI. Run a few stages with
+warnings as errors, so a green run on your machine is a green run in CI. Its stages are:
+`fmt`, `clippy`, `test`, `doctest`, `docs`, `data`, `package`, `example` and `check-docs`
+(this page and `AGENTS.md` are checked: the commands and files they name must exist).
+CI additionally runs the MSRV build, the wasm32 build, `cargo-deny`, typos, taplo, actionlint
+and a packaging job. Run a few stages with
 `cargo xtask ci fmt clippy`, see all of them with `cargo xtask ci --list`, and keep going past
 a failure with `--keep-going`.
 
@@ -49,7 +53,7 @@ precision notes, benchmarks). `AGENTS.md` has a one-page map.
 
 1. Open or find an issue for anything bigger than a typo, so we can agree on the approach.
 2. Branch, change, and run `cargo xtask ci`.
-3. Commit with a **sign-off** and a **Conventional Commit** message (details below).
+3. Commit with a **Conventional Commit** message and, if you are not the owner, a **sign-off** (details below).
 4. Open a pull request and fill in the template: what you ran, expected versus measured, any
    changed default, and the source plus test vector for every data change.
 
@@ -88,9 +92,11 @@ follows the same rule (a CI check enforces it) and drives the changelog.
 
 ### Developer Certificate of Origin (DCO)
 
-Every commit must carry a `Signed-off-by: Your Name <you@example.org>` line, added with
-`git commit -s`. By signing off you certify the
-[Developer Certificate of Origin 1.1](https://developercertificate.org/). A CI job checks it.
+Outside contributors: every commit in your pull request must carry a
+`Signed-off-by: Your Name <you@example.org>` line, added with `git commit -s`. By signing off
+you certify the [Developer Certificate of Origin 1.1](https://developercertificate.org/). A CI
+job checks it. The repository owner is the sole maintainer and is exempt (the check is skipped
+for pull requests the owner authors), and coding agents do not add sign-offs for the owner.
 To fix a missing sign-off: `git commit --amend -s`, or for several commits
 `git rebase --signoff main`.
 
@@ -106,6 +112,13 @@ No `unsafe`; no `unwrap`, `expect`, `panic!`, indexing or lossy casts in library
 may use them: see `clippy.toml`). Checked arithmetic only. Run `cargo fmt` before you commit.
 Read `docs/precision.md` before touching anything on the `f64` path, and the ADRs in
 `docs/adr/` before changing a design decision.
+
+## Skills for coding agents
+
+If you work with a coding agent, the repository carries short task guides in
+`.claude/skills/` (add a unit, triage a unit request, precision, benchmarks, tests, ADRs,
+releases, API changes, bug reproduction). `AGENTS.md` lists them. They restate the rules on
+this page; the rules and the checks that enforce them are the same.
 
 ## Reporting problems
 

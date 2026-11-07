@@ -47,11 +47,27 @@ dependency without an issue and an ADR. Edition 2024, MSRV 1.85 (do not change i
 | `.github/` | workflows (pinned actions, see `docs/ci-pinning.md`), issue forms, PR template |
 | `extras/`, `fuzz/` | network-only tooling; separate workspaces, never built offline |
 
+## Skills
+
+Read the matching skill in `.claude/skills/<name>/SKILL.md` before the task.
+
+| Skill | Use it when |
+|---|---|
+| `add-unit` | adding or changing a unit in the tables |
+| `unit-request-triage` | answering a GitHub "Unit request" issue |
+| `precision` | touching the `f64` path, ulp bounds or exactness |
+| `benchmarks` | running or quoting performance numbers |
+| `tests` | adding a test or a snapshot, or deciding where a test goes |
+| `adr` | a decision needs recording or changing |
+| `release` | preparing (never publishing) a release |
+| `api-change` | changing a public item, an error code or the JSON schema |
+| `bug-repro` | turning a bug report into a failing test |
+
 ## Conventions
 
-* Conventional Commits (`feat(core): ...`); commits are signed off (`git commit -s`) when you
-  prepare them for a pull request. End commits with the attribution lines your environment
-  asks for.
+* Conventional Commits (`feat(core): ...`). Do not add `Signed-off-by` lines for the owner (the
+  owner is the sole maintainer and exempt from the DCO check; outside contributors sign off).
+  End commits with the attribution lines your environment asks for.
 * Do not push, publish or touch remotes unless the task says so.
 * Keep error codes stable (`Error::ALL_CODES`); adding a field to the JSON schema is allowed
   within `dimvexa.convert/1`, removing one is not.

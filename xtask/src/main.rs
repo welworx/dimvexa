@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! Repository automation: `cargo xtask ci`, `cargo xtask validate-data` and
-//! `cargo xtask update-data-hash`.
+//! Repository automation: `cargo xtask ci`, `check-docs`, `validate-data` and
+//! `update-data-hash`.
 //!
 //! `validate-data` is the gatekeeper of the unit table. It fails on a missing source,
 //! exactness, dimension, note or golden vector, on duplicate symbols, ambiguous bare
@@ -21,6 +21,7 @@ mod toml_lite;
 
 mod chains;
 mod ci;
+mod docs_check;
 mod validate;
 
 use std::path::PathBuf;
@@ -66,6 +67,19 @@ fn main() -> ExitCode {
                 ExitCode::FAILURE
             }
         }
+        "check-docs" => {
+            let errors = docs_check::run(&root);
+            for e in &errors {
+                eprintln!("error: {e}");
+            }
+            if errors.is_empty() {
+                println!("check-docs: ok");
+                ExitCode::SUCCESS
+            } else {
+                eprintln!("check-docs: {} problem(s)", errors.len());
+                ExitCode::FAILURE
+            }
+        }
         "update-data-hash" => match validate::update_hash(&root) {
             Ok(msg) => {
                 println!("{msg}");
@@ -77,7 +91,9 @@ fn main() -> ExitCode {
             }
         },
         _ => {
-            eprintln!("usage: cargo xtask <ci [STAGE...] | validate-data | update-data-hash>");
+            eprintln!(
+                "usage: cargo xtask <ci [STAGE...] | check-docs | validate-data | update-data-hash>"
+            );
             ExitCode::from(2)
         }
     }

@@ -1,6 +1,6 @@
 [package]
 name = "xtask"
-description = "Repository automation for dimvexa (data validation). Exact factors. Loud failures. Zero guessing."
+description = "Repository automation for dimvexa unit conversion (ci, docs checks, data validation). Exact factors. Loud failures. Zero guessing."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

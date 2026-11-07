@@ -29,6 +29,8 @@ enum Kind {
     Cargo(&'static [&'static str]),
     /// The in-process unit table validation.
     ValidateData,
+    /// `cargo xtask check-docs`, in process.
+    CheckDocs,
     /// `cargo package --list` for the data crate must contain the unit tables, so that the
     /// published crate is self-contained.
     PackageList,
@@ -103,6 +105,11 @@ const STAGES: &[Stage] = &[
         kind: Kind::PackageList,
     },
     Stage {
+        name: "check-docs",
+        about: "docs, skills and workflows are consistent with the code",
+        kind: Kind::CheckDocs,
+    },
+    Stage {
         name: "example",
         about: "the pool pump cookbook example runs",
         kind: Kind::Cargo(&[
@@ -118,6 +125,11 @@ const STAGES: &[Stage] = &[
     },
 ];
 
+/// Names of all stages, in order.
+pub fn stage_names() -> Vec<&'static str> {
+    STAGES.iter().map(|s| s.name).collect()
+}
+
 /// Appends `-D warnings` to an existing flag string without dropping what the user set.
 fn with_deny_warnings(existing: Option<String>) -> String {
     match existing {
@@ -131,6 +143,16 @@ fn run_stage(stage: &Stage, root: &Path, validate: &dyn Fn() -> bool) -> bool {
     match &stage.kind {
         Kind::ValidateData => validate(),
         Kind::PackageList => package_list(root),
+        Kind::CheckDocs => {
+            let errors = crate::docs_check::run(root);
+            for e in &errors {
+                eprintln!("    error: {e}");
+            }
+            if errors.is_empty() {
+                println!("    docs, skills and workflows are consistent");
+            }
+            errors.is_empty()
+        }
         Kind::Cargo(args) => {
             println!("    $ cargo {}", args.join(" "));
             let status = Command::new(std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into()))
@@ -228,6 +250,7 @@ pub fn run(args: &[String], root: &Path, validate: &dyn Fn() -> bool) -> ExitCod
                     let how = match &s.kind {
                         Kind::Cargo(c) => format!("cargo {}", c.join(" ")),
                         Kind::ValidateData => String::from("cargo xtask validate-data"),
+                        Kind::CheckDocs => String::from("cargo xtask check-docs"),
                         Kind::PackageList => String::from(
                             "cargo package --list -p dimvexa-data, then check the file list",
                         ),
