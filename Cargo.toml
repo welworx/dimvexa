@@ -3,6 +3,7 @@ resolver = "3"
 members = [
     "crates/dimvexa-core",
     "crates/dimvexa-data",
+    "crates/dimvexa-config",
     "crates/dimvexa",
     "crates/dimvexa-testkit",
     "crates/dimvexa-cli",
@@ -11,6 +12,7 @@ members = [
 default-members = [
     "crates/dimvexa-core",
     "crates/dimvexa-data",
+    "crates/dimvexa-config",
     "crates/dimvexa",
     "crates/dimvexa-testkit",
     "crates/dimvexa-cli",
@@ -37,6 +39,7 @@ categories = ["science", "mathematics"]
 [workspace.dependencies]
 dimvexa-core = { version = "0.0.0", path = "crates/dimvexa-core" }
 dimvexa-data = { version = "0.0.0", path = "crates/dimvexa-data" }
+dimvexa-config = { version = "0.0.0", path = "crates/dimvexa-config" }
 dimvexa = { version = "0.0.0", path = "crates/dimvexa" }
 dimvexa-testkit = { version = "0.0.0", path = "crates/dimvexa-testkit" }
 

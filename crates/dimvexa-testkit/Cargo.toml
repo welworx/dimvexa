@@ -18,6 +18,7 @@ publish = false
 dimvexa = { workspace = true }
 dimvexa-core = { workspace = true }
 dimvexa-data = { workspace = true }
+dimvexa-config = { workspace = true }
 
 [lints.rust]
 # The counting allocator needs `unsafe impl GlobalAlloc`. Unsafe is denied everywhere

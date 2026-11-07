@@ -173,6 +173,7 @@ Rules (ADR-009, [`docs/adr/009-user-config.md`](docs/adr/009-user-config.md)):
 |---|---|
 | `crates/dimvexa-core` | dimensions, rationals, parser, registry, conversions (no data, no `unsafe`) |
 | `crates/dimvexa-data` | the unit table, compiled from `data/units/*.toml` (inside the crate) by `build.rs` |
+| `crates/dimvexa-config` | user config files (`--config`): your own names for units, kept out of the core |
 | `crates/dimvexa` | facade crate: core plus the seed table |
 | `crates/dimvexa-cli` | the `dimvexa` command line tool (no conversion logic of its own) |
 | `crates/dimvexa-testkit` | shared test helpers and the counting allocator (not published) |

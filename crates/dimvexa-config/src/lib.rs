@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! User config files (ADR-009): name mappings the caller chooses to apply.
+//! User config files for dimvexa (ADR-009): name mappings the caller chooses to apply.
+//!
+//! This crate is separate from `dimvexa-core` on purpose: the file format, the content hash
+//! and the override rules are not conversion logic. It reads no files itself and loads
+//! nothing implicitly: the caller reads the text, calls [`Config::parse`] and applies the
+//! result with [`apply`]. The only thing it asks of the core is
+//! [`Registry::add_alias`](dimvexa_core::Registry::add_alias).
 //!
 //! A config maps a name to an existing unit, for example `mt = "tonne"`. It never carries a
-//! factor, never redefines an existing symbol and is never loaded implicitly: the caller
-//! reads the text and passes it to [`Config::parse`], then applies it with
-//! [`Registry::apply_config`](crate::Registry::apply_config).
+//! factor and never redefines an existing symbol.
 //!
 //! ```text
 //! # my trade vocabulary
@@ -13,14 +17,16 @@
 //! ton = "ton_short"
 //! ```
 
-use crate::error::{Error, Result};
+#![forbid(unsafe_code)]
+
+use dimvexa_core::{Error, Registry, Result};
 
 /// A parsed config file: its origin, a content hash and the `[map]` entries in file order.
 ///
 /// # Examples
 ///
 /// ```
-/// use dimvexa_core::Config;
+/// use dimvexa_config::Config;
 /// let cfg = Config::parse("[map]\nmt = \"tonne\"\n", "trade.toml")?;
 /// assert_eq!(cfg.mappings().len(), 1);
 /// assert_eq!(cfg.mappings()[0].name, "mt");
@@ -127,6 +133,52 @@ impl Config {
     pub fn mappings(&self) -> &[Mapping] {
         &self.mappings
     }
+}
+
+/// Applies configs to a registry, in order: a later config overrides an earlier mapping of the
+/// same name. Returns the mappings now in effect (one per name, in application order).
+///
+/// All configs go in one call, so overrides are resolved before the registry is touched. The
+/// registry is unchanged if any entry is refused.
+///
+/// # Errors
+///
+/// [`Error::InvalidDefinition`] (symbol `origin:line`) for a name that is malformed or already
+/// means a unit, or a target that is not a unit of the registry.
+///
+/// # Examples
+///
+/// ```
+/// use dimvexa_config::{Config, apply};
+/// use dimvexa_core::{Dim, Ratio, Registry, Unit};
+///
+/// let mut reg = Registry::new();
+/// reg.register(Unit::linear("kg", Dim::KG, Ratio::ONE)?)?;
+/// reg.register(Unit::linear("t", Dim::KG, Ratio::from_int(1000))?)?;
+/// let cfg = Config::parse("[map]\nmetric_ton = \"t\"\n", "my.toml")?;
+/// let applied = apply(&mut reg, &[cfg])?;
+/// assert_eq!(applied.len(), 1);
+/// assert_eq!(reg.conversion("metric_ton", "kg")?.factor(), Ratio::from_int(1000));
+/// # Ok::<(), dimvexa_core::Error>(())
+/// ```
+pub fn apply(reg: &mut Registry, configs: &[Config]) -> Result<Vec<Mapping>> {
+    let mut effective: Vec<Mapping> = Vec::new();
+    for m in configs.iter().flat_map(Config::mappings) {
+        effective.retain(|e| e.name != m.name);
+        effective.push(m.clone());
+    }
+    let mut staged = reg.clone();
+    for m in &effective {
+        staged.add_alias(&m.name, &m.target).map_err(|e| match e {
+            Error::InvalidDefinition { message, .. } => Error::InvalidDefinition {
+                symbol: format!("{}:{}", m.origin, m.line),
+                message,
+            },
+            other => other,
+        })?;
+    }
+    *reg = staged;
+    Ok(effective)
 }
 
 /// Removes a `#` comment that is not inside a quoted string.

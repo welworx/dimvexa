@@ -22,7 +22,8 @@
 use std::fmt::Write as _;
 use std::io::Write;
 
-use dimvexa::{Config, Conversion, Dim, Error, Mapping, Ratio, Registry, Unit, UnitExpr, registry};
+use dimvexa::{Conversion, Dim, Error, Ratio, Registry, Unit, UnitExpr, registry};
+use dimvexa_config::{Config, Mapping};
 
 const USAGE: &str = "\
 Usage:
@@ -277,6 +278,8 @@ fn json_error(
 /// A registry with the user's configs applied, and which configs those were.
 struct Loaded {
     reg: Registry,
+    /// The name mappings in effect (empty without a config).
+    mappings: Vec<Mapping>,
     /// `(file, content hash)` of each config, in the order given.
     configs: Vec<(String, String)>,
 }
@@ -291,15 +294,20 @@ enum LoadError {
 
 fn load(config_files: &[String]) -> Result<Loaded, LoadError> {
     let mut reg = registry().map_err(LoadError::Lib)?;
-    let mut configs = Vec::new();
+    let (mut parsed, mut configs) = (Vec::new(), Vec::new());
     for file in config_files {
         let text = std::fs::read_to_string(file)
             .map_err(|e| LoadError::Io(format!("cannot read config '{file}': {e}")))?;
         let cfg = Config::parse(&text, file).map_err(LoadError::Lib)?;
-        reg.apply_config(&cfg).map_err(LoadError::Lib)?;
         configs.push((file.clone(), cfg.hash().to_string()));
+        parsed.push(cfg);
     }
-    Ok(Loaded { reg, configs })
+    let mappings = dimvexa_config::apply(&mut reg, &parsed).map_err(LoadError::Lib)?;
+    Ok(Loaded {
+        reg,
+        mappings,
+        configs,
+    })
 }
 
 /// Prints a load failure for `schema` and returns the exit code.
@@ -618,8 +626,7 @@ fn units_json(
         .map(|(g, n)| format!("{{\"name\":{},\"units\":{n}}}", json_string(g)))
         .collect();
     let mappings: Vec<String> = loaded
-        .reg
-        .mappings()
+        .mappings
         .iter()
         .map(|m| {
             format!(
@@ -853,7 +860,7 @@ fn run_units(
             units_json(&groups, &units, &ambiguous, group.as_deref(), &loaded)
         );
     } else {
-        let _ = write!(out, "{}", units_text(&units, &ambiguous, reg.mappings()));
+        let _ = write!(out, "{}", units_text(&units, &ambiguous, &loaded.mappings));
     }
     0
 }

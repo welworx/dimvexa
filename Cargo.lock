@@ -15,8 +15,16 @@ name = "dimvexa-cli"
 version = "0.0.0"
 dependencies = [
  "dimvexa",
+ "dimvexa-config",
  "dimvexa-core",
  "dimvexa-data",
+]
+
+[[package]]
+name = "dimvexa-config"
+version = "0.0.0"
+dependencies = [
+ "dimvexa-core",
 ]
 
 [[package]]
@@ -35,6 +43,7 @@ name = "dimvexa-testkit"
 version = "0.0.0"
 dependencies = [
  "dimvexa",
+ "dimvexa-config",
  "dimvexa-core",
  "dimvexa-data",
 ]
