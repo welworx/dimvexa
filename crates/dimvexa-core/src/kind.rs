@@ -86,6 +86,7 @@ impl Kind {
                 from: self,
                 to: rhs,
                 operation: "addition",
+                suggestions: Vec::new(),
             }),
         }
     }
@@ -110,6 +111,7 @@ impl Kind {
                 from: self,
                 to: rhs,
                 operation: "subtraction",
+                suggestions: Vec::new(),
             }),
         }
     }

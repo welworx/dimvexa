@@ -1,7 +1,7 @@
 $ dimvexa convert 1 ton kg --json
 [exit 1]
 --- stdout
-{"schema":"dimvexa.convert/1","ok":false,"error":{"code":"ambiguous_symbol","message":"'ton' is ambiguous: use ton_short or ton_long or tonne, or choose a profile","candidates":["ton_short","ton_long","tonne"]}}
+{"schema":"dimvexa.convert/1","ok":false,"error":{"code":"ambiguous_symbol","message":"'ton' is ambiguous: use ton_short or ton_long or tonne, or choose a profile","candidates":["ton_short","ton_long","tonne"],"suggestions":["ton_short","ton_long","tonne"]}}
 --- stderr
 
 $ dimvexa convert 1 gal L
@@ -13,7 +13,7 @@ error[ambiguous_symbol]: 'gal' is ambiguous: use gal_us or gal_imp, or choose a 
 $ dimvexa convert 1 kcal J --json
 [exit 1]
 --- stdout
-{"schema":"dimvexa.convert/1","ok":false,"error":{"code":"ambiguous_symbol","message":"'kcal' is ambiguous: use kcal_th or kcal_IT, or choose a profile","candidates":["kcal_th","kcal_IT"]}}
+{"schema":"dimvexa.convert/1","ok":false,"error":{"code":"ambiguous_symbol","message":"'kcal' is ambiguous: use kcal_th or kcal_IT, or choose a profile","candidates":["kcal_th","kcal_IT"],"suggestions":["kcal_th","kcal_IT"]}}
 --- stderr
 
 $ dimvexa convert 1 H s --json
@@ -38,7 +38,19 @@ $ dimvexa convert 20 degC delta_degC
 [exit 1]
 --- stdout
 --- stderr
-error[kind_mismatch]: kind mismatch in conversion: absolute_temperature and temperature_difference are not compatible
+error[kind_mismatch]: kind mismatch in conversion: absolute_temperature and temperature_difference are not compatible (a temperature point and a temperature difference are different kinds; for a difference use delta_degC)
+
+$ dimvexa convert 5 K delta_degF --json
+[exit 1]
+--- stdout
+{"schema":"dimvexa.convert/1","ok":false,"error":{"code":"kind_mismatch","message":"kind mismatch in conversion: absolute_temperature and temperature_difference are not compatible (a temperature point and a temperature difference are different kinds; for a difference use delta_K)","suggestions":["delta_K"]}}
+--- stderr
+
+$ dimvexa convert 1 degC/s K/s --json
+[exit 1]
+--- stdout
+{"schema":"dimvexa.convert/1","ok":false,"error":{"code":"refused","message":"refused: 'degC' has an offset (temperature scale) and cannot be part of a compound unit; use the difference unit delta_degC for a temperature difference","suggestions":["delta_degC"]}}
+--- stderr
 
 $ dimvexa convert 1 ppm 1
 [exit 1]

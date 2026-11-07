@@ -214,6 +214,94 @@ fn temperature_kinds_in_the_seed_table() {
     );
 }
 
+#[test]
+fn temperature_point_plus_point_is_an_error_that_suggests_the_delta_unit() {
+    use dimvexa_core::Quantity;
+    let reg = dimvexa_data::registry().unwrap();
+    let q = |s: &str| -> Quantity { reg.quantity(s).unwrap() };
+
+    // The documented rule: a point plus an interval works, a point plus a point does not.
+    assert!(q("20 degC").checked_add(&q("5 delta_K")).is_ok());
+    let err = q("20 degC").checked_add(&q("5 K")).unwrap_err();
+    assert_eq!(err.code(), "kind_mismatch");
+    assert_eq!(err.suggestions(), ["delta_K", "delta_degC"]);
+    let text = err.to_string();
+    assert!(text.contains("delta_K"), "{text}");
+    assert!(text.contains("temperature difference"), "{text}");
+    // Same for the other scales, and with the symbol written as an alias.
+    let err = q("68 degF").checked_add(&q("5 degF")).unwrap_err();
+    assert_eq!(err.suggestions(), ["delta_degF"]);
+    let err = q("20 \u{b0}C").checked_add(&q("5 \u{b0}C")).unwrap_err();
+    assert_eq!(err.suggestions(), ["delta_degC"]);
+    // Scaling a temperature point by a number is refused with the same advice.
+    let err = q("20 degC").checked_mul(&q("2")).unwrap_err();
+    assert_eq!(err.suggestions(), ["delta_degC"]);
+    // Converting a point into an interval names the delta unit to use.
+    let err = reg.conversion("K", "delta_degF").unwrap_err();
+    assert_eq!(err.code(), "kind_mismatch");
+    assert_eq!(err.suggestions(), ["delta_K"]);
+    // The result of subtracting points prints with a symbol that parses back.
+    let d = q("30 \u{b0}C").checked_sub(&q("20 \u{b0}C")).unwrap();
+    assert_eq!(d.unit().to_string(), "delta_degC");
+    assert!(reg.parse(&d.unit().to_string()).is_ok());
+    // A prefixed temperature has no registered difference unit: loud refusal, no guess.
+    let err = q("1 mK").checked_sub(&q("1 mK")).unwrap_err();
+    assert_eq!(err.code(), "refused");
+}
+
+#[test]
+fn delta_aliases_resolve_to_the_difference_kind() {
+    use dimvexa_core::Kind;
+    let reg = dimvexa_data::registry().unwrap();
+    for (alias, canonical) in [
+        ("\u{394}K", "delta_K"),
+        ("\u{394}\u{b0}C", "delta_degC"),
+        ("\u{394}\u{b0}F", "delta_degF"),
+        ("\u{394}\u{b0}R", "delta_degR"),
+    ] {
+        let a = reg.parse(alias).unwrap();
+        let c = reg.parse(canonical).unwrap();
+        assert_eq!(a.kind(), Kind::TemperatureDifference, "{alias}");
+        assert_eq!(a.factor(), c.factor(), "{alias}");
+        assert_eq!(a.offset(), c.offset(), "{alias}");
+    }
+}
+
+#[test]
+fn kelvin_inside_a_compound_unit_is_the_difference_kind() {
+    use dimvexa_core::Kind;
+    let reg = dimvexa_data::registry().unwrap();
+    // A K factor in a compound means a temperature interval: the compound is a plain
+    // quantity and K, delta_K, delta_degC are interchangeable there (all factor 1).
+    for (a, b) in [
+        ("kJ/(kg.K)", "kJ/(kg.delta_K)"),
+        ("W/(m.K)", "W/(m.delta_degC)"),
+        ("J/(mol.K)", "J/(mol.\u{394}K)"),
+        ("W/(m2.K)", "W/(m2.delta_K)"),
+    ] {
+        let c = reg.conversion(a, b).unwrap();
+        assert_eq!(c.factor(), Ratio::ONE, "{a} -> {b}");
+        assert_eq!(reg.parse(a).unwrap().kind(), Kind::Plain, "{a}");
+        assert_eq!(reg.parse(b).unwrap().kind(), Kind::Plain, "{b}");
+    }
+    // Fahrenheit intervals scale by 5/9, never by the offset.
+    let c = reg.conversion("kJ/(kg.delta_degF)", "kJ/(kg.K)").unwrap();
+    assert_eq!(c.factor(), Ratio::new(9, 5).unwrap());
+    assert_eq!(c.offset(), Ratio::ZERO);
+    // A temperature point (offset scale) inside a compound is refused and names the delta unit.
+    for expr in ["kJ/(kg.degC)", "W/(m.degF)", "degC/s", "degC2"] {
+        let err = reg.parse(expr).unwrap_err();
+        assert_eq!(err.code(), "refused", "{expr}");
+        assert!(err.to_string().contains("delta_deg"), "{expr}: {err}");
+        assert_eq!(err.suggestions().len(), 1, "{expr}");
+    }
+    // Plain K as a standalone unit stays a point: it does not convert to an interval.
+    assert_eq!(
+        reg.conversion("K", "delta_K").unwrap_err().code(),
+        "kind_mismatch"
+    );
+}
+
 const fn r_int(n: i128) -> Ratio {
     Ratio::from_int(n)
 }

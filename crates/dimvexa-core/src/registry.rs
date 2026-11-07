@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use crate::conversion::Conversion;
 use crate::error::{Error, Result};
 use crate::expr::{Expr, is_valid_symbol};
+use crate::kind::Kind;
 use crate::prefix::{Prefix, all_prefixes};
 use crate::quantity::Quantity;
 use crate::ratio::Ratio;
@@ -169,7 +170,7 @@ impl Registry {
         self.ambiguous.get(symbol).map(Vec::as_slice)
     }
 
-    fn unit_expr(text: &str, unit: &Unit, prefix: Option<Prefix>) -> Result<UnitExpr> {
+    fn unit_expr(&self, text: &str, unit: &Unit, prefix: Option<Prefix>) -> Result<UnitExpr> {
         let (factor, mut sources) = match prefix {
             Some(p) => (
                 unit.factor().checked_mul(p.factor()?)?,
@@ -180,6 +181,19 @@ impl Registry {
         if !unit.source().is_empty() {
             sources.insert(0, unit.source().to_string());
         }
+        // The temperature-difference unit of the same scale, if one is registered. Only a
+        // plain (unprefixed) absolute temperature has one; its factor must agree.
+        let difference = if prefix.is_none() && unit.kind() == Kind::AbsoluteTemperature {
+            self.get(&format!("delta_{}", unit.symbol()))
+                .filter(|d| {
+                    d.kind() == Kind::TemperatureDifference
+                        && d.dim() == unit.dim()
+                        && d.factor() == unit.factor()
+                })
+                .map(|d| d.symbol().to_string())
+        } else {
+            None
+        };
         Ok(UnitExpr::from_parts(
             Expr::Unit(text.to_string()),
             unit.dim(),
@@ -188,7 +202,8 @@ impl Registry {
             unit.offset(),
             unit.exactness(),
             sources,
-        ))
+        )
+        .with_difference(difference))
     }
 
     fn suggestions(&self, symbol: &str) -> Vec<String> {
@@ -223,7 +238,7 @@ impl Registry {
             });
         }
         if let Some(unit) = self.get(symbol) {
-            return Self::unit_expr(symbol, unit, None);
+            return self.unit_expr(symbol, unit, None);
         }
         let mut hits: Vec<(Prefix, &Unit)> = Vec::new();
         let mut ambiguous_rest: Vec<(Prefix, &Vec<String>)> = Vec::new();
@@ -239,7 +254,7 @@ impl Registry {
             }
         }
         match hits.as_slice() {
-            [(p, unit)] => Self::unit_expr(symbol, unit, Some(*p)),
+            [(p, unit)] => self.unit_expr(symbol, unit, Some(*p)),
             [] => {
                 if let Some((p, cands)) = ambiguous_rest.first() {
                     return Err(Error::AmbiguousSymbol {

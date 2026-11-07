@@ -133,7 +133,7 @@ fn schema_id() -> String {
     format!("{}.convert/1", dimvexa::PROJECT_NAME)
 }
 
-fn json_error(code: &str, message: &str, candidates: &[String]) -> String {
+fn json_error(code: &str, message: &str, candidates: &[String], suggestions: &[String]) -> String {
     let mut s = format!(
         "{{\"schema\":{},\"ok\":false,\"error\":{{\"code\":{},\"message\":{}",
         json_string(&schema_id()),
@@ -143,6 +143,10 @@ fn json_error(code: &str, message: &str, candidates: &[String]) -> String {
     if !candidates.is_empty() {
         let list: Vec<String> = candidates.iter().map(|c| json_string(c)).collect();
         let _ = write!(s, ",\"candidates\":[{}]", list.join(","));
+    }
+    if !suggestions.is_empty() {
+        let list: Vec<String> = suggestions.iter().map(|c| json_string(c)).collect();
+        let _ = write!(s, ",\"suggestions\":[{}]", list.join(","));
     }
     s.push_str("}}");
     s
@@ -239,7 +243,7 @@ where
         Ok(p) => p,
         Err(u) => {
             if u.json {
-                let _ = writeln!(out, "{}", json_error("usage", &u.message, &[]));
+                let _ = writeln!(out, "{}", json_error("usage", &u.message, &[], &[]));
             } else {
                 let _ = writeln!(err, "error[usage]: {}\n\n{USAGE}", u.message);
             }
@@ -285,7 +289,7 @@ fn fail(args: &Args, e: &Error, out: &mut dyn Write, err: &mut dyn Write) -> u8 
         let _ = writeln!(
             out,
             "{}",
-            json_error(e.code(), &e.to_string(), e.candidates())
+            json_error(e.code(), &e.to_string(), e.candidates(), e.suggestions())
         );
     } else {
         let _ = writeln!(err, "error[{}]: {e}", e.code());

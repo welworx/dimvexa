@@ -316,3 +316,27 @@ from = "kcal_th"
 to = "J"
 expect = "4184"
 source = "derived: kilo prefix on 4.184 J"
+
+[[vector]]
+unit = "delta_degF"
+value = "9"
+from = "Δ°F"
+to = "delta_K"
+expect = "5"
+source = "alias check; NIST SP 811 (2008), Appendix B (degF interval = 5/9 K)"
+
+[[vector]]
+unit = "delta_degR"
+value = "9"
+from = "Δ°R"
+to = "delta_K"
+expect = "5"
+source = "alias check; NIST SP 811 (2008), Appendix B (degR interval = 5/9 K)"
+
+[[vector]]
+unit = "delta_degF"
+value = "1"
+from = "Btu_IT/(lb.delta_degF)"
+to = "kJ/(kg.K)"
+expect = "4.1868"
+source = "NIST SP 811 (2008), Appendix B: 1 Btu_IT/(lb degF) = 4186.8 J/(kg K)"

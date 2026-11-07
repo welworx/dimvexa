@@ -502,8 +502,10 @@ mod tests {
     #[test]
     fn detects_broken_psi_chain() {
         // 6894757293168361/1000000000000 is not the exact psi; nudge the table numerator.
-        let real =
-            std::fs::read_to_string(crate::repo_root().join("crates/dimvexa-data/data/units/common.toml")).unwrap();
+        let real = std::fs::read_to_string(
+            crate::repo_root().join("crates/dimvexa-data/data/units/common.toml"),
+        )
+        .unwrap();
         let psi_factor = real
             .split("symbol = \"psi\"")
             .nth(1)

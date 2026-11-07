@@ -532,7 +532,7 @@ The API below is a provisional sketch to show the intent, not a final design.
    println!("{}", energy.to("MJ")?);    // 950.4 MJ
    ```
 2. **Process plant:** gauge to absolute pressure (`barg` to `bar` with an explicit atmospheric pressure), `kmol/h` and `lbmol/h`, `Nm3/h` as a stated reference-condition unit, and what happens when you try to convert `Nm3/h` to `m3/h` (a refusal with a clear message, plus how to pass your own factor).
-3. **Temperature done right:** absolute vs difference; why `20 degC + 20 degC` is an error and `20 degC + 5 K` is not; kJ/(kg K) with temperature differences.
+3. **Temperature done right:** absolute vs difference; why `20 degC + 20 degC` is an error and so is `20 degC + 5 K` (the error suggests `delta_K`), while `20 degC + 5 delta_K` is `25 degC`; and why a K inside a compound unit such as kJ/(kg K) or W/(m K) is a temperature difference, so `kJ/(kg K)` and `kJ/(kg delta_K)` are the same unit.
 4. **Home heating:** gas consumption in m3, kWh, MJ, therm and MMBtu using stated calorific-value factors supplied by the caller (not computed by the library).
 5. **Cooking and household:** US cup, tablespoon, fluid ounce vs imperial ones; why a bare `gal` or `oz` is rejected unless a profile is chosen.
 6. **Fuel economy:** mpg (US and imperial) to L/100 km (reciprocal shape).
@@ -544,7 +544,7 @@ The API below is a provisional sketch to show the intent, not a final design.
 
 | Pack | First-release content |
 |---|---|
-| base | SI base and derived units, SI prefixes, binary prefixes, dimensionless units, time units, percent and per-mille, temperature kinds (K, degC, degF, degR) |
+| base | SI base and derived units, SI prefixes, binary prefixes, dimensionless units, time units, percent and per-mille, temperature kinds (points: K, degC, degF, degR; differences: delta_K, delta_degC, delta_degF, delta_degR) |
 | `common` | The optional pack of everyday conversions: energy (kWh, MJ, BTU variants, kcal, therm), power (kW, hp variants), volume (L, US and imperial gal, cup, fl oz), mass (lb, oz variants, tonne, US ton, long ton), length (in, ft, yd, mi, nmi), pressure (bar, psi, atm, mmHg, torr), speed, area, fuel economy. Ambiguous names only through profiles |
 | `process` | barg/psig, kmol/h, lbmol/h, standard-volume units with stated reference conditions, cP, cSt, W/(m K), kJ/(kg K), Btu/(lb degF), bbl/d, ppm variants, mol%, wt% |
 | `imperial` | Full US customary, imperial, survey units, avoirdupois, troy, apothecary |

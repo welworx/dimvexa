@@ -382,7 +382,7 @@ note = "degree Celsius: K = degC + 273.15; absolute temperature"
 
 [[unit]]
 symbol = "delta_K"
-aliases = []
+aliases = ["ΔK"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "temperature_difference"
 shape = "linear"

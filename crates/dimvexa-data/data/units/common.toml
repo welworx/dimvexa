@@ -453,7 +453,7 @@ note = "K = degR * 5/9; absolute temperature, linear (zero at absolute zero)"
 
 [[unit]]
 symbol = "delta_degF"
-aliases = []
+aliases = ["Δ°F"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "temperature_difference"
 shape = "linear"
@@ -467,7 +467,7 @@ note = "temperature difference of 1 degF = 5/9 K"
 
 [[unit]]
 symbol = "delta_degR"
-aliases = []
+aliases = ["Δ°R"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "temperature_difference"
 shape = "linear"

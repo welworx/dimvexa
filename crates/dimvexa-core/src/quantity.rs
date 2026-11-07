@@ -83,6 +83,12 @@ impl Quantity {
                     from: Kind::AbsoluteTemperature,
                     to: Kind::Plain,
                     operation,
+                    suggestions: q
+                        .unit
+                        .difference_symbol()
+                        .map(String::from)
+                        .into_iter()
+                        .collect(),
                 });
             }
         }
@@ -125,6 +131,35 @@ impl Quantity {
         }
     }
 
+    /// Adds the delta units of the temperature-point operands to a kind error, so that
+    /// `20 degC + 5 K` tells the caller to write `5 delta_K`.
+    fn with_difference_hint(&self, err: Error, rhs: &Self) -> Error {
+        match err {
+            Error::KindMismatch {
+                from,
+                to,
+                operation,
+                ..
+            } => {
+                let mut suggestions: Vec<String> = Vec::new();
+                for u in [&rhs.unit, &self.unit] {
+                    if let Some(d) = u.difference_symbol() {
+                        if !suggestions.iter().any(|s| s == d) {
+                            suggestions.push(d.to_string());
+                        }
+                    }
+                }
+                Error::KindMismatch {
+                    from,
+                    to,
+                    operation,
+                    suggestions,
+                }
+            }
+            other => other,
+        }
+    }
+
     fn combine(&self, rhs: &Self, subtract: bool) -> Result<Self> {
         let operation = if subtract { "subtraction" } else { "addition" };
         if self.unit.dim() != rhs.unit.dim() {
@@ -134,10 +169,11 @@ impl Quantity {
             });
         }
         let kind = if subtract {
-            self.unit.kind().sub(rhs.unit.kind())?
+            self.unit.kind().sub(rhs.unit.kind())
         } else {
-            self.unit.kind().add(rhs.unit.kind())?
-        };
+            self.unit.kind().add(rhs.unit.kind())
+        }
+        .map_err(|e| self.with_difference_hint(e, rhs))?;
         // Absolute temperatures carry their offset; differences and plain values do not.
         let l = self.si_value(self.unit.kind() == Kind::AbsoluteTemperature)?;
         let r = rhs.si_value(rhs.unit.kind() == Kind::AbsoluteTemperature)?;
@@ -159,6 +195,7 @@ impl Quantity {
                 from: unit.kind(),
                 to: kind,
                 operation,
+                suggestions: Vec::new(),
             });
         }
         let value = total

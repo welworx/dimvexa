@@ -139,10 +139,21 @@ impl Conversion {
             });
         }
         if from.kind() != to.kind() {
+            // A point and an interval cannot be converted into each other. Recommend the
+            // delta unit of whichever side is the temperature point.
+            let mut suggestions: Vec<String> = Vec::new();
+            for u in [from, to] {
+                if let Some(d) = u.difference_symbol() {
+                    if !suggestions.iter().any(|s| s == d) {
+                        suggestions.push(d.to_string());
+                    }
+                }
+            }
             return Err(Error::KindMismatch {
                 from: from.kind(),
                 to: to.kind(),
                 operation: "conversion",
+                suggestions,
             });
         }
         let factor = from.factor().checked_div(to.factor())?;
