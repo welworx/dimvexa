@@ -47,7 +47,7 @@ jobs:
           rustup toolchain install "$v" --profile minimal --component rustfmt --component clippy --no-self-update
           rustup default "$v"
       # copied from a widely used repo, verify against the action's release page before enabling
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: cargo xtask ci (includes check-docs)
         run: cargo xtask ci
 
@@ -71,7 +71,7 @@ jobs:
           rustup toolchain install "$v" --profile minimal --component rustfmt --component clippy --no-self-update
           rustup default "$v"
       # copied from a widely used repo, verify against the action's release page before enabling
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: cargo xtask ci test doctest example
         run: cargo xtask ci test doctest example
 
@@ -92,7 +92,7 @@ jobs:
         # RUSTUP_TOOLCHAIN (job env) overrides rust-toolchain.toml for every step.
         run: rustup toolchain install 1.85 --profile minimal --no-self-update
       # copied from a widely used repo, verify against the action's release page before enabling
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Show the compiler (must say 1.85)
         run: rustc -V && cargo -V
       - run: cargo check --workspace --all-targets --all-features --locked
@@ -113,7 +113,7 @@ jobs:
           rustup toolchain install "$v" --profile minimal --target wasm32-unknown-unknown --no-self-update
           rustup default "$v"
       # copied from a widely used repo, verify against the action's release page before enabling
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - run: cargo build -p dimvexa-core --target wasm32-unknown-unknown --locked
 
   deny:
@@ -126,7 +126,7 @@ jobs:
         with:
           persist-credentials: false
       # copied from a widely used repo, verify against the action's release page before enabling
-      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+      - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
         with:
           # Pinned. Keep in step with .github/workflows/nightly.yml.
           tool: cargo-deny@0.18.3
@@ -142,7 +142,7 @@ jobs:
         with:
           persist-credentials: false
       # copied from a widely used repo, verify against the action's release page before enabling
-      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+      - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
         with:
           # Not version-pinned (see docs/ci-pinning.md): pin them once you have chosen versions.
           tool: typos-cli,taplo-cli
@@ -165,7 +165,7 @@ jobs:
           rustup toolchain install "$v" --profile minimal --component rustfmt --component clippy --no-self-update
           rustup default "$v"
       # copied from a widely used repo, verify against the action's release page before enabling
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: List the files of every publishable crate
         run: |
           for c in dimvexa-core dimvexa-data dimvexa-config dimvexa dimvexa-cli; do
@@ -190,7 +190,7 @@ jobs:
         with:
           persist-credentials: false
       # copied from a widely used repo, verify against the action's release page before enabling
-      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+      - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
         with:
           # Pinned. Unverified: confirm this release exists (docs/ci-pinning.md).
           tool: actionlint@1.7.7
