@@ -15,3 +15,26 @@ Commits by `release-plz` once releases start (planned for M1).
 - `dimvexa-cli`: `convert` with `--exact` and `--json`.
 - `xtask validate-data`.
 - ADR-001 to ADR-008, benchmark report for M0.
+- `Conversion::apply_exact_f64`: the correctly rounded `f64` of the exact result (0 ulp), with
+  a test that proves the rounding against both neighbours.
+- `docs/precision.md`: ulps, the guarantee (linear at most 1 ulp, affine at most 2 ulp),
+  behaviour near zero points and for NaN, infinities, signed zero and subnormals, and when to
+  use the exact path. The bound is stated on every public conversion method.
+- Aliases for the temperature-difference units (`ΔK`, `Δ°F`, `Δ°R`; `Δ°C` existed) and
+  golden vectors for K as an interval inside compound units.
+- `Error::suggestions()`; kind and offset errors now name the delta unit to use (for example
+  `20 degC + 5 K` suggests `delta_K`). The CLI JSON error has a `suggestions` field.
+
+### Changed
+
+- The unit tables moved from `data/` to `crates/dimvexa-data/data/` so the published crate is
+  self-contained. Data version 2.
+- The differential test is a hard-failing check of the documented bounds (it previously
+  tolerated the affine case through a term-relative allowance).
+- Owner placeholders replaced (GitHub handle, repository URL, citation authors).
+
+### Fixed
+
+- `30 °C - 20 °C` printed the unit `delta_°C`, which does not parse; the difference unit is now
+  looked up in the registry (`delta_degC`).
+- PLAN cookbook text said `20 degC + 5 K` works; it is an error, `20 degC + 5 delta_K` works.

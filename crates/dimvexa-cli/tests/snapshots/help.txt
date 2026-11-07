@@ -15,4 +15,8 @@ Examples:
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
 
+Precision: the CLI always uses the exact path, so the number printed is the exact result
+rounded once to the nearest f64 (0 ulp). The library's fast f64 path is within 1 ulp (linear
+units) or 2 ulp (temperature scales such as degC and degF) of it; see docs/precision.md.
+
 Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
