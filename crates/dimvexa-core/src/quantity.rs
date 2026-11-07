@@ -54,7 +54,8 @@ impl Quantity {
         &self.unit
     }
 
-    /// The value rounded to `f64`.
+    /// The value rounded to `f64`: correctly rounded (0 ulp from the exact value, ties to
+    /// even).
     ///
     /// # Errors
     ///
@@ -64,6 +65,9 @@ impl Quantity {
     }
 
     /// Re-expresses the quantity in another unit with the same dimension and kind.
+    ///
+    /// The conversion is exact (rational arithmetic, no rounding); only
+    /// [`to_f64`](Self::to_f64) rounds, once, to the nearest `f64`.
     ///
     /// # Errors
     ///

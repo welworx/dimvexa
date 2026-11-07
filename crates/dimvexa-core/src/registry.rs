@@ -305,6 +305,10 @@ impl Registry {
 
     /// Prepares the conversion between two unit expressions (parse and compose once).
     ///
+    /// The returned [`Conversion`] carries the exact rational factor and offset. Its fast
+    /// `f64` methods are within 1 ulp (linear) or 2 ulp (affine) of the correctly rounded
+    /// exact result; [`Conversion::apply_exact_f64`] is exactly that result.
+    ///
     /// # Errors
     ///
     /// Parse and resolution errors, [`Error::DimensionMismatch`], [`Error::KindMismatch`].

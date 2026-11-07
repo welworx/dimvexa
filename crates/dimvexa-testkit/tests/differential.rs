@@ -2,9 +2,18 @@
 //! Differential test (plan section 6.2): the fast `f64` path against the exact rational
 //! reference, over the whole seed table and many random and edge-case inputs.
 //!
-//! Reference: convert the input exactly (`Ratio::from_f64`), apply the exact conversion and
-//! round once with the correctly rounded `Ratio::to_f64`. For inputs too large or too small
-//! for `i128` fractions, linear conversions use the exact mantissa scaled by a power of two.
+//! The documented bounds (`docs/precision.md`) are asserted here and the test fails the build
+//! when they are exceeded:
+//!
+//! * linear conversions: at most 1 ulp from the correctly rounded exact result,
+//! * affine conversions: at most 2 ulp, also next to the scale's zero point,
+//! * NaN stays NaN, infinities pass through, the sign of zero is kept (linear).
+//!
+//! Reference: `Conversion::apply_exact_f64` (exact rational arithmetic, rounded once). It is
+//! itself cross-checked against a second, independent implementation written in this file
+//! (convert the input exactly, apply the exact conversion, round with `Ratio::to_f64`; for
+//! inputs too large or too small for `i128` fractions, the exact mantissa scaled by a power of
+//! two), and its "nearest neighbour" property is checked in `exact_f64_is_correctly_rounded`.
 //!
 //! Set `DIMVEXA_DIFF_REPORT=1` and run with `--nocapture` to print the statistics that are
 //! quoted in `docs/benchmarks/M0.md`.
@@ -31,7 +40,11 @@
 use dimvexa::{Conversion, Ratio, Registry, Shape, registry};
 use dimvexa_testkit::generators::{edge_f64, spread_f64};
 use dimvexa_testkit::rng::Rng;
-use dimvexa_testkit::ulp::{ulp_distance, ulp_of};
+use dimvexa_testkit::ulp::ulp_distance;
+
+/// The documented bounds, in ulps (`docs/precision.md`).
+const LINEAR_MAX_ULP: u64 = 1;
+const AFFINE_MAX_ULP: u64 = 2;
 
 const SEED: u64 = 0xd1ff_0000_2026_1107;
 
@@ -39,6 +52,9 @@ const SEED: u64 = 0xd1ff_0000_2026_1107;
 struct Stats {
     compared: u64,
     skipped_no_reference: u64,
+    out_of_normal_range: u64,
+    subnormal_results: u64,
+    subnormal_checked: u64,
     max_ulp: u64,
     /// counts of ulp distance 0, 1, 2, 3 or more
     histogram: [u64; 4],
@@ -92,19 +108,78 @@ fn exact_reference(conv: &Conversion, x: f64) -> Option<f64> {
     Some(if x < 0.0 { -r } else { r })
 }
 
-fn check_linear(conv: &Conversion, x: f64, stats: &mut Stats, label: &str) {
+/// The reference value: `apply_exact_f64`, cross-checked against the local implementation.
+fn reference(conv: &Conversion, x: f64, label: &str) -> Option<f64> {
+    let want = conv.apply_exact_f64(x).ok();
+    if let (Some(w), Some(local)) = (want, exact_reference(conv, x)) {
+        assert_eq!(
+            w.to_bits(),
+            local.to_bits(),
+            "{label}: apply_exact_f64({x:e}) = {w:e} but the local reference says {local:e}"
+        );
+    }
+    want
+}
+
+/// Correctly rounded linear result when it lies in the subnormal range (or just below it):
+/// round `(a * m) * 2^(exp2 + 1074)` to the nearest integer, ties to even; that integer is the
+/// bit pattern. `None` if the arithmetic does not fit `u128` or the result is not tiny.
+fn subnormal_reference(conv: &Conversion, x: f64) -> Option<f64> {
+    let bits = x.abs().to_bits();
+    let biased = i32::try_from(bits >> 52).ok()?;
+    let frac = bits & ((1_u64 << 52) - 1);
+    let (mant, exp2) = if biased == 0 {
+        (frac, -1074)
+    } else {
+        (frac | (1 << 52), biased - 1075)
+    };
+    let num = u128::try_from(conv.factor().num())
+        .ok()?
+        .checked_mul(u128::from(mant))?;
+    let den = u128::try_from(conv.factor().den()).ok()?;
+    let shift = -(exp2 + 1074);
+    if shift < 0 {
+        return None;
+    }
+    let den = den
+        .checked_shl(u32::try_from(shift).ok()?)
+        .filter(|d| d >> shift == u128::try_from(conv.factor().den()).ok().unwrap_or(0))?;
+    let q = num / den;
+    let r = num % den;
+    let twice = r.checked_mul(2)?;
+    let n = if twice > den || (twice == den && q & 1 == 1) {
+        q + 1
+    } else {
+        q
+    };
+    if n >= (1_u128 << 53) {
+        return None;
+    }
+    let v = f64::from_bits(u64::try_from(n).ok()?);
+    Some(if x < 0.0 { -v } else { v })
+}
+
+fn check_special(conv: &Conversion, x: f64, label: &str) -> bool {
     let fast = conv.apply(x);
     if x.is_nan() {
         assert!(fast.is_nan(), "{label}: NaN must stay NaN");
-        return;
+        return true;
     }
     if x.is_infinite() {
         assert_eq!(
             fast, x,
             "{label}: infinity must pass through for a positive factor"
         );
+        return true;
+    }
+    false
+}
+
+fn check_linear(conv: &Conversion, x: f64, stats: &mut Stats, label: &str) {
+    if check_special(conv, x, label) {
         return;
     }
+    let fast = conv.apply(x);
     if x == 0.0 {
         assert_eq!(
             fast.to_bits(),
@@ -113,64 +188,73 @@ fn check_linear(conv: &Conversion, x: f64, stats: &mut Stats, label: &str) {
         );
         return;
     }
-    let Some(want) = exact_reference(conv, x) else {
-        stats.skipped_no_reference += 1;
+    let Some(want) = reference(conv, x, label) else {
+        // The correctly rounded result is not a normal number: it overflows, or it is
+        // subnormal. Overflow must give an infinity of the right sign; a subnormal result
+        // is within one step of the subnormal grid of the exact value.
+        stats.out_of_normal_range += 1;
+        if fast.is_infinite() {
+            assert_eq!(fast.is_sign_negative(), x.is_sign_negative(), "{label}");
+        } else if fast != 0.0 && fast.abs() < f64::MIN_POSITIVE {
+            stats.subnormal_results += 1;
+            if let Some(sub) = subnormal_reference(conv, x) {
+                let ulps = ulp_distance(fast, sub).unwrap();
+                assert!(
+                    ulps <= LINEAR_MAX_ULP,
+                    "{label}: subnormal result {fast:e} is {ulps} ulp from the exact {sub:e} (x = {x:e})"
+                );
+                stats.subnormal_checked += 1;
+            }
+        } else if fast == 0.0 {
+            // underflow to zero keeps the sign of the input
+            assert_eq!(fast.is_sign_negative(), x.is_sign_negative(), "{label}");
+        } else {
+            assert!(
+                fast.abs() >= f64::MAX / 2.0 || fast.abs() < 4.0 * f64::MIN_POSITIVE,
+                "{label}: x = {x:e} gave {fast:e} but the exact path has no normal result"
+            );
+        }
         return;
     };
-    if want.abs() >= f64::MAX / 2.0 {
-        // Near overflow the reference double-rounds; the fast path may be infinite.
-        if fast.is_infinite() {
-            assert_eq!(fast.is_sign_negative(), want.is_sign_negative(), "{label}");
-            return;
-        }
-    }
-    if want.abs() < f64::MIN_POSITIVE * 4.0 {
-        // Subnormal results have fewer bits; allow two spacings of the subnormal grid.
-        assert!(
-            (fast - want).abs() <= 2.0 * f64::from_bits(1) * 4.0,
-            "{label}: {x:e} -> {fast:e} vs {want:e}"
-        );
+    if want.abs() >= f64::MAX / 2.0 && fast.is_infinite() {
+        // Near the top of the range the fast factor may round the result over the edge.
+        assert_eq!(fast.is_sign_negative(), want.is_sign_negative(), "{label}");
+        stats.out_of_normal_range += 1;
         return;
     }
     let ulps = ulp_distance(fast, want).unwrap();
     stats.record(ulps, || {
         format!("{label}: x = {x:e}, fast = {fast:e}, exact = {want:e}")
     });
+    assert!(
+        ulps <= LINEAR_MAX_ULP,
+        "{label}: linear fast path is {ulps} ulp from the exact result (x = {x:e}, fast = {fast:e}, exact = {want:e}); documented bound is {LINEAR_MAX_ULP}"
+    );
 }
 
 fn check_affine(conv: &Conversion, x: f64, stats: &mut Stats, label: &str) {
+    if check_special(conv, x, label) {
+        return;
+    }
     let fast = conv.apply(x);
-    if x.is_nan() {
-        assert!(fast.is_nan(), "{label}");
-        return;
-    }
-    if x.is_infinite() {
-        assert_eq!(fast, x, "{label}");
-        return;
-    }
-    let Some(want) = exact_reference(conv, x) else {
+    let Some(want) = reference(conv, x, label) else {
+        // |x| is too large or too small for exact fractions (the shift is then far below
+        // one ulp of x, or x is below one ulp of the shift); not compared.
         stats.skipped_no_reference += 1;
         return;
     };
-    // Cancellation near the scale's zero point makes the relative error meaningless, so the
-    // bound is in ulps of the larger of the two terms (|x a| and |b|); a result that is
-    // large compared to both terms must be within a few ulps of itself.
-    let a = conv.factor_f64().abs();
-    let term = (x.abs() * a).max(conv.offset_f64().abs()).max(want.abs());
-    let err = (fast - want).abs();
-    let in_term_ulps = err / ulp_of(term);
+    let ulps = ulp_distance(fast, want).unwrap();
+    stats.record(ulps, || {
+        format!("{label}: x = {x:e}, fast = {fast:e}, exact = {want:e}")
+    });
+    // The bound is in ulps of the RESULT, with no allowance for cancellation: next to the
+    // scale's zero point the split shift keeps the result as accurate as anywhere else.
     assert!(
-        in_term_ulps <= 2.0,
-        "{label}: x = {x:e}: fast {fast:e} vs exact {want:e} ({in_term_ulps} ulps of the larger term)"
+        ulps <= AFFINE_MAX_ULP,
+        "{label}: affine fast path is {ulps} ulp from the exact result (x = {x:e}, fast = {fast:e}, exact = {want:e}); documented bound is {AFFINE_MAX_ULP}"
     );
-    if want.abs() >= 0.5 * term {
-        let ulps = ulp_distance(fast, want).unwrap();
-        stats.record(ulps, || {
-            format!("{label}: x = {x:e}, fast = {fast:e}, exact = {want:e}")
-        });
-    } else {
-        stats.compared += 1;
-        stats.histogram[0] += 1; // cancellation region: judged by the term bound above
+    if want == 0.0 {
+        assert_eq!(fast, 0.0, "{label}: an exact zero must come out as zero");
     }
 }
 
@@ -255,21 +339,31 @@ fn fast_path_agrees_with_the_exact_path() {
     }
     assert!(lin.compared > 100_000, "{lin:?}");
     assert!(aff.compared > 1_000, "{aff:?}");
-    // Measured bounds (see docs/benchmarks/M0.md). Linear: never more than 1 ulp from the
-    // correctly rounded exact result across the seed table. Affine: at most 2 ulps, and only
-    // in a fraction of a percent of the comparisons; the plan's 1 ulp target is therefore met
-    // for linear and NOT met for affine conversions (open decision in the report).
-    // Theory allows up to about 2 ulps for both: the factor is rounded once and each
-    // operation rounds once more.
     assert!(
-        lin.max_ulp <= 1,
-        "linear fast path exceeded 1 ulp: {}",
+        lin.out_of_normal_range > 0,
+        "no overflow/underflow edge exercised"
+    );
+    assert!(lin.subnormal_results > 0, "no subnormal result exercised");
+    assert!(
+        lin.subnormal_checked > 0,
+        "no subnormal result checked against the reference"
+    );
+    // Hard bounds (also asserted per value above, with the offending input in the message).
+    assert!(
+        lin.max_ulp <= LINEAR_MAX_ULP,
+        "linear fast path exceeded {LINEAR_MAX_ULP} ulp: {}",
         lin.worst
     );
     assert!(
-        aff.max_ulp <= 2,
-        "affine fast path exceeded 2 ulp: {}",
+        aff.max_ulp <= AFFINE_MAX_ULP,
+        "affine fast path exceeded {AFFINE_MAX_ULP} ulp: {}",
         aff.worst
+    );
+    // The bounds are not vacuous: the affine path really does reach 2 ulp on this input set.
+    // If a future change makes it always 1 ulp, tighten the documented bound.
+    assert!(
+        aff.max_ulp >= 1,
+        "affine path never differed from the exact result: are the inputs too easy? {aff:?}"
     );
     let within1 = lin.histogram[0] + lin.histogram[1];
     assert!(within1 * 1000 > lin.compared * 999, "{lin:?}");
@@ -357,8 +451,69 @@ fn affine_path_stays_accurate_next_to_the_scale_zero_point() {
             }
         }
         assert!(
-            worst <= 4,
+            worst <= AFFINE_MAX_ULP,
             "{from} -> {to}: {worst} ulps next to the zero point"
         );
+    }
+}
+
+#[test]
+fn affine_bound_holds_on_a_large_input_set_including_the_zero_point() {
+    // All affine conversions between the four temperature scales, each with random inputs
+    // over many magnitudes, inputs on the decimal grid users type, inputs within a few ulps
+    // of the scale's zero point (where the sum cancels), and values at exact rounding
+    // boundaries (the zero point itself, +-1 ulp around it).
+    let reg = registry().unwrap();
+    let scales = ["K", "degC", "degF", "degR"];
+    let mut rng = Rng::new(SEED ^ 3);
+    let mut stats = Stats::default();
+    for from in scales {
+        for to in scales {
+            if from == to {
+                continue;
+            }
+            let conv = reg.conversion(from, to).unwrap();
+            if conv.shape() != Shape::Affine {
+                continue; // K <-> degR and degF <-> degR are linear
+            }
+            let label = format!("{from} -> {to}");
+            // the input that maps to exactly 0 in the target scale
+            let zero = conv
+                .inverse()
+                .unwrap()
+                .apply_exact(Ratio::ZERO)
+                .unwrap()
+                .to_f64()
+                .unwrap();
+            let mut inputs = edge_f64();
+            inputs.extend((0..30_000).map(|_| spread_f64(&mut rng, -40, 40)));
+            inputs.extend((0..10_000).map(|_| {
+                f64::from(i32::try_from(rng.range_i64(-3_000_000, 3_000_000)).unwrap()) / 100.0
+            }));
+            inputs.extend((0..30_000).map(|_| {
+                let scale = 2.0_f64.powi(i32::try_from(rng.range_i64(-60, 12)).unwrap());
+                let k = f64::from(i32::try_from(rng.range_i64(-1_000_000, 1_000_000)).unwrap());
+                zero + scale * k / 1e6
+            }));
+            let mut x = zero;
+            for _ in 0..200 {
+                x = f64::from_bits(x.to_bits() + 1);
+                inputs.push(x);
+            }
+            let mut x = zero;
+            for _ in 0..200 {
+                x = f64::from_bits(x.to_bits() - 1);
+                inputs.push(x);
+            }
+            inputs.push(zero);
+            for x in inputs {
+                check_affine(&conv, x, &mut stats, &label);
+            }
+        }
+    }
+    assert!(stats.compared > 600_000, "{stats:?}");
+    assert!(stats.max_ulp <= AFFINE_MAX_ULP, "{}", stats.worst);
+    if std::env::var_os("DIMVEXA_DIFF_REPORT").is_some() {
+        println!("affine (large set): {stats:#?}");
     }
 }
