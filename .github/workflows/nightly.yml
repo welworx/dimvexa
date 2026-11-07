@@ -33,7 +33,7 @@ jobs:
       - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
         with:
           # Pinned. Keep in step with .github/workflows/ci.yml.
-          tool: cargo-deny@0.18.3
+          tool: cargo-deny@0.20.2
       # The advisory database changes daily even when our lock file does not.
       - run: cargo deny --locked check advisories
 

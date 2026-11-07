@@ -129,7 +129,7 @@ jobs:
       - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
         with:
           # Pinned. Keep in step with .github/workflows/nightly.yml.
-          tool: cargo-deny@0.18.3
+          tool: cargo-deny@0.20.2
       - run: cargo deny --locked check
 
   text:
@@ -189,12 +189,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # copied from a widely used repo, verify against the action's release page before enabling
-      - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
-        with:
-          # Pinned. Unverified: confirm this release exists (docs/ci-pinning.md).
-          tool: actionlint@1.7.7
-      - run: actionlint
+      # The install action does not know actionlint, so the release tarball is downloaded and
+      # checked against its SHA-256 (from the release's actionlint_1.7.7_checksums.txt). Bump
+      # the version and the hash together; docs/ci-pinning.md.
+      - name: Install actionlint 1.7.7 (checksum verified)
+        run: |
+          curl -sSfL -o actionlint.tar.gz \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz
+          echo "023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757  actionlint.tar.gz" | sha256sum --check -
+          tar -xzf actionlint.tar.gz actionlint
+      - run: ./actionlint
 
   # The only check branch protection needs. A needed job must have succeeded; "skipped" is
   # accepted only for jobs listed in ALLOW_SKIPPED (none today).
