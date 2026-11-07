@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 'use strict';
-// Runner for mathjs units. NOT yet run: mathjs could not be installed where this was written.
+// Runner for mathjs units. Run in the first comparison (docs/benchmarks/comparison-run-1.md).
 // "plain": math.unit(x, from).toNumber(to). "factor": convert 0 and 1 once, then x*a+b.
 const c = require('./common');
 

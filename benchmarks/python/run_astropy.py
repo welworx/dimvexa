@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""Runner for astropy.units. NOT yet run: astropy could not be installed where this was written.
+"""Runner for astropy.units. Run in the first comparison (docs/benchmarks/comparison-run-1.md).
 
 Modes: "plain" is the Quantity API with `u.temperature()` equivalencies supplied (that is what
 astropy requires for degC/degF); "unit_to" is `Unit.to(other, value)`, which skips Quantity
