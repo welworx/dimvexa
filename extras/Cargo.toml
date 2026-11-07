@@ -21,7 +21,7 @@ proptest = "1"
 criterion = "0.5"
 # The library and its runner must be the same version: pin both exactly. Install the runner
 # with `cargo install iai-callgrind-runner --version 0.14.0 --locked`.
-iai-callgrind = "=0.14.0"
+iai-callgrind = "=0.16.1"
 insta = "1"
 assert_cmd = "2"
 
