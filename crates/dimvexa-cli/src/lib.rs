@@ -33,7 +33,7 @@ Usage:
 Converts VALUE from unit FROM to unit TO.
 
 Commands:
-  units        list all supported units (symbol, aliases, kind, exactness, prefixes)
+  units        list all supported units (symbol, kind, exactness, prefixes, source, aliases) and ambiguous symbols
 
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
@@ -259,12 +259,29 @@ fn units_text(reg: &Registry) -> String {
         };
         let _ = writeln!(
             s,
-            "{}\t{}\t{}\t{}{}",
+            "{}\t{}\t{}\t{}\t{}{}",
             u.symbol(),
             u.kind().name(),
             u.exactness().name(),
             u.prefixes().name(),
+            u.source(),
             aliases
+        );
+    }
+    s.push_str("\n# ambiguous symbols (rejected; use an explicit symbol)\n");
+    for a in dimvexa::AMBIGUOUS {
+        let planned = if a.planned.is_empty() {
+            String::new()
+        } else {
+            format!("; planned: {}", a.planned.join(", "))
+        };
+        let _ = writeln!(
+            s,
+            "{}\tcandidates: {}{}\t{}",
+            a.symbol,
+            a.candidates.join(", "),
+            planned,
+            a.note
         );
     }
     s
@@ -290,11 +307,30 @@ fn units_json(reg: &Registry) -> String {
             )
         })
         .collect();
+    let strs = |v: &[&str]| {
+        v.iter()
+            .map(|x| json_string(x))
+            .collect::<Vec<_>>()
+            .join(",")
+    };
+    let ambiguous: Vec<String> = dimvexa::AMBIGUOUS
+        .iter()
+        .map(|a| {
+            format!(
+                "{{\"symbol\":{},\"candidates\":[{}],\"planned\":[{}],\"note\":{}}}",
+                json_string(a.symbol),
+                strs(a.candidates),
+                strs(a.planned),
+                json_string(a.note)
+            )
+        })
+        .collect();
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"units\":[{}]}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"units\":[{}],\"ambiguous\":[{}]}}",
         json_string(&format!("{}.units/1", dimvexa::PROJECT_NAME)),
         json_string(&dimvexa::data_version()),
-        items.join(",")
+        items.join(","),
+        ambiguous.join(",")
     )
 }
 
@@ -421,6 +457,7 @@ mod tests {
         let (code, out, _) = run_str(&["units"]);
         assert_eq!(code, 0);
         assert!(out.lines().any(|l| l.starts_with("psi\t")));
+        assert!(out.lines().any(|l| l.starts_with("ton\tcandidates:")));
         let (code, out, _) = run_str(&["units", "--json"]);
         assert_eq!(code, 0);
         assert!(out.contains("\"schema\":\"dimvexa.units/1\""));
