@@ -2,10 +2,9 @@
 
 **Exact factors. Loud failures. Zero guessing.**
 
-Dimvexa is a unit conversion library with a Rust core and a command-line tool. Python, WASM,
-MCP and Excel interfaces are planned and not available yet (see [`ROADMAP.md`](ROADMAP.md)).
-It is for engineers and scientists who need conversions they can trust: every factor is an
-exact fraction with a cited source, and anything ambiguous is an error instead of a guess.
+Dimvexa is a unit conversion library with a Rust core and a command-line tool (Python, WASM,
+MCP and Excel interfaces are planned, not available yet). Every factor is an exact fraction
+with a cited source, and anything ambiguous is an error instead of a guess.
 
 ```rust
 use dimvexa::registry;
@@ -21,10 +20,7 @@ $ dimvexa convert 1 ton kg
 error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne, or choose a profile
 ```
 
-**Status: pre-release (version 0.0.0).** The library is a Rust crate and the tool a Rust binary;
-nothing is published to crates.io yet and the API may change. Use it from a git checkout
-(`dimvexa = { git = "https://github.com/welworx/dimvexa" }`).
-The name *Dimvexa* is a working name (`docs/PLAN.md`, section 14).
+**Status:** pre-release 0.0.0, not on crates.io yet; use it from git (`dimvexa = { git = "https://github.com/welworx/dimvexa" }`).
 
 ## Why
 
@@ -32,6 +28,7 @@ The name *Dimvexa* is a working name (`docs/PLAN.md`, section 14).
 - **Loud.** Ambiguous names (`ton`, `gal`, `oz`), overflow and unsupported requests are errors with stable codes.
 - **Right about temperature.** Points and differences differ: `20 degC + 5 delta_K` works, `20 degC + 5 K` fails and says why.
 - **Fast and honest.** About 0.5 ns per prepared conversion; within 1 ulp (linear) or 2 ulp (temperature scales) of the exact answer, and `apply_exact_f64` gives the correctly rounded value ([`docs/precision.md`](docs/precision.md), [`docs/benchmarks/M0.md`](docs/benchmarks/M0.md)).
+- **Covers the everyday units.** SI and prefixes, US customary and imperial, pressure, energy, power and temperature (about 60 units, more by request).
 - **Extensible by data.** Units live in cited TOML tables; missing one? Open a *Unit request* issue.
 
 A worked example (pool pump electricity: 1.1 kW for 8 h a day for 30 days is 264 kWh,
@@ -91,3 +88,13 @@ release, version number or DOI yet; please also give the commit you used.
 `MIT OR Apache-2.0`. Commercial use is allowed. Please keep the copyright notice and the
 `NOTICE` file with copies, and cite the project when you use it in research (see
 `CITATION.cff`). Contributions are licensed under the same terms (see `CONTRIBUTING.md`).
+
+## Planned
+
+See [`ROADMAP.md`](ROADMAP.md).
+
+- Process-engineering and common packs, water head conventions, more CLI commands
+- First crates.io release
+- Python binding, WASM and npm package, MCP server
+- Excel add-in (optional)
+- Published benchmarks against other unit libraries ([`docs/benchmarking.md`](docs/benchmarking.md))

@@ -6,6 +6,8 @@ Status: ready-to-start plan v0.2. Supersedes the build/CI/licence/docs parts of 
 
 Nothing here has been built, run or benchmarked. The CI YAML and config snippets are untested starting points and will need small fixes on the first run. Version numbers of tools and actions must be checked at bootstrap time.
 
+The phases, interfaces and the success criteria for "number one" are summarised in [`ROADMAP.md`](../ROADMAP.md); this plan is the detailed design.
+
 Working name: `dimvexa` (placeholder). The name search is still pending (see section 14). Use the placeholder everywhere through a single rename step, so the final name is a search-and-replace.
 
 ---
