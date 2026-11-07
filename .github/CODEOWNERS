@@ -1,5 +1,6 @@
-# TODO(owner): replace @TODO-owner with the real GitHub handle (or team) before enabling
-# "Require review from Code Owners" in branch protection. Until then this file is inert.
-*                      @TODO-owner
-/data/                 @TODO-owner
-/crates/dimvexa-core/  @TODO-owner
+# Code owners. Turn on "Require review from Code Owners" in branch protection to enforce.
+*                                   @welworx
+/crates/dimvexa-data/data/          @welworx
+/crates/dimvexa-core/               @welworx
+/.github/                           @welworx
+/SECURITY.md                        @welworx

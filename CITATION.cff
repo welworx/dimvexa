@@ -1,17 +1,24 @@
 cff-version: 1.2.0
 message: "If you use Dimvexa in research or in a published report, please cite it as below."
 title: "Dimvexa: exact unit conversion with loud failures"
-abstract: "Exact factors. Loud failures. Zero guessing."
+abstract: >-
+  Dimvexa is a Rust library for unit conversion in science and engineering.
+  Every conversion factor is an exact rational with a cited source and a recorded
+  exactness (defined or measured). Temperature differences, temperature points and
+  ambiguous symbols are kept apart, and unsupported or ambiguous requests fail with a
+  stable error code instead of a guess. Exact factors. Loud failures. Zero guessing.
 type: software
 license: "MIT OR Apache-2.0"
-version: 0.0.0
-date-released: 2026-11-07
+repository-code: "https://github.com/welworx/dimvexa"
+url: "https://github.com/welworx/dimvexa"
 authors:
-  - name: "The Dimvexa contributors"
-# TODO(owner): add real authors (family-names, given-names, orcid) and the
-# repository-code URL once the GitHub repository exists.
+  - family-names: "Liemberger"
+    given-names: "Werner"
+    orcid: "https://orcid.org/0000-0003-3226-5890"
 keywords:
   - units
   - unit conversion
   - dimensional analysis
   - rust
+# No version or date-released yet: Dimvexa has not been released. Add `version` and
+# `date-released` (YYYY-MM-DD) in the commit that tags the first release.
