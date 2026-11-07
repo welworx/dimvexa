@@ -9,7 +9,8 @@
 //! This crate contains **no conversion logic**: it parses arguments, calls the public
 //! library API and formats the result, so it cannot disagree with the library. It always
 //! uses the exact path; the decimal it prints is the exact result rounded once to the
-//! nearest `f64`, never the fast path's result.
+//! nearest `f64` (0 ulp), never the fast path's result. The library's fast path is within
+//! 1 ulp (linear) or 2 ulp (affine) of that value (`docs/precision.md`).
 //!
 //! Exit codes: `0` success, `1` conversion refused or invalid input, `2` usage error.
 //! With `--json`, errors are printed to stdout as JSON (schema `dimvexa.convert/1`, see
@@ -39,6 +40,10 @@ Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
+
+Precision: the CLI always uses the exact path, so the number printed is the exact result
+rounded once to the nearest f64 (0 ulp). The library's fast f64 path is within 1 ulp (linear
+units) or 2 ulp (temperature scales such as degC and degF) of it; see docs/precision.md.
 
 Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
 ";

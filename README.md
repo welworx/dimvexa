@@ -16,6 +16,10 @@ for anyone who needs conversions they can trust.
 - **Fast.** Parse and compose once, then every conversion is a single multiply (or
   add-then-multiply for temperature scales). Slice and in-place batch APIs are built in.
   Measured numbers, method and hardware are in [`docs/benchmarks/M0.md`](docs/benchmarks/M0.md).
+- **Honest about rounding.** The fast `f64` path is within **1 ulp** of the correctly rounded
+  exact result for linear units and within **2 ulp** for temperature scales (degC, degF, ...),
+  and a hard-failing test enforces it. `Conversion::apply_exact_f64` returns the correctly
+  rounded value (0 ulp) when you need it. See [`docs/precision.md`](docs/precision.md).
 - **Never a silent error.** Ambiguous names (`ton`, `gal`, `oz`, `pt`, `cal`, `BTU`, `mile`,
   `hp`, bare `ppm`) are rejected, and the error lists the explicit units to use instead.
   Failed arithmetic (overflow) is an error, never a wrapped number.
