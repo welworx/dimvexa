@@ -596,6 +596,13 @@ Create these as GitHub issues and a milestone each.
 | Ambiguity complaints ("why can't I write `gal`?") | Profiles, very clear error messages with suggestions, concept page |
 | Name clash discovered late | Name check before the first public push (section 14) |
 
+## 11a. M1 item: release automation
+
+Not implemented yet. At M1, add `release-plz` for version bumps, changelog and release pull
+requests, and publish to crates.io with **trusted publishing** (OIDC from GitHub Actions, no
+long-lived token stored as a secret). Publishing stays an owner decision: a release pull
+request is prepared automatically and merged by the owner.
+
 ## 12. Open decisions for the owner
 
 1. Final name (research pending).
