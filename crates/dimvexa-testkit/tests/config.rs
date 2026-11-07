@@ -464,3 +464,61 @@ fn problems_name_the_offender_and_the_chain_rules() {
     let msg = refused(&text);
     assert!(msg.contains("mapped names do not count"), "{msg}");
 }
+
+#[test]
+fn a_new_name_cannot_hide_a_prefixed_name_that_already_means_something() {
+    // Exact symbols beat prefix splits, so `pallet` with SI prefixes would hide `kpallet`.
+    let kilo = unit_text("kpallet", "kg", "7", "");
+    let pallet_si = unit_text("pallet", "kg", "1", "prefixes = \"si\"\n");
+    // Same file, either order; two files, either order; an alias of a prefixed target.
+    for texts in [
+        vec![format!("{kilo}{pallet_si}")],
+        vec![format!("{pallet_si}{kilo}")],
+        vec![kilo.clone(), pallet_si.clone()],
+        vec![pallet_si, kilo.clone()],
+    ] {
+        let configs: Vec<Config> = texts.iter().map(|x| cfg(x, "t.toml")).collect();
+        let mut reg = registry().unwrap();
+        let err = apply(&mut reg, &configs).unwrap_err();
+        assert_eq!(err.code(), "invalid_definition", "{texts:?}");
+    }
+    // Without prefixes there is nothing to hide, in either order.
+    let plain = unit_text("pallet", "kg", "1", "");
+    let mut reg = registry().unwrap();
+    apply(&mut reg, &[cfg(&format!("{kilo}{plain}"), "t.toml")]).unwrap();
+    assert_eq!(factor(&reg, "kpallet", "kg"), Ratio::from_int(7));
+    // Against the shipped table: `ol` with SI prefixes would make `mol` a milli-ol.
+    let msg = refused(&unit_text("ol", "kg", "1", "prefixes = \"si\"\n"));
+    assert!(msg.contains("would hide 'mol'"), "{msg}");
+    // A mapping that takes a prefixed target's name is checked the same way.
+    let msg = refused("[map]\nmm = \"m\"\n");
+    assert!(msg.contains("already means a unit"), "{msg}");
+    let mut reg = registry().unwrap();
+    let both = cfg(&format!("{kilo}[map]\npallet = \"tonne\"\n"), "t.toml");
+    let err = apply(&mut reg, &[both]).unwrap_err();
+    assert!(err.to_string().contains("would hide 'kpallet'"), "{err}");
+}
+
+#[test]
+fn a_config_cannot_turn_an_ambiguous_prefixed_name_into_a_quiet_reading() {
+    // `Miton` is mega + the ambiguous `ton`. A mapping `iton` must not make it a mega-iton.
+    let base = registry().unwrap();
+    assert_eq!(
+        base.conversion("Miton", "kg").unwrap_err().code(),
+        "ambiguous_symbol"
+    );
+    for text in [
+        "[map]\niton = \"tonne\"\n".to_string(),
+        unit_text("iton", "kg", "1", "prefixes = \"si\"\n"),
+    ] {
+        let mut reg = registry().unwrap();
+        apply(&mut reg, &[cfg(&text, "t.toml")]).unwrap();
+        assert_eq!(
+            reg.conversion("Miton", "kg").unwrap_err().code(),
+            "ambiguous_symbol",
+            "{text}"
+        );
+        // The new name itself works.
+        assert!(reg.conversion("iton", "kg").is_ok());
+    }
+}

@@ -135,7 +135,7 @@ degR	absolute_temperature	defined	none	°R	NIST SP 811 (2008), Appendix B (degre
 delta_degF	temperature_difference	defined	none	Δ°F	NIST SP 811 (2008), Appendix B (degree Fahrenheit, temperature interval)
 delta_degR	temperature_difference	defined	none	Δ°R	NIST SP 811 (2008), Appendix B (degree Rankine, temperature interval)
 
-## ambiguous symbols (refused; use an explicit symbol)
+## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note
 ton	ton_short, ton_long, tonne	-	short ton (2000 lb), long ton (2240 lb) and metric tonne (1000 kg) are all called ton
 mt	tonne	-	SI reads mt as milli-tonne (1 kg, write mtonne or kg), while trade usage means metric ton (1000 kg, write tonne or t)

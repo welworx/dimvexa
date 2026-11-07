@@ -46,7 +46,11 @@ fn known_limitation_kl_4_definition_order_matters() {
     let mut reg = registry().unwrap();
     // A unit based on a name that is only mapped in the same config.
     let text = format!("[map]\nmt = \"tonne\"\n{}", unit("lot", "mt", "2", ""));
-    assert!(apply(&mut reg, &[cfg(&text)]).is_err());
+    let err = apply(&mut reg, &[cfg(&text)]).unwrap_err().to_string();
+    assert!(
+        err.contains("base 'mt'") && err.contains("mapped names do not count"),
+        "{err}"
+    );
     // A unit listed before the unit it builds on.
     let text = format!(
         "{}{}",
