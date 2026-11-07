@@ -20,7 +20,7 @@ dimvexa-data = { path = "../crates/dimvexa-data" }
 proptest = "1"
 criterion = "0.8"
 # The library and its runner must be the same version: pin both exactly. Install the runner
-# with `cargo install iai-callgrind-runner --version 0.14.0 --locked`.
+# with `cargo install iai-callgrind-runner --version 0.16.1 --locked`.
 iai-callgrind = "=0.16.1"
 insta = "1"
 assert_cmd = "2"
