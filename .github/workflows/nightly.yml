@@ -59,7 +59,8 @@ jobs:
         run: |
           # A different seed every day; the seed is printed so that a failure can be replayed
           # with DIMVEXA_PROP_SEED=<value> cargo test -p dimvexa-testkit.
-          export DIMVEXA_PROP_SEED=$(date -u +%Y%m%d)
+          DIMVEXA_PROP_SEED=$(date -u +%Y%m%d)
+          export DIMVEXA_PROP_SEED
           echo "DIMVEXA_PROP_SEED=$DIMVEXA_PROP_SEED DIMVEXA_PROP_SCALE=$DIMVEXA_PROP_SCALE"
           cargo test -p dimvexa-testkit --locked --release
 
