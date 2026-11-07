@@ -158,7 +158,8 @@ error[ambiguous_symbol]: 'gal' is ambiguous: use gal_us or gal_imp, or choose a 
 $ dimvexa units mass --config trade.toml     # ... ends with the names your config resolves
 ```
 
-Rules (ADR-009, [`docs/adr/009-user-config.md`](docs/adr/009-user-config.md)):
+Rules (ADR-009, [`docs/adr/009-user-config.md`](docs/adr/009-user-config.md); what is not
+supported yet is in [`docs/known-limitations.md`](docs/known-limitations.md)):
 - Nothing is loaded unless you name the file; `--config` can be repeated and a later file
   overrides an earlier one.
 - A mapping only points at an existing unit, so it cannot carry a factor, and it can never
