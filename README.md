@@ -1,61 +1,40 @@
-# Dimvexa
+# Dimvexa: unit conversion for Rust
 
 **Exact factors. Loud failures. Zero guessing.**
 
-> Status: **M0 spike (version 0.0.0)**. The API is provisional and nothing is published.
-> The name *Dimvexa* is a working name: availability on crates.io, PyPI and npm is not
-> verified yet (see `docs/PLAN.md`, section 14).
-
-An open-source unit-conversion library with a Rust core, built for process engineering and
-for anyone who needs conversions they can trust.
-
-## Why
-
-- **Exact.** Conversion factors are stored as exact rational numbers. Every unit records its
-  source and whether its factor is exact by definition or measured.
-- **Fast.** Parse and compose once, then every conversion is a single multiply (or
-  add-then-multiply for temperature scales). Slice and in-place batch APIs are built in.
-  Measured numbers, method and hardware are in [`docs/benchmarks/M0.md`](docs/benchmarks/M0.md).
-- **Honest about rounding.** The fast `f64` path is within **1 ulp** of the correctly rounded
-  exact result for linear units and within **2 ulp** for temperature scales (degC, degF, ...),
-  and a hard-failing test enforces it. `Conversion::apply_exact_f64` returns the correctly
-  rounded value (0 ulp) when you need it. See [`docs/precision.md`](docs/precision.md).
-- **Never a silent error.** Ambiguous names (`ton`, `gal`, `oz`, `pt`, `cal`, `BTU`, `mile`,
-  `hp`, bare `ppm`) are rejected, and the error lists the explicit units to use instead.
-  Failed arithmetic (overflow) is an error, never a wrapped number.
-- **Kinds, not just dimensions.** Absolute and difference temperatures are distinct:
-  `abs - abs = difference`, `abs + difference = abs`, `abs + abs` is an error.
-  `20 degC + 5 delta_K` is `25 degC`; `20 degC + 5 K` fails and the error suggests `delta_K`.
-  Inside a compound unit such as `kJ/(kg.K)` or `W/(m.K)` the K is a temperature interval.
-- **Extensible by data.** Units live in TOML tables under `crates/dimvexa-data/data/units/`, each with a cited
-  source and a golden test vector. Missing a unit? Open a *Unit request* issue.
-
-## Usage
+Dimvexa is a unit conversion library (with a command-line tool) for engineers and scientists
+who need conversions they can trust: every factor is an exact fraction with a cited source,
+and anything ambiguous is an error instead of a guess.
 
 ```rust
 use dimvexa::registry;
 
-let reg = registry()?;
-let conv = reg.conversion("m/s", "km/h")?; // parse + compose once: factor 18/5
-assert_eq!(conv.apply(10.0), 36.0);
-
-let mut readings = vec![1.0, 2.0, 3.0];
-conv.apply_in_place(&mut readings);
-# Ok::<(), dimvexa::Error>(())
+let conv = registry()?.conversion("m/s", "km/h")?; // parse once, convert many times
+assert_eq!(conv.apply(10.0), 36.0);                // 10 m/s = 36 km/h
 ```
 
 ```console
 $ dimvexa convert 10 m/s km/h
 36 km/h
-$ dimvexa convert 10 m/s km/h --exact
-36/1 km/h
 $ dimvexa convert 1 ton kg
 error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne, or choose a profile
 ```
 
-A complete worked example (pool pump electricity: 1.1 kW for 8 h a day for 30 days is
-264 kWh, 950.4 MJ, 79.20 EUR at 0.30 EUR/kWh) is in
-[`examples/pool_pump.rs`](examples/pool_pump.rs) and runs as a test.
+**Status: pre-release (version 0.0.0).** Nothing is published to crates.io yet and the API may
+change; use it from a git checkout (`dimvexa = { git = "https://github.com/welworx/dimvexa" }`).
+The name *Dimvexa* is a working name (`docs/PLAN.md`, section 14).
+
+## Why
+
+- **Exact.** Factors are rational numbers with a source and an exact/measured flag.
+- **Loud.** Ambiguous names (`ton`, `gal`, `oz`), overflow and unsupported requests are errors with stable codes.
+- **Right about temperature.** Points and differences differ: `20 degC + 5 delta_K` works, `20 degC + 5 K` fails and says why.
+- **Fast and honest.** About 0.5 ns per prepared conversion; within 1 ulp (linear) or 2 ulp (temperature scales) of the exact answer, and `apply_exact_f64` gives the correctly rounded value ([`docs/precision.md`](docs/precision.md), [`docs/benchmarks/M0.md`](docs/benchmarks/M0.md)).
+- **Extensible by data.** Units live in cited TOML tables; missing one? Open a *Unit request* issue.
+
+A worked example (pool pump electricity: 1.1 kW for 8 h a day for 30 days is 264 kWh,
+950.4 MJ, 79.20 EUR at 0.30 EUR/kWh) is in [`examples/pool_pump.rs`](examples/pool_pump.rs)
+and runs as a test.
 
 ## Repository layout
 
@@ -83,14 +62,27 @@ warnings as errors, tests, doc tests, rustdoc, unit table validation, the packag
 the pool pump example). See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the rules and for how to
 request a missing unit, and [`SECURITY.md`](SECURITY.md) to report a vulnerability privately.
 
-## Citing
+## How to cite
 
-If you use Dimvexa in research or in a published report, please cite it. GitHub shows a
-"Cite this repository" button generated from [`CITATION.cff`](CITATION.cff). Until the first
-release the entry has no version or release date; please give the commit hash you used.
+Plain text:
 
-> Liemberger, W. *Dimvexa: exact unit conversion with loud failures* (software).
-> <https://github.com/welworx/dimvexa>
+```text
+Liemberger, W. (2026). Dimvexa: exact, fast unit conversion for Rust. https://github.com/welworx/dimvexa
+```
+
+BibTeX:
+
+```bibtex
+@software{liemberger_dimvexa_2026,
+  author = {Liemberger, Werner},
+  title  = {Dimvexa: exact, fast unit conversion for Rust},
+  year   = {2026},
+  url    = {https://github.com/welworx/dimvexa},
+}
+```
+
+GitHub's "Cite this repository" button reads [`CITATION.cff`](CITATION.cff). There is no
+release, version number or DOI yet; please also give the commit you used.
 
 ## Licence
 

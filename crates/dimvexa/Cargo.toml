@@ -1,6 +1,6 @@
 [package]
 name = "dimvexa"
-description = "Facade crate: dimvexa core plus the seed unit table. Exact factors. Loud failures. Zero guessing."
+description = "Exact, fast unit conversion for Rust: core plus the seed unit table. Exact factors. Loud failures. Zero guessing."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

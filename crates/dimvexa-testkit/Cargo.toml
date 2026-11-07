@@ -1,6 +1,6 @@
 [package]
 name = "dimvexa-testkit"
-description = "Test helpers for dimvexa (not published). Exact factors. Loud failures. Zero guessing."
+description = "Test helpers for dimvexa unit conversion (not published). Exact factors. Loud failures. Zero guessing."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

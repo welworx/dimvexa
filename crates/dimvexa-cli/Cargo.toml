@@ -1,6 +1,6 @@
 [package]
 name = "dimvexa-cli"
-description = "Command-line front end for dimvexa. Exact factors. Loud failures. Zero guessing."
+description = "Command-line unit conversion tool built on dimvexa. Exact factors. Loud failures. Zero guessing."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

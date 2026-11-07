@@ -1,6 +1,6 @@
 [package]
 name = "dimvexa-core"
-description = "Core of dimvexa: dimensions, exact rationals, parser and prepared conversions. Exact factors. Loud failures. Zero guessing."
+description = "Unit conversion core: dimensions, exact rationals, parser and prepared conversions. Exact factors. Loud failures. Zero guessing."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
