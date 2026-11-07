@@ -64,6 +64,7 @@ Definition of done:
    states its accuracy guarantee.
 3. New or changed unit entries have a `source`, an `exactness` flag and a cited golden vector.
 4. A benchmark is added or run when a hot path changes; no regression beyond the threshold.
+   Claims against other libraries need a dated run (`docs/benchmarking.md`).
 5. `cargo xtask ci` passes.
 
 ## Asking for a missing unit

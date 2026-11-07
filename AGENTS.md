@@ -32,6 +32,8 @@ dependency without an issue and an ADR. Edition 2024, MSRV 1.85 (do not change i
    (`docs/precision.md`), enforced by `crates/dimvexa-testkit/tests/differential.rs`. Do not
    loosen a bound to make a test pass; find the bug.
 6. Never claim something passed unless you ran it and saw it pass.
+7. No performance or accuracy claim against another library ("fastest", "most accurate") without a
+   link to a dated benchmark run (`docs/benchmarking.md`). Never invent competitor numbers.
 
 ## Where things live
 
@@ -46,6 +48,7 @@ dependency without an issue and an ADR. Edition 2024, MSRV 1.85 (do not change i
 | `docs/` | `PLAN.md`, `DESIGN.md`, `adr/`, `precision.md`, `benchmarks/`, `ci-pinning.md`, `schemas/` |
 | `.github/` | workflows (pinned actions, see `docs/ci-pinning.md`), issue forms, PR template |
 | `extras/`, `fuzz/` | network-only tooling; separate workspaces, never built offline |
+| `benchmarks/` | cross-library comparison: corpus, runners, report generator (own workspaces; competitors need network) |
 
 ## Skills
 
@@ -56,7 +59,7 @@ Read the matching skill in `.claude/skills/<name>/SKILL.md` before the task.
 | `add-unit` | adding or changing a unit in the tables |
 | `unit-request-triage` | answering a GitHub "Unit request" issue |
 | `precision` | touching the `f64` path, ulp bounds or exactness |
-| `benchmarks` | running or quoting performance numbers |
+| `benchmarks` | running or quoting performance numbers, or comparing with other libraries |
 | `tests` | adding a test or a snapshot, or deciding where a test goes |
 | `adr` | a decision needs recording or changing |
 | `release` | preparing (never publishing) a release |
