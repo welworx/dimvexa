@@ -334,6 +334,14 @@ def main(argv=None):
     if any(fixtures) and not all(fixtures):
         raise SystemExit("refusing to mix fixture files with real results")
     fixture = bool(results) and all(fixtures)
+    quick = [bool(r.get("parameters", {}).get("quick")) for r in results]
+    if any(quick) and out.resolve() == OFFICIAL.resolve():
+        raise SystemExit("refusing to publish --quick results (a smoke test, not a measurement); pass --out elsewhere")
+    if any(quick) and not all(quick):
+        raise SystemExit("refusing to mix --quick and full results")
+    ids = {r.get("corpus_id") for r in results if not r.get("fixture")}
+    if len(ids) > 1:
+        raise SystemExit(f"result files come from different corpora ({sorted(map(str, ids))}); remove the stale ones")
     if fixture and out.resolve() == OFFICIAL.resolve():
         raise SystemExit("refusing to write fixture data to the official docs/benchmarks/comparison.md; pass --out elsewhere")
     out.parent.mkdir(parents=True, exist_ok=True)

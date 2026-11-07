@@ -69,8 +69,11 @@ fn measure_dimvexa_perf(reg: &Registry, perf: &Json, p: &Params, cli: Option<&st
             let mut entry = Json::obj();
             let cold: Vec<f64> = (0..p.cold_samples)
                 .map(|_| {
-                    let t = Instant::now();
+                    // A fresh registry is built before the clock starts, as the Python runners
+                    // build a fresh UnitRegistry; the registry build itself is reported as
+                    // `import_ms`. Only the first conversion() on the fresh registry is timed.
                     let r = registry().ok();
+                    let t = Instant::now();
                     let c2 = r.as_ref().and_then(|r| r.conversion(from, to).ok());
                     black_box(&c2);
                     t.elapsed().as_nanos() as f64
@@ -88,11 +91,16 @@ fn measure_dimvexa_perf(reg: &Registry, perf: &Json, p: &Params, cli: Option<&st
                 entry.set("scalar", time_loop(|| { black_box(conv.apply_exact_f64(black_box(x)).ok()); }, p.warmup_s, p.samples, p.min_sample_s, 1.0));
             }
             entry.set("loop_overhead", time_loop(|| { black_box(0_u8); }, p.warmup_s, p.samples, p.min_sample_s, 1.0));
-            let (v, u) = split_quantity(c.get("oneshot").str());
             if mode == "prepared" {
-                let val: f64 = v.parse().unwrap_or(f64::NAN);
+                // Split and parse the number inside the loop, so the work matches the string
+                // APIs of the other libraries (number, unit and target are all text here).
+                let text = c.get("oneshot").str().to_string();
                 entry.set("oneshot", time_loop(
-                    || { black_box(reg.conversion(black_box(u), black_box(to)).map(|c| c.apply(black_box(val))).ok()); },
+                    || {
+                        let (v, u) = split_quantity(black_box(&text));
+                        let val: f64 = v.parse().unwrap_or(f64::NAN);
+                        black_box(reg.conversion(u, black_box(to)).map(|c| c.apply(val)).ok());
+                    },
                     p.warmup_s, p.samples, p.min_sample_s, 1.0));
             } else {
                 let text = c.get("oneshot").str().to_string();
@@ -158,7 +166,7 @@ fn measure_ceiling_perf(perf: &Json, p: &Params) -> Json {
             let mut entry = Json::obj();
             if mode == "plain_loop" {
                 let x = 12.5_f64;
-                entry.set("scalar", time_loop(|| { black_box(black_box(x) * black_box(a) + black_box(b)); }, p.warmup_s, p.samples, p.min_sample_s, 1.0));
+                entry.set("scalar", time_loop(|| { black_box(black_box(x) * a + b); }, p.warmup_s, p.samples, p.min_sample_s, 1.0));
             }
             entry.set("loop_overhead", time_loop(|| { black_box(0_u8); }, p.warmup_s, p.samples, p.min_sample_s, 1.0));
             let mut batches = Json::obj();

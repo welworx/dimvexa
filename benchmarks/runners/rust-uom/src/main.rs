@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! Benchmark runner for `uom` (compile-time dimensional analysis). NEVER COMPILED OR RUN yet.
+//! Benchmark runner for `uom` (compile-time dimensional analysis). Run in the first comparison (docs/benchmarks/comparison-run-1.md).
 //!
 //! uom resolves units at compile time and has no string interface, so:
 //! * speed rows measure `Quantity::new::<from>(x).get::<to>()`, the idiomatic typed conversion
@@ -30,26 +30,79 @@ use uom::si::pressure::{kilopascal, pascal, pound_force_per_square_inch};
 use uom::si::thermodynamic_temperature::{degree_celsius, degree_fahrenheit, kelvin};
 use uom::si::velocity::{kilometer_per_hour, meter_per_second};
 
-/// Typed conversions available to this runner. The key is the corpus spelling (from, to).
-fn convert_pair(from: &str, to: &str, x: f64) -> Option<f64> {
-    Some(match (from, to) {
-        ("m", "ft") => Length::new::<meter>(x).get::<foot>(),
-        ("ft", "m") => Length::new::<foot>(x).get::<meter>(),
-        ("km", "m") => Length::new::<kilometer>(x).get::<meter>(),
-        ("in", "m") => Length::new::<inch>(x).get::<meter>(),
-        ("mi", "km") => Length::new::<mile>(x).get::<kilometer>(),
-        ("kg", "lb") => Mass::new::<kilogram>(x).get::<pound>(),
-        ("lb", "kg") => Mass::new::<pound>(x).get::<kilogram>(),
-        ("m/s", "km/h") => Velocity::new::<meter_per_second>(x).get::<kilometer_per_hour>(),
-        ("km/h", "m/s") => Velocity::new::<kilometer_per_hour>(x).get::<meter_per_second>(),
-        ("psi", "kPa") => Pressure::new::<pound_force_per_square_inch>(x).get::<kilopascal>(),
-        ("psi", "Pa") => Pressure::new::<pound_force_per_square_inch>(x).get::<pascal>(),
-        ("degC", "degF") => ThermodynamicTemperature::new::<degree_celsius>(x).get::<degree_fahrenheit>(),
-        ("degF", "degC") => ThermodynamicTemperature::new::<degree_fahrenheit>(x).get::<degree_celsius>(),
-        ("degC", "K") => ThermodynamicTemperature::new::<degree_celsius>(x).get::<kelvin>(),
-        ("K", "degC") => ThermodynamicTemperature::new::<kelvin>(x).get::<degree_celsius>(),
-        _ => return None,
-    })
+/// Typed conversions available to this runner, written once. `pairs!` expands the list into
+/// `convert_pair` (used for accuracy; matches the strings per call) and `dispatch` (used for
+/// timing; matches once and hands the typed conversion to a `Job` as a statically dispatched
+/// closure, so the compiler sees the same code a user of uom writes).
+macro_rules! pairs {
+    ($(($from:literal, $to:literal) => |$x:ident| $body:expr),+ $(,)?) => {
+        fn convert_pair(from: &str, to: &str, x: f64) -> Option<f64> {
+            Some(match (from, to) {
+                $(($from, $to) => { let $x = x; $body },)+
+                _ => return None,
+            })
+        }
+        fn dispatch(from: &str, to: &str, job: &mut impl Job) -> bool {
+            match (from, to) {
+                $(($from, $to) => { job.run(|$x: f64| $body); true },)+
+                _ => false,
+            }
+        }
+    };
+}
+
+/// A timing job that is generic over the typed conversion it measures.
+trait Job {
+    fn run<F: Fn(f64) -> f64>(&mut self, f: F);
+}
+
+pairs! {
+    ("m", "ft") => |x| Length::new::<meter>(x).get::<foot>(),
+    ("ft", "m") => |x| Length::new::<foot>(x).get::<meter>(),
+    ("km", "m") => |x| Length::new::<kilometer>(x).get::<meter>(),
+    ("in", "m") => |x| Length::new::<inch>(x).get::<meter>(),
+    ("mi", "km") => |x| Length::new::<mile>(x).get::<kilometer>(),
+    ("kg", "lb") => |x| Mass::new::<kilogram>(x).get::<pound>(),
+    ("lb", "kg") => |x| Mass::new::<pound>(x).get::<kilogram>(),
+    ("m/s", "km/h") => |x| Velocity::new::<meter_per_second>(x).get::<kilometer_per_hour>(),
+    ("km/h", "m/s") => |x| Velocity::new::<kilometer_per_hour>(x).get::<meter_per_second>(),
+    ("psi", "kPa") => |x| Pressure::new::<pound_force_per_square_inch>(x).get::<kilopascal>(),
+    ("psi", "Pa") => |x| Pressure::new::<pound_force_per_square_inch>(x).get::<pascal>(),
+    ("degC", "degF") => |x| ThermodynamicTemperature::new::<degree_celsius>(x).get::<degree_fahrenheit>(),
+    ("degF", "degC") => |x| ThermodynamicTemperature::new::<degree_fahrenheit>(x).get::<degree_celsius>(),
+    ("degC", "K") => |x| ThermodynamicTemperature::new::<degree_celsius>(x).get::<kelvin>(),
+    ("K", "degC") => |x| ThermodynamicTemperature::new::<kelvin>(x).get::<degree_celsius>(),
+}
+
+/// Times the scalar call and the batch loops of one typed conversion.
+struct Timing<'a> {
+    p: &'a Params,
+    values: &'a [f64],
+    entry: Json,
+}
+
+impl Job for Timing<'_> {
+    fn run<F: Fn(f64) -> f64>(&mut self, f: F) {
+        let p = self.p;
+        let x = 12.5_f64;
+        self.entry.set("scalar", harness::time_loop(|| { black_box(f(black_box(x))); }, p.warmup_s, p.samples, p.min_sample_s, 1.0));
+        self.entry.set("loop_overhead", harness::time_loop(|| { black_box(0_u8); }, p.warmup_s, p.samples, p.min_sample_s, 1.0));
+        self.entry.set("oneshot", Json::Null);
+        let mut batches = Json::obj();
+        for &n in &p.batch_sizes {
+            let input = &self.values[..n];
+            let mut out = vec![0.0_f64; n];
+            let samples = if n < 1_000_000 { p.samples } else { (p.samples / 3).max(5) };
+            let r = harness::time_loop(|| {
+                for (o, &i) in out.iter_mut().zip(black_box(input)) {
+                    *o = f(i);
+                }
+                black_box(&out);
+            }, p.warmup_s.min(0.05), samples, 0.0, n as f64);
+            batches.set(&n.to_string(), r);
+        }
+        self.entry.set("batch", batches);
+    }
 }
 
 const KNOWN: &[&str] = &["m", "ft", "km", "in", "mi", "kg", "lb", "m/s", "km/h", "psi", "kPa", "Pa", "degC", "degF", "K"];
@@ -92,27 +145,9 @@ fn main() {
             continue;
         }
         eprintln!("  [typed] {id}");
-        let mut entry = Json::obj();
-        let x = 12.5_f64;
-        entry.set("scalar", harness::time_loop(|| { black_box(convert_pair(black_box(from), black_box(to), black_box(x))); }, p.warmup_s, p.samples, p.min_sample_s, 1.0));
-        entry.set("loop_overhead", harness::time_loop(|| { black_box(0_u8); }, p.warmup_s, p.samples, p.min_sample_s, 1.0));
-        entry.set("oneshot", Json::Null);
-        let mut batches = Json::obj();
-        for &n in &p.batch_sizes {
-            let input = &values[..n];
-            let mut out = vec![0.0_f64; n];
-            let samples = if n < 1_000_000 { p.samples } else { (p.samples / 3).max(5) };
-            // The pair is matched once per batch, outside the loop, so the typed call is what is timed.
-            let r = harness::time_loop(|| {
-                for (o, &i) in out.iter_mut().zip(black_box(input)) {
-                    *o = convert_pair(from, to, i).unwrap_or(f64::NAN);
-                }
-                black_box(&out);
-            }, p.warmup_s.min(0.05), samples, 0.0, n as f64);
-            batches.set(&n.to_string(), r);
-        }
-        entry.set("batch", batches);
-        per_conv.set(id, entry);
+        let mut job = Timing { p: &p, values: &values, entry: Json::obj() };
+        dispatch(from, to, &mut job);
+        per_conv.set(id, job.entry);
     }
     let mut performance = Json::obj();
     performance.set("typed", per_conv);
