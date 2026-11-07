@@ -423,7 +423,7 @@ fn main() {
         b.run(
             &format!("registry miss (unknown symbol) with {n} units"),
             1,
-            "prefix scan + suggestion scan, O(n)",
+            "prefix split + indexed suggestion lookup",
             || r.parse(black_box("zzzz9")).is_err(),
         );
         b.run(
