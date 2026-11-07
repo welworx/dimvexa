@@ -30,7 +30,7 @@ jobs:
         with:
           persist-credentials: false
       # copied from a widely used repo, verify against the action's release page before enabling
-      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+      - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
         with:
           # Pinned. Keep in step with .github/workflows/ci.yml.
           tool: cargo-deny@0.18.3
@@ -54,7 +54,7 @@ jobs:
           rustup toolchain install "$v" --profile minimal --no-self-update
           rustup default "$v"
       # copied from a widely used repo, verify against the action's release page before enabling
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Run the property and differential suites
         run: |
           # A different seed every day; the seed is printed so that a failure can be replayed
@@ -102,7 +102,7 @@ jobs:
           rustup toolchain install "$v" --profile minimal --component llvm-tools-preview --no-self-update
           rustup default "$v"
       # copied from a widely used repo, verify against the action's release page before enabling
-      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+      - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
         with:
           # Not version-pinned (see docs/ci-pinning.md).
           tool: cargo-llvm-cov
@@ -131,7 +131,7 @@ jobs:
           rustup toolchain install "$v" --profile minimal --no-self-update
           rustup default "$v"
       # copied from a widely used repo, verify against the action's release page before enabling
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: extras
       - run: cargo test --manifest-path extras/Cargo.toml
