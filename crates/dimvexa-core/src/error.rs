@@ -78,6 +78,8 @@ pub enum Error {
         to: Kind,
         /// What was attempted.
         operation: &'static str,
+        /// Units to use instead, for example `delta_K` for a temperature difference.
+        suggestions: Vec<String>,
     },
     /// A checked integer operation overflowed. Code `overflow`.
     Overflow {
@@ -98,6 +100,8 @@ pub enum Error {
     Refused {
         /// Why the operation is refused and what to do instead.
         reason: String,
+        /// Units or expressions to use instead (may be empty).
+        suggestions: Vec<String>,
     },
     /// A unit definition is inconsistent. Code `invalid_definition`.
     InvalidDefinition {
@@ -160,6 +164,29 @@ impl Error {
         }
     }
 
+    /// Everything the error recommends instead: close matches for an unknown unit, the explicit
+    /// symbols for an ambiguous one, and the difference unit (`delta_K`, ...) for a refused or
+    /// mismatched temperature operation. Empty if the error has no recommendation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_core::Error;
+    /// let e = Error::UnknownUnit { symbol: "PSI".into(), suggestions: vec!["psi".into()] };
+    /// assert_eq!(e.suggestions(), ["psi"]);
+    /// assert!(Error::DivisionByZero.suggestions().is_empty());
+    /// ```
+    #[must_use]
+    pub fn suggestions(&self) -> &[String] {
+        match self {
+            Self::AmbiguousSymbol { candidates, .. } => candidates,
+            Self::UnknownUnit { suggestions, .. }
+            | Self::KindMismatch { suggestions, .. }
+            | Self::Refused { suggestions, .. } => suggestions,
+            _ => &[],
+        }
+    }
+
     /// Candidate symbols attached to the error, if any (ambiguous or unknown symbols).
     #[must_use]
     pub fn candidates(&self) -> &[String] {
@@ -213,11 +240,21 @@ impl fmt::Display for Error {
                 from,
                 to,
                 operation,
+                suggestions,
             } => {
                 write!(
                     f,
                     "kind mismatch in {operation}: {from} and {to} are not compatible"
-                )
+                )?;
+                if !suggestions.is_empty() {
+                    write!(
+                        f,
+                        " (a temperature point and a temperature difference are different kinds; \
+                         for a difference use {})",
+                        suggestions.join(" or ")
+                    )?;
+                }
+                Ok(())
             }
             Self::Overflow { operation } => {
                 write!(f, "integer overflow in exact arithmetic ({operation})")
@@ -229,7 +266,7 @@ impl fmt::Display for Error {
                     "input has {input} values but output has room for {output}"
                 )
             }
-            Self::Refused { reason } => write!(f, "refused: {reason}"),
+            Self::Refused { reason, .. } => write!(f, "refused: {reason}"),
             Self::InvalidDefinition { symbol, message } => {
                 write!(f, "invalid definition of '{symbol}': {message}")
             }

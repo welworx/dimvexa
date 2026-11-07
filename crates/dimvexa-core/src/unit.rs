@@ -301,6 +301,9 @@ pub struct UnitExpr {
     offset: Ratio,
     exactness: Exactness,
     sources: Vec<String>,
+    /// Symbol of the registered temperature-difference unit of the same scale (`delta_K`
+    /// for `K`), only set for a plain absolute temperature unit.
+    difference: Option<String>,
 }
 
 impl UnitExpr {
@@ -315,6 +318,7 @@ impl UnitExpr {
             offset: Ratio::ZERO,
             exactness: Exactness::Defined,
             sources: Vec::new(),
+            difference: None,
         }
     }
 
@@ -335,7 +339,21 @@ impl UnitExpr {
             offset,
             exactness,
             sources,
+            difference: None,
         }
+    }
+
+    pub(crate) fn with_difference(mut self, difference: Option<String>) -> Self {
+        self.difference = difference;
+        self
+    }
+
+    /// Symbol of the registered temperature-difference unit that goes with this absolute
+    /// temperature unit (`delta_K` for `K`, `delta_degC` for `degC`). `None` for every other
+    /// unit expression, including prefixed temperatures such as `mK`.
+    #[must_use]
+    pub fn difference_symbol(&self) -> Option<&str> {
+        self.difference.as_deref()
     }
 
     /// True for the plain scalar `1`.
@@ -412,12 +430,21 @@ impl UnitExpr {
     fn refuse_affine(&self, other: &Self) -> Result<()> {
         for u in [self, other] {
             if !u.offset.is_zero() {
+                let suggestions: Vec<String> = u.difference.iter().cloned().collect();
+                let advice = suggestions.first().map_or_else(
+                    || {
+                        String::from(
+                            "use a difference unit (delta_...) for a temperature difference",
+                        )
+                    },
+                    |d| format!("use the difference unit {d} for a temperature difference"),
+                );
                 return Err(Error::Refused {
                     reason: format!(
-                        "'{}' has an offset (temperature scale) and cannot be part of a compound unit; \
-                         use the difference unit (delta_...) for temperature differences",
+                        "'{}' has an offset (temperature scale) and cannot be part of a compound unit; {advice}",
                         u.expr
                     ),
+                    suggestions,
                 });
             }
         }
@@ -446,6 +473,7 @@ impl UnitExpr {
             offset: Ratio::ZERO,
             exactness: self.exactness.combine(rhs.exactness),
             sources: self.merged_sources(rhs),
+            difference: None,
         })
     }
 
@@ -467,6 +495,7 @@ impl UnitExpr {
             offset: Ratio::ZERO,
             exactness: self.exactness.combine(rhs.exactness),
             sources: self.merged_sources(rhs),
+            difference: None,
         })
     }
 
@@ -490,27 +519,41 @@ impl UnitExpr {
             offset: Ratio::ZERO,
             exactness: self.exactness,
             sources: self.sources.clone(),
+            difference: None,
         })
     }
 
-    /// The temperature-difference counterpart of an absolute temperature unit: same
-    /// factor, no offset, symbol `delta_<symbol>`.
+    /// The temperature-difference counterpart of an absolute temperature unit: the
+    /// registered `delta_` unit of the same scale ([`difference_symbol`](Self::difference_symbol)),
+    /// with the same factor and no offset.
     ///
     /// # Errors
     ///
-    /// [`Error::KindMismatch`] if `self` is not an absolute temperature.
+    /// [`Error::KindMismatch`] if `self` is not an absolute temperature;
+    /// [`Error::Refused`] if no difference unit is registered for it (for example `mK`).
     pub fn difference_counterpart(&self) -> Result<Self> {
         if self.kind != Kind::AbsoluteTemperature {
             return Err(Error::KindMismatch {
                 from: self.kind,
                 to: Kind::AbsoluteTemperature,
                 operation: "difference counterpart",
+                suggestions: Vec::new(),
             });
         }
+        let Some(symbol) = self.difference.clone() else {
+            return Err(Error::Refused {
+                reason: format!(
+                    "no temperature-difference unit is registered for '{}'; convert to K or degC first",
+                    self.expr
+                ),
+                suggestions: vec![String::from("delta_K")],
+            });
+        };
         let mut out = self.clone();
         out.kind = Kind::TemperatureDifference;
         out.offset = Ratio::ZERO;
-        out.expr = Expr::Unit(format!("delta_{}", self.expr));
+        out.expr = Expr::Unit(symbol);
+        out.difference = None;
         Ok(out)
     }
 }

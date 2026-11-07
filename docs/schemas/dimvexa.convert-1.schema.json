@@ -59,7 +59,8 @@
               "description": "Library error codes (stable, non-exhaustive list) plus `usage` for command-line mistakes."
             },
             "message": { "type": "string" },
-            "candidates": { "type": "array", "items": { "type": "string" } }
+            "candidates": { "type": "array", "items": { "type": "string" }, "description": "Explicit symbols or close matches (ambiguous_symbol, unknown_unit)." },
+            "suggestions": { "type": "array", "items": { "type": "string" }, "description": "Everything the error recommends instead: candidates, or the delta unit (delta_K, delta_degC, ...) for temperature kind errors and refused offset units." }
           }
         }
       }

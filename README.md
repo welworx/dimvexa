@@ -21,6 +21,8 @@ for anyone who needs conversions they can trust.
   Failed arithmetic (overflow) is an error, never a wrapped number.
 - **Kinds, not just dimensions.** Absolute and difference temperatures are distinct:
   `abs - abs = difference`, `abs + difference = abs`, `abs + abs` is an error.
+  `20 degC + 5 delta_K` is `25 degC`; `20 degC + 5 K` fails and the error suggests `delta_K`.
+  Inside a compound unit such as `kJ/(kg.K)` or `W/(m.K)` the K is a temperature interval.
 - **Extensible by data.** Units live in TOML tables under `crates/dimvexa-data/data/units/`, each with a cited
   source and a golden test vector. Missing a unit? Open a *Unit request* issue.
 

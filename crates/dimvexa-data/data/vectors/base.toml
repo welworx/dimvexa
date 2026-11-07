@@ -290,3 +290,27 @@ from = "kmol/h"
 to = "mol/s"
 expect = "5/18"
 source = "derived: 1000 mol / 3600 s"
+
+[[vector]]
+unit = "delta_K"
+value = "10"
+from = "ΔK"
+to = "delta_degF"
+expect = "18"
+source = "alias check: 10 K interval = 18 degF interval (BIPM SI Brochure, 9th ed. (2019); NIST SP 811 (2008), Appendix B)"
+
+[[vector]]
+unit = "delta_degC"
+value = "1"
+from = "W/(m.K)"
+to = "W/(m.delta_degC)"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019): a temperature interval of 1 K equals 1 degC, so W/(m K) = W/(m degC); a K inside a compound unit is the interval kind"
+
+[[vector]]
+unit = "delta_K"
+value = "1"
+from = "kJ/(kg.K)"
+to = "kJ/(kg.delta_K)"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019): specific heat capacity is J/(kg K), where K is a temperature interval"

@@ -53,14 +53,27 @@ fn snapshot(name: &str, actual: &str) {
     );
 }
 
-/// Normalises the data hash so snapshots survive a table update (the hash has its own test).
+/// Normalises the data version and hash so snapshots survive a table update (the version
+/// and hash have their own tests).
 fn stable(s: &str) -> String {
     let Some(i) = s.find("fnv1a64:") else {
         return s.to_string();
     };
     let tail = &s[i..];
     let len = tail.find(['"', ')', '\n']).unwrap_or(tail.len());
-    format!("{}fnv1a64:<hash>{}", &s[..i], &tail[len..])
+    let mut head = s[..i].to_string();
+    // Mask "v<digits>+" in front of the hash as well.
+    if head.ends_with('+') {
+        head.pop();
+        while head.ends_with(|c: char| c.is_ascii_digit()) {
+            head.pop();
+        }
+        if head.ends_with('v') {
+            head.pop();
+        }
+        head.push_str("v<N>+");
+    }
+    format!("{head}fnv1a64:<hash>{}", &tail[len..])
 }
 
 #[test]
@@ -159,7 +172,7 @@ fn json_fields_have_the_documented_values() {
         v.get("data_version")
             .unwrap()
             .as_str()
-            .starts_with("v1+fnv1a64:")
+            .contains("+fnv1a64:")
     );
     // Third: a non-terminating decimal is flagged, the exact fraction stays exact.
     let v = json::parse(&dimvexa(&["convert", "1", "min", "h", "--json"]).stdout).unwrap();
@@ -258,6 +271,8 @@ fn error_snapshots() {
         vec!["convert", "1", "m", "s", "--json"],
         vec!["convert", "1", "J/mol.K", "J/mol/K"],
         vec!["convert", "20", "degC", "delta_degC"],
+        vec!["convert", "5", "K", "delta_degF", "--json"],
+        vec!["convert", "1", "degC/s", "K/s", "--json"],
         vec!["convert", "1", "ppm", "1"],
         vec!["convert", "1", "m"],
     ] {
@@ -281,7 +296,7 @@ fn help_and_version() {
     let r = dimvexa(&["--version"]);
     assert_eq!(r.code, 0);
     assert!(
-        r.stdout.starts_with("dimvexa 0.0.0 (data v1+fnv1a64:"),
+        r.stdout.starts_with("dimvexa 0.0.0 (data v") && r.stdout.contains("+fnv1a64:"),
         "{}",
         r.stdout
     );
