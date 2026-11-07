@@ -7,7 +7,7 @@ use crate::conversion::Conversion;
 use crate::error::{Error, Result};
 use crate::expr::{Expr, is_valid_symbol};
 use crate::kind::Kind;
-use crate::prefix::{Prefix, all_prefixes};
+use crate::prefix::{Prefix, PrefixMode, all_prefixes};
 use crate::quantity::Quantity;
 use crate::ratio::Ratio;
 use crate::unit::{AmbiguousDef, Unit, UnitDef, UnitExpr};
@@ -117,6 +117,28 @@ impl Registry {
             || matches!(self.resolve_symbol(name), Err(Error::UnknownUnit { .. }))
     }
 
+    /// The first prefixed form of `name` that already means something, if any: with `mode`
+    /// accepting `k`, a new `pallet` clashes with an existing `kpallet`. Giving `name` those
+    /// prefixes would silently lose the prefixed reading, because an exact symbol always wins.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_core::{Dim, PrefixMode, Ratio, Registry, Unit};
+    /// let mut reg = Registry::new();
+    /// reg.register(Unit::linear("kpallet", Dim::KG, Ratio::from_int(7))?)?;
+    /// assert_eq!(reg.prefix_clash("pallet", PrefixMode::Si).as_deref(), Some("kpallet"));
+    /// assert_eq!(reg.prefix_clash("pallet", PrefixMode::None), None);
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    #[must_use]
+    pub fn prefix_clash(&self, name: &str, mode: PrefixMode) -> Option<String> {
+        all_prefixes()
+            .filter(|p| mode.accepts(p.family))
+            .map(|p| format!("{}{name}", p.symbol))
+            .find(|c| self.by_symbol.contains_key(c) || self.ambiguous.contains_key(c))
+    }
+
     /// Makes `alias` another name of the registered unit `target`, so prefixes and compound
     /// expressions work with it (`kmt` is `ktonne` once `mt` names the tonne).
     ///
@@ -170,6 +192,16 @@ impl Registry {
                 ),
             ));
         };
+        if let Some(clash) = self
+            .units
+            .get(index)
+            .and_then(|u| self.prefix_clash(alias, u.prefixes()))
+        {
+            return Err(bad(
+                alias,
+                format!("'{alias}' would hide '{clash}', which already means something else"),
+            ));
+        }
         self.lowered
             .entry(alias.to_lowercase())
             .or_default()
@@ -338,6 +370,14 @@ impl Registry {
             if let Some(unit) = self.get(rest).filter(|u| u.prefixes().accepts(p.family)) {
                 hits.push((p, unit));
             }
+        }
+        // A prefix on an ambiguous name stays ambiguous even when another reading exists, so a
+        // later alias cannot turn `Miton` (mega + the ambiguous `ton`) into a quiet mega-`iton`.
+        if let (false, Some((p, cands))) = (hits.is_empty(), ambiguous_rest.first()) {
+            return Err(Error::AmbiguousSymbol {
+                symbol: symbol.to_string(),
+                candidates: cands.iter().map(|c| format!("{}{c}", p.symbol)).collect(),
+            });
         }
         match hits.as_slice() {
             [(p, unit)] => self.unit_expr(symbol, unit, Some(*p)),

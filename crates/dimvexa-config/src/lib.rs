@@ -510,7 +510,9 @@ impl Bridge {
     /// ```
     /// use dimvexa_config::Bridge;
     /// use dimvexa_core::Dim;
+    /// assert!(Bridge::density_needed(Dim::KG, Dim::M.checked_scale(3)?));
     /// assert!(!Bridge::density_needed(Dim::KG, Dim::M));
+    /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     #[must_use]
     pub fn density_needed(from: Dim, to: Dim) -> bool {
@@ -627,6 +629,12 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
     if !reg.name_is_free(&u.symbol) {
         return Err(bad(format!(
             "'{}' already means a unit and cannot be redefined",
+            u.symbol
+        )));
+    }
+    if let Some(clash) = reg.prefix_clash(&u.symbol, u.prefixes) {
+        return Err(bad(format!(
+            "'{}' would hide '{clash}', which already means something else",
             u.symbol
         )));
     }

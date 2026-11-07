@@ -1398,18 +1398,262 @@ fn known_limitation_kl_12_density_hint_is_text_only() {
     );
 }
 
-/// `docs/known-limitations.md` lists every limitation these tests pin.
+/// KL-3: a usage error belongs to `units` if any argument is the word `units`, even when the
+/// command is `convert` (here the word is the name of a bridge).
+#[test]
+fn known_limitation_kl_3_units_is_detected_by_any_argument() {
+    let r = dimvexa(&[
+        "convert", "1", "m", "km", "--bridge", "units", "--config", "--json",
+    ]);
+    assert_eq!(r.code, 2);
+    let v = json::parse(&r.stdout).unwrap();
+    assert_eq!(
+        v.get("schema").unwrap().as_str(),
+        "dimvexa.units/1",
+        "KL-3 fixed? then a convert error carries dimvexa.convert/1"
+    );
+}
+
+/// `docs/known-limitations.md` lists every limitation these tests pin, and each pinned entry
+/// has a test named after it somewhere in the workspace.
 #[test]
 fn known_limitations_document_lists_the_pinned_entries() {
     let doc = std::fs::read_to_string(repo_root().join("docs/known-limitations.md")).unwrap();
-    for id in [1, 4, 6, 7, 8, 9, 10, 12] {
+    let mut sources = String::new();
+    for dir in ["crates/dimvexa-cli/tests", "crates/dimvexa-testkit/tests"] {
+        for entry in std::fs::read_dir(repo_root().join(dir)).unwrap() {
+            let path = entry.unwrap().path();
+            if path.extension().is_some_and(|e| e == "rs") {
+                sources.push_str(&std::fs::read_to_string(path).unwrap());
+            }
+        }
+    }
+    for id in PINNED_LIMITATIONS {
         assert!(
             doc.contains(&format!("| KL-{id} |")),
             "docs/known-limitations.md lacks KL-{id}"
         );
         assert!(
-            doc.contains(&format!("known_limitation_kl_{id}"))
-                || doc.contains("known_limitation_kl_<n>")
+            sources.contains(&format!("fn known_limitation_kl_{id}_")),
+            "no test is named known_limitation_kl_{id}_..."
         );
     }
+}
+
+/// The entries of `docs/known-limitations.md` that a test pins.
+const PINNED_LIMITATIONS: [u32; 14] = [1, 3, 4, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18];
+
+/// Real outputs validate against the schema files in `docs/schemas/`, not only against the
+/// hand-written checks in `support/json.rs`.
+#[test]
+fn outputs_validate_against_the_schema_files() {
+    let schema = |name: &str| {
+        json::parse(&std::fs::read_to_string(repo_root().join("docs/schemas").join(name)).unwrap())
+            .unwrap()
+    };
+    let (convert, units) = (
+        schema("dimvexa.convert-1.schema.json"),
+        schema("dimvexa.units-1.schema.json"),
+    );
+    let cfg = config_file("schema_check.toml", TRADE);
+    let w = ["--config", WATER_CFG, "--bridge", "water_20C"];
+    let o = ["--config", OIL_CFG];
+    let cases: Vec<(&json::V, Vec<&str>)> = vec![
+        (&convert, vec!["convert", "10", "m/s", "km/h", "--json"]),
+        (&convert, vec!["convert", "100", "degC", "degF", "--json"]),
+        (
+            &convert,
+            [&["convert", "1", "L", "kg", "--json"][..], &w].concat(),
+        ),
+        (
+            &convert,
+            [&[
+                "convert",
+                "1",
+                "bbl_oil",
+                "kg",
+                "--json",
+                "--config",
+                OIL_CFG,
+                "--config",
+                WATER_CFG,
+                "--bridge",
+                "water_20C",
+            ][..]]
+            .concat(),
+        ),
+        (&convert, vec!["convert", "1", "ton", "kg", "--json"]),
+        (&convert, vec!["convert", "1", "m", "--json"]),
+        (
+            &convert,
+            vec!["convert", "1", "mt", "kg", "--json", "--config", &cfg],
+        ),
+        (
+            &convert,
+            vec!["convert", "1", "L", "kg", "--json", "--bridge", "nope"],
+        ),
+        (&units, vec!["units", "--json"]),
+        (&units, vec!["units", "--groups", "--json"]),
+        (&units, vec!["units", "mass", "--json", "--config", &cfg]),
+        (&units, [&["units", "--json"][..], &w[..2], &o].concat()),
+        (&units, vec!["units", "psi", "--json"]),
+        (&units, vec!["units", "mt", "--json", "--config", &cfg]),
+        (
+            &units,
+            vec!["units", "bbl_oil", "--json", "--config", OIL_CFG],
+        ),
+        (&units, vec!["units", "zork", "--json"]),
+        (&units, vec!["units", "a", "b", "--json"]),
+    ];
+    for (schema, args) in cases {
+        let r = dimvexa_at_root(&args);
+        let v = json::parse(&r.stdout).unwrap_or_else(|e| panic!("{args:?}: {e}\n{}", r.stdout));
+        if let Some(m) = json::schema_mismatch(schema, &v, "$") {
+            panic!("{args:?} does not match its schema: {m}\n{}", r.stdout);
+        }
+    }
+}
+
+/// KL-14: a mapping target must be a symbol or alias, not a prefixed form such as `kg`.
+#[test]
+fn known_limitation_kl_14_a_mapping_target_cannot_be_a_prefixed_form() {
+    let cfg = config_file("kl14.toml", "[map]\nPallet = \"kg\"\n");
+    let r = dimvexa(&["convert", "1", "Pallet", "g", "--config", &cfg]);
+    assert_eq!(r.code, 1, "KL-14 fixed? then Pallet = \"kg\" works");
+    assert!(
+        r.stderr.contains("'kg' is not a unit symbol or alias"),
+        "{}",
+        r.stderr
+    );
+}
+
+/// KL-15: a config must be a regular file of at most 1 MiB.
+#[test]
+fn known_limitation_kl_15_config_files_are_capped() {
+    let big = config_file("kl15.toml", &"# padding\n".repeat(120_000));
+    let r = dimvexa(&["convert", "1", "m", "km", "--config", &big]);
+    assert_eq!(r.code, 2);
+    assert!(
+        r.stderr.contains("larger than 1048576 bytes"),
+        "{}",
+        r.stderr
+    );
+    let dir = env!("CARGO_TARGET_TMPDIR");
+    let r = dimvexa(&["convert", "1", "m", "km", "--config", dir]);
+    assert_eq!(r.code, 2);
+    assert!(r.stderr.contains("not a regular file"), "{}", r.stderr);
+}
+
+/// KL-16: the candidates offered for an ambiguous prefixed name include forms that do not
+/// exist (`Mitonne`: tonne takes no binary prefixes). Present before the config layer.
+#[test]
+fn known_limitation_kl_16_prefixed_ambiguity_candidates_are_not_all_valid() {
+    let r = dimvexa(&["convert", "1", "Miton", "kg"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr.contains("Mitonne"),
+        "KL-16 fixed? then only valid forms are offered: {}",
+        r.stderr
+    );
+}
+
+/// KL-17: a user unit named like a group is listed by `units GROUP`, not looked up.
+#[test]
+fn known_limitation_kl_17_a_unit_named_like_a_group_is_shadowed_by_the_group() {
+    let cfg = config_file(
+        "kl17.toml",
+        "[[unit]]\nsymbol = \"volume\"\nbase = \"L\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"s\"\n",
+    );
+    let r = dimvexa(&["units", "volume", "--config", &cfg]);
+    assert_eq!(r.code, 0);
+    assert!(
+        r.stdout.contains("## volume") && !r.stdout.starts_with("volume\n"),
+        "KL-17 fixed? then the unit's details are shown"
+    );
+    assert_eq!(
+        dimvexa(&["convert", "1", "volume", "L", "--config", &cfg]).stdout,
+        "2 L\n"
+    );
+}
+
+/// KL-18: `--` is not supported, and an unknown short option is read as a value.
+#[test]
+fn known_limitation_kl_18_end_of_options_and_short_options() {
+    let r = dimvexa(&["convert", "1", "m", "km", "--"]);
+    assert_eq!(r.code, 2, "KL-18 fixed? then `--` ends the options");
+    assert!(r.stderr.contains("unknown option '--'"));
+    let r = dimvexa(&["-x", "m", "km"]);
+    assert_eq!(
+        (r.code, r.stderr.starts_with("error[invalid_number]")),
+        (1, true)
+    );
+}
+
+#[test]
+fn a_bridge_note_never_misstates_the_density() {
+    let tiny = config_file(
+        "tiny.toml",
+        "[[bridge]]\nname = \"tiny\"\nkind = \"density\"\nvalue = \"1/1000000000000000000000\"\nconditions = \"c\"\nsource = \"s\"\n",
+    );
+    let r = dimvexa(&[
+        "convert", "1", "kg", "m3", "--config", &tiny, "--bridge", "tiny",
+    ]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(
+        r.stderr
+            .contains("1/1000000000000000000000 (about 0.000000000000000)"),
+        "{}",
+        r.stderr
+    );
+    let third = config_file(
+        "third.toml",
+        "[[bridge]]\nname = \"t\"\nkind = \"density\"\nvalue = \"1000/3\"\nconditions = \"c\"\nsource = \"s\"\n",
+    );
+    let r = dimvexa(&[
+        "convert", "3", "L", "kg", "--config", &third, "--bridge", "t", "--exact",
+    ]);
+    assert!(
+        r.stderr.contains("1000/3 (about 333.333333333333333)"),
+        "{}",
+        r.stderr
+    );
+    // A short exact decimal is shown plainly, and control characters in the config text are cleaned.
+    let cfg = config_file(
+        "ctl.toml",
+        "[[bridge]]\nname = \"w\"\nkind = \"density\"\nvalue = \"998.2067\"\nconditions = \"a\tb\"\nsource = \"s\"\n",
+    );
+    let r = dimvexa(&["convert", "1", "L", "kg", "--config", &cfg, "--bridge", "w"]);
+    assert!(
+        r.stderr.contains("density 998.2067 kg/m3; a b;"),
+        "{}",
+        r.stderr
+    );
+}
+
+#[test]
+fn units_json_marks_the_ambiguous_names_a_config_resolves() {
+    let cfg = config_file("resolved.toml", TRADE);
+    let v = json::parse(&dimvexa(&["units", "--json", "--config", &cfg]).stdout).unwrap();
+    json::check_units_schema(&v);
+    let amb = v.get("ambiguous").unwrap().as_array();
+    let by = |sym: &str| {
+        amb.iter()
+            .find(|a| a.get("symbol").unwrap().as_str() == sym)
+            .unwrap()
+    };
+    assert_eq!(
+        by("mt")
+            .get("resolved_by")
+            .unwrap()
+            .get("unit")
+            .unwrap()
+            .as_str(),
+        "tonne"
+    );
+    assert!(matches!(
+        by("gal").get("resolved_by").unwrap(),
+        json::V::Null
+    ));
+    let text = dimvexa(&["units", "mass", "--config", &cfg]).stdout;
+    assert!(text.contains("refused unless your config resolves them"));
 }

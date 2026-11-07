@@ -155,14 +155,15 @@
         },
         "ambiguous": {
           "type": "array",
-          "description": "Bare symbols that are rejected with `ambiguous_symbol`; use one of the candidates.",
+          "description": "Bare symbols the shipped table refuses with `ambiguous_symbol`. One that your `--config` maps to a unit is still listed, with `resolved_by` set; with no config it is null.",
           "items": {
             "type": "object",
             "required": [
               "symbol",
               "candidates",
               "planned",
-              "note"
+              "note",
+              "resolved_by"
             ],
             "properties": {
               "symbol": {
@@ -184,6 +185,33 @@
               },
               "note": {
                 "type": "string"
+              },
+              "resolved_by": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "unit",
+                      "file",
+                      "line"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "type": "string"
+                      },
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  }
+                ]
               }
             }
           }

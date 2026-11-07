@@ -335,12 +335,35 @@ enum LoadError {
     Lib(Error),
 }
 
+/// The largest config file we read: a config is a handful of lines, so anything bigger is
+/// a mistake (or a device such as `/dev/zero`), not a config.
+const MAX_CONFIG_BYTES: u64 = 1 << 20;
+
+/// Reads a config file: a regular file of at most [`MAX_CONFIG_BYTES`], valid UTF-8.
+fn read_config(file: &str) -> Result<String, LoadError> {
+    use std::io::Read as _;
+    let fail = |why: String| LoadError::Io(format!("cannot read config '{file}': {why}"));
+    let meta = std::fs::metadata(file).map_err(|e| fail(e.to_string()))?;
+    if !meta.is_file() {
+        return Err(fail("not a regular file".to_string()));
+    }
+    let mut text = String::new();
+    std::fs::File::open(file)
+        .map_err(|e| fail(e.to_string()))?
+        .take(MAX_CONFIG_BYTES.saturating_add(1))
+        .read_to_string(&mut text)
+        .map_err(|e| fail(e.to_string()))?;
+    if u64::try_from(text.len()).map_or(true, |n| n > MAX_CONFIG_BYTES) {
+        return Err(fail(format!("larger than {MAX_CONFIG_BYTES} bytes")));
+    }
+    Ok(text)
+}
+
 fn load(config_files: &[String]) -> Result<Loaded, LoadError> {
     let mut reg = registry().map_err(LoadError::Lib)?;
     let (mut parsed, mut configs) = (Vec::new(), Vec::new());
     for file in config_files {
-        let text = std::fs::read_to_string(file)
-            .map_err(|e| LoadError::Io(format!("cannot read config '{file}': {e}")))?;
+        let text = read_config(file)?;
         let cfg = Config::parse(&text, file).map_err(LoadError::Lib)?;
         configs.push((file.clone(), cfg.hash().to_string()));
         parsed.push(cfg);
@@ -464,21 +487,29 @@ fn bridge_json(b: &Bridge) -> String {
     )
 }
 
-/// One line for people: the assumption behind a bridged result.
+/// One line for people: the assumption behind a bridged result. Text from the config has its
+/// control characters replaced, and a density that is not a short decimal is shown as the
+/// exact fraction, so the note never reads as a different number.
 fn bridge_note(b: &Bridge) -> String {
-    let decimal = b
-        .value
-        .to_decimal(15)
-        .map_or_else(|_| b.value.to_fraction_string(), |(d, _)| d);
+    let value = match b.value.to_decimal(15) {
+        Ok((decimal, true)) => decimal,
+        Ok((decimal, false)) => format!("{} (about {decimal})", b.value.to_fraction_string()),
+        Err(_) => b.value.to_fraction_string(),
+    };
+    let clean = |s: &str| -> String {
+        s.chars()
+            .map(|c| if c.is_control() { ' ' } else { c })
+            .collect()
+    };
     format!(
         "note: used bridge {} ({} {} {}; {}; source: {}; {}:{})",
-        b.name,
+        clean(&b.name),
         b.kind.name(),
-        decimal,
+        value,
         b.kind.unit(),
-        b.conditions,
-        b.source,
-        b.origin,
+        clean(&b.conditions),
+        clean(&b.source),
+        clean(&b.origin),
         b.line
     )
 }
@@ -672,7 +703,7 @@ fn units_text(
     }
     if !ambiguous.is_empty() {
         s.push_str(
-            "\n## ambiguous symbols (refused; use an explicit symbol)\n\
+            "\n## ambiguous symbols (refused unless your config resolves them)\n\
 # columns: symbol, candidates, planned, note\n",
         );
         for a in ambiguous {
@@ -770,11 +801,24 @@ fn units_json(
         .iter()
         .map(|a| {
             format!(
-                "{{\"symbol\":{},\"candidates\":[{}],\"planned\":[{}],\"note\":{}}}",
+                "{{\"symbol\":{},\"candidates\":[{}],\"planned\":[{}],\"note\":{},\"resolved_by\":{}}}",
                 json_string(a.symbol),
                 strs(a.candidates),
                 strs(a.planned),
-                json_string(a.note)
+                json_string(a.note),
+                loaded
+                    .mappings
+                    .iter()
+                    .find(|m| m.name == a.symbol)
+                    .map_or_else(
+                        || "null".to_string(),
+                        |m| format!(
+                            "{{\"unit\":{},\"file\":{},\"line\":{}}}",
+                            json_string(&m.target),
+                            json_string(&m.origin),
+                            m.line
+                        )
+                    )
             )
         })
         .collect();

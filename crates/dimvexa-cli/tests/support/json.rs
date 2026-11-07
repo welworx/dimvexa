@@ -311,7 +311,7 @@ pub fn check_units_schema(v: &V) {
         let _ = u.get("aliases").unwrap().as_array();
     }
     for a in v.get("ambiguous").unwrap().as_array() {
-        for k in ["symbol", "candidates", "planned", "note"] {
+        for k in ["symbol", "candidates", "planned", "note", "resolved_by"] {
             assert!(a.get(k).is_some(), "missing ambiguous[].{k}");
         }
         // A symbol may have only planned candidates until they enter the table.
@@ -379,4 +379,90 @@ fn check_bridge(b: &V) {
     assert_eq!(b.get("unit").unwrap().as_str(), "kg/m3");
     assert!(!b.get("conditions").unwrap().as_str().is_empty());
     assert!(!b.get("source").unwrap().as_str().is_empty());
+}
+
+/// A small JSON Schema checker for the files in `docs/schemas/`: `type`, `const`, `enum`,
+/// `required`, `properties`, `items`, `oneOf`, `minItems`, `maxItems` and `minimum`. Enough to
+/// catch a CLI output that drifts from the documented schema. Returns the first mismatch.
+pub fn schema_mismatch(schema: &V, value: &V, path: &str) -> Option<String> {
+    if let Some(V::Arr(options)) = schema.get("oneOf") {
+        let matching = options
+            .iter()
+            .filter(|o| schema_mismatch(o, value, path).is_none())
+            .count();
+        return (matching == 0).then(|| format!("{path}: matches none of the oneOf branches"));
+    }
+    if let Some(c) = schema.get("const") {
+        if c != value {
+            return Some(format!("{path}: expected const {c:?}, got {value:?}"));
+        }
+    }
+    if let Some(V::Arr(options)) = schema.get("enum") {
+        if !options.contains(value) {
+            return Some(format!("{path}: {value:?} is not one of {options:?}"));
+        }
+    }
+    if let Some(t) = schema.get("type") {
+        let names: Vec<&str> = match t {
+            V::Str(s) => vec![s.as_str()],
+            V::Arr(a) => a.iter().map(V::as_str).collect(),
+            _ => vec![],
+        };
+        let ok = names.iter().any(|n| match (*n, value) {
+            ("null", V::Null)
+            | ("boolean", V::Bool(_))
+            | ("string", V::Str(_))
+            | ("array", V::Arr(_))
+            | ("object", V::Obj(_))
+            | ("number", V::Num(_)) => true,
+            ("integer", V::Num(x)) => x.fract() == 0.0,
+            _ => false,
+        });
+        if !names.is_empty() && !ok {
+            return Some(format!("{path}: expected type {names:?}, got {value:?}"));
+        }
+    }
+    if let V::Obj(map) = value {
+        if let Some(V::Arr(req)) = schema.get("required") {
+            for k in req {
+                if !map.contains_key(k.as_str()) {
+                    return Some(format!("{path}: missing required key '{}'", k.as_str()));
+                }
+            }
+        }
+        if let Some(V::Obj(props)) = schema.get("properties") {
+            for (k, sub) in props {
+                if let Some(v) = map.get(k) {
+                    if let Some(m) = schema_mismatch(sub, v, &format!("{path}.{k}")) {
+                        return Some(m);
+                    }
+                }
+            }
+        }
+    }
+    if let V::Arr(items) = value {
+        if let Some(V::Num(n)) = schema.get("minItems") {
+            if f64::from(u32::try_from(items.len()).unwrap()) < *n {
+                return Some(format!("{path}: fewer than {n} items"));
+            }
+        }
+        if let Some(V::Num(n)) = schema.get("maxItems") {
+            if f64::from(u32::try_from(items.len()).unwrap()) > *n {
+                return Some(format!("{path}: more than {n} items"));
+            }
+        }
+        if let Some(sub) = schema.get("items") {
+            for (i, v) in items.iter().enumerate() {
+                if let Some(m) = schema_mismatch(sub, v, &format!("{path}[{i}]")) {
+                    return Some(m);
+                }
+            }
+        }
+    }
+    if let (Some(V::Num(min)), V::Num(x)) = (schema.get("minimum"), value) {
+        if x < min {
+            return Some(format!("{path}: {x} is below the minimum {min}"));
+        }
+    }
+    None
 }

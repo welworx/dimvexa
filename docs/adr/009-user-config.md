@@ -21,7 +21,9 @@ Both can use one format and one loader, so a shipped profile is a config bundled
 
 The config layer is a separate component, the crate `dimvexa-config`, so the core stays focused
 on units and conversions. The core offers one primitive, `Registry::add_alias(alias, target)`,
-with the safety rules below (no redefinition, the target must exist, no factor). The file
+with the safety rules below (no redefinition, the target must exist, no factor), and two
+read-only helpers the config layer uses to apply the same rules to `[[unit]]`:
+`Registry::name_is_free` and `Registry::prefix_clash`. The file
 format, the content hash and the override rules live in `dimvexa-config`; the CLI only reads
 files and passes the text. The facade crate does not re-export it.
 
@@ -56,7 +58,10 @@ Rules, so a config cannot make a result silently wrong:
 
 1. **Core is never shadowed (ADR-008).** A `[[unit]]` can never take the name of an existing
    symbol, alias or prefixed form (`kg`, `mm`), nor a prefix on an ambiguous name (`kcal`:
-   defining it would silently drop the prefix), nor a declared-ambiguous bare name. `[map]` may resolve a name that is declared ambiguous
+   defining it would silently drop the prefix), nor a declared-ambiguous bare name. A new name
+   that accepts prefixes may not hide a prefixed form that already means something (`pallet`
+   with SI prefixes would hide `kpallet`, `ol` would hide `mol`). A prefix on an ambiguous name
+   stays ambiguous even when a config gives the rest a meaning (`Miton` after `iton`). `[map]` may resolve a name that is declared ambiguous
    or unknown (`mt`, `ton`). It may not redefine an existing symbol or alias (`t`, `m`, `psi`).
 2. **A mapping only points at an existing unit.** It cannot carry a factor.
 3. **Everything is validated like the shipped data.** A bad fraction, duplicate symbol,
@@ -104,7 +109,7 @@ Open sub-decisions (recommended default first; not implemented before the owner 
 ## Known limitations
 
 Listed with ids, effects and fix ideas in [`docs/known-limitations.md`](../known-limitations.md)
-(KL-1 to KL-13); the ones that can be checked are pinned by tests.
+(KL-1 to KL-18); the ones that can be checked are pinned by tests.
 
 ## Consequences
 
