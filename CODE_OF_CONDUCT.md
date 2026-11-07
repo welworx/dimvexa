@@ -12,9 +12,10 @@ publishing others' private information are not acceptable.
 ## Enforcement
 
 Maintainers may remove comments, commits and contributions that violate this code and may
-ban contributors who do so repeatedly. Report concerns privately to the maintainers through
-GitHub's private channels.
+ban contributors who do so repeatedly. Report concerns privately to the maintainer: open a private report through the repository's
+*Security > Report a vulnerability* form and start the title with "Conduct report". Reports
+are read only by the maintainer and are not made public.
 
-<!-- TODO(owner): add a private contact address for conduct reports. Before the first public
-release, replace this summary with the full Contributor Covenant 2.1 text, which is licensed
-CC BY 4.0 and must be attributed. -->
+This page is a short summary written for this project. Before the first public release it
+should be replaced by the full Contributor Covenant 2.1 text, which is licensed CC BY 4.0
+and must be attributed.

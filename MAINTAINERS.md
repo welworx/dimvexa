@@ -1,7 +1,7 @@
 # Maintainers
 
-<!-- TODO(owner): replace with the GitHub handle(s) of the maintainer(s). -->
-
 | Handle | Role |
 |---|---|
-| TODO-owner | Owner and sole maintainer |
+| [@welworx](https://github.com/welworx) | Owner and sole maintainer |
+
+Decision rules are in [GOVERNANCE.md](GOVERNANCE.md).
