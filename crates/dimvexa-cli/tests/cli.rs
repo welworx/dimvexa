@@ -334,6 +334,12 @@ fn units_lists_every_table_entry_by_group() {
     let rows = r.stdout.lines().filter(|l| l.split('\t').count() == 6);
     assert_eq!(rows.count(), n);
     assert!(r.stdout.lines().any(|l| l == "## volume"));
+    // The listing starts with the selectable groups and their sizes.
+    assert!(
+        r.stdout
+            .starts_with("## groups (list one with: dimvexa units GROUP)\n")
+    );
+    assert!(r.stdout.lines().any(|l| l == "volume\t5"));
     assert!(r.stdout.lines().any(|l| l.starts_with("psi\t")));
     assert!(r.stdout.lines().any(|l| l.starts_with("ton\tton_short, ")));
     snapshot("units.txt", &r.stdout);
@@ -358,6 +364,9 @@ fn units_can_be_narrowed_to_a_group() {
     let v = json::parse(&dimvexa(&["units", "mass", "--json"]).stdout).unwrap();
     json::check_units_schema(&v);
     assert_eq!(v.get("group").unwrap().as_str(), "mass");
+    // A narrowed listing still names every group, and its text has no group overview.
+    assert!(v.get("groups").unwrap().as_array().len() > 5);
+    assert!(!r.stdout.contains("## groups"));
     for u in v.get("units").unwrap().as_array() {
         assert_eq!(u.get("group").unwrap().as_str(), "mass");
     }

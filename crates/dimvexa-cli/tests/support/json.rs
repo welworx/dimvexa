@@ -258,6 +258,12 @@ pub fn check_units_schema(v: &V) {
     assert!(v.get("ok").unwrap().as_bool());
     assert!(v.get("data_version").unwrap().as_str().starts_with('v'));
     assert!(v.get("group").is_some(), "missing group");
+    let groups = v.get("groups").unwrap().as_array();
+    assert!(!groups.is_empty());
+    for g in groups {
+        assert!(!g.get("name").unwrap().as_str().is_empty());
+        assert!(g.get("units").unwrap().as_f64() >= 1.0);
+    }
     let units = v.get("units").unwrap().as_array();
     assert!(!units.is_empty());
     for u in units {
