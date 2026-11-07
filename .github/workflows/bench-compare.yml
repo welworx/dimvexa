@@ -1,0 +1,127 @@
+# Cross-library benchmark comparison. NEVER required and NOT part of ci-success: it installs
+# third-party packages, takes long and is noisy on shared runners. Run it by hand or weekly; the
+# results are uploaded as artifacts and nothing is committed. See docs/benchmarking.md.
+# Not yet executed on GitHub (see docs/ci-pinning.md).
+name: bench-compare
+
+on:
+  workflow_dispatch:
+    inputs:
+      allow_unlocked:
+        description: "Install competitors without lockfiles (results are labelled 'unlocked')"
+        type: boolean
+        default: false
+      quick:
+        description: "Smoke test with few samples (not a measurement)"
+        type: boolean
+        default: false
+  schedule:
+    # Mondays 04:41 UTC, an off-peak, off-the-hour minute.
+    - cron: "41 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bench-compare
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+
+jobs:
+  compare:
+    name: run all runners on one machine
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      ALLOW_UNLOCKED: ${{ inputs.allow_unlocked && 'true' || 'false' }}
+      QUICK: ${{ inputs.quick && 'yes' || 'no' }}
+    steps:
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # UNVERIFIED SHA: no SHA for this action was available; look it up on the release page
+      # and replace the placeholder before the first run (see docs/ci-pinning.md).
+      - uses: actions/setup-python@UNVERIFIED-pin-before-use # v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      # UNVERIFIED SHA: as above.
+      - uses: actions/setup-node@UNVERIFIED-pin-before-use # v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Check the lockfiles
+        run: |
+          missing=""
+          for f in benchmarks/python/requirements.lock.txt benchmarks/node/package-lock.json benchmarks/runners/rust-uom/Cargo.lock; do
+            [ -f "$f" ] || missing="$missing $f"
+          done
+          if [ -n "$missing" ] && [ "$ALLOW_UNLOCKED" != "true" ]; then
+            echo "missing lockfiles:$missing (run benchmarks/tools/lock.sh, or start with allow_unlocked)"
+            exit 1
+          fi
+          if [ -n "$missing" ]; then echo "DIMVEXA_BENCH_LOCK=unlocked" >> "$GITHUB_ENV"; else echo "DIMVEXA_BENCH_LOCK=pinned" >> "$GITHUB_ENV"; fi
+      - name: Rust toolchain (rustup, as in ci.yml)
+        run: rustup toolchain install stable --profile minimal && rustup default stable
+      - name: Record the machine
+        run: |
+          mkdir -p benchmarks/results
+          { lscpu; echo; cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo "governor: unknown"; } > benchmarks/results/machine.txt
+      - name: Verify the corpus is current
+        run: python3 -I benchmarks/tools/gen_corpus.py --check
+      - name: Install Python competitors
+        run: |
+          python3 -m venv benchmarks/python/.venv
+          . benchmarks/python/.venv/bin/activate
+          if [ -f benchmarks/python/requirements.lock.txt ]; then
+            pip install --require-hashes -r benchmarks/python/requirements.lock.txt
+          else
+            pip install -r benchmarks/python/requirements.in
+          fi
+      - name: Install Node competitors
+        working-directory: benchmarks/node
+        run: |
+          if [ -f package-lock.json ]; then npm ci --ignore-scripts; else npm install --ignore-scripts; fi
+      - name: Build the Rust runners
+        run: |
+          cargo build --release --manifest-path benchmarks/runners/dimvexa-rs/Cargo.toml
+          cargo build --release -p dimvexa-cli
+          if [ -f benchmarks/runners/rust-uom/Cargo.lock ]; then
+            cargo build --release --locked --manifest-path benchmarks/runners/rust-uom/Cargo.toml
+          else
+            cargo build --release --manifest-path benchmarks/runners/rust-uom/Cargo.toml
+          fi
+      - name: Run Rust runners
+        run: |
+          R=benchmarks/runners
+          args=(); [ "$QUICK" = yes ] && args+=(--quick)
+          $R/dimvexa-rs/target/release/dimvexa-bench "${args[@]}" --cli target/release/dimvexa
+          $R/dimvexa-rs/target/release/dimvexa-bench "${args[@]}" --ceiling
+          $R/rust-uom/target/release/dimvexa-bench-uom "${args[@]}"
+      - name: Run Python runners
+        run: |
+          . benchmarks/python/.venv/bin/activate
+          cd benchmarks/python
+          args=(); [ "$QUICK" = yes ] && args+=(--quick)
+          for r in run_pint.py run_unyt.py run_astropy.py; do python3 "$r" "${args[@]}"; done
+          python3 run_ceiling.py numpy "${args[@]}"
+          python3 run_ceiling.py python "${args[@]}"
+      - name: Run Node runners
+        working-directory: benchmarks/node
+        run: |
+          args=(); [ "$QUICK" = yes ] && args+=(--quick)
+          for r in run_mathjs.js run_jsquantities.js run_convertunits.js run_ceiling.js; do node "$r" "${args[@]}"; done
+      - name: Build the report
+        run: python3 -I benchmarks/tools/report.py --out benchmarks/results/report/comparison.md
+      - name: Upload raw results and report
+        # copied from a widely used repo, verify against the action's release page before enabling
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: bench-compare-${{ github.run_id }}
+          path: |
+            benchmarks/results/
+          if-no-files-found: error
+          retention-days: 90
