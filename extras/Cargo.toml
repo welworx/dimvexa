@@ -1,0 +1,29 @@
+# NOT built by the main workspace and NOT verified in M0: the crates registry was unreachable
+# when this was written. Run `cargo test` and `cargo bench` here once the network is available.
+[package]
+name = "dimvexa-extras"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+
+[dev-dependencies]
+dimvexa = { path = "../crates/dimvexa" }
+dimvexa-core = { path = "../crates/dimvexa-core" }
+dimvexa-data = { path = "../crates/dimvexa-data" }
+proptest = "1"
+criterion = "0.5"
+iai-callgrind = "0.14"
+insta = "1"
+assert_cmd = "2"
+
+[[bench]]
+name = "criterion"
+harness = false
+
+[[bench]]
+name = "iai"
+harness = false

@@ -1,0 +1,23 @@
+# cargo-fuzz skeleton, NOT built in M0 (libfuzzer-sys could not be downloaded).
+# Run: cargo install cargo-fuzz && cargo +nightly fuzz run parse_unit
+[package]
+name = "dimvexa-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+
+[dependencies]
+libfuzzer-sys = "0.4"
+dimvexa-core = { path = "../crates/dimvexa-core" }
+dimvexa-data = { path = "../crates/dimvexa-data" }
+
+[[bin]]
+name = "parse_unit"
+path = "fuzz_targets/parse_unit.rs"
+test = false
+doc = false
