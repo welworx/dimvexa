@@ -1,0 +1,311 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+//! Integration and snapshot tests for the `dimvexa` binary (std::process, no extra crates).
+//!
+//! Snapshots live in `tests/snapshots/`. Set `DIMVEXA_UPDATE_SNAPSHOTS=1` to rewrite them,
+//! then review the diff.
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::too_many_lines,
+    clippy::panic,
+    clippy::doc_markdown,
+    clippy::format_push_string,
+    clippy::indexing_slicing
+)]
+
+#[path = "support/json.rs"]
+mod json;
+
+use std::path::PathBuf;
+use std::process::Command;
+
+struct Run {
+    code: i32,
+    stdout: String,
+    stderr: String,
+}
+
+fn dimvexa(args: &[&str]) -> Run {
+    let out = Command::new(env!("CARGO_BIN_EXE_dimvexa"))
+        .args(args)
+        .output()
+        .unwrap();
+    Run {
+        code: out.status.code().unwrap(),
+        stdout: String::from_utf8(out.stdout).unwrap(),
+        stderr: String::from_utf8(out.stderr).unwrap(),
+    }
+}
+
+fn snapshot(name: &str, actual: &str) {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/snapshots")
+        .join(name);
+    if std::env::var_os("DIMVEXA_UPDATE_SNAPSHOTS").is_some() {
+        std::fs::write(&path, actual).unwrap();
+        return;
+    }
+    let expected =
+        std::fs::read_to_string(&path).unwrap_or_else(|_| panic!("missing snapshot {name}"));
+    assert_eq!(
+        actual, expected,
+        "snapshot {name} differs (DIMVEXA_UPDATE_SNAPSHOTS=1 to update)"
+    );
+}
+
+/// Normalises the data hash so snapshots survive a table update (the hash has its own test).
+fn stable(s: &str) -> String {
+    let Some(i) = s.find("fnv1a64:") else {
+        return s.to_string();
+    };
+    let tail = &s[i..];
+    let len = tail.find(['"', ')', '\n']).unwrap_or(tail.len());
+    format!("{}fnv1a64:<hash>{}", &s[..i], &tail[len..])
+}
+
+#[test]
+fn text_output_and_shorthand() {
+    let r = dimvexa(&["convert", "10", "m/s", "km/h"]);
+    assert_eq!(
+        (r.code, r.stdout.as_str(), r.stderr.as_str()),
+        (0, "36 km/h\n", "")
+    );
+    assert_eq!(dimvexa(&["10", "m/s", "km/h"]).stdout, "36 km/h\n");
+    assert_eq!(
+        dimvexa(&["convert", "10", "m/s", "km/h", "--exact"]).stdout,
+        "36/1 km/h\n"
+    );
+    assert_eq!(
+        dimvexa(&["--exact", "convert", "1", "psi", "Pa"]).stdout,
+        "8896443230521/1290320000 Pa\n"
+    );
+    assert_eq!(
+        dimvexa(&["convert", "1", "psi", "Pa"]).stdout,
+        "6894.757293168362 Pa\n"
+    );
+    assert_eq!(dimvexa(&["convert", "0", "degC", "K"]).stdout, "273.15 K\n");
+    assert_eq!(
+        dimvexa(&["convert", "-40", "degF", "degC"]).stdout,
+        "-40 degC\n"
+    );
+    assert_eq!(
+        dimvexa(&["convert", "1", "kWh", "MJ", "--exact"]).stdout,
+        "18/5 MJ\n"
+    );
+    assert_eq!(dimvexa(&["convert", "1.5e3", "m", "km"]).stdout, "1.5 km\n");
+    assert_eq!(
+        dimvexa(&["convert", "1", "atm", "mmHg"]).stdout,
+        "759.9998917256113 mmHg\n"
+    );
+}
+
+#[test]
+fn snapshots_of_successful_json() {
+    for (name, args) in [
+        (
+            "json_m_s_km_h.json",
+            vec!["convert", "10", "m/s", "km/h", "--json"],
+        ),
+        (
+            "json_degc_degf.json",
+            vec!["convert", "100", "degC", "degF", "--json"],
+        ),
+        (
+            "json_psi_pa.json",
+            vec!["convert", "1", "psi", "Pa", "--json"],
+        ),
+        (
+            "json_third.json",
+            vec!["convert", "1", "min", "h", "--json"],
+        ),
+    ] {
+        let r = dimvexa(&args);
+        assert_eq!((r.code, r.stderr.as_str()), (0, ""), "{name}");
+        snapshot(name, &stable(&r.stdout));
+        let v = json::parse(&r.stdout).unwrap();
+        json::check_convert_schema(&v);
+    }
+}
+
+#[test]
+fn json_fields_have_the_documented_values() {
+    let r = dimvexa(&["convert", "10", "m/s", "km/h", "--json"]);
+    let v = json::parse(&r.stdout).unwrap();
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/1");
+    assert!(v.get("ok").unwrap().as_bool());
+    assert_eq!(v.get("input").unwrap().get("value").unwrap().as_str(), "10");
+    assert_eq!(v.get("input").unwrap().get("unit").unwrap().as_str(), "m/s");
+    assert_eq!(
+        v.get("output").unwrap().get("value").unwrap().as_str(),
+        "36"
+    );
+    assert_eq!(
+        v.get("output").unwrap().get("unit").unwrap().as_str(),
+        "km/h"
+    );
+    assert!((v.get("output").unwrap().get("f64").unwrap().as_f64() - 36.0).abs() < 1e-12);
+    assert_eq!(
+        v.get("exact").unwrap().get("value").unwrap().as_str(),
+        "36/1"
+    );
+    assert_eq!(
+        v.get("exact").unwrap().get("factor").unwrap().as_str(),
+        "18/5"
+    );
+    assert_eq!(v.get("exactness").unwrap().as_str(), "defined");
+    assert_eq!(v.get("kind").unwrap().as_str(), "linear");
+    assert_eq!(v.get("dimension").unwrap().as_array().len(), 7);
+    assert!(
+        v.get("data_version")
+            .unwrap()
+            .as_str()
+            .starts_with("v1+fnv1a64:")
+    );
+    // Third: a non-terminating decimal is flagged, the exact fraction stays exact.
+    let v = json::parse(&dimvexa(&["convert", "1", "min", "h", "--json"]).stdout).unwrap();
+    assert_eq!(
+        v.get("exact").unwrap().get("value").unwrap().as_str(),
+        "1/60"
+    );
+    assert!(v.get("output").unwrap().get("truncated").unwrap().as_bool());
+}
+
+#[test]
+fn every_error_code_has_a_cli_test() {
+    // (args, library error code, exit code)
+    let cases: Vec<(&[&str], &str, i32)> = vec![
+        (&["convert", "1", "ton", "kg"], "ambiguous_symbol", 1),
+        (&["convert", "1", "zork", "m"], "unknown_unit", 1),
+        (&["convert", "1", "m", "s"], "dimension_mismatch", 1),
+        (&["convert", "20", "degC", "delta_degC"], "kind_mismatch", 1),
+        (&["convert", "1", "m/", "m"], "parse_error", 1),
+        (&["convert", "abc", "m", "km"], "invalid_number", 1),
+        (
+            &["convert", "1", "J/mol.K", "J/mol/K"],
+            "ambiguous_expression",
+            1,
+        ),
+        (&["convert", "1", "degC/s", "K/s"], "refused", 1),
+        (&["convert", "1", "Qm2", "qm2"], "overflow", 1),
+        (&["convert", "1", "m"], "usage", 2),
+    ];
+    for (args, code, exit) in cases {
+        // text mode: message on stderr, nothing on stdout
+        let r = dimvexa(args);
+        assert_eq!((r.code, r.stdout.as_str()), (exit, ""), "{args:?}");
+        assert!(
+            r.stderr.starts_with(&format!("error[{code}]: ")),
+            "{args:?}: {}",
+            r.stderr
+        );
+        // json mode: JSON error on stdout, same exit code, nothing on stderr
+        let mut with_json = args.to_vec();
+        with_json.push("--json");
+        let r = dimvexa(&with_json);
+        assert_eq!((r.code, r.stderr.as_str()), (exit, ""), "{with_json:?}");
+        let v =
+            json::parse(&r.stdout).unwrap_or_else(|e| panic!("{with_json:?}: {e}: {}", r.stdout));
+        assert!(!v.get("ok").unwrap().as_bool());
+        assert_eq!(
+            v.get("error").unwrap().get("code").unwrap().as_str(),
+            code,
+            "{with_json:?}"
+        );
+        assert!(
+            !v.get("error")
+                .unwrap()
+                .get("message")
+                .unwrap()
+                .as_str()
+                .is_empty()
+        );
+    }
+    // every documented library code is covered by the table above
+    for code in dimvexa::Error::ALL_CODES {
+        let covered = [
+            "ambiguous_symbol",
+            "unknown_unit",
+            "dimension_mismatch",
+            "kind_mismatch",
+            "parse_error",
+            "invalid_number",
+            "ambiguous_expression",
+            "refused",
+            "overflow",
+        ];
+        // Codes that need a malformed registry or internal state cannot be triggered from the CLI.
+        let not_reachable = [
+            "division_by_zero",
+            "length_mismatch",
+            "invalid_definition",
+            "duplicate_symbol",
+        ];
+        assert!(
+            covered.contains(code) || not_reachable.contains(code),
+            "uncovered error code {code}"
+        );
+    }
+}
+
+#[test]
+fn error_snapshots() {
+    let mut text = String::new();
+    for args in [
+        vec!["convert", "1", "ton", "kg", "--json"],
+        vec!["convert", "1", "gal", "L"],
+        vec!["convert", "1", "kcal", "J", "--json"],
+        vec!["convert", "1", "H", "s", "--json"],
+        vec!["convert", "1", "m", "s", "--json"],
+        vec!["convert", "1", "J/mol.K", "J/mol/K"],
+        vec!["convert", "20", "degC", "delta_degC"],
+        vec!["convert", "1", "ppm", "1"],
+        vec!["convert", "1", "m"],
+    ] {
+        let r = dimvexa(&args);
+        text.push_str(&format!(
+            "$ dimvexa {}\n[exit {}]\n--- stdout\n{}--- stderr\n{}\n",
+            args.join(" "),
+            r.code,
+            r.stdout,
+            r.stderr
+        ));
+    }
+    snapshot("errors.txt", &text);
+}
+
+#[test]
+fn help_and_version() {
+    let r = dimvexa(&["--help"]);
+    assert_eq!(r.code, 0);
+    snapshot("help.txt", &r.stdout);
+    let r = dimvexa(&["--version"]);
+    assert_eq!(r.code, 0);
+    assert!(
+        r.stdout.starts_with("dimvexa 0.0.0 (data v1+fnv1a64:"),
+        "{}",
+        r.stdout
+    );
+}
+
+#[test]
+fn ambiguous_candidates_are_listed_in_json() {
+    let v = json::parse(&dimvexa(&["convert", "1", "oz", "g", "--json"]).stdout).unwrap();
+    let cands: Vec<String> = v
+        .get("error")
+        .unwrap()
+        .get("candidates")
+        .unwrap()
+        .as_array()
+        .iter()
+        .map(|c| c.as_str().to_string())
+        .collect();
+    assert_eq!(
+        cands,
+        [
+            "oz_av",
+            "oz_troy",
+            "fl_oz_us (planned)",
+            "fl_oz_imp (planned)"
+        ]
+    );
+}

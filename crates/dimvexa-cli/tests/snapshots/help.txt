@@ -1,0 +1,18 @@
+Usage:
+  dimvexa convert VALUE FROM TO [--exact] [--json]
+  dimvexa VALUE FROM TO [--exact] [--json]
+
+Converts VALUE from unit FROM to unit TO.
+
+Options:
+  --exact      print the exact rational result (num/den) instead of a decimal
+  --json       machine-readable output (schema dimvexa.convert/1)
+  --version    print version and data table version
+  -h, --help   print this help
+
+Examples:
+  dimvexa convert 10 m/s km/h
+  dimvexa convert 1 psi Pa --exact
+  dimvexa convert 100 degC degF --json
+
+Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.

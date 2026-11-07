@@ -14,6 +14,10 @@ keywords.workspace = true
 categories.workspace = true
 
 
+[lib]
+name = "dimvexa_cli"
+path = "src/lib.rs"
+
 [[bin]]
 name = "dimvexa"
 path = "src/main.rs"

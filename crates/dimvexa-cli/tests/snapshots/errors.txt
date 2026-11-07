@@ -1,0 +1,74 @@
+$ dimvexa convert 1 ton kg --json
+[exit 1]
+--- stdout
+{"schema":"dimvexa.convert/1","ok":false,"error":{"code":"ambiguous_symbol","message":"'ton' is ambiguous: use ton_short or ton_long or tonne, or choose a profile","candidates":["ton_short","ton_long","tonne"]}}
+--- stderr
+
+$ dimvexa convert 1 gal L
+[exit 1]
+--- stdout
+--- stderr
+error[ambiguous_symbol]: 'gal' is ambiguous: use gal_us or gal_imp, or choose a profile
+
+$ dimvexa convert 1 kcal J --json
+[exit 1]
+--- stdout
+{"schema":"dimvexa.convert/1","ok":false,"error":{"code":"ambiguous_symbol","message":"'kcal' is ambiguous: use kcal_th or kcal_IT, or choose a profile","candidates":["kcal_th","kcal_IT"]}}
+--- stderr
+
+$ dimvexa convert 1 H s --json
+[exit 1]
+--- stdout
+{"schema":"dimvexa.convert/1","ok":false,"error":{"code":"dimension_mismatch","message":"dimension mismatch: [kg m^2 s^-2 A^-2] cannot be converted to [s]"}}
+--- stderr
+
+$ dimvexa convert 1 m s --json
+[exit 1]
+--- stdout
+{"schema":"dimvexa.convert/1","ok":false,"error":{"code":"dimension_mismatch","message":"dimension mismatch: [m] cannot be converted to [s]"}}
+--- stderr
+
+$ dimvexa convert 1 J/mol.K J/mol/K
+[exit 1]
+--- stdout
+--- stderr
+error[ambiguous_expression]: ambiguous expression 'J/mol.K': a multiplication after a division (position 5) can be read two ways; write a/(b.c) or (a/b).c
+
+$ dimvexa convert 20 degC delta_degC
+[exit 1]
+--- stdout
+--- stderr
+error[kind_mismatch]: kind mismatch in conversion: absolute_temperature and temperature_difference are not compatible
+
+$ dimvexa convert 1 ppm 1
+[exit 1]
+--- stdout
+--- stderr
+error[ambiguous_symbol]: 'ppm' is ambiguous: use ppmw (planned) or ppmv (planned) or ppmmol (planned), or choose a profile
+
+$ dimvexa convert 1 m
+[exit 2]
+--- stdout
+--- stderr
+error[usage]: expected VALUE FROM TO, got 2 argument(s); try 'dimvexa --help'
+
+Usage:
+  dimvexa convert VALUE FROM TO [--exact] [--json]
+  dimvexa VALUE FROM TO [--exact] [--json]
+
+Converts VALUE from unit FROM to unit TO.
+
+Options:
+  --exact      print the exact rational result (num/den) instead of a decimal
+  --json       machine-readable output (schema dimvexa.convert/1)
+  --version    print version and data table version
+  -h, --help   print this help
+
+Examples:
+  dimvexa convert 10 m/s km/h
+  dimvexa convert 1 psi Pa --exact
+  dimvexa convert 100 degC degF --json
+
+Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
+
+
