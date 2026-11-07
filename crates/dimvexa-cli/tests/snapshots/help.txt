@@ -1,12 +1,16 @@
 Usage:
   dimvexa convert VALUE FROM TO [--exact] [--json]
   dimvexa VALUE FROM TO [--exact] [--json]
+  dimvexa units [--json]
 
 Converts VALUE from unit FROM to unit TO.
 
+Commands:
+  units        list all supported units (symbol, aliases, kind, exactness, prefixes)
+
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
-  --json       machine-readable output (schema dimvexa.convert/1)
+  --json       machine-readable output (schema dimvexa.convert/1; dimvexa.units/1 for units)
   --version    print version and data table version
   -h, --help   print this help
 

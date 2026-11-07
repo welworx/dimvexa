@@ -4,6 +4,7 @@
 //! ```text
 //! dimvexa convert VALUE FROM TO [--exact] [--json]
 //! dimvexa VALUE FROM TO [--exact] [--json]        shorthand
+//! dimvexa units [--json]                          list all supported units
 //! ```
 //!
 //! This crate contains **no conversion logic**: it parses arguments, calls the public
@@ -21,18 +22,22 @@
 use std::fmt::Write as _;
 use std::io::Write;
 
-use dimvexa::{Conversion, Error, Ratio, UnitExpr, registry};
+use dimvexa::{Conversion, Error, Ratio, Registry, UnitExpr, registry};
 
 const USAGE: &str = "\
 Usage:
   dimvexa convert VALUE FROM TO [--exact] [--json]
   dimvexa VALUE FROM TO [--exact] [--json]
+  dimvexa units [--json]
 
 Converts VALUE from unit FROM to unit TO.
 
+Commands:
+  units        list all supported units (symbol, aliases, kind, exactness, prefixes)
+
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
-  --json       machine-readable output (schema dimvexa.convert/1)
+  --json       machine-readable output (schema dimvexa.convert/1; dimvexa.units/1 for units)
   --version    print version and data table version
   -h, --help   print this help
 
@@ -59,6 +64,7 @@ struct Args {
 
 enum Parsed {
     Convert(Args),
+    Units { json: bool },
     Help,
     Version,
 }
@@ -86,6 +92,12 @@ fn parse_args(args: &[String]) -> Result<Parsed, UsageError> {
     }
     if positional.first() == Some(&"convert") {
         positional.remove(0);
+    }
+    if positional.as_slice() == ["units"] {
+        if exact {
+            return Err(usage("'units' does not take --exact".to_string()));
+        }
+        return Ok(Parsed::Units { json: want_json });
     }
     match positional.as_slice() {
         [value, from, to] => Ok(Parsed::Convert(Args {
@@ -237,6 +249,55 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
     ))
 }
 
+fn units_text(reg: &Registry) -> String {
+    let mut s = String::new();
+    for u in reg.units() {
+        let aliases = if u.aliases().is_empty() {
+            String::new()
+        } else {
+            format!("  (aliases: {})", u.aliases().join(", "))
+        };
+        let _ = writeln!(
+            s,
+            "{}\t{}\t{}\t{}{}",
+            u.symbol(),
+            u.kind().name(),
+            u.exactness().name(),
+            u.prefixes().name(),
+            aliases
+        );
+    }
+    s
+}
+
+fn units_json(reg: &Registry) -> String {
+    let items: Vec<String> = reg
+        .units()
+        .iter()
+        .map(|u| {
+            let aliases: Vec<String> = u.aliases().iter().map(|a| json_string(a)).collect();
+            let dims: Vec<String> = u.dim().exponents().iter().map(ToString::to_string).collect();
+            format!(
+                "{{\"symbol\":{},\"aliases\":[{}],\"dimension\":[{}],\"kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"source\":{}}}",
+                json_string(u.symbol()),
+                aliases.join(","),
+                dims.join(","),
+                json_string(u.kind().name()),
+                json_string(u.exactness().name()),
+                json_string(u.prefixes().name()),
+                json_string(u.namespace()),
+                json_string(u.source()),
+            )
+        })
+        .collect();
+    format!(
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"units\":[{}]}}",
+        json_string(&format!("{}.units/1", dimvexa::PROJECT_NAME)),
+        json_string(&dimvexa::data_version()),
+        items.join(",")
+    )
+}
+
 /// Runs the command line `args` (without the program name), writing to `out` and `err`.
 /// Returns the process exit code.
 pub fn run<I>(args: I, out: &mut dyn Write, err: &mut dyn Write) -> u8
@@ -269,6 +330,22 @@ where
                 dimvexa::data_version()
             );
             return 0;
+        }
+        Parsed::Units { json } => {
+            return match registry() {
+                Ok(reg) => {
+                    if json {
+                        let _ = writeln!(out, "{}", units_json(&reg));
+                    } else {
+                        let _ = write!(out, "{}", units_text(&reg));
+                    }
+                    0
+                }
+                Err(e) => {
+                    let _ = writeln!(err, "error[{}]: {e}", e.code());
+                    1
+                }
+            };
         }
         Parsed::Convert(a) => a,
     };
@@ -337,6 +414,17 @@ mod tests {
             (0, "36 km/h\n".into(), String::new())
         );
         assert_eq!(run_str(&["-40", "degF", "degC"]).1, "-40 degC\n");
+    }
+
+    #[test]
+    fn units_lists_the_table() {
+        let (code, out, _) = run_str(&["units"]);
+        assert_eq!(code, 0);
+        assert!(out.lines().any(|l| l.starts_with("psi\t")));
+        let (code, out, _) = run_str(&["units", "--json"]);
+        assert_eq!(code, 0);
+        assert!(out.contains("\"schema\":\"dimvexa.units/1\""));
+        assert_eq!(run_str(&["units", "--exact"]).0, 2);
     }
 
     #[test]
