@@ -2,5 +2,5 @@
 # Version and hash of data/units/*.toml. `cargo xtask validate-data` fails if the hash no
 # longer matches the files; `cargo xtask update-data-hash` bumps the version and rewrites it.
 [[data]]
-version = 2
-hash = "fnv1a64:3033b1b397ec6483"
+version = 3
+hash = "fnv1a64:b81226faf50bb254"

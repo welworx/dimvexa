@@ -138,6 +138,7 @@ delta_degR	temperature_difference	defined	none	Δ°R	NIST SP 811 (2008), Appendi
 ## ambiguous symbols (refused; use an explicit symbol)
 # columns: symbol, candidates, planned, note
 ton	ton_short, ton_long, tonne	-	short ton (2000 lb), long ton (2240 lb) and metric tonne (1000 kg) are all called ton
+mt	tonne	-	SI reads mt as milli-tonne (1 kg, write mtonne or kg), while trade usage means metric ton (1000 kg, write tonne or t)
 gal	gal_us, gal_imp	-	US liquid gallon (3.785411784 L) and imperial gallon (4.54609 L) differ by about 20 percent
 oz	oz_av, oz_troy	fl_oz_us, fl_oz_imp	avoirdupois ounce, troy ounce and the fluid ounces (US and imperial) share the symbol
 pt	pt_us, pt_imp	-	US liquid pint (473.176473 mL), imperial pint (568.26125 mL), dry pint, and pt is also the point and the pico-tonne

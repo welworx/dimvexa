@@ -46,6 +46,9 @@ Commits by `release-plz` once releases start (planned for M1).
 - The differential test is a hard-failing check of the documented bounds (it previously
   tolerated the affine case through a term-relative allowance).
 - Owner placeholders replaced (GitHub handle, repository URL, citation authors).
+- `mt` is now an ambiguous symbol (SI milli-tonne = 1 kg versus the trade abbreviation for metric
+  ton = 1000 kg): it used to convert silently as milli-tonne. Use `tonne` (or `t`) for the metric
+  ton and `mtonne` for the milli-tonne. Data version 3.
 
 ### Fixed
 

@@ -552,6 +552,9 @@ fn readme_ton_example_is_real_output() {
     assert_readme_shows(&section, &["convert", "1", "ton_short", "tonne", "--exact"]);
     assert_readme_shows(&section, &["convert", "1", "ton_short", "kg"]);
     assert_readme_shows(&section, &["convert", "1", "ton_long", "tonne"]);
+    for to in ["mt", "t", "mtonne"] {
+        assert_readme_shows(&section, &["convert", "1", to, "kg"]);
+    }
     // The factor table agrees with the unit data.
     for (sym, factor) in [
         ("tonne", "1000/1"),
@@ -579,4 +582,37 @@ fn readme_ton_example_is_real_output() {
         .map(json::V::as_str)
         .collect();
     assert_eq!(c, ["ton_short", "ton_long", "tonne"]);
+}
+
+/// `mt` is milli-tonne in SI but "metric ton" in trade usage: a silent factor of 1000 either
+/// way, so it is refused like `ton`, and the explicit spellings work.
+#[test]
+fn mt_is_ambiguous_and_the_explicit_spellings_work() {
+    let r = dimvexa(&["convert", "1", "mt", "kg"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr
+            .starts_with("error[ambiguous_symbol]: 'mt' is ambiguous")
+    );
+    assert!(r.stderr.contains("tonne"));
+    assert_eq!(dimvexa(&["convert", "1", "t", "kg"]).stdout, "1000 kg\n");
+    assert_eq!(
+        dimvexa(&["convert", "1", "tonne", "kg"]).stdout,
+        "1000 kg\n"
+    );
+    assert_eq!(dimvexa(&["convert", "1", "mtonne", "kg"]).stdout, "1 kg\n");
+    assert_eq!(dimvexa(&["convert", "1", "Mt", "t"]).stdout, "1000000 t\n");
+    // A prefixed spelling is caught as well, and names the explicit form.
+    let r = dimvexa(&["convert", "1", "kmt", "kg"]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.contains("ktonne"));
+    let v = json::parse(&dimvexa(&["units", "mt", "--json"]).stdout).unwrap();
+    let c = v
+        .get("error")
+        .unwrap()
+        .get("suggestions")
+        .unwrap()
+        .as_array();
+    assert_eq!(c.len(), 1);
+    assert_eq!(c[0].as_str(), "tonne");
 }

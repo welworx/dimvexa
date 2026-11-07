@@ -119,6 +119,19 @@ $ dimvexa convert 1 ton_long tonne
 1.0160469088 tonne
 ```
 
+The abbreviation `mt` is refused too: SI reads it as milli-tonne (1 kg), but trade usage means
+metric ton (1000 kg), and a silent factor of 1000 is worse than an error. `t` is the metric ton,
+`mtonne` the milli-tonne:
+
+```console
+$ dimvexa convert 1 mt kg
+error[ambiguous_symbol]: 'mt' is ambiguous: use tonne, or choose a profile
+$ dimvexa convert 1 t kg
+1000 kg
+$ dimvexa convert 1 mtonne kg
+1 kg
+```
+
 `dimvexa units NAME` also takes an alias (`degC` or its degree-sign spelling) and prefixed or
 compound expressions such as `km` or `m/s`; an unknown or ambiguous name is an error that lists
 the close matches or the candidates.

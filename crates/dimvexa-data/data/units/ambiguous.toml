@@ -9,6 +9,12 @@ planned = []
 note = "short ton (2000 lb), long ton (2240 lb) and metric tonne (1000 kg) are all called ton"
 
 [[ambiguous]]
+symbol = "mt"
+candidates = ["tonne"]
+planned = []
+note = "SI reads mt as milli-tonne (1 kg, write mtonne or kg), while trade usage means metric ton (1000 kg, write tonne or t)"
+
+[[ambiguous]]
 symbol = "gal"
 candidates = ["gal_us", "gal_imp"]
 planned = []
