@@ -1,0 +1,13 @@
+# columns: symbol, quantity_kind, exactness, prefixes, aliases, source
+
+## volume
+L	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)
+gal_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gallon, U.S. liquid = 231 in^3)
+gal_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1 (4.54609 L); NIST SP 811 (2008), Appendix B
+pt_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pint, U.S. liquid)
+pt_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1
+
+## ambiguous symbols (refused; use an explicit symbol)
+# columns: symbol, candidates, planned, note
+gal	gal_us, gal_imp	-	US liquid gallon (3.785411784 L) and imperial gallon (4.54609 L) differ by about 20 percent
+pt	pt_us, pt_imp	-	US liquid pint (473.176473 mL), imperial pint (568.26125 mL), dry pint, and pt is also the point and the pico-tonne

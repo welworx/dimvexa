@@ -42,7 +42,7 @@ dependency without an issue and an ADR. Edition 2024, MSRV 1.85 (do not change i
 | `crates/dimvexa-core/src` | `Dim`, `Ratio` (checked i128), `Kind`, parser (`expr.rs`), `Registry`, `Conversion`, `Quantity`, `Error` |
 | `crates/dimvexa-data` | `data/units/*.toml`, `data/vectors/*.toml`, `data/data_version.toml`; `build.rs` compiles the tables |
 | `crates/dimvexa` | facade crate (re-exports core + data) |
-| `crates/dimvexa-cli` | `dimvexa convert`; no conversion logic of its own; snapshots in `tests/snapshots` |
+| `crates/dimvexa-cli` | `dimvexa convert`, `dimvexa units`; no conversion logic of its own; snapshots in `tests/snapshots` |
 | `crates/dimvexa-testkit` | test helpers; differential, exact-path, property, overflow and zero-allocation tests |
 | `xtask` | `ci`, `validate-data`, `update-data-hash` |
 | `docs/` | `PLAN.md`, `DESIGN.md`, `adr/`, `precision.md`, `benchmarks/`, `ci-pinning.md`, `schemas/` |
@@ -73,6 +73,6 @@ Read the matching skill in `.claude/skills/<name>/SKILL.md` before the task.
   End commits with the attribution lines your environment asks for.
 * Do not push, publish or touch remotes unless the task says so.
 * Keep error codes stable (`Error::ALL_CODES`); adding a field to the JSON schema is allowed
-  within `dimvexa.convert/1`, removing one is not.
+  within `dimvexa.convert/1` or `dimvexa.units/1`, removing one is not.
 * Update `CHANGELOG.md` for user-visible changes and the relevant ADR or doc for a decision.
 * Placeholders are not allowed: no unresolved owner or author markers in committed files.
