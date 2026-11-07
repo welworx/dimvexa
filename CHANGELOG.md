@@ -21,6 +21,8 @@ Commits by `release-plz` once releases start (planned for M1).
   included).
 - `xtask validate-data`.
 - ADR-001 to ADR-008, benchmark report for M0.
+- ADR-009 (proposed): user config files with name mappings, extra units and caller-supplied bridge
+  constants such as a density.
 - `Conversion::apply_exact_f64`: the correctly rounded `f64` of the exact result (0 ulp), with
   a test that proves the rounding against both neighbours.
 - `docs/precision.md`: ulps, the guarantee (linear at most 1 ulp, affine at most 2 ulp),
