@@ -22,6 +22,14 @@ Commits by `release-plz` once releases start (planned for M1).
   use the exact path. The bound is stated on every public conversion method.
 - Aliases for the temperature-difference units (`ΔK`, `Δ°F`, `Δ°R`; `Δ°C` existed) and
   golden vectors for K as an interval inside compound units.
+- `cargo xtask ci`: one local command that runs what CI runs (fmt, clippy, tests, doc tests,
+  docs, data validation, package check, example); a `ci` build profile.
+- CI workflows rewritten: least-privilege permissions, concurrency, timeouts, `merge_group`,
+  `--locked`, an MSRV job, a nightly advisory job with a pinned cargo-deny, an aggregate
+  `ci-success` job, SHA-pinned actions (see `docs/ci-pinning.md`), and PR-title and DCO checks
+  that use no third-party action.
+- Issue forms (bug, feature, unit request) with a security contact link, a new pull request
+  template, `AGENTS.md`, `CLAUDE.md`, a private-reporting `SECURITY.md`, a `Citing` section.
 - `Error::suggestions()`; kind and offset errors now name the delta unit to use (for example
   `20 degC + 5 K` suggests `delta_K`). The CLI JSON error has a `suggestions` field.
 

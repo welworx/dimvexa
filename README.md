@@ -66,21 +66,31 @@ A complete worked example (pool pump electricity: 1.1 kW for 8 h a day for 30 da
 | `crates/dimvexa` | facade crate: core plus the seed table |
 | `crates/dimvexa-cli` | the `dimvexa` command line tool (no conversion logic of its own) |
 | `crates/dimvexa-testkit` | shared test helpers and the counting allocator (not published) |
-| `xtask` | `cargo xtask validate-data` |
+| `xtask` | `cargo xtask ci` (what CI runs), `validate-data`, `update-data-hash` |
 | `extras/`, `fuzz/` | network-only tooling: proptest, criterion, iai-callgrind, insta, cargo-fuzz |
 | `docs/` | plan, design, ADRs, benchmark results, JSON schema |
 
 ## Development
 
 ```console
-cargo build --workspace
-cargo test --workspace --all-features
-cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo fmt --all --check
-cargo xtask validate-data
-cargo run --example pool_pump -p dimvexa
+cargo xtask ci        # everything CI runs: fmt, clippy, tests, doc tests, docs, data, example
+cargo test            # quick loop
 cargo bench -p dimvexa --bench m0
 ```
+
+`cargo xtask ci` runs the same commands as the GitHub workflow (formatting, clippy with
+warnings as errors, tests, doc tests, rustdoc, unit table validation, the package check and
+the pool pump example). See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the rules and for how to
+request a missing unit, and [`SECURITY.md`](SECURITY.md) to report a vulnerability privately.
+
+## Citing
+
+If you use Dimvexa in research or in a published report, please cite it. GitHub shows a
+"Cite this repository" button generated from [`CITATION.cff`](CITATION.cff). Until the first
+release the entry has no version or release date; please give the commit hash you used.
+
+> Liemberger, W. *Dimvexa: exact unit conversion with loud failures* (software).
+> <https://github.com/welworx/dimvexa>
 
 ## Licence
 
