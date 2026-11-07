@@ -1,7 +1,15 @@
 name: Unit request
 description: Ask for a unit that is missing from the table.
+title: "unit: "
 labels: [unit-request, needs-source]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Every unit in Dimvexa has an authoritative source and a test vector. A request without a
+        source cannot be accepted, so please include one. Please do not copy values from GNU
+        units, rink or other GPL data: cite the primary definition (BIPM, NIST, a standard, a
+        statute).
   - type: input
     id: name
     attributes:
@@ -11,37 +19,48 @@ body:
   - type: input
     id: symbol
     attributes:
-      label: Proposed symbol (explicit, not ambiguous)
+      label: Proposed symbol
+      description: Explicit and unambiguous. Bare `ton`, `gal`, `oz` and similar names are rejected on purpose.
       placeholder: "ft_us_survey"
     validations: { required: true }
   - type: textarea
     id: definition
     attributes:
       label: Definition
-      description: Exact definition, for example "1 ft = 1200/3937 m".
+      description: The exact relation to an SI unit as a fraction, for example "1 ft = 1200/3937 m".
     validations: { required: true }
   - type: input
     id: source
     attributes:
       label: Authoritative source (link or citation)
-      description: BIPM, NIST, a statute or a standard. Not GNU units or rink.
+      description: The document that defines the unit, with section or page.
+      placeholder: "NIST Handbook 44, Appendix C"
     validations: { required: true }
   - type: dropdown
     id: exactness
     attributes:
-      label: Is the factor exact by definition or measured?
-      options: [defined, measured, not sure]
+      label: Is the factor exact by definition, or measured?
+      options: [Exact (defined), Measured, Not sure]
     validations: { required: true }
   - type: input
     id: field
     attributes:
       label: Region or field of use
       placeholder: "US land surveying"
+    validations: { required: true }
   - type: textarea
     id: why
     attributes:
       label: Why is it needed?
+      description: Which real task, standard or data set uses it?
+    validations: { required: true }
+  - type: textarea
+    id: vector
+    attributes:
+      label: A value you can check against (optional)
+      description: For example "3937 ft_us_survey = 1200 m", taken from the source above.
   - type: textarea
     id: ambiguity
     attributes:
       label: Known ambiguities or competing definitions
+      description: Other units that share the name or the symbol (for example the international foot).

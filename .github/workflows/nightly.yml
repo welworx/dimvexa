@@ -1,0 +1,61 @@
+# Scheduled checks that must not block pull requests but must not be forgotten either.
+# Not yet executed on GitHub (see docs/ci-pinning.md).
+name: nightly
+
+on:
+  schedule:
+    # 03:17 UTC every day; an off-peak, off-the-hour minute.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  advisories:
+    name: dependency advisories (cargo-deny)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+        with:
+          # Pinned. Keep in step with .github/workflows/ci.yml.
+          tool: cargo-deny@0.18.3
+      # The advisory database changes daily even when our lock file does not.
+      - run: cargo deny --locked check advisories
+
+  extras:
+    name: extras (network-only dev tooling, advisory)
+    # extras/ (proptest, criterion, insta, assert_cmd, iai-callgrind) was written without
+    # registry access and has never been compiled. Until it has, a failure here is
+    # information, not a verdict.
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the stable toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: extras
+      - run: cargo test --manifest-path extras/Cargo.toml
+      - run: cargo bench --manifest-path extras/Cargo.toml --no-run
