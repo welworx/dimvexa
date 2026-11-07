@@ -465,3 +465,31 @@ fn units_misuse_is_a_usage_error_in_the_units_schema() {
     // --groups belongs to 'units' only.
     assert_eq!(dimvexa(&["1", "m", "km", "--groups"]).code, 2);
 }
+
+/// The README lists every unit by group; it must match what `dimvexa units` prints.
+#[test]
+fn readme_unit_table_matches_the_cli() {
+    let readme =
+        std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../README.md"))
+            .unwrap();
+    let v = json::parse(&dimvexa(&["units", "--json"]).stdout).unwrap();
+    let mut groups: Vec<(String, Vec<String>)> = Vec::new();
+    for u in v.get("units").unwrap().as_array() {
+        let (g, s) = (
+            u.get("group").unwrap().as_str().to_string(),
+            u.get("symbol").unwrap().as_str().to_string(),
+        );
+        match groups.iter_mut().find(|(name, _)| *name == g) {
+            Some((_, syms)) => syms.push(s),
+            None => groups.push((g, vec![s])),
+        }
+    }
+    for (g, syms) in groups {
+        let cells: Vec<String> = syms.iter().map(|s| format!("`{s}`")).collect();
+        let row = format!("| {g} | {} |", cells.join(", "));
+        assert!(
+            readme.lines().any(|l| l == row),
+            "README.md is missing or has a stale row:\n{row}"
+        );
+    }
+}
