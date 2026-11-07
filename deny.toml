@@ -14,15 +14,7 @@ ignore = []
 [licenses]
 version = 2
 # The allow-list from docs/PLAN.md. GPL, AGPL and LGPL are not on it and therefore denied.
-allow = [
-    "MIT",
-    "Apache-2.0",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "ISC",
-    "Unicode-3.0",
-    "Zlib",
-]
+allow = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Unicode-3.0", "Zlib"]
 confidence-threshold = 0.9
 
 [bans]
