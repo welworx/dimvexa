@@ -1,5 +1,7 @@
 # cargo-fuzz skeleton, NOT built in M0 (libfuzzer-sys could not be downloaded).
 # Run: cargo install cargo-fuzz && cargo +nightly fuzz run parse_unit
+# Lockfile policy: commit fuzz/Cargo.lock after the first successful run (see
+# .github/workflows/fuzz.yml), then build with --locked.
 [package]
 name = "dimvexa-fuzz"
 version = "0.0.0"

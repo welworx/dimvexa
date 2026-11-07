@@ -1,5 +1,8 @@
 # NOT built by the main workspace and NOT verified in M0: the crates registry was unreachable
 # when this was written. Run `cargo test` and `cargo bench` here once the network is available.
+# Lockfile policy: this crate is its own workspace. Commit extras/Cargo.lock after the first
+# successful run on a machine with registry access (none could be generated offline), and then
+# run it with --locked.
 [package]
 name = "dimvexa-extras"
 version = "0.0.0"
@@ -16,7 +19,9 @@ dimvexa-core = { path = "../crates/dimvexa-core" }
 dimvexa-data = { path = "../crates/dimvexa-data" }
 proptest = "1"
 criterion = "0.5"
-iai-callgrind = "0.14"
+# The library and its runner must be the same version: pin both exactly. Install the runner
+# with `cargo install iai-callgrind-runner --version 0.14.0 --locked`.
+iai-callgrind = "=0.14.0"
 insta = "1"
 assert_cmd = "2"
 

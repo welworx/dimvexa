@@ -1,5 +1,7 @@
 # Developer Certificate of Origin: every commit in a pull request carries a Signed-off-by line
-# (git commit -s). See CONTRIBUTING.md. Read-only permissions, no third-party action, and
+# (git commit -s). See CONTRIBUTING.md. The repository owner (welworx) is the sole maintainer
+# and is exempt: pull requests authored by the owner skip the check, and coding agents working
+# for the owner do not add sign-offs. Outside contributors are always checked. Read-only permissions, no third-party action, and
 # never pull_request_target: the code of the pull request is only read as git history.
 name: dco
 
@@ -18,6 +20,9 @@ concurrency:
 jobs:
   dco:
     name: dco
+    # A skipped job counts as passing for branch protection. The login comes from the event
+    # payload and is only compared here, never executed.
+    if: github.event_name == 'merge_group' || github.event.pull_request.user.login != 'welworx'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

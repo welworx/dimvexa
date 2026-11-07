@@ -22,7 +22,8 @@ permissions:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # Only superseded pull request runs are cancelled; every push to main runs to the end.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   CARGO_TERM_COLOR: always
@@ -39,13 +40,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install the stable toolchain
+      - name: Install the pinned toolchain
+        shell: bash
         run: |
-          rustup toolchain install stable --profile minimal --component rustfmt --component clippy --no-self-update
-          rustup default stable
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --component rustfmt --component clippy --no-self-update
+          rustup default "$v"
       # copied from a widely used repo, verify against the action's release page before enabling
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-      - name: cargo xtask ci
+      - name: cargo xtask ci (includes check-docs)
         run: cargo xtask ci
 
   test-os:
@@ -61,11 +64,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install the stable toolchain
+      - name: Install the pinned toolchain
         shell: bash
         run: |
-          rustup toolchain install stable --profile minimal --no-self-update
-          rustup default stable
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --component rustfmt --component clippy --no-self-update
+          rustup default "$v"
       # copied from a widely used repo, verify against the action's release page before enabling
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - name: cargo xtask ci test doctest example
@@ -85,10 +89,12 @@ jobs:
         with:
           persist-credentials: false
       - name: Install the MSRV toolchain
+        # RUSTUP_TOOLCHAIN (job env) overrides rust-toolchain.toml for every step.
         run: rustup toolchain install 1.85 --profile minimal --no-self-update
       # copied from a widely used repo, verify against the action's release page before enabling
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-      - run: cargo --version && rustc --version
+      - name: Show the compiler (must say 1.85)
+        run: rustc -V && cargo -V
       - run: cargo check --workspace --all-targets --all-features --locked
       - run: cargo test --workspace --all-features --locked --profile ci
 
@@ -101,10 +107,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install the stable toolchain with the wasm target
+      - name: Install the pinned toolchain with the wasm target
         run: |
-          rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown --no-self-update
-          rustup default stable
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --target wasm32-unknown-unknown --no-self-update
+          rustup default "$v"
       # copied from a widely used repo, verify against the action's release page before enabling
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - run: cargo build -p dimvexa-core --target wasm32-unknown-unknown --locked
@@ -142,18 +149,75 @@ jobs:
       - run: typos
       - run: taplo fmt --check
 
-  # The only check branch protection needs. It fails if any job above failed or was cancelled
-  # and is the required status check for the merge queue as well.
+  package:
+    name: package (self-contained crates)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned toolchain
+        shell: bash
+        run: |
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --component rustfmt --component clippy --no-self-update
+          rustup default "$v"
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - name: List the files of every publishable crate
+        run: |
+          for c in dimvexa-core dimvexa-data dimvexa dimvexa-cli; do
+            echo "== $c"
+            cargo package --list --package "$c" --locked
+          done
+      - name: The data crate carries its unit tables
+        run: cargo xtask ci package
+      - name: Dry-run publish of the leaf crate
+        # Only dimvexa-core can be checked this way: the others depend on workspace crates
+        # that are not on crates.io yet. Once core is published, extend this to the others
+        # in dependency order (core, data, dimvexa, cli).
+        run: cargo publish --dry-run --package dimvexa-core --locked
+
+  workflows:
+    name: workflow lint (actionlint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+        with:
+          # Pinned. Unverified: confirm this release exists (docs/ci-pinning.md).
+          tool: actionlint@1.7.7
+      - run: actionlint
+
+  # The only check branch protection needs. A needed job must have succeeded; "skipped" is
+  # accepted only for jobs listed in ALLOW_SKIPPED (none today).
   ci-success:
     name: ci-success
     if: always()
-    needs: [check, test-os, msrv, wasm, deny, text]
+    needs: [check, test-os, msrv, wasm, deny, text, package, workflows]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Require every job to have succeeded
+      - name: Require every needed job to have succeeded
         env:
           NEEDS: ${{ toJSON(needs) }}
+          ALLOW_SKIPPED: ""
         run: |
           echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
-          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null
+          bad=$(echo "$NEEDS" | jq -r --arg allow "$ALLOW_SKIPPED" '
+            ($allow | split(",")) as $ok
+            | to_entries[]
+            | select(.value.result != "success"
+                     and (.value.result != "skipped" or ([.key] | inside($ok) | not)))
+            | "\(.key)=\(.value.result)"')
+          if [ -n "$bad" ]; then
+            echo "::error::not successful: $bad"
+            exit 1
+          fi

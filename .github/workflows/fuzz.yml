@@ -1,0 +1,44 @@
+# Builds the fuzz target and fuzzes it for a short, fixed time budget every week. A crash fails
+# the job and uploads nothing sensitive: the reproducer is printed in the log. Fuzz findings
+# that are crashes or hangs are security-relevant: see SECURITY.md before posting the input
+# publicly.
+#
+# Lockfile policy: fuzz/ is a separate workspace. Its Cargo.lock is committed after the first
+# successful run (it could not be generated offline), and from then on this workflow passes
+# --locked. Dependabot updates it. Not yet executed on GitHub.
+name: fuzz
+
+on:
+  schedule:
+    - cron: "41 4 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  parse-unit:
+    name: fuzz parse_unit (120 s)
+    # Until fuzz/Cargo.lock is committed and this has run once, a failure is information.
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install a nightly toolchain (cargo-fuzz needs sanitizer flags)
+        run: rustup toolchain install nightly --profile minimal --no-self-update
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+        with:
+          tool: cargo-fuzz
+      - name: Build the target
+        run: cargo +nightly fuzz build parse_unit
+      - name: Fuzz for two minutes
+        run: cargo +nightly fuzz run parse_unit -- -max_total_time=120 -timeout=10 -rss_limit_mb=2048

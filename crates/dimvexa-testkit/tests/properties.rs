@@ -27,7 +27,24 @@ use dimvexa::{Conversion, Dim, Error, Expr, Kind, Quantity, Ratio, Registry, reg
 use dimvexa_testkit::generators as gen_;
 use dimvexa_testkit::rng::Rng;
 
-const SEED: u64 = 0x5eed_d1ce_2026_1107;
+const BASE_SEED: u64 = 0x5eed_d1ce_2026_1107;
+
+/// Iteration count: `base` times `DIMVEXA_PROP_SCALE` (default 1). The nightly workflow sets
+/// a larger scale and a fresh `DIMVEXA_PROP_SEED` to explore beyond the fixed default run.
+fn cases(base: u64) -> u64 {
+    let scale = std::env::var("DIMVEXA_PROP_SCALE")
+        .ok()
+        .and_then(|v| v.parse::<u64>().ok())
+        .unwrap_or(1);
+    base.saturating_mul(scale.max(1))
+}
+
+fn seed() -> u64 {
+    std::env::var("DIMVEXA_PROP_SEED")
+        .ok()
+        .and_then(|v| v.parse::<u64>().ok())
+        .unwrap_or(BASE_SEED)
+}
 
 fn gcd(mut a: u128, mut b: u128) -> u128 {
     while b != 0 {
@@ -47,8 +64,8 @@ fn assert_canonical(r: Ratio, what: &str) {
 
 #[test]
 fn dimension_algebra_laws() {
-    let mut rng = Rng::new(SEED);
-    for _ in 0..50_000 {
+    let mut rng = Rng::new(seed());
+    for _ in 0..cases(50_000) {
         let (a, b, c) = (
             gen_::dim(&mut rng),
             gen_::dim(&mut rng),
@@ -82,9 +99,9 @@ fn dimension_algebra_laws() {
 
 #[test]
 fn dimension_overflow_matches_a_wide_model() {
-    let mut rng = Rng::new(SEED ^ 1);
+    let mut rng = Rng::new(seed() ^ 1);
     let (mut ok, mut over) = (0_u32, 0_u32);
-    for _ in 0..50_000 {
+    for _ in 0..cases(50_000) {
         let (a, b) = (gen_::wild_dim(&mut rng), gen_::wild_dim(&mut rng));
         let model: Vec<i16> = a
             .exponents()
@@ -111,9 +128,9 @@ fn dimension_overflow_matches_a_wide_model() {
 
 #[test]
 fn ratio_laws() {
-    let mut rng = Rng::new(SEED ^ 2);
+    let mut rng = Rng::new(seed() ^ 2);
     let mut overflowed = 0_u32;
-    for _ in 0..100_000 {
+    for _ in 0..cases(100_000) {
         let (a, b, c) = (
             gen_::small_ratio(&mut rng),
             gen_::small_ratio(&mut rng),
@@ -167,9 +184,9 @@ fn ratio_laws() {
 
 #[test]
 fn ratio_overflow_is_reported_never_wrapped() {
-    let mut rng = Rng::new(SEED ^ 3);
+    let mut rng = Rng::new(seed() ^ 3);
     let (mut ok, mut over) = (0_u32, 0_u32);
-    for _ in 0..100_000 {
+    for _ in 0..cases(100_000) {
         let (a, b) = (gen_::wide_ratio(&mut rng), gen_::wide_ratio(&mut rng));
         for (name, r) in [
             ("add", a.checked_add(b)),
@@ -209,8 +226,8 @@ fn ratio_overflow_is_reported_never_wrapped() {
 
 #[test]
 fn ratio_to_f64_is_correctly_rounded_and_monotonic() {
-    let mut rng = Rng::new(SEED ^ 4);
-    for _ in 0..100_000 {
+    let mut rng = Rng::new(seed() ^ 4);
+    for _ in 0..cases(100_000) {
         // Operands below 2^31 are exact in f64, so IEEE division is the correctly rounded reference.
         let n = i32::try_from(rng.range_i64(-(1 << 30), 1 << 30)).unwrap();
         let d = i32::try_from(rng.range_i64(1, 1 << 30)).unwrap();
@@ -221,7 +238,7 @@ fn ratio_to_f64_is_correctly_rounded_and_monotonic() {
             .unwrap();
         assert_eq!(got.to_bits(), want.to_bits(), "{n}/{d}");
     }
-    for _ in 0..50_000 {
+    for _ in 0..cases(50_000) {
         let x = gen_::spread_f64(&mut rng, -40, 60);
         if let Ok(q) = Ratio::from_f64(x) {
             assert_eq!(
@@ -305,8 +322,8 @@ fn same_si(a: &Quantity, b: &Quantity) -> bool {
 #[test]
 fn temperature_kind_algebra_on_quantities() {
     let reg = registry().unwrap();
-    let mut rng = Rng::new(SEED ^ 5);
-    for _ in 0..20_000 {
+    let mut rng = Rng::new(seed() ^ 5);
+    for _ in 0..cases(20_000) {
         let (a, b) = (
             temp_quantity(&reg, &mut rng, true),
             temp_quantity(&reg, &mut rng, true),
@@ -354,8 +371,8 @@ fn temperature_kind_algebra_on_quantities() {
 #[test]
 fn parser_printer_round_trip() {
     let reg = registry().unwrap();
-    let mut rng = Rng::new(SEED ^ 6);
-    for _ in 0..100_000 {
+    let mut rng = Rng::new(seed() ^ 6);
+    for _ in 0..cases(100_000) {
         let depth = u32::try_from(rng.below(5)).unwrap();
         let e = gen_::expr(&mut rng, depth);
         let printed = e.to_string();
@@ -381,9 +398,9 @@ fn parser_printer_round_trip() {
 #[test]
 fn parser_never_panics_on_noise() {
     let reg = registry().unwrap();
-    let mut rng = Rng::new(SEED ^ 7);
+    let mut rng = Rng::new(seed() ^ 7);
     let (mut accepted, mut rejected) = (0_u32, 0_u32);
-    for _ in 0..200_000 {
+    for _ in 0..cases(200_000) {
         let s = gen_::noisy_unit_string(&mut rng);
         match Expr::parse(&s) {
             Ok(e) => {
@@ -435,9 +452,9 @@ fn conversion_laws_hold_exactly_across_the_seed_table() {
     let reg = registry().unwrap();
     let groups = groups(&reg);
     assert!(groups.len() >= 10, "{}", groups.len());
-    let mut rng = Rng::new(SEED ^ 8);
+    let mut rng = Rng::new(seed() ^ 8);
     let (mut checked, mut overflowed) = (0_u32, 0_u32);
-    for _ in 0..60_000 {
+    for _ in 0..cases(60_000) {
         let members: Vec<&Vec<String>> = groups.values().filter(|m| m.len() >= 2).collect();
         let m = *rng.pick(&members).unwrap();
         let (a, b, c) = (
@@ -493,8 +510,8 @@ fn dimension_mismatches_are_always_errors() {
     let reg = registry().unwrap();
     let groups = groups(&reg);
     let reps: Vec<&String> = groups.values().filter_map(|m| m.first()).collect();
-    let mut rng = Rng::new(SEED ^ 9);
-    for _ in 0..5000 {
+    let mut rng = Rng::new(seed() ^ 9);
+    for _ in 0..cases(5000) {
         let (a, b) = (rng.pick(&reps).unwrap(), rng.pick(&reps).unwrap());
         let (ea, eb) = (reg.parse(a).unwrap(), reg.parse(b).unwrap());
         let r = Conversion::between(&ea, &eb);
