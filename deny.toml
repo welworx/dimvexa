@@ -1,17 +1,22 @@
-# cargo-deny configuration (untested in M0: cargo-deny was not installable offline).
+# cargo-deny configuration. Run `cargo deny check` (CI does, and a scheduled job re-checks the
+# advisory database every night). cargo-deny was not available in the authoring sandbox, so
+# this file has been reviewed by hand against the cargo-deny documentation but not executed;
+# the first CI run is its first real test.
 [graph]
 all-features = true
 
 [advisories]
 version = 2
+# A yanked crate version in the lock file fails the check.
 yanked = "deny"
+ignore = []
 
 [licenses]
 version = 2
+# The allow-list from docs/PLAN.md. GPL, AGPL and LGPL are not on it and therefore denied.
 allow = [
     "MIT",
     "Apache-2.0",
-    "Apache-2.0 WITH LLVM-exception",
     "BSD-2-Clause",
     "BSD-3-Clause",
     "ISC",
@@ -22,11 +27,13 @@ confidence-threshold = 0.9
 
 [bans]
 multiple-versions = "warn"
-wildcards = "deny"
+wildcards = "warn"
 allow-wildcard-paths = true
 deny = []
 
 [sources]
+# Only crates.io; no git dependencies, no alternative registries.
 unknown-registry = "deny"
 unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

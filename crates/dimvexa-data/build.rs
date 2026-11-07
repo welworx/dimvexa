@@ -197,7 +197,7 @@ fn generate(dir: &Path) -> Res<String> {
     Ok(out)
 }
 
-fn main() {
+fn main() -> std::process::ExitCode {
     let dir = data_dir();
     let mut stdout = std::io::stdout();
     let _ = writeln!(stdout, "cargo:rerun-if-changed={}", dir.display());
@@ -206,12 +206,13 @@ fn main() {
             let out = PathBuf::from(std::env::var_os("OUT_DIR").unwrap_or_default());
             if let Err(e) = std::fs::write(out.join("units_generated.rs"), code) {
                 let _ = writeln!(std::io::stderr(), "cannot write generated table: {e}");
-                std::process::exit(1);
+                return std::process::ExitCode::FAILURE;
             }
+            std::process::ExitCode::SUCCESS
         }
         Err(e) => {
             let _ = writeln!(std::io::stderr(), "error: invalid unit table: {e}");
-            std::process::exit(1);
+            std::process::ExitCode::FAILURE
         }
     }
 }

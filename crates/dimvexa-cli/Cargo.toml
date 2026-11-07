@@ -21,6 +21,9 @@ path = "src/lib.rs"
 [[bin]]
 name = "dimvexa"
 path = "src/main.rs"
+# The library crate `dimvexa` documents the API; the binary has the same name and would
+# otherwise collide with it in `cargo doc` output.
+doc = false
 
 [dependencies]
 dimvexa = { workspace = true }

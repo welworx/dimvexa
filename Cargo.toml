@@ -72,3 +72,10 @@ codegen-units = 1
 
 [profile.bench]
 inherits = "release"
+
+# Used by `cargo xtask ci` and the CI workflow: the dev profile with smaller debug info and
+# no incremental cache (CI builds from scratch, so incremental data is wasted disk and time).
+[profile.ci]
+inherits = "dev"
+debug = "line-tables-only"
+incremental = false

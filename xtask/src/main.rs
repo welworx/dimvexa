@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! Repository automation: `cargo xtask validate-data` and `cargo xtask update-data-hash`.
+//! Repository automation: `cargo xtask ci`, `cargo xtask validate-data` and
+//! `cargo xtask update-data-hash`.
 //!
 //! `validate-data` is the gatekeeper of the unit table. It fails on a missing source,
 //! exactness, dimension, note or golden vector, on duplicate symbols, ambiguous bare
@@ -19,6 +20,7 @@
 mod toml_lite;
 
 mod chains;
+mod ci;
 mod validate;
 
 use std::path::PathBuf;
@@ -28,28 +30,42 @@ fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..")
 }
 
+/// Runs the unit table validation and prints the report. Returns true on success.
+fn validate_data(root: &std::path::Path) -> bool {
+    match validate::run(root) {
+        Ok(report) => {
+            println!("{}", report.summary());
+            if report.errors.is_empty() {
+                true
+            } else {
+                for e in &report.errors {
+                    eprintln!("error: {e}");
+                }
+                eprintln!("validate-data: {} error(s)", report.errors.len());
+                false
+            }
+        }
+        Err(e) => {
+            eprintln!("validate-data: cannot run: {e}");
+            false
+        }
+    }
+}
+
 fn main() -> ExitCode {
-    let cmd = std::env::args().nth(1).unwrap_or_default();
+    let mut args = std::env::args().skip(1);
+    let cmd = args.next().unwrap_or_default();
+    let rest: Vec<String> = args.collect();
     let root = repo_root();
     match cmd.as_str() {
-        "validate-data" => match validate::run(&root) {
-            Ok(report) => {
-                println!("{}", report.summary());
-                if report.errors.is_empty() {
-                    ExitCode::SUCCESS
-                } else {
-                    for e in &report.errors {
-                        eprintln!("error: {e}");
-                    }
-                    eprintln!("validate-data: {} error(s)", report.errors.len());
-                    ExitCode::FAILURE
-                }
-            }
-            Err(e) => {
-                eprintln!("validate-data: cannot run: {e}");
+        "ci" => ci::run(&rest, &root, &|| validate_data(&root)),
+        "validate-data" => {
+            if validate_data(&root) {
+                ExitCode::SUCCESS
+            } else {
                 ExitCode::FAILURE
             }
-        },
+        }
         "update-data-hash" => match validate::update_hash(&root) {
             Ok(msg) => {
                 println!("{msg}");
@@ -61,7 +77,7 @@ fn main() -> ExitCode {
             }
         },
         _ => {
-            eprintln!("usage: cargo xtask <validate-data | update-data-hash>");
+            eprintln!("usage: cargo xtask <ci [STAGE...] | validate-data | update-data-hash>");
             ExitCode::from(2)
         }
     }
