@@ -1,6 +1,7 @@
 //! Criterion version of the M0 benchmarks (unverified: criterion could not be installed).
-use criterion::{Criterion, black_box, criterion_group, criterion_main};
+use criterion::{Criterion, criterion_group, criterion_main};
 use dimvexa_data::registry;
+use std::hint::black_box;
 
 fn bench(c: &mut Criterion) {
     let reg = registry().unwrap();
@@ -11,7 +12,9 @@ fn bench(c: &mut Criterion) {
     c.bench_function("slice 1e6", |b| {
         b.iter(|| conv.apply_slice(black_box(&input), &mut out).unwrap())
     });
-    c.bench_function("parse psi", |b| b.iter(|| reg.parse(black_box("psi")).unwrap()));
+    c.bench_function("parse psi", |b| {
+        b.iter(|| reg.parse(black_box("psi")).unwrap())
+    });
 }
 
 criterion_group!(benches, bench);
