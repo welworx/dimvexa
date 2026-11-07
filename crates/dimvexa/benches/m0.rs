@@ -205,6 +205,19 @@ fn main() {
         || lin.apply_exact(black_box(exact)).unwrap(),
     );
 
+    b.run(
+        "apply_exact_f64 (linear, correctly rounded)",
+        1,
+        "f64 in, f64 out, one rounding",
+        || lin.apply_exact_f64(black_box(10.5)).unwrap(),
+    );
+    b.run(
+        "apply_exact_f64 (affine, correctly rounded)",
+        1,
+        "degF -> degC",
+        || aff.apply_exact_f64(black_box(98.6)).unwrap(),
+    );
+
     // ---- 2. parse cost (the library has no cache by design)
     b.run(
         "parse unit `psi` (cold, every call)",

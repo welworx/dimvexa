@@ -28,11 +28,24 @@ use crate::unit::UnitExpr;
 /// IEEE rules; overflow yields an infinity. The exact path ([`apply_exact`](Self::apply_exact))
 /// reports overflow as an error instead.
 ///
-/// The factor `a` is rounded once from the exact rational (relative error at most
-/// 2^-53), then each operation rounds again. The measured agreement with the exact path
-/// is reported in `docs/benchmarks/M0.md` and tested in
-/// `crates/dimvexa-testkit/tests/differential.rs`: at most 1 ulp for linear conversions of the
-/// seed table, at most 2 ulps for affine ones (theory allows about 2 ulps for both).
+/// # Accuracy guarantee
+///
+/// For finite inputs whose result is a normal, non-overflowing number, the fast path is
+/// within a documented number of ulps of the **correctly rounded exact result** (the `f64`
+/// nearest to `a * x + b` computed in exact rational arithmetic, which
+/// [`apply_exact_f64`](Self::apply_exact_f64) returns):
+///
+/// | shape | bound |
+/// |---|---|
+/// | linear | at most 1 ulp |
+/// | affine | at most 2 ulp |
+///
+/// The factor `a` is rounded once from the exact rational (relative error at most 2^-53)
+/// and each IEEE operation rounds again; the affine form has two additions on top of the
+/// multiplication. The bounds are checked by a hard-failing differential test over many
+/// random and edge-case inputs, not proven; the exact path is the answer when you need a
+/// proven result. Full details, special values and the behaviour next to a scale's zero
+/// point are in `docs/precision.md`.
 ///
 /// # Examples
 ///
@@ -221,6 +234,15 @@ impl Conversion {
     }
 
     /// Converts one value on the fast `f64` path.
+    ///
+    /// # Accuracy
+    ///
+    /// Within 1 ulp (linear) or 2 ulp (affine) of the correctly rounded exact result for
+    /// finite inputs with a normal, non-overflowing result; see the type-level documentation
+    /// and `docs/precision.md`. NaN stays NaN, infinities pass through, overflow gives an
+    /// infinity, and a linear conversion keeps the sign of zero. Never panics, never
+    /// allocates. Use [`apply_exact_f64`](Self::apply_exact_f64) when you need the correctly
+    /// rounded value.
     #[inline]
     #[must_use]
     pub fn apply(&self, x: f64) -> f64 {
@@ -234,6 +256,12 @@ impl Conversion {
     ///
     /// The shape is selected once, outside the loop; each loop body is branch-free and
     /// operates independently per element, so the compiler can vectorise it.
+    ///
+    /// # Accuracy
+    ///
+    /// Every element is bit-identical to [`apply`](Self::apply), so it has the same bound:
+    /// at most 1 ulp (linear) or 2 ulp (affine) from the correctly rounded exact result for
+    /// finite inputs with a normal, non-overflowing result (`docs/precision.md`).
     ///
     /// # Errors
     ///
@@ -264,6 +292,11 @@ impl Conversion {
     }
 
     /// Converts all values in place on the fast path.
+    ///
+    /// # Accuracy
+    ///
+    /// Bit-identical to [`apply`](Self::apply) per element: at most 1 ulp (linear) or 2 ulp
+    /// (affine) from the correctly rounded exact result (`docs/precision.md`).
     #[inline]
     pub fn apply_in_place(&self, data: &mut [f64]) {
         let a = self.factor_f64;
@@ -283,6 +316,11 @@ impl Conversion {
     }
 
     /// Converts `input` into a newly allocated vector (one allocation).
+    ///
+    /// # Accuracy
+    ///
+    /// Bit-identical to [`apply`](Self::apply) per element: at most 1 ulp (linear) or 2 ulp
+    /// (affine) from the correctly rounded exact result (`docs/precision.md`).
     #[must_use]
     pub fn apply_vec(&self, input: &[f64]) -> Vec<f64> {
         let mut out = input.to_vec();
@@ -292,11 +330,121 @@ impl Conversion {
 
     /// Converts an exact value: `a * x + b` in checked rational arithmetic.
     ///
+    /// This is the reference path: no rounding happens at all.
+    ///
     /// # Errors
     ///
     /// [`Error::Overflow`] if the result does not fit in `i128` fractions.
     pub fn apply_exact(&self, x: Ratio) -> Result<Ratio> {
         self.factor.checked_mul(x)?.checked_add(self.offset)
+    }
+
+    /// Converts one `f64` on the exact path and rounds once: the result is the `f64` nearest
+    /// to the exact rational value of `a * x + b` (ties to even), where `x` is taken as the
+    /// exact rational value of the `f64` you pass in.
+    ///
+    /// # Guarantee
+    ///
+    /// The result is **correctly rounded**: no other `f64` is closer to the exact result.
+    /// That is 0 ulp from the exact answer by definition. It costs a few hundred nanoseconds
+    /// per value (checked `i128` arithmetic, about 0.3 microseconds measured), so use it for audits, golden values and
+    /// checking the fast path, and [`apply`](Self::apply) for bulk work. See
+    /// `docs/precision.md`.
+    ///
+    /// # Special values
+    ///
+    /// * NaN and infinities have no exact value and are an error ([`Error::InvalidNumber`]),
+    ///   unlike the fast path, which passes them through.
+    /// * A linear conversion of `0.0` or `-0.0` returns a zero with the IEEE sign of the
+    ///   fast path (`-0.0` stays `-0.0` for a positive factor). An exact zero from an affine
+    ///   conversion is `+0.0`, because a rational has no sign of zero.
+    /// * A result that would overflow or fall outside the normal `f64` range is an error,
+    ///   never an infinity or a subnormal approximation.
+    ///
+    /// # Errors
+    ///
+    /// * [`Error::InvalidNumber`] for NaN and infinities.
+    /// * [`Error::Overflow`] if the exact arithmetic does not fit `i128` fractions (an
+    ///   unusually large or tiny `x`, or an extreme factor) or if the result is not a normal
+    ///   `f64`. A linear conversion also handles an `x` too large or too small for an exact
+    ///   fraction, as long as the result is a normal number.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_core::{Conversion, Ratio};
+    ///
+    /// // degF -> degC: y = 5/9 x - 160/9.
+    /// let c = Conversion::affine(Ratio::new(5, 9)?, Ratio::new(-160, 9)?)?;
+    /// assert_eq!(c.apply_exact_f64(32.0)?, 0.0);
+    /// assert_eq!(c.apply_exact_f64(212.0)?, 100.0);
+    /// // 98.6 degF is not exactly representable; the answer is the f64 nearest to the
+    /// // exact result for that f64 input.
+    /// let y = c.apply_exact_f64(98.6)?;
+    /// assert!((y - 37.0).abs() < 1e-13);
+    /// assert!(c.apply_exact_f64(f64::NAN).is_err());
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn apply_exact_f64(&self, x: f64) -> Result<f64> {
+        if !x.is_finite() {
+            return Err(Error::InvalidNumber {
+                input: x.to_string(),
+            });
+        }
+        if x == 0.0 && self.shape == Shape::Linear {
+            return Ok(x * self.factor_f64);
+        }
+        match Ratio::from_f64(x).and_then(|xr| self.apply_exact(xr)) {
+            Ok(y) => {
+                let y = y.to_f64()?;
+                // A rational has no negative zero; an exact zero is +0.0.
+                Ok(if y == 0.0 { 0.0 } else { y })
+            }
+            Err(Error::Overflow { .. }) if self.shape == Shape::Linear => self.scaled_linear_f64(x),
+            Err(e) => Err(e),
+        }
+    }
+
+    /// Linear conversion of an `f64` whose exact fraction does not fit `i128`: split
+    /// `x = m * 2^e` with an odd integer `m`, round `a * m` once, and move the exponent.
+    /// Multiplying by a power of two is exact while the result stays normal, so the result
+    /// is still correctly rounded.
+    fn scaled_linear_f64(&self, x: f64) -> Result<f64> {
+        let err = || Error::Overflow {
+            operation: "exact f64 result outside the normal range",
+        };
+        let bits = x.abs().to_bits();
+        let biased = i32::try_from(bits >> 52).map_err(|_| err())?;
+        let frac = bits & ((1_u64 << 52) - 1);
+        let (mut mant, mut exp2) = if biased == 0 {
+            (frac, -1074_i32)
+        } else {
+            (
+                frac | (1_u64 << 52),
+                biased.checked_sub(1075).ok_or_else(err)?,
+            )
+        };
+        let tz = mant.trailing_zeros();
+        mant = mant.checked_shr(tz).ok_or_else(err)?;
+        exp2 = exp2
+            .checked_add(i32::try_from(tz).map_err(|_| err())?)
+            .ok_or_else(err)?;
+        let signed = if x.is_sign_negative() {
+            i128::from(mant).checked_neg().ok_or_else(err)?
+        } else {
+            i128::from(mant)
+        };
+        let v = self.factor.checked_mul(Ratio::from_int(signed))?.to_f64()?;
+        let vbits = v.abs().to_bits();
+        let vbiased = i32::try_from(vbits >> 52).map_err(|_| err())?;
+        let new_biased = vbiased.checked_add(exp2).ok_or_else(err)?;
+        if !(1..=2046).contains(&new_biased) {
+            return Err(err());
+        }
+        let sign = v.to_bits() & (1_u64 << 63);
+        let frac = vbits & ((1_u64 << 52) - 1);
+        let new = u64::try_from(new_biased).map_err(|_| err())?;
+        Ok(f64::from_bits(sign | (new << 52) | frac))
     }
 }
 
