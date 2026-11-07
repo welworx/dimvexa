@@ -1,0 +1,74 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/dimvexa-core",
+    "crates/dimvexa-data",
+    "crates/dimvexa",
+    "crates/dimvexa-testkit",
+    "crates/dimvexa-cli",
+    "xtask",
+]
+default-members = [
+    "crates/dimvexa-core",
+    "crates/dimvexa-data",
+    "crates/dimvexa",
+    "crates/dimvexa-testkit",
+    "crates/dimvexa-cli",
+]
+# extras/ holds the network-only dev tooling (proptest, criterion, iai-callgrind,
+# insta, assert_cmd). It is a separate workspace so the main workspace builds offline.
+exclude = ["extras", "fuzz"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/TODO-owner/dimvexa"
+homepage = "https://github.com/TODO-owner/dimvexa"
+documentation = "https://docs.rs/dimvexa"
+readme = "README.md"
+authors = ["The Dimvexa contributors"]
+keywords = ["units", "unit-conversion", "dimensional-analysis", "science", "engineering"]
+categories = ["science", "mathematics"]
+
+[workspace.dependencies]
+dimvexa-core = { version = "0.0.0", path = "crates/dimvexa-core" }
+dimvexa-data = { version = "0.0.0", path = "crates/dimvexa-data" }
+dimvexa = { version = "0.0.0", path = "crates/dimvexa" }
+dimvexa-testkit = { version = "0.0.0", path = "crates/dimvexa-testkit" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+unreachable_pub = "warn"
+unused_must_use = "deny"
+rust_2018_idioms = { level = "warn", priority = -1 }
+missing_debug_implementations = "warn"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+indexing_slicing = "deny"
+arithmetic_side_effects = "deny"
+cast_possible_truncation = "deny"
+cast_precision_loss = "deny"
+float_cmp = "deny"
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+
+[profile.release]
+debug = 1
+lto = "thin"
+codegen-units = 1
+
+[profile.bench]
+inherits = "release"

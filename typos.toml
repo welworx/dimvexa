@@ -1,0 +1,15 @@
+[default]
+extend-ignore-re = [
+    # Unit symbols that look like typos.
+    "\\bBtu\\b",
+    "\\bPa\\b",
+]
+
+[default.extend-words]
+# Unit symbols and names that are not typos.
+ohm = "ohm"
+tonne = "tonne"
+nmi = "nmi"
+
+[files]
+extend-exclude = ["LICENSE-APACHE", "LICENSE-MIT", "Cargo.lock"]

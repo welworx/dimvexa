@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use Dimvexa in research or in a published report, please cite it as below."
+title: "Dimvexa: exact unit conversion with loud failures"
+abstract: "Exact factors. Loud failures. Zero guessing."
+type: software
+license: "MIT OR Apache-2.0"
+version: 0.0.0
+date-released: 2026-11-07
+authors:
+  - name: "The Dimvexa contributors"
+# TODO(owner): add real authors (family-names, given-names, orcid) and the
+# repository-code URL once the GitHub repository exists.
+keywords:
+  - units
+  - unit conversion
+  - dimensional analysis
+  - rust

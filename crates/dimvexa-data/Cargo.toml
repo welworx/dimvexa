@@ -1,0 +1,21 @@
+[package]
+name = "dimvexa-data"
+description = "Unit tables for dimvexa, compiled from audited TOML. Exact factors. Loud failures. Zero guessing."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+readme = "README.md"
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+build = "build.rs"
+
+[dependencies]
+dimvexa-core = { workspace = true }
+
+[lints]
+workspace = true

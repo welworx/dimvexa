@@ -1,0 +1,47 @@
+name: Unit request
+description: Ask for a unit that is missing from the table.
+labels: [unit-request, needs-source]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Unit name
+      placeholder: "US survey foot"
+    validations: { required: true }
+  - type: input
+    id: symbol
+    attributes:
+      label: Proposed symbol (explicit, not ambiguous)
+      placeholder: "ft_us_survey"
+    validations: { required: true }
+  - type: textarea
+    id: definition
+    attributes:
+      label: Definition
+      description: Exact definition, for example "1 ft = 1200/3937 m".
+    validations: { required: true }
+  - type: input
+    id: source
+    attributes:
+      label: Authoritative source (link or citation)
+      description: BIPM, NIST, a statute or a standard. Not GNU units or rink.
+    validations: { required: true }
+  - type: dropdown
+    id: exactness
+    attributes:
+      label: Is the factor exact by definition or measured?
+      options: [defined, measured, not sure]
+    validations: { required: true }
+  - type: input
+    id: field
+    attributes:
+      label: Region or field of use
+      placeholder: "US land surveying"
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is it needed?
+  - type: textarea
+    id: ambiguity
+    attributes:
+      label: Known ambiguities or competing definitions

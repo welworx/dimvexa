@@ -1,0 +1,38 @@
+[package]
+name = "dimvexa-testkit"
+description = "Test helpers for dimvexa (not published). Exact factors. Loud failures. Zero guessing."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+readme = "README.md"
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+publish = false
+
+[dependencies]
+dimvexa = { workspace = true }
+dimvexa-core = { workspace = true }
+dimvexa-data = { workspace = true }
+
+[lints.rust]
+# The counting allocator needs `unsafe impl GlobalAlloc`. Unsafe is denied everywhere
+# else in this crate and allowed only in `alloc_counter`, with SAFETY comments.
+unsafe_code = "deny"
+missing_docs = "deny"
+unreachable_pub = "warn"
+unused_must_use = "deny"
+missing_debug_implementations = "warn"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
