@@ -254,6 +254,8 @@ Rules for your units:
 - They can build on each other, in file order, and a mapping (`[map]`) can point at them.
 - They can never take the name of an existing unit, alias or prefixed form (`mm`, `kg`, `psi`),
   and a bare name the table refuses (`ton`) is resolved with `[map]`, not by defining a unit.
+  A new name with prefixes may not hide a prefixed form that already means something
+  (`pallet` with SI prefixes next to an existing `kpallet`).
 - The base must be linear: no temperature points and no units with an offset.
 - If the base is `measured`, so is the new unit, whatever you state.
 - `dimvexa units` marks them (`[yours: file:line]`) and the JSON has an `origin` for each.
