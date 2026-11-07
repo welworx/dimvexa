@@ -336,6 +336,7 @@ fn units_lists_every_table_entry() {
     assert!(r.stdout.lines().any(|l| l.starts_with("ton\tcandidates:")));
     let j = dimvexa(&["units", "--json"]);
     assert_eq!(j.code, 0);
-    assert!(j.stdout.contains("\"schema\":\"dimvexa.units/1\""));
-    assert!(j.stdout.contains("\"ambiguous\":[{\"symbol\":"));
+    let v = json::parse(&j.stdout).unwrap();
+    json::check_units_schema(&v);
+    assert_eq!(v.get("units").unwrap().as_array().len(), n);
 }

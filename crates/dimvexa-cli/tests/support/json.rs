@@ -251,3 +251,46 @@ pub fn check_convert_schema(v: &V) {
             .contains('/')
     );
 }
+
+/// Checks a `dimvexa.units/1` document against the documented schema.
+pub fn check_units_schema(v: &V) {
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+    assert!(v.get("ok").unwrap().as_bool());
+    assert!(v.get("data_version").unwrap().as_str().starts_with('v'));
+    let units = v.get("units").unwrap().as_array();
+    assert!(!units.is_empty());
+    for u in units {
+        for k in [
+            "symbol",
+            "aliases",
+            "dimension",
+            "quantity_kind",
+            "exactness",
+            "prefixes",
+            "namespace",
+            "source",
+        ] {
+            assert!(u.get(k).is_some(), "missing units[].{k}");
+        }
+        assert!(!u.get("symbol").unwrap().as_str().is_empty());
+        assert_eq!(u.get("dimension").unwrap().as_array().len(), 7);
+        assert!(
+            ["plain", "absolute_temperature", "temperature_difference"]
+                .contains(&u.get("quantity_kind").unwrap().as_str())
+        );
+        assert!(["defined", "measured"].contains(&u.get("exactness").unwrap().as_str()));
+        assert!(["none", "si", "si_binary"].contains(&u.get("prefixes").unwrap().as_str()));
+        assert!(!u.get("source").unwrap().as_str().is_empty());
+        let _ = u.get("aliases").unwrap().as_array();
+    }
+    for a in v.get("ambiguous").unwrap().as_array() {
+        for k in ["symbol", "candidates", "planned", "note"] {
+            assert!(a.get(k).is_some(), "missing ambiguous[].{k}");
+        }
+        // A symbol may have only planned candidates until they enter the table.
+        assert!(
+            !a.get("candidates").unwrap().as_array().is_empty()
+                || !a.get("planned").unwrap().as_array().is_empty()
+        );
+    }
+}

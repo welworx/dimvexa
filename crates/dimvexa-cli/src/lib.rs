@@ -15,7 +15,7 @@
 //!
 //! Exit codes: `0` success, `1` conversion refused or invalid input, `2` usage error.
 //! With `--json`, errors are printed to stdout as JSON (schema `dimvexa.convert/1`, see
-//! `docs/schemas/`) and the exit code stays non-zero. The error `code` is one of the
+//! `docs/schemas/`; `units --json` uses `dimvexa.units/1`) and the exit code stays non-zero. The error `code` is one of the
 //! library's stable codes ([`dimvexa::Error::ALL_CODES`]) or `usage`.
 #![forbid(unsafe_code)]
 
@@ -295,7 +295,7 @@ fn units_json(reg: &Registry) -> String {
             let aliases: Vec<String> = u.aliases().iter().map(|a| json_string(a)).collect();
             let dims: Vec<String> = u.dim().exponents().iter().map(ToString::to_string).collect();
             format!(
-                "{{\"symbol\":{},\"aliases\":[{}],\"dimension\":[{}],\"kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"source\":{}}}",
+                "{{\"symbol\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"source\":{}}}",
                 json_string(u.symbol()),
                 aliases.join(","),
                 dims.join(","),
