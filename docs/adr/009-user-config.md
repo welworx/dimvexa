@@ -80,7 +80,9 @@ Rules, so a config cannot make a result silently wrong:
    mass to volume and the other bridged conversions stay refused with the ADR-001 error, which
    now also names the option.
 6. **Results are reproducible.** JSON output records the config files used (path and content
-   hash) and the bridge, replacing the planned `"profile": null` field.
+   hash) in a `"config"` array and the bridge in a `"bridge"` object. The planned `"profile"`
+   field is not replaced: it stays `null`, because removing a field is breaking, and is meant
+   for shipped profiles, when those exist.
 7. **`dimvexa units` marks the origin** of every unit and mapping that comes from a file.
 8. **Shipped profiles are `[map]` only** (for example `us-customary`, `imperial`,
    `metric-trade`). They carry no bridge, because a density depends on conditions the project

@@ -32,7 +32,9 @@ Commits by `release-plz` once releases start (planned for M1).
   never take an existing name; `units` marks them and the JSON has an `origin`). Examples:
   `examples/configs/water.toml`, `examples/configs/oil.toml`.
   The new `dimvexa-config` crate holds `Config` and `apply`; the core only gains
-  `Registry::add_alias`. JSON output gains `config` (files and hashes) and `bridge`;
+  `Registry::add_alias` (plus the read-only helpers `Registry::name_is_free` and
+  `Registry::prefix_clash`). A prefix on an ambiguous name now stays ambiguous when another
+  reading exists. Config files are regular files of at most 1 MiB. JSON output gains `config` (files and hashes) and `bridge`;
   `dimvexa.units/1` gains `config`, `mappings`, `bridges`, a per-unit `origin` and, for a
   queried name of yours, `mapping`.
 - `Conversion::apply_exact_f64`: the correctly rounded `f64` of the exact result (0 ulp), with
