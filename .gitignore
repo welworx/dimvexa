@@ -1,0 +1,8 @@
+/target
+**/*.rs.bk
+/extras/target
+/fuzz/target
+/fuzz/corpus
+/fuzz/artifacts
+*.profraw
+callgrind.out.*

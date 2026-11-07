@@ -1,0 +1,27 @@
+[package]
+name = "dimvexa-cli"
+description = "Command-line front end for dimvexa. Exact factors. Loud failures. Zero guessing."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+readme = "README.md"
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+
+[[bin]]
+name = "dimvexa"
+path = "src/main.rs"
+
+[dependencies]
+dimvexa = { workspace = true }
+dimvexa-core = { workspace = true }
+dimvexa-data = { workspace = true }
+
+[lints]
+workspace = true

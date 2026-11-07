@@ -1,0 +1,18 @@
+name: Bug report
+description: A wrong result, a panic, a crash or a confusing error.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include the exact input, for example `dimvexa convert 1 psi Pa --exact`.
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect, and what is your source?
+  - type: input
+    id: version
+    attributes:
+      label: Version and data hash (`dimvexa --version`)

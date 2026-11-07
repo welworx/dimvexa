@@ -1,0 +1,26 @@
+[package]
+name = "dimvexa"
+description = "Facade crate: dimvexa core plus the seed unit table. Exact factors. Loud failures. Zero guessing."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+readme = "README.md"
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+
+[dependencies]
+dimvexa-core = { workspace = true }
+dimvexa-data = { workspace = true }
+
+[[example]]
+name = "pool_pump"
+path = "../../examples/pool_pump.rs"
+
+[lints]
+workspace = true

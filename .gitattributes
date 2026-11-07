@@ -1,0 +1,4 @@
+# Keep line endings stable so the data table hash is identical on every platform.
+* text=auto eol=lf
+*.toml text eol=lf
+*.rs text eol=lf
