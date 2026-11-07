@@ -21,10 +21,22 @@ step will fail with "unable to find version" (the safe failure). Do the same for
 
 | Action | SHA (full) | Version comment | Used in |
 |---|---|---|---|
-| `actions/checkout` | `3d3c42e5aac5ba805825da76410c181273ba90b1` | v7.0.1 | ci, nightly, dco, fuzz, mutants |
+| `actions/checkout` | `3d3c42e5aac5ba805825da76410c181273ba90b1` | v7.0.1 | ci, nightly, dco, fuzz, mutants, bench-compare |
 | `Swatinem/rust-cache` | `6323deb102c322ba6fcbdcafc7e3dddab59af2b6` | v2.9.2 | ci, nightly |
 | `taiki-e/install-action` | `1168f6810a3cb30a3514bf5756a3b7f0422c6df8` | v2.87.28 | ci (`deny`, `text`, `workflows`), nightly, fuzz, mutants |
-| `actions/upload-artifact` | `cf430e030ddbb5b0abf93d22962f4752f3646cd9` | v7.0.2 | mutants |
+| `actions/upload-artifact` | `cf430e030ddbb5b0abf93d22962f4752f3646cd9` | v7.0.2 | mutants, bench-compare |
+
+### Placeholders in `bench-compare.yml` (unverified, workflow cannot run until replaced)
+
+| Action | Value in the file | What to do |
+|---|---|---|
+| `actions/setup-python` | `UNVERIFIED-pin-before-use` (v5 intended) | look up the full commit SHA of the release and replace the placeholder |
+| `actions/setup-node` | `UNVERIFIED-pin-before-use` (v4 intended) | same |
+
+No SHA was invented for these; the workflow fails at "unable to resolve action" until they are
+pinned, which is the safe failure. `bench-compare.yml` is not part of `ci-success`, installs
+third-party packages (PyPI, npm, crates.io) with `--ignore-scripts` where possible, and has
+`contents: read` only.
 
 ## What is not an action
 

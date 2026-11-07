@@ -1,0 +1,35 @@
+name: Benchmark runner review
+description: Maintainers and users of another unit library - tell us how to run it better or more fairly.
+title: "bench: "
+labels: [benchmarks]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The comparison runners in `benchmarks/` should use each library the way its own
+        documentation recommends, in both its plain and its fastest idiomatic form. If a runner
+        uses your library unfairly or wrongly (a wrong unit name, a slower API than necessary, a
+        missing feature we counted as unsupported), please say so. Corrections are applied
+        before any result is published, and your name is credited if you wish.
+  - type: input
+    id: library
+    attributes:
+      label: Library and version
+      placeholder: "pint 0.24"
+    validations: { required: true }
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is unfair, wrong or missing?
+      description: Name the file (for example `benchmarks/python/run_pint.py` or `benchmarks/translations/pint.json`) and the case id if it is about the corpus.
+    validations: { required: true }
+  - type: textarea
+    id: fix
+    attributes:
+      label: Suggested change
+      description: Code, a documentation link, or the unit spelling your library expects.
+  - type: textarea
+    id: corpus
+    attributes:
+      label: Corpus case you think is wrong
+      description: Id from `benchmarks/corpus/*.json` plus the primary source for the correct value.
