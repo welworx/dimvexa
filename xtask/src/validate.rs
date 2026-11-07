@@ -226,7 +226,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
         match (t.str("shape"), offset.is_zero()) {
             (Ok("linear"), true) | (Ok("affine"), false) => {}
             (Ok(s @ ("linear" | "affine")), _) => {
-                err(format!("{at}: shape '{s}' contradicts offset {offset}"))
+                err(format!("{at}: shape '{s}' contradicts offset {offset}"));
             }
             _ => err(format!("{at}: missing or unknown 'shape'")),
         }
