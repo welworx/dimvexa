@@ -18,7 +18,7 @@ $ dimvexa convert 10 m/s km/h
 36 km/h
 $ dimvexa convert 1 ton kg
 error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne, or choose a profile
-$ dimvexa units volume      # which volume units exist? (also: units --groups, units psi)
+$ dimvexa units volume      # which volume units exist? (see "Finding a unit" below)
 ```
 
 **Status:** pre-release 0.0.0, not on crates.io yet; use it from git (`dimvexa = { git = "https://github.com/welworx/dimvexa" }`).
@@ -35,6 +35,81 @@ $ dimvexa units volume      # which volume units exist? (also: units --groups, u
 A worked example (pool pump electricity: 1.1 kW for 8 h a day for 30 days is 264 kWh,
 950.4 MJ, 79.20 EUR at 0.30 EUR/kWh) is in [`examples/pool_pump.rs`](examples/pool_pump.rs)
 and runs as a test.
+
+## Supported units
+
+The table below lists every unit symbol by quantity group (the SI units also accept the SI
+prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa units`.
+
+| Group | Unit symbols |
+|---|---|
+| length | `m`, `in`, `ft`, `yd`, `mi`, `nmi`, `ft_us_survey`, `mi_us_survey` |
+| mass | `g`, `tonne`, `lb`, `oz_av`, `oz_troy`, `ton_short`, `ton_long` |
+| time | `s`, `min`, `h`, `d` |
+| electric_current | `A` |
+| temperature | `K`, `degC`, `delta_K`, `delta_degC`, `degF`, `degR`, `delta_degF`, `delta_degR` |
+| amount_of_substance | `mol`, `lbmol` |
+| luminous_intensity | `cd` |
+| frequency | `Hz` |
+| force | `N`, `lbf` |
+| pressure | `Pa`, `bar`, `atm`, `psi`, `mmHg`, `torr` |
+| energy | `J`, `Wh`, `cal_th`, `cal_IT`, `Btu_IT`, `Btu_th` |
+| power | `W`, `hp_mech`, `hp_metric` |
+| electric_charge | `C` |
+| voltage | `V` |
+| resistance | `ohm` |
+| capacitance | `F` |
+| conductance | `S` |
+| magnetic_flux | `Wb` |
+| magnetic_flux_density | `T` |
+| inductance | `H` |
+| volume | `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp` |
+| acceleration | `g_n` |
+
+## Finding a unit
+
+The CLI answers "what exists, and what exactly is it?" without leaving the terminal:
+
+```console
+$ dimvexa units --groups     # the groups: length, mass, volume, ... with their sizes
+$ dimvexa units mass         # every unit of one group, plus the refused ambiguous symbols
+$ dimvexa units tonne        # the details of one unit
+$ dimvexa units --json       # the same, machine-readable (schema docs/schemas/dimvexa.units-1.schema.json)
+```
+
+Take `ton`. It is refused on purpose, because three different masses are called a ton:
+
+```console
+$ dimvexa convert 1 ton kg
+error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne, or choose a profile
+$ dimvexa units mass         # (excerpt)
+tonne      plain  defined  si    t  BIPM SI Brochure, 9th ed. (2019), ch. 4 ...
+ton_short  plain  defined  none  -  NIST SP 811 (2008), Appendix B (ton, short, 2000 lb)
+ton_long   plain  defined  none  -  NIST SP 811 (2008), Appendix B (ton, long, 2240 lb)
+ton        candidates: ton_short, ton_long, tonne   (refused: all three are called ton)
+$ dimvexa units ton_long
+ton_long
+  group         mass
+  aliases       -
+  dimension     kg
+  quantity kind plain
+  exactness     defined
+  prefixes      none
+  namespace     std
+  factor to SI  317514659/312500
+  offset to SI  0/1
+  source        NIST SP 811 (2008), Appendix B (ton, long, 2240 lb)
+```
+
+| Symbol | Meaning | Exact factor to kg |
+|---|---|---|
+| `tonne` (alias `t`) | metric ton, 1000 kg | `1000/1` |
+| `ton_short` | US short ton, 2000 lb | `45359237/50000` |
+| `ton_long` | UK long ton, 2240 lb | `317514659/312500` |
+
+`dimvexa units NAME` also takes an alias (`degC` or its degree-sign spelling) and prefixed or
+compound expressions such as `km` or `m/s`; an unknown or ambiguous name is an error that lists
+the close matches or the candidates.
 
 ## Repository layout
 
