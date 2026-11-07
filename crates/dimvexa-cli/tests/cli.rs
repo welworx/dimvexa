@@ -324,3 +324,15 @@ fn ambiguous_candidates_are_listed_in_json() {
         ]
     );
 }
+
+#[test]
+fn units_lists_every_table_entry() {
+    let r = dimvexa(&["units"]);
+    assert_eq!(r.code, 0);
+    assert!(r.stdout.lines().any(|l| l.starts_with("psi\t")));
+    let n = dimvexa_data::registry().unwrap().len();
+    assert_eq!(r.stdout.lines().count(), n);
+    let j = dimvexa(&["units", "--json"]);
+    assert_eq!(j.code, 0);
+    assert!(j.stdout.contains("\"schema\":\"dimvexa.units/1\""));
+}
