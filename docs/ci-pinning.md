@@ -54,8 +54,8 @@ third-party packages (PyPI, npm, crates.io) with `--ignore-scripts` where possib
 
 | Tool | Version | Pinned? |
 |---|---|---|
-| `cargo-deny` | `0.18.3` | yes, in `ci.yml` and `nightly.yml` (unverified: confirm the release exists and that `deny.toml` is accepted by it) |
-| `actionlint` | `1.7.7` | yes, in `ci.yml` (unverified: confirm the release exists) |
+| `cargo-deny` | `0.20.2` | yes, in `ci.yml` and `nightly.yml` (`cargo deny --locked check` passes locally with this version; 0.18.3 cannot read advisories that use CVSS 4.0) |
+| `actionlint` | `1.7.7` | yes, in `ci.yml`: the release tarball, verified against the SHA-256 in the release's checksums file (taiki-e/install-action does not know actionlint). `actionlint` passes on all workflows locally |
 | `cargo-fuzz`, `cargo-mutants`, `cargo-llvm-cov` | latest | no (weekly and nightly workflows only) |
 | `typos-cli`, `taplo-cli` | latest | no. Choose versions and pin them (`typos-cli@X.Y.Z`) once the first run is green |
 
