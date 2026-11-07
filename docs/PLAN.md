@@ -257,6 +257,17 @@ Plan:
 
 Go/no-go for Phase 2: the GPU path must beat the best CPU path including transfers on a stated problem size, or the data must already be on the device. Otherwise it is not built.
 
+### Benchmarks against other libraries
+
+Method, corpus, runners and the rule that no "fastest" or "most accurate" claim is made without a
+dated run: [`docs/benchmarking.md`](benchmarking.md).
+
+### Excel add-in (optional)
+
+Office.js custom functions on the WASM build first, a native XLL later. Excel never shapes the
+core. Limits to test before promising anything (unverified): JS-WASM call overhead per cell,
+memory, behaviour on Mac; prefer batch and range functions. Prerequisite: the WASM binding.
+
 ### Benchmarks for this section
 
 - Slice conversion at 10^3, 10^5, 10^6, 10^8 values: serial, `parallel` (1, 2, 4, 8 threads), versus a hand-written multiply loop and a memcpy as the bandwidth ceiling.

@@ -18,3 +18,7 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
 * A faster implementation must stay bit-identical or inside the documented bound, proven by
   `crates/dimvexa-testkit/tests/differential.rs`, before the benchmark counts.
 * Shared cloud machines are noisy: repeat a surprising result before acting on it.
+* **Comparing with other libraries** follows `docs/benchmarking.md`. Never write "fastest",
+  "most accurate" or a similar claim in the README, docs or release notes without a link to a dated
+  run that shows it. Do not invent or edit competitor numbers; runners that were not run are listed
+  as such in the status table of that page. Corpus: `python3 benchmarks/tools/gen_corpus.py --check`.

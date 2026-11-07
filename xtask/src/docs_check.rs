@@ -32,6 +32,7 @@ const ROOTS: &[&str] = &[
     "fuzz/",
     "examples/",
     "scripts/",
+    "benchmarks/",
 ];
 
 fn read(path: &Path) -> String {
