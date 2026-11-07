@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use Dimvexa in research or in a published report, please cite it as below."
-title: "Dimvexa: exact unit conversion with loud failures"
+title: "Dimvexa: exact, fast unit conversion for Rust"
 abstract: >-
   Dimvexa is a Rust library for unit conversion in science and engineering.
   Every conversion factor is an exact rational with a cited source and a recorded
