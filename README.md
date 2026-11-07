@@ -21,7 +21,7 @@ for anyone who needs conversions they can trust.
   Failed arithmetic (overflow) is an error, never a wrapped number.
 - **Kinds, not just dimensions.** Absolute and difference temperatures are distinct:
   `abs - abs = difference`, `abs + difference = abs`, `abs + abs` is an error.
-- **Extensible by data.** Units live in TOML tables under `data/units/`, each with a cited
+- **Extensible by data.** Units live in TOML tables under `crates/dimvexa-data/data/units/`, each with a cited
   source and a golden test vector. Missing a unit? Open a *Unit request* issue.
 
 ## Usage
@@ -56,12 +56,11 @@ A complete worked example (pool pump electricity: 1.1 kW for 8 h a day for 30 da
 | Path | Purpose |
 |---|---|
 | `crates/dimvexa-core` | dimensions, rationals, parser, registry, conversions (no data, no `unsafe`) |
-| `crates/dimvexa-data` | the unit table, compiled from `data/units/*.toml` by `build.rs` |
+| `crates/dimvexa-data` | the unit table, compiled from `data/units/*.toml` (inside the crate) by `build.rs` |
 | `crates/dimvexa` | facade crate: core plus the seed table |
 | `crates/dimvexa-cli` | the `dimvexa` command line tool (no conversion logic of its own) |
 | `crates/dimvexa-testkit` | shared test helpers and the counting allocator (not published) |
 | `xtask` | `cargo xtask validate-data` |
-| `data/` | unit tables and golden vectors with citations |
 | `extras/`, `fuzz/` | network-only tooling: proptest, criterion, iai-callgrind, insta, cargo-fuzz |
 | `docs/` | plan, design, ADRs, benchmark results, JSON schema |
 

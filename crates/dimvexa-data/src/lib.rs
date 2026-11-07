@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //! The unit table of **dimvexa**, compiled from audited TOML at build time.
 //!
-//! The source of truth is `data/units/*.toml`: each unit carries an exact rational factor,
+//! The source of truth is `data/units/*.toml` (inside this crate): each unit carries an exact rational factor,
 //! an exactness flag (`defined` or `measured`), a cited source and a note, and has at least
 //! one golden test vector in `data/vectors/`. `cargo xtask validate-data` enforces this.
 //!

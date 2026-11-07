@@ -69,12 +69,11 @@ dimvexa/
   crates/
     dimvexa-core/             # dimensions, kinds, shapes, rationals, parser, registry
     dimvexa-data/             # unit tables (TOML) compiled by build step; packs as features
+      data/units/             # one TOML file per pack (inside the crate so the package is self-contained)
+      data/vectors/           # golden test vectors with citations
     dimvexa/                  # facade crate: re-exports core + selected packs
     dimvexa-testkit/          # shared test vectors, oracles, generators (publish = false)
     dimvexa-cli/              # command-line tool, public API only (section 6.3)
-  data/
-    units/                    # one TOML file per pack
-    vectors/                  # golden test vectors with citations
   benches/                    # criterion + iai-callgrind (in the crates they test)
   fuzz/                       # cargo-fuzz targets (parser, registry)
   examples/                   # runnable cookbook examples (also tested in CI)
@@ -166,7 +165,7 @@ CI runs `cargo clippy --workspace --all-targets --all-features -- -D warnings`.
 |---|---|---|
 | Unit tests | built-in | Every function, error path and edge case |
 | Doc tests | rustdoc | Every public example compiles and runs |
-| Golden vectors | `data/vectors/*.toml` | Every unit has at least one vector: value, from, to, exact expected rational, citation |
+| Golden vectors | `crates/dimvexa-data/data/vectors/*.toml` | Every unit has at least one vector: value, from, to, exact expected rational, citation |
 | Property tests | `proptest` | Round trip `a -> b -> a` exact in exact mode; dimension algebra laws (associativity, identity, inverse); kind algebra closure; parser/printer round trip; affine and reciprocal inverses |
 | Oracle tests | local only | Compare against `ucum-units`, Pint (via a script) and UDUNITS values. Oracle data is never copied into the repo; only agreed results are, with citations |
 | Snapshot tests | `insta` | Error messages and the unit reference output |

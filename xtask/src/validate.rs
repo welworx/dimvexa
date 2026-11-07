@@ -74,7 +74,7 @@ fn strict_fraction(s: &str) -> Result<Ratio, String> {
 
 fn data_hash(root: &Path) -> Result<String, String> {
     let mut input: Vec<u8> = Vec::new();
-    for f in toml_files(&root.join("data/units"))? {
+    for f in toml_files(&root.join("crates/dimvexa-data/data/units"))? {
         let name = f
             .file_stem()
             .and_then(|s| s.to_str())
@@ -89,7 +89,7 @@ fn data_hash(root: &Path) -> Result<String, String> {
 
 pub fn update_hash(root: &Path) -> Result<String, String> {
     let hash = data_hash(root)?;
-    let path = root.join("data/data_version.toml");
+    let path = root.join("crates/dimvexa-data/data/data_version.toml");
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     let tables = toml_lite::parse(&text)?;
     let t = tables
@@ -124,7 +124,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
     // ---- load
     let mut unit_tables: Vec<(String, Table)> = Vec::new();
     let mut ambiguous_tables: Vec<Table> = Vec::new();
-    for f in toml_files(&root.join("data/units"))? {
+    for f in toml_files(&root.join("crates/dimvexa-data/data/units"))? {
         let fname = f
             .file_name()
             .and_then(|s| s.to_str())
@@ -140,7 +140,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
         }
     }
     let mut vector_tables: Vec<(String, Table)> = Vec::new();
-    for f in toml_files(&root.join("data/vectors"))? {
+    for f in toml_files(&root.join("crates/dimvexa-data/data/vectors"))? {
         let fname = f
             .file_name()
             .and_then(|s| s.to_str())
@@ -363,7 +363,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
 
     // ---- hash
     let hash = data_hash(root)?;
-    let version_path = root.join("data/data_version.toml");
+    let version_path = root.join("crates/dimvexa-data/data/data_version.toml");
     match std::fs::read_to_string(&version_path)
         .map_err(|e| e.to_string())
         .and_then(|s| toml_lite::parse(&s))
@@ -372,11 +372,11 @@ pub fn run(root: &Path) -> Result<Report, String> {
             Some(recorded) if recorded == hash => {}
             Some(recorded) => errors.push(format!(
                 "unit table hash {hash} differs from recorded {recorded}: run `cargo xtask update-data-hash` \
-                 (it bumps the data version) and commit data/data_version.toml"
+                 (it bumps the data version) and commit crates/dimvexa-data/data/data_version.toml"
             )),
-            None => errors.push("data/data_version.toml: missing hash".to_string()),
+            None => errors.push("crates/dimvexa-data/data/data_version.toml: missing hash".to_string()),
         },
-        Err(e) => errors.push(format!("data/data_version.toml: {e}")),
+        Err(e) => errors.push(format!("crates/dimvexa-data/data/data_version.toml: {e}")),
     }
 
     Ok(Report {
@@ -415,11 +415,12 @@ mod tests {
     /// Copies `data/` to a fresh temp dir, applies `mutate` to `file` (relative to data/)
     /// and returns the validation errors.
     fn errors_after(tag: &str, file: &str, mutate: impl Fn(String) -> String) -> Vec<String> {
-        let real = crate::repo_root().join("data");
+        let real = crate::repo_root().join("crates/dimvexa-data/data");
         let tmp = std::env::temp_dir().join(format!("dimvexa-xtask-{}-{tag}", std::process::id()));
         let _ = std::fs::remove_dir_all(&tmp);
-        copy_dir(&real, &tmp.join("data"));
-        let path = tmp.join("data").join(file);
+        let data = tmp.join("crates/dimvexa-data/data");
+        copy_dir(&real, &data);
+        let path = data.join(file);
         let text = std::fs::read_to_string(&path).unwrap();
         let new = mutate(text.clone());
         assert_ne!(text, new, "mutation did not change {file}");
@@ -502,7 +503,7 @@ mod tests {
     fn detects_broken_psi_chain() {
         // 6894757293168361/1000000000000 is not the exact psi; nudge the table numerator.
         let real =
-            std::fs::read_to_string(crate::repo_root().join("data/units/common.toml")).unwrap();
+            std::fs::read_to_string(crate::repo_root().join("crates/dimvexa-data/data/units/common.toml")).unwrap();
         let psi_factor = real
             .split("symbol = \"psi\"")
             .nth(1)
