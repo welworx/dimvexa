@@ -7,7 +7,8 @@
 //! result with [`apply`]. The only thing it asks of the core is
 //! [`Registry::add_alias`](dimvexa_core::Registry::add_alias).
 //!
-//! A config maps a name to an existing unit, for example `mt = "tonne"`. It never carries a
+//! A config can define **units** (`[[unit]]`: an exact multiple of an existing unit, with a
+//! source) and maps a name to an existing unit, for example `mt = "tonne"`. It never carries a
 //! factor and never redefines an existing symbol.
 //!
 //! A config can also hold **bridges**: constants the caller supplies for a conversion the core
@@ -33,7 +34,10 @@
 
 #![forbid(unsafe_code)]
 
-use dimvexa_core::{Conversion, Dim, Error, Exactness, Ratio, Registry, Result, UnitExpr};
+use dimvexa_core::{
+    Conversion, Dim, Error, Exactness, Kind, PrefixMode, Ratio, Registry, Result, Unit, UnitExpr,
+    is_valid_symbol,
+};
 
 /// A parsed config file: its origin, a content hash and the `[map]` entries in file order.
 ///
@@ -54,6 +58,33 @@ pub struct Config {
     hash: String,
     mappings: Vec<Mapping>,
     bridges: Vec<Bridge>,
+    units: Vec<ConfigUnit>,
+}
+
+/// A unit the caller defines in a `[[unit]]` table: an exact multiple of an existing unit.
+///
+/// `1 symbol = factor * base`. The dimension and kind come from the base, so they cannot be
+/// mistyped; `source` is mandatory like for the shipped tables.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ConfigUnit {
+    /// The new symbol, for example `bbl_oil`.
+    pub symbol: String,
+    /// The unit expression it is a multiple of, for example `gal_us`.
+    pub base: String,
+    /// How many `base` it is, exact and positive.
+    pub factor: Ratio,
+    /// Whether the definition is exact by definition or a measurement.
+    pub exactness: Exactness,
+    /// Which SI and binary prefixes the symbol accepts.
+    pub prefixes: PrefixMode,
+    /// Where the definition comes from.
+    pub source: String,
+    /// A free-text note (may be empty).
+    pub note: String,
+    /// The config file it came from.
+    pub origin: String,
+    /// One-based line of its `[[unit]]` header.
+    pub line: usize,
 }
 
 /// What a [`Bridge`] connects. Only densities exist in this version.
@@ -132,8 +163,9 @@ impl Config {
     pub fn parse(text: &str, origin: &str) -> Result<Self> {
         let mut mappings: Vec<Mapping> = Vec::new();
         let mut bridges: Vec<Bridge> = Vec::new();
+        let mut units: Vec<ConfigUnit> = Vec::new();
         let mut section = Section::None;
-        let mut pending: Option<PendingBridge> = None;
+        let mut pending: Option<Pending> = None;
         for (i, raw) in text.lines().enumerate() {
             let line = i.saturating_add(1);
             let bad = |message: String| Error::InvalidDefinition {
@@ -145,19 +177,23 @@ impl Config {
                 continue;
             }
             if let Some(header) = content.strip_prefix('[') {
-                finish_bridge(&mut pending, &mut bridges, origin)?;
+                finish_table(&mut pending, &mut bridges, &mut units, origin)?;
                 let name = header
                     .strip_suffix(']')
                     .ok_or_else(|| bad("unterminated section header".to_string()))?;
                 match name {
                     "map" => section = Section::Map,
                     "[bridge]" => {
-                        section = Section::Bridge;
-                        pending = Some(PendingBridge::new(line));
+                        section = Section::Table;
+                        pending = Some(Pending::new(TableKind::Bridge, line));
+                    }
+                    "[unit]" => {
+                        section = Section::Table;
+                        pending = Some(Pending::new(TableKind::Unit, line));
                     }
                     other => {
                         return Err(bad(format!(
-                            "unknown section '[{other}]': this version reads [map] and [[bridge]]"
+                            "unknown section '[{other}]': this version reads [map], [[unit]] and [[bridge]]"
                         )));
                     }
                 }
@@ -171,7 +207,8 @@ impl Config {
             match section {
                 Section::None => {
                     return Err(bad(
-                        "an entry must be inside a [map] or [[bridge]] section".to_string()
+                        "an entry must be inside a [map], [[unit]] or [[bridge]] section"
+                            .to_string(),
                     ));
                 }
                 Section::Map => {
@@ -185,19 +222,20 @@ impl Config {
                         line,
                     });
                 }
-                Section::Bridge => {
+                Section::Table => {
                     if let Some(p) = pending.as_mut() {
                         p.set(&key, value).map_err(&bad)?;
                     }
                 }
             }
         }
-        finish_bridge(&mut pending, &mut bridges, origin)?;
+        finish_table(&mut pending, &mut bridges, &mut units, origin)?;
         Ok(Self {
             origin: origin.to_string(),
             hash: format!("fnv1a64:{:016x}", fnv1a64(text.as_bytes())),
             mappings,
             bridges,
+            units,
         })
     }
 
@@ -224,101 +262,139 @@ impl Config {
     pub fn bridges(&self) -> &[Bridge] {
         &self.bridges
     }
+
+    /// The `[[unit]]` entries in file order.
+    #[must_use]
+    pub fn units(&self) -> &[ConfigUnit] {
+        &self.units
+    }
 }
 
 #[derive(Clone, Copy)]
 enum Section {
     None,
     Map,
+    Table,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum TableKind {
     Bridge,
+    Unit,
 }
 
-/// A `[[bridge]]` table while it is being read.
-struct PendingBridge {
+impl TableKind {
+    const fn keys(self) -> &'static [&'static str] {
+        match self {
+            Self::Bridge => &["name", "kind", "value", "conditions", "source"],
+            Self::Unit => &[
+                "symbol",
+                "base",
+                "factor",
+                "exactness",
+                "source",
+                "prefixes",
+                "note",
+            ],
+        }
+    }
+}
+
+/// A `[[bridge]]` or `[[unit]]` table while it is being read.
+struct Pending {
+    kind: TableKind,
     line: usize,
-    name: Option<String>,
-    kind: Option<String>,
-    value: Option<String>,
-    conditions: Option<String>,
-    source: Option<String>,
+    entries: Vec<(String, String)>,
 }
 
-impl PendingBridge {
-    const fn new(line: usize) -> Self {
+impl Pending {
+    const fn new(kind: TableKind, line: usize) -> Self {
         Self {
+            kind,
             line,
-            name: None,
-            kind: None,
-            value: None,
-            conditions: None,
-            source: None,
+            entries: Vec::new(),
         }
     }
 
     fn set(&mut self, key: &str, value: String) -> core::result::Result<(), String> {
-        let slot = match key {
-            "name" => &mut self.name,
-            "kind" => &mut self.kind,
-            "value" => &mut self.value,
-            "conditions" => &mut self.conditions,
-            "source" => &mut self.source,
-            other => {
-                return Err(format!(
-                    "unknown bridge key '{other}' (name, kind, value, conditions, source)"
-                ));
-            }
-        };
-        if slot.is_some() {
+        if !self.kind.keys().contains(&key) {
+            let table = match self.kind {
+                TableKind::Bridge => "bridge",
+                TableKind::Unit => "unit",
+            };
+            return Err(format!(
+                "unknown {table} key '{key}' ({})",
+                self.kind.keys().join(", ")
+            ));
+        }
+        if self.entries.iter().any(|(k, _)| k == key) {
             return Err(format!("'{key}' is given twice"));
         }
-        *slot = Some(value);
+        self.entries.push((key.to_string(), value));
         Ok(())
+    }
+
+    fn get(&self, key: &str) -> Option<&str> {
+        self.entries
+            .iter()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v.trim())
+    }
+
+    /// A mandatory, non-empty field.
+    fn need(&self, key: &str) -> core::result::Result<String, String> {
+        self.get(key)
+            .filter(|v| !v.is_empty())
+            .map(str::to_string)
+            .ok_or_else(|| format!("missing or empty '{key}'"))
     }
 }
 
-/// Validates the `[[bridge]]` table read so far and stores it.
-fn finish_bridge(
-    pending: &mut Option<PendingBridge>,
+/// Validates the table read so far and stores it.
+fn finish_table(
+    pending: &mut Option<Pending>,
     bridges: &mut Vec<Bridge>,
+    units: &mut Vec<ConfigUnit>,
     origin: &str,
 ) -> Result<()> {
     let Some(p) = pending.take() else {
         return Ok(());
     };
-    let bad = |message: String| Error::InvalidDefinition {
+    let (what, result) = match p.kind {
+        TableKind::Bridge => ("bridge", finish_bridge(&p, bridges, origin)),
+        TableKind::Unit => ("unit", finish_unit(&p, units, origin)),
+    };
+    result.map_err(|message| Error::InvalidDefinition {
         symbol: format!("{origin}:{}", p.line),
-        message: format!("bridge: {message}"),
-    };
-    let need = |field: &Option<String>, key: &str| -> Result<String> {
-        field
-            .as_deref()
-            .map(str::trim)
-            .filter(|v| !v.is_empty())
-            .map(str::to_string)
-            .ok_or_else(|| bad(format!("missing or empty '{key}'")))
-    };
-    let name = need(&p.name, "name")?;
-    let kind = match need(&p.kind, "kind")?.as_str() {
+        message: format!("{what}: {message}"),
+    })
+}
+
+fn finish_bridge(
+    p: &Pending,
+    bridges: &mut Vec<Bridge>,
+    origin: &str,
+) -> core::result::Result<(), String> {
+    let name = p.need("name")?;
+    let kind = match p.need("kind")?.as_str() {
         "density" => BridgeKind::Density,
         other => {
-            return Err(bad(format!(
+            return Err(format!(
                 "kind '{other}' is not supported (only 'density' in this version)"
-            )));
+            ));
         }
     };
-    let text = need(&p.value, "value")?;
+    let text = p.need("value")?;
     let value: Ratio = text.parse().map_err(|_| {
-        bad(format!(
-            "value '{text}' is not an exact number (use 9982071/10000 or 998.2071)"
-        ))
+        format!("value '{text}' is not an exact number (use 9982071/10000 or 998.2071)")
     })?;
     if value.num() <= 0 {
-        return Err(bad("value must be positive".to_string()));
+        return Err("value must be positive".to_string());
     }
-    let conditions = need(&p.conditions, "conditions")?;
-    let source = need(&p.source, "source")?;
+    let conditions = p.need("conditions")?;
+    let source = p.need("source")?;
     if bridges.iter().any(|b| b.name == name) {
-        return Err(bad(format!("'{name}' is defined twice")));
+        return Err(format!("'{name}' is defined twice"));
     }
     bridges.push(Bridge {
         name,
@@ -326,6 +402,55 @@ fn finish_bridge(
         value,
         conditions,
         source,
+        origin: origin.to_string(),
+        line: p.line,
+    });
+    Ok(())
+}
+
+fn finish_unit(
+    p: &Pending,
+    units: &mut Vec<ConfigUnit>,
+    origin: &str,
+) -> core::result::Result<(), String> {
+    let symbol = p.need("symbol")?;
+    if !is_valid_symbol(&symbol) {
+        return Err(format!("'{symbol}' is not a well-formed unit symbol"));
+    }
+    let base = p.need("base")?;
+    let text = p.need("factor")?;
+    let factor: Ratio = text.parse().map_err(|_| {
+        format!("factor '{text}' is not an exact number (use 158987294928/1000000000 or 42)")
+    })?;
+    if factor.num() <= 0 {
+        return Err("factor must be positive".to_string());
+    }
+    let exactness = match p.need("exactness")?.as_str() {
+        "defined" => Exactness::Defined,
+        "measured" => Exactness::Measured,
+        other => {
+            return Err(format!(
+                "exactness '{other}' must be 'defined' or 'measured'"
+            ));
+        }
+    };
+    let source = p.need("source")?;
+    let prefixes = match p.get("prefixes").filter(|v| !v.is_empty()) {
+        None => PrefixMode::None,
+        Some(name) => PrefixMode::from_name(name)
+            .ok_or_else(|| format!("prefixes '{name}' must be 'none', 'si' or 'si_binary'"))?,
+    };
+    if units.iter().any(|u| u.symbol == symbol) {
+        return Err(format!("'{symbol}' is defined twice"));
+    }
+    units.push(ConfigUnit {
+        symbol,
+        base,
+        factor,
+        exactness,
+        prefixes,
+        source,
+        note: p.get("note").unwrap_or_default().to_string(),
         origin: origin.to_string(),
         line: p.line,
     });
@@ -436,16 +561,87 @@ fn density_direction(from: Dim, to: Dim) -> Option<Direction> {
     }
 }
 
-/// Applies configs to a registry, in order: a later config overrides an earlier mapping of the
-/// same name. Returns the mappings now in effect (one per name, in application order).
+/// What [`apply`] put into a registry: the user units and name mappings now in effect.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Applied {
+    /// The `[[unit]]` definitions in effect, in application order.
+    pub units: Vec<ConfigUnit>,
+    /// The `[map]` entries in effect (one per name), in application order.
+    pub mappings: Vec<Mapping>,
+}
+
+/// Wraps any error of an entry as an `invalid_definition` at `origin:line`.
+fn at(origin: &str, line: usize, e: Error) -> Error {
+    let message = match e {
+        Error::InvalidDefinition { message, .. } => message,
+        other => other.to_string(),
+    };
+    Error::InvalidDefinition {
+        symbol: format!("{origin}:{line}"),
+        message,
+    }
+}
+
+/// Defines one user unit in `reg`: `factor` times the unit expression `base`.
+fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
+    let bad = |message: String| {
+        at(
+            &u.origin,
+            u.line,
+            Error::InvalidDefinition {
+                symbol: u.symbol.clone(),
+                message,
+            },
+        )
+    };
+    if reg.get(&u.symbol).is_some() || reg.resolve_symbol(&u.symbol).is_ok() {
+        return Err(bad(format!(
+            "'{}' already means a unit and cannot be redefined",
+            u.symbol
+        )));
+    }
+    let base = reg
+        .parse(&u.base)
+        .map_err(|e| bad(format!("base '{}': {e}", u.base)))?;
+    if base.kind() == Kind::AbsoluteTemperature || !base.offset().is_zero() {
+        return Err(bad(format!(
+            "base '{}' is a temperature point or has an offset; only linear units can be a base",
+            u.base
+        )));
+    }
+    let factor = base
+        .factor()
+        .checked_mul(u.factor)
+        .map_err(|e| bad(format!("{e}")))?;
+    let note = if u.note.is_empty() {
+        format!("user unit: 1 {} = {} {}", u.symbol, u.factor, u.base)
+    } else {
+        u.note.clone()
+    };
+    let unit = Unit::new(&u.symbol, base.dim(), base.kind(), factor, Ratio::ZERO)
+        .map_err(|e| at(&u.origin, u.line, e))?
+        .with_prefixes(u.prefixes)
+        .with_provenance(base.exactness().combine(u.exactness), &u.source, &note)
+        .with_namespace("user");
+    reg.register(unit).map_err(|e| at(&u.origin, u.line, e))
+}
+
+/// Applies configs to a registry and returns what is now in effect.
+///
+/// Every `[[unit]]` goes in first, then every `[map]` entry (so a mapping can point at a user
+/// unit). A later config overrides an earlier definition of the same unit symbol or mapped
+/// name.
 ///
 /// All configs go in one call, so overrides are resolved before the registry is touched. The
-/// registry is unchanged if any entry is refused.
+/// registry is unchanged if any entry is refused. A user unit is the base unit times an exact
+/// factor; its dimension comes from the base, and it can never take the name of an existing
+/// unit, alias or prefixed form (`mm`, `kg`).
 ///
 /// # Errors
 ///
-/// [`Error::InvalidDefinition`] (symbol `origin:line`) for a name that is malformed or already
-/// means a unit, or a target that is not a unit of the registry.
+/// [`Error::InvalidDefinition`] (symbol `origin:line`) for a unit or name that is malformed or
+/// already means a unit, a base that does not resolve or is not linear, or a mapping target
+/// that is not a unit of the registry.
 ///
 /// # Examples
 ///
@@ -456,30 +652,40 @@ fn density_direction(from: Dim, to: Dim) -> Option<Direction> {
 /// let mut reg = Registry::new();
 /// reg.register(Unit::linear("kg", Dim::KG, Ratio::ONE)?)?;
 /// reg.register(Unit::linear("t", Dim::KG, Ratio::from_int(1000))?)?;
-/// let cfg = Config::parse("[map]\nmetric_ton = \"t\"\n", "my.toml")?;
+/// let cfg = Config::parse(
+///     "[[unit]]\nsymbol = \"sack\"\nbase = \"kg\"\nfactor = \"50\"\nexactness = \"defined\"\n\
+///      source = \"my supplier\"\n[map]\nmetric_ton = \"t\"\n",
+///     "my.toml",
+/// )?;
 /// let applied = apply(&mut reg, &[cfg])?;
-/// assert_eq!(applied.len(), 1);
+/// assert_eq!(applied.units.len(), 1);
+/// assert_eq!(applied.mappings.len(), 1);
+/// assert_eq!(reg.conversion("sack", "kg")?.factor(), Ratio::from_int(50));
 /// assert_eq!(reg.conversion("metric_ton", "kg")?.factor(), Ratio::from_int(1000));
 /// # Ok::<(), dimvexa_core::Error>(())
 /// ```
-pub fn apply(reg: &mut Registry, configs: &[Config]) -> Result<Vec<Mapping>> {
-    let mut effective: Vec<Mapping> = Vec::new();
+pub fn apply(reg: &mut Registry, configs: &[Config]) -> Result<Applied> {
+    let mut units: Vec<ConfigUnit> = Vec::new();
+    for u in configs.iter().flat_map(Config::units) {
+        units.retain(|e| e.symbol != u.symbol);
+        units.push(u.clone());
+    }
+    let mut mappings: Vec<Mapping> = Vec::new();
     for m in configs.iter().flat_map(Config::mappings) {
-        effective.retain(|e| e.name != m.name);
-        effective.push(m.clone());
+        mappings.retain(|e| e.name != m.name);
+        mappings.push(m.clone());
     }
     let mut staged = reg.clone();
-    for m in &effective {
-        staged.add_alias(&m.name, &m.target).map_err(|e| match e {
-            Error::InvalidDefinition { message, .. } => Error::InvalidDefinition {
-                symbol: format!("{}:{}", m.origin, m.line),
-                message,
-            },
-            other => other,
-        })?;
+    for u in &units {
+        define_unit(&mut staged, u)?;
+    }
+    for m in &mappings {
+        staged
+            .add_alias(&m.name, &m.target)
+            .map_err(|e| at(&m.origin, m.line, e))?;
     }
     *reg = staged;
-    Ok(effective)
+    Ok(Applied { units, mappings })
 }
 
 /// Removes a `#` comment that is not inside a quoted string.
@@ -587,13 +793,16 @@ mod tests {
     #[test]
     fn everything_unsupported_is_a_loud_error_with_a_line() {
         for (text, needle) in [
-            ("mt = \"tonne\"\n", "inside a [map] or [[bridge]] section"),
+            (
+                "mt = \"tonne\"\n",
+                "inside a [map], [[unit]] or [[bridge]] section",
+            ),
             ("[map]\nmt = tonne\n", "quoted string"),
             ("[map]\nmt = \"a\" \"b\"\n", "unescaped quote"),
             ("[map]\nmt\n", "expected name"),
             ("[map]\nmt = \"t\"\nmt = \"u\"\n", "mapped twice"),
-            ("[unit]\n", "reads [map] and [[bridge]]"),
-            ("[[map]]\n", "reads [map] and [[bridge]]"),
+            ("[unit]\n", "reads [map], [[unit]] and [[bridge]]"),
+            ("[[map]]\n", "reads [map], [[unit]] and [[bridge]]"),
             ("[map\n", "unterminated"),
             ("[map]\nm t = \"tonne\"\n", "not a bare name"),
             ("[map]\nmt = \"a\\nb\"\n", "unsupported escape"),
@@ -679,6 +888,77 @@ mod tests {
         assert_eq!(effective.len(), 1);
         assert_eq!(effective[0].value, Ratio::from_int(1000));
         assert_eq!(effective[0].origin, "b.toml");
+    }
+
+    const BARREL: &str = "[[unit]]\nsymbol = \"bbl_oil\"\nbase = \"gal_us\"\nfactor = \"42\"\nexactness = \"defined\"\nsource = \"NIST SP 811 (2008), Appendix B\"\n";
+
+    #[test]
+    fn parses_a_unit_with_its_base_factor_and_source() {
+        let cfg = Config::parse(&format!("[map]\nmt = \"tonne\"\n\n{BARREL}"), "o.toml").unwrap();
+        let u = &cfg.units()[0];
+        assert_eq!((u.symbol.as_str(), u.base.as_str()), ("bbl_oil", "gal_us"));
+        assert_eq!(u.factor, Ratio::from_int(42));
+        assert_eq!(u.exactness, Exactness::Defined);
+        assert_eq!(u.prefixes, PrefixMode::None);
+        assert_eq!((u.origin.as_str(), u.line), ("o.toml", 4));
+        assert!(u.note.is_empty());
+        let full = BARREL.replace("source", "prefixes = \"si\"\nnote = \"n\"\nsource");
+        let u = Config::parse(&full, "o").unwrap().units()[0].clone();
+        assert_eq!((u.prefixes, u.note.as_str()), (PrefixMode::Si, "n"));
+        // A decimal factor is the same exact number.
+        let d = Config::parse(&BARREL.replace("\"42\"", "42.0"), "o");
+        assert!(d.is_err(), "an unquoted number is not a string");
+        let d = Config::parse(&BARREL.replace("\"42\"", "\"4.2e1\""), "o").unwrap();
+        assert_eq!(d.units()[0].factor, Ratio::from_int(42));
+    }
+
+    #[test]
+    fn a_unit_without_its_definition_is_refused() {
+        let without = |key: &str| {
+            BARREL
+                .lines()
+                .filter(|l| !l.starts_with(key))
+                .collect::<Vec<_>>()
+                .join("\n")
+        };
+        for key in ["symbol", "base", "factor", "exactness", "source"] {
+            let msg = Config::parse(&without(key), "o.toml")
+                .unwrap_err()
+                .to_string();
+            assert!(
+                msg.contains("o.toml:1") && msg.contains(&format!("'{key}'")),
+                "{key}: {msg}"
+            );
+        }
+        for (text, needle) in [
+            (BARREL.replace("\"42\"", "\"0\""), "factor must be positive"),
+            (
+                BARREL.replace("\"42\"", "\"-3\""),
+                "factor must be positive",
+            ),
+            (BARREL.replace("\"42\"", "\"lots\""), "not an exact number"),
+            (
+                BARREL.replace("\"defined\"", "\"exact\""),
+                "'defined' or 'measured'",
+            ),
+            (
+                BARREL.replace("bbl_oil", "bbl oil"),
+                "not a well-formed unit symbol",
+            ),
+            (
+                BARREL.replace("source", "prefixes = \"kilo\"\nsource"),
+                "'none', 'si' or 'si_binary'",
+            ),
+            (
+                BARREL.replace("source", "colour = \"x\"\nsource"),
+                "unknown unit key 'colour'",
+            ),
+            (format!("{BARREL}{BARREL}"), "defined twice"),
+            (format!("{BARREL}symbol = \"x\"\n"), "given twice"),
+        ] {
+            let msg = Config::parse(&text, "o.toml").unwrap_err().to_string();
+            assert!(msg.contains(needle), "{needle}: {msg}");
+        }
     }
 
     #[test]

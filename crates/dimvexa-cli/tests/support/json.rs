@@ -295,6 +295,7 @@ pub fn check_units_schema(v: &V) {
             "prefixes",
             "namespace",
             "source",
+            "origin",
         ] {
             assert!(u.get(k).is_some(), "missing units[].{k}");
         }
@@ -338,6 +339,7 @@ fn check_unit_detail_schema(v: &V) {
         "offset",
         "sources",
         "note",
+        "origin",
     ] {
         assert!(u.get(k).is_some(), "missing unit.{k}");
     }

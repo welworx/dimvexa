@@ -26,7 +26,10 @@ Commits by `release-plz` once releases start (planned for M1).
 - `--config FILE` (repeatable): your own names for units in `[map]`, e.g. `mt = "tonne"`, and
   `[[bridge]]` densities for mass to volume (`--bridge NAME`, e.g. litres of water to kilograms
   with a density you state, its conditions and its source; the result is `measured`, the
-  assumption is printed and recorded in the JSON `bridge`). Example: `examples/configs/water.toml`.
+  assumption is printed and recorded in the JSON `bridge`) and `[[unit]]` for your own units as
+  an exact multiple of an existing one (`bbl_oil` = 42 `gal_us`, with source and exactness; they
+  never take an existing name; `units` marks them and the JSON has an `origin`). Examples:
+  `examples/configs/water.toml`, `examples/configs/oil.toml`.
   The new `dimvexa-config` crate holds `Config` and `apply`; the core only gains
   `Registry::add_alias`. JSON output gains `config` (files and hashes) and `dimvexa.units/1`
   gains `config` and `mappings`.

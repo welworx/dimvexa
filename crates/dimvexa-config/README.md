@@ -11,6 +11,10 @@ mt  = "tonne"
 ton = "ton_short"
 ```
 
+A `[[unit]]` defines your own unit as an exact multiple of an existing one (`bbl_oil` = 42
+`gal_us`), with a mandatory source; it can never take an existing name. See
+`examples/configs/oil.toml`.
+
 A `[[bridge]]` holds a constant you supply for a conversion the core refuses, such as the
 density of water for litres to kilograms; it needs `conditions` and a `source`, and the
 result is marked `measured`. See `examples/configs/water.toml`.

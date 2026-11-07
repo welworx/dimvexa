@@ -717,7 +717,11 @@ fn a_config_can_never_redefine_an_existing_symbol() {
             "[map]\nfoo = \"nope\"\n",
             "not a unit symbol or alias",
         ),
-        ("section.toml", "[unit]\n", "reads [map] and [[bridge]]"),
+        (
+            "section.toml",
+            "[unit]\n",
+            "reads [map], [[unit]] and [[bridge]]",
+        ),
         ("syntax.toml", "[map]\nfoo = tonne\n", "quoted string"),
     ] {
         let path = config_file(name, text);
@@ -1077,6 +1081,148 @@ fn readme_water_example_is_real() {
             r.stderr
         };
         let expected = format!("$ dimvexa {}\n{output}", args.join(" "));
+        assert!(
+            section.contains(&expected),
+            "README does not show:\n{expected}"
+        );
+    }
+}
+
+const OIL_CFG: &str = "examples/configs/oil.toml";
+
+#[test]
+fn a_config_can_define_a_unit() {
+    let r = dimvexa_at_root(&["convert", "1", "bbl_oil", "L"]);
+    assert_eq!(r.code, 1, "not defined without the config");
+    assert!(r.stderr.starts_with("error[unknown_unit]"));
+    let r = dimvexa_at_root(&["convert", "1", "bbl_oil", "L", "--config", OIL_CFG]);
+    assert_eq!((r.code, r.stdout.as_str()), (0, "158.987294928 L\n"));
+    let r = dimvexa_at_root(&[
+        "convert", "1", "Mbbl_oil", "m3", "--exact", "--config", OIL_CFG,
+    ]);
+    assert_eq!(r.stdout, "9936705933/62500 m^3\n");
+    // It combines with a bridge from another config: barrels of water in kilograms.
+    let r = dimvexa_at_root(&[
+        "convert",
+        "1",
+        "bbl_oil",
+        "kg",
+        "--config",
+        OIL_CFG,
+        "--config",
+        WATER_CFG,
+        "--bridge",
+        "water_20C",
+    ]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(r.stdout.starts_with("158.7022"), "{}", r.stdout);
+    // The unit is a volume, not a mass.
+    assert_eq!(
+        dimvexa_at_root(&["convert", "1", "bbl_oil", "kg", "--config", OIL_CFG]).code,
+        1
+    );
+}
+
+#[test]
+fn units_shows_which_units_are_yours() {
+    let r = dimvexa_at_root(&["units", "volume", "--config", OIL_CFG]);
+    assert_eq!(r.code, 0);
+    assert!(
+        r.stdout
+            .lines()
+            .any(|l| l.starts_with("bbl_oil\t")
+                && l.contains("[yours: examples/configs/oil.toml:10]"))
+    );
+    assert!(
+        !r.stdout
+            .lines()
+            .any(|l| l.starts_with("L\t") && l.contains("[yours"))
+    );
+    assert!(!dimvexa(&["units", "volume"]).stdout.contains("bbl_oil"));
+    // The group table counts it too.
+    let g = dimvexa_at_root(&["units", "--groups", "--config", OIL_CFG]);
+    let base = dimvexa(&["units", "--groups"]);
+    assert!(g.stdout.lines().any(|l| l == "volume\t6"));
+    assert!(base.stdout.lines().any(|l| l == "volume\t5"));
+
+    let v =
+        json::parse(&dimvexa_at_root(&["units", "--json", "--config", OIL_CFG]).stdout).unwrap();
+    json::check_units_schema(&v);
+    let units = v.get("units").unwrap().as_array();
+    let mine: Vec<_> = units
+        .iter()
+        .filter(|u| !matches!(u.get("origin").unwrap(), json::V::Null))
+        .collect();
+    assert_eq!(mine.len(), 1);
+    assert_eq!(mine[0].get("symbol").unwrap().as_str(), "bbl_oil");
+    assert_eq!(
+        mine[0].get("origin").unwrap().get("file").unwrap().as_str(),
+        OIL_CFG
+    );
+    assert_eq!(mine[0].get("namespace").unwrap().as_str(), "user");
+    let d =
+        json::parse(&dimvexa_at_root(&["units", "bbl_oil", "--json", "--config", OIL_CFG]).stdout)
+            .unwrap();
+    json::check_units_schema(&d);
+    let line = d
+        .get("unit")
+        .unwrap()
+        .get("origin")
+        .unwrap()
+        .get("line")
+        .unwrap();
+    assert!((line.as_f64() - 10.0).abs() < f64::EPSILON);
+}
+
+#[test]
+fn a_config_unit_that_takes_an_existing_name_is_refused() {
+    for (name, symbol, base) in [
+        ("m.toml", "m", "kg"),
+        ("mm.toml", "mm", "kg"),
+        ("ton.toml", "ton", "kg"),
+    ] {
+        let text = format!(
+            "[[unit]]\nsymbol = \"{symbol}\"\nbase = \"{base}\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"s\"\n"
+        );
+        let path = config_file(name, &text);
+        let r = dimvexa(&["convert", "1", "m", "km", "--config", &path]);
+        assert_eq!(r.code, 1, "{symbol}");
+        assert!(
+            r.stderr.starts_with("error[invalid_definition]"),
+            "{}",
+            r.stderr
+        );
+        assert!(r.stderr.contains(&format!("{name}:1")), "{}", r.stderr);
+    }
+}
+
+/// The README's unit example: the TOML is the example file and the output is real.
+#[test]
+fn readme_unit_example_is_real() {
+    let readme = readme();
+    let section = readme_section(&readme, "### Example: a unit of your own");
+    let shown = section
+        .split("```toml\n")
+        .nth(1)
+        .and_then(|b| b.split("```").next())
+        .unwrap();
+    let file = std::fs::read_to_string(repo_root().join(OIL_CFG)).unwrap();
+    for line in file
+        .lines()
+        .filter(|l| !l.trim().is_empty() && !l.starts_with('#'))
+    {
+        assert!(shown.contains(line), "README TOML lacks: {line}");
+    }
+    for args in [
+        &["convert", "1", "bbl_oil", "L", "--config", OIL_CFG][..],
+        &[
+            "convert", "1", "Mbbl_oil", "m3", "--config", OIL_CFG, "--exact",
+        ],
+        &["units", "bbl_oil", "--config", OIL_CFG],
+    ] {
+        let r = dimvexa_at_root(args);
+        assert_eq!(r.code, 0);
+        let expected = format!("$ dimvexa {}\n{}", args.join(" "), r.stdout);
         assert!(
             section.contains(&expected),
             "README does not show:\n{expected}"

@@ -1,0 +1,17 @@
+# A unit you define yourself. 1 bbl_oil is 42 US gallons, an exact multiple of a unit the
+# table already has, so the dimension (volume) comes from the base and cannot be mistyped.
+#
+#   dimvexa convert 1 bbl_oil L --config examples/configs/oil.toml
+#   dimvexa convert 2 bbl_oil kg --config examples/configs/oil.toml --config examples/configs/water.toml --bridge water_20C
+#
+# A unit needs an exact factor, a base, whether it is exact by definition or measured, and a
+# source. It can never take the name of an existing unit, alias or prefixed form.
+
+[[unit]]
+symbol = "bbl_oil"
+base = "gal_us"
+factor = "42"
+exactness = "defined"
+prefixes = "si"                        # kbbl_oil, Mbbl_oil, ...
+source = "NIST SP 811 (2008), Appendix B (barrel, petroleum: 42 gallons)"
+note = "petroleum barrel = 42 US gallons"
