@@ -13,7 +13,9 @@
         "group",
         "groups",
         "units",
-        "ambiguous"
+        "ambiguous",
+        "config",
+        "mappings"
       ],
       "properties": {
         "schema": {
@@ -156,6 +158,55 @@
               },
               "note": {
                 "type": "string"
+              }
+            }
+          }
+        },
+        "config": {
+          "type": "array",
+          "description": "The user config files applied with --config, in order (empty if none): the file as given and a content hash (fnv1a64), so a result can be reproduced.",
+          "items": {
+            "type": "object",
+            "required": [
+              "file",
+              "hash"
+            ],
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "hash": {
+                "type": "string",
+                "pattern": "^fnv1a64:[0-9a-f]{16}$"
+              }
+            }
+          }
+        },
+        "mappings": {
+          "type": "array",
+          "description": "Names resolved by the --config files, in application order (empty if none). A name listed here is no longer reported as refused.",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "unit",
+              "file",
+              "line"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "unit": {
+                "type": "string",
+                "description": "The table unit the name stands for."
+              },
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 1
               }
             }
           }

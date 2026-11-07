@@ -2,7 +2,7 @@
 //! The command-line front end of dimvexa.
 //!
 //! ```text
-//! dimvexa convert VALUE FROM TO [--exact] [--json]
+//! dimvexa convert VALUE FROM TO [--exact] [--json] [--config FILE]...
 //! dimvexa VALUE FROM TO [--exact] [--json]        shorthand
 //! dimvexa units [--groups | GROUP | UNIT] [--json]  list units by quantity, one group, or one unit
 //! ```
@@ -22,13 +22,13 @@
 use std::fmt::Write as _;
 use std::io::Write;
 
-use dimvexa::{Conversion, Dim, Error, Ratio, Registry, Unit, UnitExpr, registry};
+use dimvexa::{Config, Conversion, Dim, Error, Mapping, Ratio, Registry, Unit, UnitExpr, registry};
 
 const USAGE: &str = "\
 Usage:
-  dimvexa convert VALUE FROM TO [--exact] [--json]
-  dimvexa VALUE FROM TO [--exact] [--json]
-  dimvexa units [--groups | GROUP | UNIT] [--json]
+  dimvexa convert VALUE FROM TO [--exact] [--json] [--config FILE]...
+  dimvexa VALUE FROM TO [--exact] [--json] [--config FILE]...
+  dimvexa units [--groups | GROUP | UNIT] [--json] [--config FILE]...
 
 Converts VALUE from unit FROM to unit TO.
 
@@ -42,6 +42,8 @@ Commands:
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
   --json       machine-readable output (schema dimvexa.convert/1; dimvexa.units/1 for units)
+  --config FILE  apply your own name mappings, for example mt = \"tonne\" (repeatable; see
+               docs/adr/009-user-config.md). Nothing is loaded unless you name the file
   --version    print version and data table version
   -h, --help   print this help
 
@@ -49,6 +51,7 @@ Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
+  dimvexa convert 1 mt kg --config trade.toml
 
 Precision: the CLI always uses the exact path, so the number printed is the exact result
 rounded once to the nearest f64 (0 ulp). The library's fast f64 path is within 1 ulp (linear
@@ -92,7 +95,39 @@ struct UsageError {
     suggestions: Vec<String>,
 }
 
-fn parse_args(args: &[String]) -> Result<Parsed, UsageError> {
+/// Splits `--config FILE` / `--config=FILE` (repeatable) off the command line.
+fn split_configs(args: &[String]) -> Result<(Vec<String>, Vec<String>), UsageError> {
+    let (mut configs, mut rest) = (Vec::new(), Vec::new());
+    let mut it = args.iter();
+    while let Some(a) = it.next() {
+        if a == "--config" {
+            match it.next() {
+                Some(v) => configs.push(v.clone()),
+                None => {
+                    return Err(UsageError {
+                        message: "'--config' needs a file name".to_string(),
+                        json: args.iter().any(|x| x == "--json"),
+                        schema: if args.iter().any(|x| x == "units") {
+                            "units"
+                        } else {
+                            "convert"
+                        },
+                        suggestions: Vec::new(),
+                    });
+                }
+            }
+        } else if let Some(v) = a.strip_prefix("--config=") {
+            configs.push(v.to_string());
+        } else {
+            rest.push(a.clone());
+        }
+    }
+    Ok((configs, rest))
+}
+
+fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
+    let (configs, args) = split_configs(all)?;
+    let args = args.as_slice();
     let json = args.iter().any(|a| a == "--json");
     let is_units = args
         .iter()
@@ -112,8 +147,8 @@ fn parse_args(args: &[String]) -> Result<Parsed, UsageError> {
             "--exact" => exact = true,
             "--json" => want_json = true,
             "--groups" => want_groups = true,
-            "-h" | "--help" => return Ok(Parsed::Help),
-            "-V" | "--version" => return Ok(Parsed::Version),
+            "-h" | "--help" => return Ok((Parsed::Help, configs)),
+            "-V" | "--version" => return Ok((Parsed::Version, configs)),
             s if s.starts_with("--") => return Err(usage(format!("unknown option '{s}'"))),
             s => positional.push(s),
         }
@@ -124,21 +159,30 @@ fn parse_args(args: &[String]) -> Result<Parsed, UsageError> {
         }
         let json = want_json;
         return match (rest, want_groups) {
-            ([], false) => Ok(Parsed::Units {
-                target: UnitsTarget::All,
-                json,
-            }),
-            ([], true) => Ok(Parsed::Units {
-                target: UnitsTarget::Groups,
-                json,
-            }),
+            ([], false) => Ok((
+                Parsed::Units {
+                    target: UnitsTarget::All,
+                    json,
+                },
+                configs,
+            )),
+            ([], true) => Ok((
+                Parsed::Units {
+                    target: UnitsTarget::Groups,
+                    json,
+                },
+                configs,
+            )),
             ([_], true) => Err(usage(
                 "'--groups' lists the groups and takes no GROUP or UNIT".to_string(),
             )),
-            ([query], false) => Ok(Parsed::Units {
-                target: UnitsTarget::Query((*query).to_string()),
-                json,
-            }),
+            ([query], false) => Ok((
+                Parsed::Units {
+                    target: UnitsTarget::Query((*query).to_string()),
+                    json,
+                },
+                configs,
+            )),
             _ => Err(usage(format!(
                 "'units' takes at most one argument (a group such as 'length' or a unit such as 'psi'), got {}",
                 rest.len()
@@ -152,13 +196,16 @@ fn parse_args(args: &[String]) -> Result<Parsed, UsageError> {
         positional.remove(0);
     }
     match positional.as_slice() {
-        [value, from, to] => Ok(Parsed::Convert(Args {
-            value: (*value).to_string(),
-            from: (*from).to_string(),
-            to: (*to).to_string(),
-            exact,
-            json: want_json,
-        })),
+        [value, from, to] => Ok((
+            Parsed::Convert(Args {
+                value: (*value).to_string(),
+                from: (*from).to_string(),
+                to: (*to).to_string(),
+                exact,
+                json: want_json,
+            }),
+            configs,
+        )),
         other => Err(usage(format!(
             "expected VALUE FROM TO, got {} argument(s); try 'dimvexa --help'",
             other.len()
@@ -227,9 +274,73 @@ fn json_error(
     s
 }
 
+/// A registry with the user's configs applied, and which configs those were.
+struct Loaded {
+    reg: Registry,
+    /// `(file, content hash)` of each config, in the order given.
+    configs: Vec<(String, String)>,
+}
+
+/// Why the registry could not be built.
+enum LoadError {
+    /// A config file could not be read (a usage problem).
+    Io(String),
+    /// The table or a config was refused by the library.
+    Lib(Error),
+}
+
+fn load(config_files: &[String]) -> Result<Loaded, LoadError> {
+    let mut reg = registry().map_err(LoadError::Lib)?;
+    let mut configs = Vec::new();
+    for file in config_files {
+        let text = std::fs::read_to_string(file)
+            .map_err(|e| LoadError::Io(format!("cannot read config '{file}': {e}")))?;
+        let cfg = Config::parse(&text, file).map_err(LoadError::Lib)?;
+        reg.apply_config(&cfg).map_err(LoadError::Lib)?;
+        configs.push((file.clone(), cfg.hash().to_string()));
+    }
+    Ok(Loaded { reg, configs })
+}
+
+/// Prints a load failure for `schema` and returns the exit code.
+fn report_load_error(
+    e: &LoadError,
+    json: bool,
+    schema: &str,
+    out: &mut dyn Write,
+    err: &mut dyn Write,
+) -> u8 {
+    let (code, message, status) = match e {
+        LoadError::Io(m) => ("usage", m.clone(), 2),
+        LoadError::Lib(e) => (e.code(), e.to_string(), 1),
+    };
+    if json {
+        let _ = writeln!(out, "{}", json_error(schema, code, &message, &[], &[]));
+    } else {
+        let _ = writeln!(err, "error[{code}]: {message}");
+    }
+    status
+}
+
+/// JSON array of the configs used: `[{"file":..,"hash":..}]`.
+fn configs_json(configs: &[(String, String)]) -> String {
+    let items: Vec<String> = configs
+        .iter()
+        .map(|(f, h)| {
+            format!(
+                "{{\"file\":{},\"hash\":{}}}",
+                json_string(f),
+                json_string(h)
+            )
+        })
+        .collect();
+    format!("[{}]", items.join(","))
+}
+
 /// Everything computed for a successful conversion, before formatting.
 struct Outcome<'a> {
     args: &'a Args,
+    configs: &'a [(String, String)],
     from: UnitExpr,
     to: UnitExpr,
     conv: Conversion,
@@ -238,8 +349,8 @@ struct Outcome<'a> {
     approx: f64,
 }
 
-fn compute(args: &Args) -> Result<Outcome<'_>, Error> {
-    let reg = registry()?;
+fn compute<'a>(args: &'a Args, loaded: &'a Loaded) -> Result<Outcome<'a>, Error> {
+    let reg = &loaded.reg;
     let value: Ratio = args.value.parse()?;
     let from = reg.parse(&args.from)?;
     let to = reg.parse(&args.to)?;
@@ -248,6 +359,7 @@ fn compute(args: &Args) -> Result<Outcome<'_>, Error> {
     let approx = exact.to_f64()?;
     Ok(Outcome {
         args,
+        configs: &loaded.configs,
         from,
         to,
         conv,
@@ -286,7 +398,7 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
 \"output\":{{\"value\":{},\"unit\":{},\"f64\":{},\"truncated\":{}}},\
 \"exact\":{{\"value\":{},\"factor\":{},\"offset\":{}}},\
 \"exactness\":{},\"dimension\":[{}],\"kind\":{},\"quantity_kind\":{},\
-\"profile\":null,\"packs\":[{}],\"data_version\":{},\"sources\":[{}]}}",
+\"profile\":null,\"packs\":[{}],\"data_version\":{},\"sources\":[{}],\"config\":{}}}",
         json_string(&schema_id()),
         json_string(&o.args.value),
         json_string(&o.from.to_string()),
@@ -304,6 +416,7 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
         packs.join(","),
         json_string(&dimvexa::data_version()),
         sources.join(","),
+        configs_json(o.configs),
     ))
 }
 
@@ -389,7 +502,11 @@ fn groups_text(groups: &[(String, usize)]) -> String {
     s
 }
 
-fn units_text(units: &[(String, &Unit)], ambiguous: &[&dimvexa::AmbiguousDef]) -> String {
+fn units_text(
+    units: &[(String, &Unit)],
+    ambiguous: &[&dimvexa::AmbiguousDef],
+    mappings: &[Mapping],
+) -> String {
     let mut s =
         String::from("# columns: symbol, quantity_kind, exactness, prefixes, aliases, source\n");
     let mut current: Option<&str> = None;
@@ -415,13 +532,37 @@ fn units_text(units: &[(String, &Unit)], ambiguous: &[&dimvexa::AmbiguousDef]) -
 # columns: symbol, candidates, planned, note\n",
         );
         for a in ambiguous {
+            let note = mappings.iter().find(|m| m.name == a.symbol).map_or_else(
+                || a.note.to_string(),
+                |m| {
+                    format!(
+                        "resolved by config as {} ({}); {}",
+                        m.target, m.origin, a.note
+                    )
+                },
+            );
             let _ = writeln!(
                 s,
                 "{}\t{}\t{}\t{}",
                 cell(a.symbol),
                 cell(&a.candidates.join(", ")),
                 cell(&a.planned.join(", ")),
-                cell(a.note)
+                cell(&note)
+            );
+        }
+    }
+    if !mappings.is_empty() {
+        s.push_str(
+            "\n## config mappings (names your --config files resolve)\n# columns: name, unit, file:line\n",
+        );
+        for m in mappings {
+            let _ = writeln!(
+                s,
+                "{}\t{}\t{}:{}",
+                cell(&m.name),
+                cell(&m.target),
+                cell(&m.origin),
+                m.line
             );
         }
     }
@@ -433,6 +574,7 @@ fn units_json(
     units: &[(String, &Unit)],
     ambiguous: &[&dimvexa::AmbiguousDef],
     group: Option<&str>,
+    loaded: &Loaded,
 ) -> String {
     let items: Vec<String> = units
         .iter()
@@ -475,18 +617,34 @@ fn units_json(
         .iter()
         .map(|(g, n)| format!("{{\"name\":{},\"units\":{n}}}", json_string(g)))
         .collect();
+    let mappings: Vec<String> = loaded
+        .reg
+        .mappings()
+        .iter()
+        .map(|m| {
+            format!(
+                "{{\"name\":{},\"unit\":{},\"file\":{},\"line\":{}}}",
+                json_string(&m.name),
+                json_string(&m.target),
+                json_string(&m.origin),
+                m.line
+            )
+        })
+        .collect();
     let group = group.map_or_else(
         || "null".to_string(),
         |g| json_string(&g.to_ascii_lowercase()),
     );
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"group\":{},\"groups\":[{}],\"units\":[{}],\"ambiguous\":[{}]}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"group\":{},\"groups\":[{}],\"units\":[{}],\"ambiguous\":[{}],\"config\":{},\"mappings\":[{}]}}",
         json_string(&format!("{}.units/1", dimvexa::PROJECT_NAME)),
         json_string(&dimvexa::data_version()),
         group,
         group_list.join(","),
         items.join(","),
-        ambiguous.join(",")
+        ambiguous.join(","),
+        configs_json(&loaded.configs),
+        mappings.join(",")
     )
 }
 
@@ -606,7 +764,17 @@ fn detail_json(d: &Detail) -> String {
 }
 
 /// Runs `dimvexa units`; returns the exit code.
-fn run_units(target: &UnitsTarget, json: bool, out: &mut dyn Write, err: &mut dyn Write) -> u8 {
+fn run_units(
+    target: &UnitsTarget,
+    config_files: &[String],
+    json: bool,
+    out: &mut dyn Write,
+    err: &mut dyn Write,
+) -> u8 {
+    let loaded = match load(config_files) {
+        Ok(l) => l,
+        Err(e) => return report_load_error(&e, json, "units", out, err),
+    };
     let mut fail = |code: &str, message: &str, suggestions: &[String], status: u8| -> u8 {
         if json {
             let _ = writeln!(
@@ -619,15 +787,12 @@ fn run_units(target: &UnitsTarget, json: bool, out: &mut dyn Write, err: &mut dy
         }
         status
     };
-    let reg = match registry() {
-        Ok(r) => r,
-        Err(e) => return fail(e.code(), &e.to_string(), &[], 1),
-    };
-    let groups = group_counts(&reg);
+    let reg = &loaded.reg;
+    let groups = group_counts(reg);
     let (selected, group) = match target {
         UnitsTarget::Groups => {
             let text = if json {
-                units_json(&groups, &[], &[], None)
+                units_json(&groups, &[], &[], None, &loaded)
             } else {
                 groups_text(&groups)
             };
@@ -643,7 +808,7 @@ fn run_units(target: &UnitsTarget, json: bool, out: &mut dyn Write, err: &mut dy
             if groups.iter().any(|(g, _)| *g == q_lower) {
                 (Some(q_lower.clone()), Some(q_lower))
             } else {
-                return match unit_detail(&reg, q) {
+                return match unit_detail(reg, q) {
                     Ok(d) => {
                         let text = if json {
                             detail_json(&d)
@@ -685,10 +850,10 @@ fn run_units(target: &UnitsTarget, json: bool, out: &mut dyn Write, err: &mut dy
         let _ = writeln!(
             out,
             "{}",
-            units_json(&groups, &units, &ambiguous, group.as_deref())
+            units_json(&groups, &units, &ambiguous, group.as_deref(), &loaded)
         );
     } else {
-        let _ = write!(out, "{}", units_text(&units, &ambiguous));
+        let _ = write!(out, "{}", units_text(&units, &ambiguous, reg.mappings()));
     }
     0
 }
@@ -700,7 +865,7 @@ where
     I: IntoIterator<Item = String>,
 {
     let args: Vec<String> = args.into_iter().collect();
-    let parsed = match parse_args(&args) {
+    let (parsed, config_files) = match parse_args(&args) {
         Ok(p) => p,
         Err(u) => {
             if u.json {
@@ -730,10 +895,16 @@ where
             );
             return 0;
         }
-        Parsed::Units { target, json } => return run_units(&target, json, out, err),
+        Parsed::Units { target, json } => {
+            return run_units(&target, &config_files, json, out, err);
+        }
         Parsed::Convert(a) => a,
     };
-    match compute(&args) {
+    let loaded = match load(&config_files) {
+        Ok(l) => l,
+        Err(e) => return report_load_error(&e, args.json, "convert", out, err),
+    };
+    match compute(&args, &loaded) {
         Ok(outcome) => {
             let text = if args.json {
                 match render_json(&outcome) {

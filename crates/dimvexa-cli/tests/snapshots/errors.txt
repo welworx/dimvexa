@@ -65,9 +65,9 @@ $ dimvexa convert 1 m
 error[usage]: expected VALUE FROM TO, got 2 argument(s); try 'dimvexa --help'
 
 Usage:
-  dimvexa convert VALUE FROM TO [--exact] [--json]
-  dimvexa VALUE FROM TO [--exact] [--json]
-  dimvexa units [--groups | GROUP | UNIT] [--json]
+  dimvexa convert VALUE FROM TO [--exact] [--json] [--config FILE]...
+  dimvexa VALUE FROM TO [--exact] [--json] [--config FILE]...
+  dimvexa units [--groups | GROUP | UNIT] [--json] [--config FILE]...
 
 Converts VALUE from unit FROM to unit TO.
 
@@ -81,6 +81,8 @@ Commands:
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
   --json       machine-readable output (schema dimvexa.convert/1; dimvexa.units/1 for units)
+  --config FILE  apply your own name mappings, for example mt = "tonne" (repeatable; see
+               docs/adr/009-user-config.md). Nothing is loaded unless you name the file
   --version    print version and data table version
   -h, --help   print this help
 
@@ -88,6 +90,7 @@ Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
+  dimvexa convert 1 mt kg --config trade.toml
 
 Precision: the CLI always uses the exact path, so the number printed is the exact result
 rounded once to the nearest f64 (0 ulp). The library's fast f64 path is within 1 ulp (linear
