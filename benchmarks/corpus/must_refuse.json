@@ -1,0 +1,436 @@
+{
+ "cases": [
+  {
+   "category": "ambiguous_name",
+   "dimvexa_codes": [
+    "ambiguous_symbol"
+   ],
+   "from": "ton",
+   "id": "ref-001",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "NIST HB 44 (2023) App. C; BIPM SI Brochure (tonne)",
+   "to": "kg",
+   "value": "1",
+   "why": "ton is short (2000 lb), long (2240 lb) or metric (1000 kg): up to 10 percent apart"
+  },
+  {
+   "category": "ambiguous_name",
+   "dimvexa_codes": [
+    "ambiguous_symbol"
+   ],
+   "from": "gal",
+   "id": "ref-002",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "NIST HB 44 (2023) App. C; UK Weights and Measures Act 1985",
+   "to": "L",
+   "value": "1",
+   "why": "US gallon 3.785 L versus imperial gallon 4.546 L: 20 percent apart"
+  },
+  {
+   "category": "ambiguous_name",
+   "dimvexa_codes": [
+    "ambiguous_symbol"
+   ],
+   "from": "oz",
+   "id": "ref-003",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "NIST SP 811 App. B.8",
+   "to": "g",
+   "value": "1",
+   "why": "avoirdupois 28.35 g, troy 31.10 g (fluid ounces are volumes)"
+  },
+  {
+   "category": "ambiguous_name",
+   "dimvexa_codes": [
+    "ambiguous_symbol"
+   ],
+   "from": "pt",
+   "id": "ref-004",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "NIST HB 44 (2023) App. C",
+   "to": "L",
+   "value": "1",
+   "why": "US pint, imperial pint, dry pint, and also the typographic point"
+  },
+  {
+   "category": "ambiguous_name",
+   "dimvexa_codes": [
+    "ambiguous_symbol"
+   ],
+   "from": "cal",
+   "id": "ref-005",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "NIST SP 811 App. B.8",
+   "to": "J",
+   "value": "1",
+   "why": "thermochemical 4.184 J versus International Table 4.1868 J"
+  },
+  {
+   "category": "ambiguous_name",
+   "dimvexa_codes": [
+    "ambiguous_symbol"
+   ],
+   "from": "Btu",
+   "id": "ref-006",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "NIST SP 811 App. B.8",
+   "to": "J",
+   "value": "1",
+   "why": "Btu_IT 1055.056 J versus Btu_th 1054.350 J (and others)"
+  },
+  {
+   "category": "ambiguous_name",
+   "dimvexa_codes": [
+    "ambiguous_symbol"
+   ],
+   "from": "hp",
+   "id": "ref-007",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "NIST SP 811 App. B.8; DIN 66036",
+   "to": "W",
+   "value": "1",
+   "why": "mechanical 745.70 W versus metric 735.50 W (and electric 746 W)"
+  },
+  {
+   "category": "ambiguous_name",
+   "dimvexa_codes": [
+    "ambiguous_symbol"
+   ],
+   "from": "mile",
+   "id": "ref-008",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "NIST SP 811 App. B.8",
+   "to": "km",
+   "value": "1",
+   "why": "international mile versus US survey mile (about 3.2 mm per mile apart)"
+  },
+  {
+   "category": "ambiguous_name",
+   "dimvexa_codes": [
+    "ambiguous_symbol",
+    "unknown_unit"
+   ],
+   "from": "foot",
+   "id": "ref-009",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "NIST SP 811 App. B.8",
+   "to": "m",
+   "value": "1",
+   "why": "international foot versus US survey foot (2 ppm apart); only matters for geodetic work, listed because the request does not say which"
+  },
+  {
+   "category": "ambiguous_name",
+   "dimvexa_codes": [
+    "ambiguous_symbol"
+   ],
+   "from": "ppm",
+   "id": "ref-010",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "UCUM (ppm is a pure number); ISO 80000-1 discourages ppm",
+   "to": "1",
+   "value": "100",
+   "why": "ppm may be by mass, by mole or by volume; the factor 1e-6 hides the basis"
+  },
+  {
+   "category": "missing_context",
+   "dimvexa_codes": [
+    "dimension_mismatch",
+    "refused"
+   ],
+   "from": "Nm3",
+   "id": "ref-011",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "stated-reference units, no standard",
+   "to": "m3",
+   "value": "1",
+   "why": "Nm3 is a volume at a stated reference state; converting to actual m3 needs the actual temperature and pressure (a factor must be supplied)"
+  },
+  {
+   "category": "missing_context",
+   "dimvexa_codes": [
+    "dimension_mismatch",
+    "refused"
+   ],
+   "from": "m3",
+   "id": "ref-012",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "stated-reference units, no standard",
+   "to": "Nm3",
+   "value": "1",
+   "why": "actual m3 to normal m3 needs the actual temperature and pressure"
+  },
+  {
+   "category": "missing_context",
+   "dimvexa_codes": [
+    "dimension_mismatch",
+    "refused"
+   ],
+   "from": "scf",
+   "id": "ref-013",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "stated-reference units, no standard",
+   "to": "m3",
+   "value": "1",
+   "why": "scf is defined at a stated reference state (60 degF, 14.696 psia is common but not the only one)"
+  },
+  {
+   "category": "missing_context",
+   "dimvexa_codes": [
+    "dimension_mismatch",
+    "refused"
+   ],
+   "from": "Nm3",
+   "id": "ref-014",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "stated-reference units, no standard",
+   "to": "scf",
+   "value": "1",
+   "why": "two different reference states: the conversion is not a unit factor"
+  },
+  {
+   "category": "missing_context",
+   "dimvexa_codes": [
+    "dimension_mismatch",
+    "refused",
+    "unknown_unit"
+   ],
+   "from": "wt%",
+   "id": "ref-015",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "definition of mass and mole fraction (ISO 80000-9)",
+   "to": "mol%",
+   "value": "10",
+   "why": "mass fraction to mole fraction needs molar masses"
+  },
+  {
+   "category": "missing_context",
+   "dimvexa_codes": [
+    "dimension_mismatch"
+   ],
+   "from": "kg",
+   "id": "ref-016",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "dimensional analysis",
+   "to": "L",
+   "value": "1",
+   "why": "mass to volume needs a density"
+  },
+  {
+   "category": "missing_context",
+   "dimvexa_codes": [
+    "dimension_mismatch"
+   ],
+   "from": "mol",
+   "id": "ref-017",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "dimensional analysis",
+   "to": "kg",
+   "value": "1",
+   "why": "amount to mass needs a molar mass"
+  },
+  {
+   "category": "missing_context",
+   "dimvexa_codes": [
+    "dimension_mismatch",
+    "refused",
+    "unknown_unit"
+   ],
+   "from": "psig",
+   "id": "ref-018",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "definition of gauge pressure",
+   "to": "bar",
+   "value": "5",
+   "why": "gauge to absolute pressure needs the atmospheric pressure"
+  },
+  {
+   "category": "missing_context",
+   "dimvexa_codes": [
+    "dimension_mismatch",
+    "refused",
+    "unknown_unit"
+   ],
+   "from": "barg",
+   "id": "ref-019",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "definition of gauge pressure",
+   "to": "psi",
+   "value": "5",
+   "why": "gauge to absolute pressure needs the atmospheric pressure"
+  },
+  {
+   "category": "missing_context",
+   "dimvexa_codes": [
+    "unknown_unit",
+    "refused"
+   ],
+   "from": "mH2O",
+   "id": "ref-020",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "convention differs (conventional vs 4 degC vs 20 degC)",
+   "to": "bar",
+   "value": "10",
+   "why": "metres of water column depend on a stated water density/temperature or a conventional definition"
+  },
+  {
+   "a": "20 degC",
+   "b": "30 degC",
+   "category": "kind",
+   "dimvexa_codes": [
+    "kind_mismatch"
+   ],
+   "id": "ref-021",
+   "op": "add",
+   "origin": "handwritten",
+   "source": "BIPM SI Brochure; Dimvexa docs",
+   "why": "adding two absolute temperatures is meaningless (use a difference)"
+  },
+  {
+   "a": "20 degC",
+   "b": "5 K",
+   "category": "kind",
+   "dimvexa_codes": [
+    "kind_mismatch"
+   ],
+   "id": "ref-022",
+   "op": "add",
+   "origin": "handwritten",
+   "source": "Dimvexa docs",
+   "why": "a point plus a plain K is ambiguous between a point and an interval"
+  },
+  {
+   "a": "20 degF",
+   "b": "10 degF",
+   "category": "kind",
+   "dimvexa_codes": [
+    "kind_mismatch"
+   ],
+   "id": "ref-023",
+   "op": "add",
+   "origin": "handwritten",
+   "source": "Dimvexa docs",
+   "why": "adding two absolute temperatures is meaningless"
+  },
+  {
+   "category": "kind",
+   "dimvexa_codes": [
+    "kind_mismatch",
+    "dimension_mismatch"
+   ],
+   "from": "degC",
+   "id": "ref-024",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "Dimvexa docs",
+   "to": "delta_K",
+   "value": "10",
+   "why": "an absolute temperature is not an interval"
+  },
+  {
+   "category": "kind",
+   "dimvexa_codes": [
+    "kind_mismatch",
+    "dimension_mismatch"
+   ],
+   "from": "delta_degC",
+   "id": "ref-025",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "Dimvexa docs",
+   "to": "degC",
+   "value": "10",
+   "why": "an interval is not an absolute temperature"
+  },
+  {
+   "category": "dimension",
+   "dimvexa_codes": [
+    "dimension_mismatch"
+   ],
+   "from": "m",
+   "id": "ref-026",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "dimensional analysis",
+   "to": "s",
+   "value": "1",
+   "why": "length is not time"
+  },
+  {
+   "category": "dimension",
+   "dimvexa_codes": [
+    "dimension_mismatch"
+   ],
+   "from": "kg",
+   "id": "ref-027",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "dimensional analysis",
+   "to": "N",
+   "value": "1",
+   "why": "mass is not force (a gravity convention would be needed)"
+  },
+  {
+   "category": "dimension",
+   "dimvexa_codes": [
+    "dimension_mismatch"
+   ],
+   "from": "psi",
+   "id": "ref-028",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "dimensional analysis",
+   "to": "N",
+   "value": "1",
+   "why": "pressure is not force"
+  },
+  {
+   "category": "dimension",
+   "dimvexa_codes": [
+    "dimension_mismatch"
+   ],
+   "from": "W",
+   "id": "ref-029",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "dimensional analysis",
+   "to": "J",
+   "value": "1",
+   "why": "power is not energy"
+  },
+  {
+   "category": "dimension",
+   "dimvexa_codes": [
+    "dimension_mismatch"
+   ],
+   "from": "bar",
+   "id": "ref-030",
+   "op": "convert",
+   "origin": "handwritten",
+   "source": "dimensional analysis",
+   "to": "W",
+   "value": "1",
+   "why": "pressure is not power"
+  }
+ ],
+ "schema": "dimvexa.bench.corpus.must_refuse/1"
+}

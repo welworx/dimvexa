@@ -1,0 +1,668 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Hand-written must-convert cases. The expected exact value is NOT stored here: gen_corpus.py
+# computes it from corpus-src/truth.toml (independent definitions with sources). `source` is
+# the citation for the definitions the result rests on.
+
+[[case]]
+id = "hw-001"
+category = "si"
+value = "1"
+from = "km"
+to = "m"
+source = "BIPM SI Brochure: prefix k = 1e3"
+
+[[case]]
+id = "hw-002"
+category = "si"
+value = "36"
+from = "km/h"
+to = "m/s"
+source = "derived: 1 km/h = 1000 m / 3600 s"
+
+[[case]]
+id = "hw-003"
+category = "si"
+value = "1"
+from = "kWh"
+to = "MJ"
+source = "1 Wh = 3600 J (BIPM SI Brochure, Table 8 for h)"
+
+[[case]]
+id = "hw-004"
+category = "si"
+value = "1"
+from = "MPa"
+to = "bar"
+source = "bar = 100 kPa (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-005"
+category = "si"
+value = "101325"
+from = "Pa"
+to = "atm"
+source = "atm = 101 325 Pa (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-006"
+category = "si"
+value = "1"
+from = "L"
+to = "m3"
+source = "1 L = 1 dm3 (BIPM SI Brochure, Table 8)"
+
+[[case]]
+id = "hw-007"
+category = "si"
+value = "2.5"
+from = "h"
+to = "s"
+source = "1 h = 3600 s (BIPM SI Brochure, Table 8)"
+
+[[case]]
+id = "hw-008"
+category = "si"
+value = "1"
+from = "d"
+to = "min"
+source = "1 d = 86400 s, 1 min = 60 s"
+
+[[case]]
+id = "hw-009"
+category = "si"
+value = "1"
+from = "tonne"
+to = "kg"
+source = "1 t = 1000 kg (BIPM SI Brochure, Table 8)"
+
+[[case]]
+id = "hw-010"
+category = "si"
+value = "1000"
+from = "mm"
+to = "in"
+source = "1 in = 25.4 mm exactly (1959 agreement)"
+
+[[case]]
+id = "hw-011"
+category = "si"
+value = "0.001"
+from = "m3"
+to = "L"
+source = "1 L = 1 dm3"
+
+[[case]]
+id = "hw-012"
+category = "si"
+value = "1"
+from = "N"
+to = "kg.m/s2"
+source = "N = kg m/s2 (BIPM SI Brochure, Table 4)"
+
+[[case]]
+id = "hw-013"
+category = "imperial_us"
+value = "1"
+from = "in"
+to = "mm"
+source = "1 in = 25.4 mm exactly (1959 agreement)"
+
+[[case]]
+id = "hw-014"
+category = "imperial_us"
+value = "1"
+from = "ft"
+to = "m"
+source = "1 ft = 0.3048 m exactly (1959 agreement)"
+
+[[case]]
+id = "hw-015"
+category = "imperial_us"
+value = "1"
+from = "mi"
+to = "km"
+source = "1 mi = 1.609344 km exactly (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-016"
+category = "imperial_us"
+value = "1"
+from = "nmi"
+to = "m"
+source = "1 nmi = 1852 m (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-017"
+category = "imperial_us"
+value = "100"
+from = "lb"
+to = "kg"
+source = "1 lb = 0.45359237 kg exactly (1959 agreement)"
+
+[[case]]
+id = "hw-018"
+category = "imperial_us"
+value = "1"
+from = "oz_av"
+to = "g"
+source = "oz_av = lb/16 (NIST HB 44 App. C)"
+
+[[case]]
+id = "hw-019"
+category = "imperial_us"
+value = "1"
+from = "oz_troy"
+to = "g"
+source = "troy ounce = 31.1034768 g (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-020"
+category = "imperial_us"
+value = "1"
+from = "ton_short"
+to = "kg"
+source = "short ton = 2000 lb (NIST HB 44 App. C)"
+
+[[case]]
+id = "hw-021"
+category = "imperial_us"
+value = "1"
+from = "ton_long"
+to = "kg"
+source = "long ton = 2240 lb (NIST HB 44 App. C)"
+
+[[case]]
+id = "hw-022"
+category = "imperial_us"
+value = "1"
+from = "gal_us"
+to = "L"
+source = "US gallon = 231 in3 = 3.785411784 L (NIST HB 44 App. C)"
+
+[[case]]
+id = "hw-023"
+category = "imperial_us"
+value = "1"
+from = "gal_imp"
+to = "L"
+source = "imperial gallon = 4.54609 L (UK Weights and Measures Act 1985)"
+
+[[case]]
+id = "hw-024"
+category = "imperial_us"
+value = "1"
+from = "gal_us"
+to = "gal_imp"
+source = "ratio of the two exact gallon definitions"
+
+[[case]]
+id = "hw-025"
+category = "imperial_us"
+value = "1"
+from = "pt_us"
+to = "mL"
+source = "US pint = 1/8 gal_us = 473.176473 mL (NIST HB 44 App. C)"
+
+[[case]]
+id = "hw-026"
+category = "imperial_us"
+value = "1"
+from = "pt_imp"
+to = "mL"
+source = "imperial pint = 568.26125 mL (UK Weights and Measures Act 1985)"
+
+[[case]]
+id = "hw-027"
+category = "imperial_us"
+value = "1"
+from = "ft_us_survey"
+to = "m"
+source = "survey foot = 1200/3937 m (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-028"
+category = "imperial_us"
+value = "1"
+from = "mi_us_survey"
+to = "m"
+source = "survey mile = 5280 survey ft (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-029"
+category = "imperial_us"
+value = "1"
+from = "cal_th"
+to = "J"
+source = "cal_th = 4.184 J (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-030"
+category = "imperial_us"
+value = "1"
+from = "cal_IT"
+to = "J"
+source = "cal_IT = 4.1868 J (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-031"
+category = "imperial_us"
+value = "1"
+from = "Btu_IT"
+to = "J"
+source = "Btu_IT = 1055.05585262 J (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-032"
+category = "imperial_us"
+value = "1"
+from = "Btu_th"
+to = "J"
+source = "Btu_th = 1054.35026444.. J (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-033"
+category = "imperial_us"
+value = "1"
+from = "hp_mech"
+to = "W"
+source = "550 ft lbf/s (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-034"
+category = "imperial_us"
+value = "1"
+from = "hp_metric"
+to = "W"
+source = "75 kgf m/s (DIN 66036)"
+
+[[case]]
+id = "hw-035"
+category = "imperial_us"
+value = "1"
+from = "lbf"
+to = "N"
+source = "lbf = lb g_n (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-036"
+category = "pressure"
+value = "1"
+from = "psi"
+to = "Pa"
+source = "psi = lbf/in2 (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-037"
+category = "pressure"
+value = "14.5"
+from = "psi"
+to = "bar"
+source = "psi = lbf/in2; bar = 100 kPa"
+
+[[case]]
+id = "hw-038"
+category = "pressure"
+value = "1"
+from = "bar"
+to = "psi"
+source = "inverse of the psi definition"
+
+[[case]]
+id = "hw-039"
+category = "pressure"
+value = "1"
+from = "mmHg"
+to = "Pa"
+source = "conventional mmHg = 133.322387415 Pa (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-040"
+category = "pressure"
+value = "760"
+from = "torr"
+to = "atm"
+source = "torr = 101325/760 Pa (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-041"
+category = "pressure"
+value = "1"
+from = "atm"
+to = "mmHg"
+source = "atm / conventional mmHg"
+
+[[case]]
+id = "hw-042"
+category = "pressure"
+value = "1"
+from = "atm"
+to = "psi"
+source = "atm / psi, both exact definitions"
+
+[[case]]
+id = "hw-043"
+category = "process"
+value = "10"
+from = "psig"
+to = "barg"
+source = "gauge to gauge with the same reference pressure is the plain psi to bar factor"
+
+[[case]]
+id = "hw-044"
+category = "process"
+value = "1"
+from = "kmol/h"
+to = "mol/s"
+source = "1 kmol = 1000 mol, 1 h = 3600 s"
+
+[[case]]
+id = "hw-045"
+category = "process"
+value = "1"
+from = "lbmol/h"
+to = "kmol/h"
+source = "1 lbmol = 453.59237 mol"
+
+[[case]]
+id = "hw-046"
+category = "process"
+value = "100"
+from = "lbmol/h"
+to = "mol/s"
+source = "1 lbmol = 453.59237 mol, 1 h = 3600 s"
+
+[[case]]
+id = "hw-047"
+category = "process"
+value = "1"
+from = "cP"
+to = "Pa.s"
+source = "1 cP = 1e-3 Pa s (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-048"
+category = "process"
+value = "1"
+from = "cSt"
+to = "m2/s"
+source = "1 cSt = 1e-6 m2/s (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-049"
+category = "process"
+value = "1"
+from = "cSt"
+to = "mm2/s"
+source = "1 cSt = 1 mm2/s"
+
+[[case]]
+id = "hw-050"
+category = "process"
+value = "1"
+from = "W/(m.K)"
+to = "W/(m.delta_degC)"
+source = "an interval of 1 K equals 1 degC; compound K is an interval (BIPM)"
+
+[[case]]
+id = "hw-051"
+category = "process"
+value = "1"
+from = "kJ/(kg.K)"
+to = "J/(g.K)"
+source = "1 kJ/kg = 1 J/g"
+
+[[case]]
+id = "hw-052"
+category = "process"
+value = "1"
+from = "kJ/(kg.K)"
+to = "Btu_IT/(lb.delta_degF)"
+source = "Btu_IT/(lb degF) = 4.1868 kJ/(kg K) exactly (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-053"
+category = "process"
+value = "1"
+from = "Btu_IT/(lb.delta_degF)"
+to = "kJ/(kg.K)"
+source = "Btu_IT/(lb degF) = 4.1868 kJ/(kg K) exactly (NIST SP 811 B.8)"
+
+[[case]]
+id = "hw-054"
+category = "process"
+value = "1"
+from = "W/(m.K)"
+to = "Btu_IT/(h.ft.delta_degF)"
+source = "Btu_IT/(h ft degF) derived from Btu_IT, ft and the degF interval"
+
+[[case]]
+id = "hw-055"
+category = "process"
+value = "1"
+from = "W/(m2.K)"
+to = "Btu_IT/(h.ft2.delta_degF)"
+source = "derived from Btu_IT, ft and the degF interval"
+
+[[case]]
+id = "hw-056"
+category = "process"
+value = "60"
+from = "Nm3/h"
+to = "Nm3/min"
+source = "same stated reference, only the time unit changes"
+
+[[case]]
+id = "hw-057"
+category = "process"
+value = "1"
+from = "Nm3/h"
+to = "Nm3/s"
+source = "same stated reference, only the time unit changes"
+
+[[case]]
+id = "hw-058"
+category = "process"
+value = "1"
+from = "scf/min"
+to = "scf/h"
+source = "same stated reference, only the time unit changes"
+
+[[case]]
+id = "hw-059"
+category = "process"
+value = "1"
+from = "bbl"
+to = "L"
+source = "oil barrel = 42 US gal = 158.987294928 L"
+
+[[case]]
+id = "hw-060"
+category = "process"
+value = "1000"
+from = "bbl"
+to = "m3"
+source = "oil barrel = 42 US gal"
+
+[[case]]
+id = "hw-061"
+category = "temperature"
+value = "0"
+from = "degC"
+to = "K"
+source = "BIPM SI Brochure: T/K = t/degC + 273.15"
+
+[[case]]
+id = "hw-062"
+category = "temperature"
+value = "100"
+from = "degC"
+to = "degF"
+source = "water boils at 100 degC = 212 degF (NIST SP 811)"
+
+[[case]]
+id = "hw-063"
+category = "temperature"
+value = "-40"
+from = "degC"
+to = "degF"
+source = "-40 degC = -40 degF (exact crossing point)"
+
+[[case]]
+id = "hw-064"
+category = "temperature"
+value = "32"
+from = "degF"
+to = "degC"
+source = "32 degF = 0 degC"
+
+[[case]]
+id = "hw-065"
+category = "temperature"
+value = "37"
+from = "degC"
+to = "degF"
+source = "98.6 degF exactly"
+
+[[case]]
+id = "hw-066"
+category = "temperature"
+value = "300"
+from = "K"
+to = "degC"
+source = "T/degC = T/K - 273.15"
+
+[[case]]
+id = "hw-067"
+category = "temperature"
+value = "491.67"
+from = "degR"
+to = "K"
+source = "degR = 5/9 K"
+
+[[case]]
+id = "hw-068"
+category = "temperature"
+value = "0"
+from = "K"
+to = "degR"
+source = "absolute zero"
+
+[[case]]
+id = "hw-069"
+category = "temperature"
+value = "68"
+from = "degF"
+to = "K"
+source = "(68 + 459.67) * 5/9 K"
+
+[[case]]
+id = "hw-070"
+category = "temperature"
+value = "10"
+from = "delta_degC"
+to = "delta_degF"
+source = "interval: 1 degC interval = 9/5 degF interval"
+
+[[case]]
+id = "hw-071"
+category = "temperature"
+value = "18"
+from = "delta_degF"
+to = "delta_K"
+source = "interval: 1 degF interval = 5/9 K"
+
+[[case]]
+id = "hw-072"
+category = "temperature"
+value = "1"
+from = "delta_K"
+to = "delta_degC"
+source = "interval: 1 K = 1 degC"
+
+[[case]]
+id = "hw-073"
+category = "compound"
+value = "1"
+from = "m/s"
+to = "km/h"
+source = "derived: 3.6"
+
+[[case]]
+id = "hw-074"
+category = "compound"
+value = "1"
+from = "kg/m3"
+to = "g/L"
+source = "1 kg/m3 = 1 g/L"
+
+[[case]]
+id = "hw-075"
+category = "compound"
+value = "1"
+from = "g/cm3"
+to = "kg/m3"
+source = "1 g/cm3 = 1000 kg/m3"
+
+[[case]]
+id = "hw-076"
+category = "compound"
+value = "1"
+from = "lb/ft3"
+to = "kg/m3"
+source = "lb and ft exact definitions"
+
+[[case]]
+id = "hw-077"
+category = "compound"
+value = "1"
+from = "kW.h"
+to = "MJ"
+source = "1 kW h = 3.6 MJ"
+
+[[case]]
+id = "hw-078"
+category = "compound"
+value = "1"
+from = "J/(mol.K)"
+to = "kJ/(kmol.K)"
+source = "1 J/mol = 1 kJ/kmol"
+
+[[case]]
+id = "hw-079"
+category = "compound"
+value = "1"
+from = "N/m2"
+to = "psi"
+source = "N/m2 = Pa; psi exact definition"
+
+[[case]]
+id = "hw-080"
+category = "compound"
+value = "50"
+from = "gal_us/min"
+to = "L/s"
+source = "US gallon exact, 1 min = 60 s"
+
+[[case]]
+id = "hw-081"
+category = "compound"
+value = "12"
+from = "m3/h"
+to = "gal_us/min"
+source = "12 m3/h is about 52.8 gal_us/min (exact ratio from definitions)"
+
+[[case]]
+id = "hw-082"
+category = "compound"
+value = "1"
+from = "lb/h"
+to = "kg/s"
+source = "lb exact, 1 h = 3600 s"
+
+[[case]]
+id = "hw-083"
+category = "compound"
+value = "1"
+from = "psi.in2"
+to = "lbf"
+source = "psi = lbf/in2"

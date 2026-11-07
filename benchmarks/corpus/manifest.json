@@ -1,0 +1,21 @@
+{
+ "corpus_id": "510101612da39d1e",
+ "counts": {
+  "coverage_lists": 8,
+  "coverage_units": 177,
+  "dimvexa_vectors_cross_checked_by_oracle": 63,
+  "must_convert": 164,
+  "must_convert_approximate": 0,
+  "must_refuse": 30
+ },
+ "dimvexa_data_hash": "fnv1a64:3033b1b397ec6483",
+ "dimvexa_data_version": 2,
+ "files": {
+  "coverage.json": "100d408cb1517703bc5ad570eb694368451952fc177a0cf974b0527e80646176",
+  "must_convert.json": "e391db07fb495ba5e5362f273bdea82078dd8b1152ca076732dfe0ad62ae7cba",
+  "must_refuse.json": "7e691cf72855940bbd4348894c6fc595c07fbb0ab68e87fe6f3d5f7f0ce609bc",
+  "perf.json": "32ccdd38732b48049e374e8339a07e4b7b565b675b90fef67a3e75145d012b5c"
+ },
+ "generator_version": 1,
+ "schema": "dimvexa.bench.corpus.manifest/1"
+}

@@ -1,0 +1,56 @@
+{
+ "conversions": [
+  {
+   "factor": 3.6,
+   "factor_exact": "18/5",
+   "from": "m/s",
+   "id": "linear_speed",
+   "offset": 0.0,
+   "offset_exact": "0/1",
+   "oneshot": "10 m/s",
+   "to": "km/h"
+  },
+  {
+   "factor": 6.894757293168361,
+   "factor_exact": "8896443230521/1290320000000",
+   "from": "psi",
+   "id": "linear_pressure",
+   "offset": 0.0,
+   "offset_exact": "0/1",
+   "oneshot": "5 psi",
+   "to": "kPa"
+  },
+  {
+   "factor": 1.8,
+   "factor_exact": "9/5",
+   "from": "degC",
+   "id": "affine_temperature",
+   "offset": 32.0,
+   "offset_exact": "32/1",
+   "oneshot": "20 degC",
+   "to": "degF"
+  },
+  {
+   "factor": 0.23884589662749595,
+   "factor_exact": "2500/10467",
+   "from": "kJ/(kg.K)",
+   "id": "compound_cp",
+   "offset": 0.0,
+   "offset_exact": "0/1",
+   "oneshot": "1 kJ/(kg.K)",
+   "to": "Btu_IT/(lb.delta_degF)"
+  }
+ ],
+ "inputs": {
+  "batch_sizes": [
+   1000,
+   100000,
+   1000000
+  ],
+  "generator": "lcg32",
+  "hi": 1000.0,
+  "lo": -1000.0,
+  "seed": 12345
+ },
+ "schema": "dimvexa.bench.corpus.perf/1"
+}
