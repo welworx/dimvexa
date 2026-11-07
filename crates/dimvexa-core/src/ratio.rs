@@ -12,6 +12,9 @@ const fn overflow(operation: &'static str) -> Error {
 }
 
 /// Greatest common divisor by Euclid's algorithm. `gcd(0, 0) == 0`.
+///
+/// Stein's binary algorithm was tried and measured 30 to 40 percent slower on `u128` in M0
+/// (see docs/benchmarks/M0.md), so the simple algorithm stays (plan section 6.2).
 const fn gcd(mut a: u128, mut b: u128) -> u128 {
     while b != 0 {
         let t = match a.checked_rem(b) {
@@ -69,16 +72,16 @@ impl Ratio {
         }
         let (n, d) = if den < 0 {
             (
-                num.checked_neg().ok_or(overflow("ratio sign"))?,
-                den.checked_neg().ok_or(overflow("ratio sign"))?,
+                num.checked_neg().ok_or_else(|| overflow("ratio sign"))?,
+                den.checked_neg().ok_or_else(|| overflow("ratio sign"))?,
             )
         } else {
             (num, den)
         };
         let g = gcd(n.unsigned_abs(), d.unsigned_abs());
         let g = i128::try_from(g).map_err(|_| overflow("ratio reduce"))?;
-        let n = n.checked_div(g).ok_or(overflow("ratio reduce"))?;
-        let d = d.checked_div(g).ok_or(overflow("ratio reduce"))?;
+        let n = n.checked_div(g).ok_or_else(|| overflow("ratio reduce"))?;
+        let d = d.checked_div(g).ok_or_else(|| overflow("ratio reduce"))?;
         Ok(Self { num: n, den: d })
     }
 
@@ -131,7 +134,10 @@ impl Ratio {
     /// [`Error::Overflow`] if the numerator is `i128::MIN`.
     pub fn checked_neg(self) -> Result<Self> {
         Ok(Self {
-            num: self.num.checked_neg().ok_or(overflow("ratio neg"))?,
+            num: self
+                .num
+                .checked_neg()
+                .ok_or_else(|| overflow("ratio neg"))?,
             den: self.den,
         })
     }
@@ -234,11 +240,11 @@ impl Ratio {
         let l = self
             .num
             .checked_mul(rhs.den)
-            .ok_or(overflow("ratio compare"))?;
+            .ok_or_else(|| overflow("ratio compare"))?;
         let r = rhs
             .num
             .checked_mul(self.den)
-            .ok_or(overflow("ratio compare"))?;
+            .ok_or_else(|| overflow("ratio compare"))?;
         Ok(l.cmp(&r))
     }
 
@@ -515,7 +521,9 @@ fn scan_decimal(s: &str) -> usize {
 }
 
 fn pow10(e: u32) -> Result<i128> {
-    10_i128.checked_pow(e).ok_or(overflow("power of ten"))
+    10_i128
+        .checked_pow(e)
+        .ok_or_else(|| overflow("power of ten"))
 }
 
 fn parse_int(s: &str) -> Result<i128> {
@@ -535,10 +543,10 @@ fn parse_int(s: &str) -> Result<i128> {
         acc = acc
             .checked_mul(10)
             .and_then(|v| v.checked_add(d))
-            .ok_or(overflow("integer parse"))?;
+            .ok_or_else(|| overflow("integer parse"))?;
     }
     if neg {
-        acc.checked_neg().ok_or(overflow("integer parse"))
+        acc.checked_neg().ok_or_else(|| overflow("integer parse"))
     } else {
         Ok(acc)
     }
@@ -578,10 +586,14 @@ fn parse_decimal(s: &str) -> Result<Ratio> {
     let mut den = pow10(frac_len)?;
     if exp >= 0 {
         let scale = pow10(u32::try_from(exp).map_err(|_| bad())?)?;
-        num = num.checked_mul(scale).ok_or(overflow("decimal exponent"))?;
+        num = num
+            .checked_mul(scale)
+            .ok_or_else(|| overflow("decimal exponent"))?;
     } else {
         let scale = pow10(exp.unsigned_abs())?;
-        den = den.checked_mul(scale).ok_or(overflow("decimal exponent"))?;
+        den = den
+            .checked_mul(scale)
+            .ok_or_else(|| overflow("decimal exponent"))?;
     }
     Ratio::new(num, den)
 }

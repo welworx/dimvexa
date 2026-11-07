@@ -65,7 +65,8 @@ impl Dim {
         self == Self::NONE
     }
 
-    fn zip_with(self, other: Self, f: fn(i8, i8) -> Option<i8>) -> Option<Self> {
+    #[inline]
+    fn zip_with(self, other: Self, f: impl Fn(i8, i8) -> Option<i8>) -> Option<Self> {
         let [a0, a1, a2, a3, a4, a5, a6] = self.0;
         let [b0, b1, b2, b3, b4, b5, b6] = other.0;
         Some(Self([

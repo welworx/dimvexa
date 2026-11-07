@@ -46,6 +46,8 @@ pub struct Registry {
     units: Vec<Unit>,
     by_symbol: HashMap<String, usize>,
     ambiguous: HashMap<String, Vec<String>>,
+    /// Lower-cased name -> original spellings, for case-insensitive suggestions without a scan.
+    lowered: HashMap<String, Vec<String>>,
 }
 
 impl Registry {
@@ -110,6 +112,10 @@ impl Registry {
         }
         let mut candidates: Vec<String> = def.candidates.iter().map(|c| (*c).to_string()).collect();
         candidates.extend(def.planned.iter().map(|p| format!("{p} (planned)")));
+        self.lowered
+            .entry(def.symbol.to_lowercase())
+            .or_default()
+            .push(def.symbol.to_string());
         self.ambiguous.insert(def.symbol.to_string(), candidates);
         Ok(())
     }
@@ -142,6 +148,10 @@ impl Registry {
         let index = self.units.len();
         for name in names {
             self.by_symbol.insert(name.to_string(), index);
+            self.lowered
+                .entry(name.to_lowercase())
+                .or_default()
+                .push(name.to_string());
         }
         self.units.push(unit);
         Ok(())
@@ -182,14 +192,17 @@ impl Registry {
     }
 
     fn suggestions(&self, symbol: &str) -> Vec<String> {
-        let lower = symbol.to_lowercase();
         let mut out: Vec<String> = self
-            .by_symbol
-            .keys()
-            .chain(self.ambiguous.keys())
-            .filter(|k| k.to_lowercase() == lower && k.as_str() != symbol)
-            .cloned()
-            .collect();
+            .lowered
+            .get(&symbol.to_lowercase())
+            .map(|names| {
+                names
+                    .iter()
+                    .filter(|n| n.as_str() != symbol)
+                    .cloned()
+                    .collect()
+            })
+            .unwrap_or_default();
         out.sort();
         out.dedup();
         out.truncate(5);

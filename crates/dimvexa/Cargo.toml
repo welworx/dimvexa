@@ -22,5 +22,10 @@ dimvexa-data = { workspace = true }
 name = "pool_pump"
 path = "../../examples/pool_pump.rs"
 
+[[bench]]
+name = "m0"
+harness = false
+path = "benches/m0.rs"
+
 [lints]
 workspace = true
