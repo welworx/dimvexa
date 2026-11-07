@@ -231,7 +231,7 @@ fn main() {
     res.write(&mut text, 0);
     text.push('\n');
     let _ = std::fs::create_dir_all(&out_dir);
-    let file = out_dir.join(format!("uom-{}.json", harness::safe(&version)));
+    let file = out_dir.join(format!("uom-{}.json", safe(&version)));
     match std::fs::write(&file, text) {
         Ok(()) => eprintln!("wrote {}", file.display()),
         Err(e) => {
@@ -239,4 +239,8 @@ fn main() {
             std::process::exit(2);
         }
     }
+}
+
+fn safe(s: &str) -> String {
+    s.chars().map(|c| if c.is_ascii_alphanumeric() || "._+-".contains(c) { c } else { '_' }).collect()
 }

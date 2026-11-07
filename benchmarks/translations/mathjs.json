@@ -1,10 +1,38 @@
 {
-  "_note": "UNVERIFIED best-effort spellings from memory of mathjs units; not checked against an installed mathjs. Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template.",
-  "ops": {".": " "},
+  "_note": "mathjs 13.2.0: Spellings checked against the installed library (see docs/benchmarks/comparison-run-1.md). Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template.",
+  "ops": {
+    ".": " "
+  },
   "pow": "^",
   "units": {
-    "1": "", "tonne": "tonne", "ton_short": "ton", "oz_av": "oz", "gal_us": "gallon", "pt_us": "pint", "cal_th": "cal", "Btu_IT": "BTU",
-    "hp_mech": "hp", "nmi": "nauticalmile", "mi": "mile", "lbf": "lbf", "degR": "degR", "delta_K": "K", "delta_degC": "K", "delta_degF": "degR", "delta_degR": "degR",
-    "mmHg": "mmHg", "torr": "torr", "psi": "psi", "bar": "bar", "atm": "atm", "cP": "cP", "L": "L"
+    "1": "",
+    "tonne": "tonne",
+    "ton_short": "ton",
+    "oz_av": "oz",
+    "gal_us": "gallon",
+    "pt_us": "pint",
+    "cal_th": "cal",
+    "Btu_IT": "BTU",
+    "hp_mech": "hp",
+    "nmi": "nauticalmile",
+    "mi": "mile",
+    "lbf": "lbf",
+    "degR": "degR",
+    "delta_K": "K",
+    "delta_degC": "K",
+    "delta_degF": "degR",
+    "delta_degR": "degR",
+    "mmHg": "mmHg",
+    "torr": "torr",
+    "psi": "psi",
+    "bar": "bar",
+    "atm": "atm",
+    "cP": "cP",
+    "L": "L",
+    "s-1": "s^-1",
+    "Ω": "ohm",
+    "Δ°F": "degR",
+    "°F": "degF",
+    "°C": "degC"
   }
 }

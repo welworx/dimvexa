@@ -19,8 +19,17 @@ class JsQuantities extends c.Adapter {
   version() { return c.moduleVersion('js-quantities'); }
   packageBytes() { return c.moduleBytes('js-quantities'); }
   translated(e) { return c.translateExpr(e, this.cfg); }
+  // js-quantities separates temperature points (tempK) from differences (degK). A bare K facing a
+  // temperature point is a point; inside a compound unit it is a difference.
+  pair(from, to) {
+    const pts = ['degC', 'degF', 'degR', '°C', '°F'];
+    let fu = this.translated(from), tu = this.translated(to);
+    if (from === 'K' && pts.includes(to)) fu = 'tempK';
+    if (to === 'K' && pts.includes(from)) tu = 'tempK';
+    return [fu, tu];
+  }
   prepare(mode, conv) {
-    const fu = this.translated(conv.from), tu = this.translated(conv.to);
+    const [fu, tu] = this.pair(conv.from, conv.to);
     if (mode === 'plain') { this.Qty(1, fu).to(tu); return [fu, tu]; }
     return this.Qty.swiftConverter(fu, tu);
   }
@@ -39,7 +48,8 @@ class JsQuantities extends c.Adapter {
     return () => Qty(text).to(to).scalar;
   }
   convertCase(mode, value, src, dst) {
-    return this.Qty(parseFloat(value), this.translated(src)).to(this.translated(dst)).scalar;
+    const [fu, tu] = this.pair(src, dst);
+    return this.Qty(parseFloat(value), fu).to(tu).scalar;
   }
   addCase(mode, a, b) {
     const q = (t) => { const [v, u] = c.splitQuantity(t); return this.Qty(parseFloat(v), this.translated(u)); };

@@ -1,9 +1,28 @@
 {
-  "_note": "UNVERIFIED best-effort spellings from memory of convert-units 2.x (C, F, K, R, lb, oz, ton, mt, gal, ...). Not checked against an installed convert-units. Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template.",
+  "_note": "convert-units 2.3.4: Spellings checked against the installed library (see docs/benchmarks/comparison-run-1.md). Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template.",
   "ops": {},
   "pow": "^",
   "units": {
-    "degC": "C", "degF": "F", "degR": "R", "K": "K", "tonne": "mt", "ton_short": "ton", "oz_av": "oz", "gal_us": "gal", "pt_us": "pnt",
-    "L": "l", "bar": "bar", "psi": "psi", "Pa": "Pa", "kPa": "kPa", "MPa": "MPa", "mi": "mi", "ft": "ft", "in": "in", "lb": "lb", "Btu_IT": "Btu"
+    "degC": "C",
+    "degF": "F",
+    "degR": "R",
+    "K": "K",
+    "tonne": "mt",
+    "ton_short": "ton",
+    "oz_av": "oz",
+    "gal_us": "gal",
+    "pt_us": "pnt",
+    "L": "l",
+    "bar": "bar",
+    "psi": "psi",
+    "Pa": "Pa",
+    "kPa": "kPa",
+    "MPa": "MPa",
+    "mi": "mi",
+    "ft": "ft",
+    "in": "in",
+    "lb": "lb",
+    "Btu_IT": "Btu",
+    "t": "mt"
   }
 }
