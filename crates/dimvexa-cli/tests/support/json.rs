@@ -340,6 +340,7 @@ fn check_unit_detail_schema(v: &V) {
         "sources",
         "note",
         "origin",
+        "mapping",
     ] {
         assert!(u.get(k).is_some(), "missing unit.{k}");
     }

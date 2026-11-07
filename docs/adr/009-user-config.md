@@ -55,7 +55,8 @@ directory file.
 Rules, so a config cannot make a result silently wrong:
 
 1. **Core is never shadowed (ADR-008).** A `[[unit]]` can never take the name of an existing
-   symbol, alias or prefixed form (`kg`, `mm`), nor a declared-ambiguous bare name. `[map]` may resolve a name that is declared ambiguous
+   symbol, alias or prefixed form (`kg`, `mm`), nor a prefix on an ambiguous name (`kcal`:
+   defining it would silently drop the prefix), nor a declared-ambiguous bare name. `[map]` may resolve a name that is declared ambiguous
    or unknown (`mt`, `ton`). It may not redefine an existing symbol or alias (`t`, `m`, `psi`).
 2. **A mapping only points at an existing unit.** It cannot carry a factor.
 3. **Everything is validated like the shipped data.** A bad fraction, duplicate symbol,
@@ -67,7 +68,9 @@ Rules, so a config cannot make a result silently wrong:
    Implemented behavior: the result's `exactness` is `measured` (the number is the caller's,
    not a definition), the bridge's source is added to `sources`, the note is printed on stderr
    in text mode (stdout stays the bare result) and a `bridge` object is added to the JSON
-   (`null` when none). A bridge applies to linear units only, never to a unit with an offset.
+   (`null` when none). A bridge applies to mass to volume and back with the same power of time on both sides
+   (`kg` to `m3`, `kg/h` to `m3/h`), not to other dimensions that merely differ by kg/m^3
+   (`kg/L`, `m3/kg`), and to linear units only.
 5. **A bridge is used only on request** (`--bridge NAME`, or the API equivalent). Without it,
    mass to volume and the other bridged conversions stay refused with the ADR-001 error, which
    now also names the option.
@@ -93,9 +96,9 @@ Open sub-decisions (recommended default first; not implemented before the owner 
   ratio, never computed from temperature and pressure, and comes later.
 * **OPEN 4: parser.** The workspace has no dependencies (ADR-003). The shipped reader
   (`toml_lite`) lives inside the data crate and cannot be reached from core when the crates are
-  published, so step 1 has its own small reader in `dimvexa-config` (`[map]` only, errors with
-  file and line). Revisit when `[[unit]]` needs the full subset: either grow that reader or move
-  `toml_lite` into core.
+  published, so `dimvexa-config` has its own small reader for the three tables it knows
+  (`[map]`, `[[unit]]`, `[[bridge]]`; errors carry file and line). Revisit if the format needs
+  more of TOML: either grow that reader or move `toml_lite` into core.
 * **OPEN 5: names of the shipped profiles** and which symbols each one maps.
 
 ## Consequences

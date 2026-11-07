@@ -128,7 +128,7 @@ fn applying_twice_is_refused_so_overrides_stay_explicit() {
 }
 
 const WATER: &str = "[[bridge]]\nname = \"water_20C\"\nkind = \"density\"\n\
-value = \"9982071/10000\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\n\
+value = \"9982067/10000\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\n\
 source = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
 
 fn water() -> dimvexa_config::Bridge {
@@ -138,11 +138,11 @@ fn water() -> dimvexa_config::Bridge {
 #[test]
 fn a_density_bridge_turns_volume_into_mass_and_back_exactly() {
     let (reg, b) = (registry().unwrap(), water());
-    let density = Ratio::new(9_982_071, 10_000).unwrap(); // kg/m3
+    let density = Ratio::new(9_982_067, 10_000).unwrap(); // kg/m3
     let (litre, kg) = (reg.parse("L").unwrap(), reg.parse("kg").unwrap());
-    // 1 L = 0.001 m3, so 1 L of this water is 0.9982071 kg, exactly.
+    // 1 L = 0.001 m3, so 1 L of this water is 0.9982067 kg, exactly.
     let c = b.conversion(&litre, &kg).unwrap();
-    assert_eq!(c.factor(), Ratio::new(9_982_071, 10_000_000).unwrap());
+    assert_eq!(c.factor(), Ratio::new(9_982_067, 10_000_000).unwrap());
     // And back: the two directions are exact inverses.
     let back = b.conversion(&kg, &litre).unwrap();
     assert_eq!(c.factor().checked_mul(back.factor()).unwrap(), Ratio::ONE);
@@ -177,13 +177,11 @@ fn a_bridge_does_nothing_for_anything_but_a_density() {
         ("kg", "kg"),
         ("m3/h", "kg"),
     ] {
-        let (Ok(f), Ok(t)) = (reg.parse(from), reg.parse(to)) else {
-            continue;
-        };
+        let (f, t) = (reg.parse(from).unwrap(), reg.parse(to).unwrap());
         let err = b.conversion(&f, &t).unwrap_err();
         assert_eq!(err.code(), "dimension_mismatch", "{from} -> {to}");
     }
-    // A unit with an offset is refused outright.
+    // A temperature is neither a mass nor a volume, so a bridge cannot touch it.
     let (degc, kg) = (reg.parse("degC").unwrap(), reg.parse("kg").unwrap());
     assert!(b.conversion(&degc, &kg).is_err());
     assert!(dimvexa_config::Bridge::density_needed(
@@ -344,4 +342,125 @@ fn a_refused_unit_leaves_the_registry_untouched() {
         reg.conversion("pallet", "kg").unwrap_err().code(),
         "unknown_unit"
     );
+}
+
+#[test]
+fn a_bridge_only_turns_mass_into_volume_not_other_dimensions_that_differ_by_a_density() {
+    let (reg, b) = (registry().unwrap(), water());
+    let dim = |s: &str| reg.parse(s).unwrap().dim();
+    // These differ by exactly kg/m3 but are not mass <-> volume.
+    for (from, to) in [
+        ("kg/L", "m"),
+        ("kg/m2", "mm"),
+        ("m3/kg", "m3"),
+        ("kg/m3", "kg/m3"),
+        ("kg/s", "m3"),
+        ("kg", "m3/s"),
+    ] {
+        assert!(
+            !dimvexa_config::Bridge::density_needed(dim(from), dim(to)),
+            "{from} -> {to}"
+        );
+        let (f, t) = (reg.parse(from).unwrap(), reg.parse(to).unwrap());
+        assert!(b.conversion(&f, &t).is_err(), "{from} -> {to}");
+    }
+    // Mass <-> volume with the same power of time still works.
+    for (from, to) in [("kg", "L"), ("L", "kg"), ("kg/h", "m3/h"), ("m3/s", "kg/s")] {
+        assert!(
+            dimvexa_config::Bridge::density_needed(dim(from), dim(to)),
+            "{from} -> {to}"
+        );
+    }
+    // A different power of time on the two sides does not.
+    assert!(!dimvexa_config::Bridge::density_needed(
+        dim("kg/h"),
+        dim("m3")
+    ));
+}
+
+#[test]
+fn a_prefix_on_an_ambiguous_name_cannot_be_redefined() {
+    // `cal` and `gal` are ambiguous, so `kcal`, `kgal` and `Mcal` are refused too. Defining
+    // them would silently drop the prefix (1000 kcal would then be 1000 cal).
+    let reg = registry().unwrap();
+    for (name, target) in [("kcal", "cal_th"), ("kgal", "gal_us"), ("Mcal", "cal_IT")] {
+        let msg = refused(&format!("[map]\n{name} = \"{target}\"\n"));
+        assert!(msg.contains("already means a unit"), "{name}: {msg}");
+        assert!(
+            msg.contains(&format!("'{name}'")),
+            "the name is in the error: {msg}"
+        );
+        let msg = refused(&unit_text(name, "kg", "2", ""));
+        assert!(msg.contains("already means a unit"), "{name}: {msg}");
+        assert_eq!(
+            reg.conversion(name, "kg").unwrap_err().code(),
+            "ambiguous_symbol",
+            "{name} stays ambiguous"
+        );
+    }
+    // The ambiguous bare name itself can still be resolved (that is what [map] is for).
+    with("[map]\ncal = \"cal_th\"\n");
+    // And `name_is_free` says why.
+    assert!(reg.name_is_free("cal") && reg.name_is_free("pallet"));
+    assert!(!reg.name_is_free("kcal") && !reg.name_is_free("km") && !reg.name_is_free("m"));
+}
+
+#[test]
+fn overriding_a_unit_keeps_the_units_that_build_on_it_working() {
+    let base = format!(
+        "{}{}",
+        unit_text("ua", "kg", "2", ""),
+        unit_text("ub", "ua", "3", "")
+    );
+    let mut reg = registry().unwrap();
+    let applied = apply(
+        &mut reg,
+        &[
+            cfg(&base, "A.toml"),
+            cfg(&unit_text("ua", "kg", "5", ""), "B.toml"),
+        ],
+    )
+    .unwrap();
+    assert_eq!(factor(&reg, "ua", "kg"), Ratio::from_int(5));
+    assert_eq!(
+        factor(&reg, "ub", "kg"),
+        Ratio::from_int(15),
+        "ub follows the new ua"
+    );
+    let order: Vec<&str> = applied.units.iter().map(|u| u.symbol.as_str()).collect();
+    assert_eq!(order, ["ua", "ub"], "an override keeps its position");
+    assert_eq!(applied.units[0].origin, "B.toml");
+}
+
+#[test]
+fn a_user_unit_keeps_the_citation_of_its_base() {
+    let mut reg = registry().unwrap();
+    apply(&mut reg, &[cfg(BARREL, "oil.toml")]).unwrap();
+    let note = reg.get("bbl_oil").unwrap().note().to_string();
+    let base_source = reg.get("gal_us").unwrap().source().to_string();
+    assert!(
+        note.contains("(base gal_us:") && note.contains(&base_source),
+        "{note}"
+    );
+}
+
+#[test]
+fn problems_name_the_offender_and_the_chain_rules() {
+    // The name is in the message.
+    let msg = refused("[map]\nMT = \"tonne\"\n");
+    assert!(msg.contains("'MT'") && msg.contains("test.toml:2"), "{msg}");
+    // A chain works only through earlier names; the error says what a target may be.
+    let msg = refused("[map]\nton = \"mt\"\nmt = \"tonne\"\n");
+    assert!(msg.contains("known at this point"), "{msg}");
+    let mut reg = registry().unwrap();
+    apply(
+        &mut reg,
+        &[cfg("[map]\nmt = \"tonne\"\nton = \"mt\"\n", "ok.toml")],
+    )
+    .unwrap();
+    assert_eq!(factor(&reg, "ton", "kg"), Ratio::from_int(1000));
+    // A base cannot be a mapped name; the error says so.
+    let text = format!("[map]\nmt = \"tonne\"\n{}", unit_text("lot", "mt", "2", ""));
+    let msg = refused(&text);
+    assert!(msg.contains("mapped names do not count"), "{msg}");
 }

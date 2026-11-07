@@ -884,24 +884,32 @@ fn a_bridge_gives_the_mass_of_a_litre_of_water() {
     assert_eq!(r.code, 1);
     // With it: exact, and the assumption is printed next to the result.
     let r = dimvexa_at_root(&args(&["convert", "1", "L", "kg"]));
-    assert_eq!((r.code, r.stdout.as_str()), (0, "0.9982071 kg\n"));
-    assert!(r.stderr.contains("density 998.2071 kg/m3"), "{}", r.stderr);
-    assert!(r.stderr.contains("air-free water, 20 degC"));
-    assert!(r.stderr.contains("Tanaka") && r.stderr.contains("water.toml:8"));
+    assert_eq!((r.code, r.stdout.as_str()), (0, "0.9982067 kg\n"));
+    assert!(r.stderr.contains("density 998.2067 kg/m3"), "{}", r.stderr);
+    assert!(
+        r.stderr
+            .contains("air-free water of SMOW isotopic composition, 20 degC")
+    );
+    assert!(r.stderr.contains("Tanaka") && r.stderr.contains("water.toml:9"));
     let r = dimvexa_at_root(&args(&["convert", "1", "L", "kg", "--exact"]));
-    assert_eq!(r.stdout, "9982071/10000000 kg\n");
+    assert_eq!(r.stdout, "9982067/10000000 kg\n");
     // Both directions, other units, and per time.
     assert_eq!(
         dimvexa_at_root(&args(&["convert", "1000", "kg", "m3"])).stdout,
-        "1.0017961202640213 m^3\n"
+        "1.0017965217023688 m^3\n"
     );
     assert_eq!(
         dimvexa_at_root(&args(&["convert", "2", "L/h", "kg/h", "--exact"])).stdout,
-        "9982071/5000000 kg/h\n"
+        "9982067/5000000 kg/h\n"
     );
     // Same-dimension conversions ignore the bridge; other mismatches stay errors.
     let r = dimvexa_at_root(&args(&["convert", "1", "m", "km"]));
-    assert_eq!((r.stdout.as_str(), r.stderr.as_str()), ("0.001 km\n", ""));
+    assert_eq!(r.stdout, "0.001 km\n");
+    assert!(
+        r.stderr.contains("bridge water_20C was not needed"),
+        "{}",
+        r.stderr
+    );
     assert_eq!(dimvexa_at_root(&args(&["convert", "1", "L", "m"])).code, 1);
     assert_eq!(
         dimvexa_at_root(&args(&["convert", "1", "degC", "kg"])).code,
@@ -928,18 +936,18 @@ fn bridge_json_records_the_assumption_and_marks_the_result_measured() {
     json::check_convert_schema(&v);
     let b = v.get("bridge").unwrap();
     assert_eq!(b.get("name").unwrap().as_str(), "water_20C");
-    assert_eq!(b.get("value").unwrap().as_str(), "9982071/10000");
+    assert_eq!(b.get("value").unwrap().as_str(), "9982067/10000");
     assert_eq!(b.get("unit").unwrap().as_str(), "kg/m3");
     assert!(b.get("conditions").unwrap().as_str().contains("20 degC"));
     assert_eq!(b.get("file").unwrap().as_str(), WATER_CFG);
     assert_eq!(v.get("exactness").unwrap().as_str(), "measured");
     assert_eq!(
         v.get("output").unwrap().get("value").unwrap().as_str(),
-        "0.9982071"
+        "0.9982067"
     );
     assert_eq!(
         v.get("exact").unwrap().get("value").unwrap().as_str(),
-        "9982071/10000000"
+        "9982067/10000000"
     );
     assert!(
         v.get("sources")
@@ -1017,7 +1025,7 @@ fn units_lists_the_bridges_of_a_config() {
     assert!(
         r.stdout
             .lines()
-            .any(|l| l.starts_with("water_20C\tdensity\t9982071/10000\tkg/m3\t"))
+            .any(|l| l.starts_with("water_20C\tdensity\t9982067/10000\tkg/m3\t"))
     );
     assert!(
         !dimvexa(&["units", "mass"])
@@ -1115,7 +1123,7 @@ fn a_config_can_define_a_unit() {
         "water_20C",
     ]);
     assert_eq!(r.code, 0, "{}", r.stderr);
-    assert!(r.stdout.starts_with("158.7022"), "{}", r.stdout);
+    assert!(r.stdout.starts_with("158.7021"), "{}", r.stdout);
     // The unit is a volume, not a mass.
     assert_eq!(
         dimvexa_at_root(&["convert", "1", "bbl_oil", "kg", "--config", OIL_CFG]).code,
@@ -1228,4 +1236,142 @@ fn readme_unit_example_is_real() {
             "README does not show:\n{expected}"
         );
     }
+}
+
+#[test]
+fn units_name_says_when_the_name_is_yours() {
+    let cfg = config_file("mine_detail.toml", TRADE);
+    let r = dimvexa(&["units", "mt", "--config", &cfg]);
+    assert_eq!(r.code, 0);
+    assert!(r.stdout.starts_with("tonne\n"), "{}", r.stdout);
+    assert!(
+        r.stdout
+            .contains("your name     'mt' means this unit in your config"),
+        "{}",
+        r.stdout
+    );
+    assert!(r.stdout.contains(&format!("{cfg}:3")));
+    let v = json::parse(&dimvexa(&["units", "mt", "--json", "--config", &cfg]).stdout).unwrap();
+    json::check_units_schema(&v);
+    let m = v.get("unit").unwrap().get("mapping").unwrap();
+    assert_eq!(m.get("name").unwrap().as_str(), "mt");
+    assert_eq!(m.get("file").unwrap().as_str(), cfg);
+    // The shipped name is not marked, and without the config there is no mapping.
+    let v = json::parse(&dimvexa(&["units", "tonne", "--json", "--config", &cfg]).stdout).unwrap();
+    assert!(matches!(
+        v.get("unit").unwrap().get("mapping").unwrap(),
+        json::V::Null
+    ));
+    assert!(!dimvexa(&["units", "tonne"]).stdout.contains("your name"));
+}
+
+#[test]
+fn option_values_are_checked() {
+    // An option is not a value: `--config --json` is a missing file name, reported as JSON.
+    let r = dimvexa(&["convert", "1", "m", "km", "--config", "--exact"]);
+    assert_eq!(r.code, 2);
+    assert!(
+        r.stderr.contains("'--config' needs a value"),
+        "{}",
+        r.stderr
+    );
+    let r = dimvexa(&["convert", "1", "m", "km", "--json", "--config", "--exact"]);
+    assert_eq!(r.code, 2);
+    let v = json::parse(&r.stdout).unwrap();
+    assert_eq!(
+        v.get("error").unwrap().get("code").unwrap().as_str(),
+        "usage"
+    );
+    // Two bridges are an error, not silently the last one.
+    let r = dimvexa(&["convert", "1", "L", "kg", "--bridge", "a", "--bridge=b"]);
+    assert_eq!(r.code, 2);
+    assert!(
+        r.stderr.contains("'--bridge' is given twice"),
+        "{}",
+        r.stderr
+    );
+}
+
+#[test]
+fn an_unneeded_bridge_is_mentioned_not_silent() {
+    let r = dimvexa_at_root(&[
+        "convert",
+        "1",
+        "kg",
+        "g",
+        "--config",
+        WATER_CFG,
+        "--bridge",
+        "water_20C",
+    ]);
+    assert_eq!((r.code, r.stdout.as_str()), (0, "1000 g\n"));
+    assert!(
+        r.stderr.contains("bridge water_20C was not needed"),
+        "{}",
+        r.stderr
+    );
+    // JSON says it with a null bridge and stays quiet on stderr.
+    let r = dimvexa_at_root(&[
+        "convert",
+        "1",
+        "kg",
+        "g",
+        "--json",
+        "--config",
+        WATER_CFG,
+        "--bridge",
+        "water_20C",
+    ]);
+    assert_eq!(r.stderr, "");
+    let v = json::parse(&r.stdout).unwrap();
+    assert!(matches!(v.get("bridge").unwrap(), json::V::Null));
+}
+
+#[test]
+fn a_bridge_does_not_apply_to_other_dimensions_that_differ_by_a_density() {
+    for (from, to) in [("kg/L", "m"), ("kg/m2", "mm"), ("kg", "m3/s")] {
+        let r = dimvexa_at_root(&[
+            "convert",
+            "1",
+            from,
+            to,
+            "--config",
+            WATER_CFG,
+            "--bridge",
+            "water_20C",
+        ]);
+        assert_eq!(r.code, 1, "{from} -> {to}");
+        assert!(
+            r.stderr.starts_with("error[dimension_mismatch]"),
+            "{}",
+            r.stderr
+        );
+        assert!(
+            !r.stderr.contains("hint:"),
+            "no density hint for {from} -> {to}"
+        );
+    }
+}
+
+#[test]
+fn a_prefix_on_an_ambiguous_name_is_refused_even_with_a_config() {
+    let cfg = config_file("kcal.toml", "[map]\nkcal = \"cal_th\"\n");
+    let r = dimvexa(&["convert", "1", "kcal", "J", "--config", &cfg]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr.starts_with("error[invalid_definition]"),
+        "{}",
+        r.stderr
+    );
+    assert!(
+        r.stderr.contains("'kcal'") && r.stderr.contains("kcal.toml:2"),
+        "{}",
+        r.stderr
+    );
+    // The bare name can be resolved, and then its prefixed forms follow it.
+    let cfg = config_file("cal.toml", "[map]\ncal = \"cal_th\"\n");
+    assert_eq!(
+        dimvexa(&["convert", "1", "kcal", "J", "--config", &cfg]).stdout,
+        "4184 J\n"
+    );
 }

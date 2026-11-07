@@ -163,7 +163,10 @@ Rules (ADR-009, [`docs/adr/009-user-config.md`](docs/adr/009-user-config.md)):
   overrides an earlier one.
 - A mapping only points at an existing unit, so it cannot carry a factor, and it can never
   redefine an existing symbol (`t`, `m`, `psi`, `km`): that is an error naming the file and line.
-- A mapped name behaves like an alias, so prefixes work (`kmt` is `ktonne`).
+- A mapped name behaves like an alias, so prefixes work (`kmt` is `ktonne`). A prefix on an
+  ambiguous name cannot be mapped (`kcal`): map the bare name (`cal`) and its prefixed forms
+  follow. A target must exist when the entry is read: a table unit, one of your `[[unit]]`, or a
+  name mapped earlier.
 - `--json` output lists the config files used with a content hash (`"config"`), and
   `dimvexa units` shows which names come from your config.
 
@@ -179,9 +182,9 @@ your own config, and select it by name:
 [[bridge]]
 name = "water_20C"
 kind = "density"                       # kg/m3, mass <-> volume
-value = "9982071/10000"                # 998.2071 kg/m3
-conditions = "air-free water, 20 degC (ITS-90), 101.325 kPa"
-source = "Tanaka et al., Metrologia 38 (2001) 301-309, recommended table for the density of water"
+value = "9982067/10000"                # 998.2067 kg/m3
+conditions = "air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa"
+source = "Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1)"
 ```
 
 ```console
@@ -189,11 +192,11 @@ $ dimvexa convert 1 L kg
 error[dimension_mismatch]: dimension mismatch: [m^3] cannot be converted to [kg]
 hint: mass and volume need a density. Define a [[bridge]] in a config file and pass --config FILE --bridge NAME (docs/adr/009-user-config.md)
 $ dimvexa convert 1 L kg --config examples/configs/water.toml --bridge water_20C
-0.9982071 kg
-note: used bridge water_20C (density 998.2071 kg/m3; air-free water, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309, recommended table for the density of water; examples/configs/water.toml:8)
+0.9982067 kg
+note: used bridge water_20C (density 998.2067 kg/m3; air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1); examples/configs/water.toml:9)
 $ dimvexa convert 1 gal_us tonne --config examples/configs/water.toml --bridge water_20C --exact
-4723281149015583/1250000000000000000 tonne
-note: used bridge water_20C (density 998.2071 kg/m3; air-free water, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309, recommended table for the density of water; examples/configs/water.toml:8)
+4723279256309691/1250000000000000000 tonne
+note: used bridge water_20C (density 998.2067 kg/m3; air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1); examples/configs/water.toml:9)
 ```
 
 What the bridge does and does not do:
@@ -242,7 +245,7 @@ bbl_oil
   factor to SI  9936705933/62500000000
   offset to SI  0/1
   source        NIST SP 811 (2008), Appendix B (barrel, petroleum: 42 gallons)
-  note          petroleum barrel = 42 US gallons
+  note          petroleum barrel = 42 US gallons (base gal_us: NIST SP 811 (2008), Appendix B (gallon, U.S. liquid = 231 in^3))
   defined in    examples/configs/oil.toml:10 (your config, not the shipped table)
 ```
 

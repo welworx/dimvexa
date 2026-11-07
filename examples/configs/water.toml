@@ -2,12 +2,13 @@
 #
 #   dimvexa convert 1 L kg --config examples/configs/water.toml --bridge water_20C
 #
-# The number is exact and applies only under the stated conditions. Change the file for
+# The number is exact and applies only under the stated conditions. 998.2067 kg/m3 is the
+# value of Tanaka's formula at 20 degC; check it against Table 1 of the paper before relying on it. Change the file for
 # another temperature or another liquid; dimvexa multiplies by what you write, nothing more.
 
 [[bridge]]
 name = "water_20C"
 kind = "density"                       # kg/m3, mass <-> volume
-value = "9982071/10000"                # 998.2071 kg/m3
-conditions = "air-free water, 20 degC (ITS-90), 101.325 kPa"
-source = "Tanaka et al., Metrologia 38 (2001) 301-309, recommended table for the density of water"
+value = "9982067/10000"                # 998.2067 kg/m3
+conditions = "air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa"
+source = "Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1)"

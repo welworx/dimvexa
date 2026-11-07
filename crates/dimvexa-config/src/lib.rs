@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! User config files for dimvexa (ADR-009): name mappings the caller chooses to apply.
+//! User config files for dimvexa (ADR-009): the names, units and constants the caller chooses
+//! to add.
 //!
 //! This crate is separate from `dimvexa-core` on purpose: the file format, the content hash
 //! and the override rules are not conversion logic. It reads no files itself and loads
@@ -7,9 +8,10 @@
 //! result with [`apply`]. The only thing it asks of the core is
 //! [`Registry::add_alias`](dimvexa_core::Registry::add_alias).
 //!
-//! A config can define **units** (`[[unit]]`: an exact multiple of an existing unit, with a
-//! source) and maps a name to an existing unit, for example `mt = "tonne"`. It never carries a
-//! factor and never redefines an existing symbol.
+//! A config has three kinds of entries. `[map]` points a name at an existing unit, for example
+//! `mt = "tonne"`, and carries no factor. `[[unit]]` defines a **unit** as an exact multiple of
+//! an existing one, with a source. Neither can redefine an existing symbol, alias or prefixed
+//! form.
 //!
 //! A config can also hold **bridges**: constants the caller supplies for a conversion the core
 //! refuses (ADR-001), such as the density of water for litres to kilograms. A bridge is an
@@ -20,7 +22,7 @@
 //! [[bridge]]
 //! name = "water_20C"
 //! kind = "density"                        # kg/m3
-//! value = "9982071/10000"
+//! value = "9982067/10000"
 //! conditions = "air-free water, 20 degC, 101.325 kPa"
 //! source = "Tanaka et al., Metrologia 38 (2001) 301"
 //! ```
@@ -39,7 +41,8 @@ use dimvexa_core::{
     is_valid_symbol,
 };
 
-/// A parsed config file: its origin, a content hash and the `[map]` entries in file order.
+/// A parsed config file: its origin, a content hash and its `[map]`, `[[unit]]` and
+/// `[[bridge]]` entries in file order.
 ///
 /// # Examples
 ///
@@ -151,10 +154,11 @@ pub struct Mapping {
 impl Config {
     /// Parses config text. `origin` names the source (a file name) in errors and listings.
     ///
-    /// Supported: comments (`#`), blank lines, one `[map]` section and
-    /// `name = "unit"` entries (bare or quoted names, basic strings with `\"` and `\\`).
-    /// Anything else, including sections this version does not read, is an error with a line
-    /// number, so a config can never be half-read.
+    /// Supported: comments (`#`), blank lines, an optional UTF-8 BOM, one `[map]` section of
+    /// `name = "unit"` entries, and `[[unit]]` and `[[bridge]]` tables of `key = "value"`
+    /// entries (bare or quoted keys, basic strings with `\"` and `\\`). Anything else,
+    /// including sections this version does not read, is an error with a line number, so a
+    /// config can never be half-read.
     ///
     /// # Errors
     ///
@@ -166,7 +170,9 @@ impl Config {
         let mut units: Vec<ConfigUnit> = Vec::new();
         let mut section = Section::None;
         let mut pending: Option<Pending> = None;
-        for (i, raw) in text.lines().enumerate() {
+        let mut seen_map = false;
+        let text_no_bom = text.strip_prefix('\u{feff}').unwrap_or(text);
+        for (i, raw) in text_no_bom.lines().enumerate() {
             let line = i.saturating_add(1);
             let bad = |message: String| Error::InvalidDefinition {
                 symbol: format!("{origin}:{line}"),
@@ -176,32 +182,36 @@ impl Config {
             if content.is_empty() {
                 continue;
             }
-            if let Some(header) = content.strip_prefix('[') {
+            if content.starts_with('[') {
                 finish_table(&mut pending, &mut bridges, &mut units, origin)?;
-                let name = header
-                    .strip_suffix(']')
-                    .ok_or_else(|| bad("unterminated section header".to_string()))?;
-                match name {
-                    "map" => section = Section::Map,
-                    "[bridge]" => {
+                let header = section_header(content)
+                    .ok_or_else(|| bad("malformed section header".to_string()))?;
+                match header {
+                    Header::Single("map") => {
+                        if seen_map {
+                            return Err(bad("the [map] section appears twice".to_string()));
+                        }
+                        seen_map = true;
+                        section = Section::Map;
+                    }
+                    Header::Double("bridge") => {
                         section = Section::Table;
                         pending = Some(Pending::new(TableKind::Bridge, line));
                     }
-                    "[unit]" => {
+                    Header::Double("unit") => {
                         section = Section::Table;
                         pending = Some(Pending::new(TableKind::Unit, line));
                     }
-                    other => {
+                    Header::Single(_) | Header::Double(_) => {
                         return Err(bad(format!(
-                            "unknown section '[{other}]': this version reads [map], [[unit]] and [[bridge]]"
+                            "unknown section '{content}': this version reads [map], [[unit]] and [[bridge]]"
                         )));
                     }
                 }
                 continue;
             }
-            let (key, value) = content
-                .split_once('=')
-                .ok_or_else(|| bad("expected name = \"value\"".to_string()))?;
+            let (key, value) =
+                split_entry(content).ok_or_else(|| bad("expected name = \"value\"".to_string()))?;
             let key = parse_key(key.trim()).map_err(&bad)?;
             let value = parse_string(value.trim()).map_err(&bad)?;
             match section {
@@ -350,6 +360,17 @@ impl Pending {
     }
 }
 
+/// Why a quoted number could not be read: too large, or not an exact number at all.
+fn number_problem(what: &str, text: &str, e: &Error) -> String {
+    if e.code() == "overflow" {
+        format!("{what} '{text}' is too large for exact arithmetic (overflow)")
+    } else {
+        format!(
+            "{what} '{text}' is not an exact number (use a fraction like 42/5 or a decimal like 8.4)"
+        )
+    }
+}
+
 /// Validates the table read so far and stores it.
 fn finish_table(
     pending: &mut Option<Pending>,
@@ -385,9 +406,9 @@ fn finish_bridge(
         }
     };
     let text = p.need("value")?;
-    let value: Ratio = text.parse().map_err(|_| {
-        format!("value '{text}' is not an exact number (use 9982071/10000 or 998.2071)")
-    })?;
+    let value: Ratio = text
+        .parse()
+        .map_err(|e| number_problem("value", &text, &e))?;
     if value.num() <= 0 {
         return Err("value must be positive".to_string());
     }
@@ -419,9 +440,9 @@ fn finish_unit(
     }
     let base = p.need("base")?;
     let text = p.need("factor")?;
-    let factor: Ratio = text.parse().map_err(|_| {
-        format!("factor '{text}' is not an exact number (use 158987294928/1000000000 or 42)")
-    })?;
+    let factor: Ratio = text
+        .parse()
+        .map_err(|e| number_problem("factor", &text, &e))?;
     if factor.num() <= 0 {
         return Err("factor must be positive".to_string());
     }
@@ -475,15 +496,14 @@ fn finish_unit(
 pub fn bridges(configs: &[Config]) -> Vec<Bridge> {
     let mut effective: Vec<Bridge> = Vec::new();
     for b in configs.iter().flat_map(Config::bridges) {
-        effective.retain(|e| e.name != b.name);
-        effective.push(b.clone());
+        upsert(&mut effective, b.clone(), |e| e.name == b.name);
     }
     effective
 }
 
 impl Bridge {
-    /// Whether converting `from` to `to` needs a density: mass to volume or back, possibly
-    /// per time (`kg/h` to `m3/h`).
+    /// Whether converting `from` to `to` needs a density: mass to volume or back, with the same
+    /// power of time on both sides (`kg/h` to `m3/h`). Nothing else does (`kg/L` does not).
     ///
     /// # Examples
     ///
@@ -543,21 +563,29 @@ enum Direction {
     MassToVolume,
 }
 
-/// The dimension of a density: kg/m^3.
-fn density_dim() -> Option<Dim> {
-    Dim::KG.checked_sub(Dim::M.checked_scale(3).ok()?).ok()
+/// Which way a density turns `from` into `to`, if it does: mass to volume or back, with the
+/// same power of time on both sides (`kg` to `m3`, `kg/h` to `m3/h`). Nothing else qualifies,
+/// not even other dimensions that happen to differ by kg/m^3 (`kg/L`, `m3/kg`, `kg/m2`).
+fn density_direction(from: Dim, to: Dim) -> Option<Direction> {
+    // Exponents of [kg, m, s, A, K, mol, cd].
+    let (f, t) = (from.exponents(), to.exponents());
+    let rest_is_empty = |e: &[i8; 7]| e.get(3..).is_some_and(|r| r.iter().all(|x| *x == 0));
+    if !rest_is_empty(&f) || !rest_is_empty(&t) || f.get(2) != t.get(2) {
+        return None;
+    }
+    match (f.get(..2)?, t.get(..2)?) {
+        ([0, 3], [1, 0]) => Some(Direction::VolumeToMass),
+        ([1, 0], [0, 3]) => Some(Direction::MassToVolume),
+        _ => None,
+    }
 }
 
-/// Which way a density turns `from` into `to`, if it does.
-fn density_direction(from: Dim, to: Dim) -> Option<Direction> {
-    let density = density_dim()?;
-    let diff = from.checked_sub(to).ok()?;
-    if diff == density {
-        Some(Direction::MassToVolume)
-    } else if diff == density.checked_neg().ok()? {
-        Some(Direction::VolumeToMass)
-    } else {
-        None
+/// Replaces the entry that `same` selects, keeping its position, or appends. An override must
+/// not move a definition behind the entries that build on it.
+fn upsert<T>(list: &mut Vec<T>, item: T, same: impl Fn(&T) -> bool) {
+    match list.iter_mut().find(|e| same(e)) {
+        Some(slot) => *slot = item,
+        None => list.push(item),
     }
 }
 
@@ -570,10 +598,12 @@ pub struct Applied {
     pub mappings: Vec<Mapping>,
 }
 
-/// Wraps any error of an entry as an `invalid_definition` at `origin:line`.
+/// Wraps any error of an entry as an `invalid_definition` at `origin:line`, naming the offender.
 fn at(origin: &str, line: usize, e: Error) -> Error {
     let message = match e {
-        Error::InvalidDefinition { message, .. } => message,
+        Error::InvalidDefinition { symbol, message } if message.contains(&symbol) => message,
+        Error::InvalidDefinition { symbol, message } => format!("'{symbol}': {message}"),
+        Error::DuplicateSymbol { symbol } => format!("'{symbol}' is already defined"),
         other => other.to_string(),
     };
     Error::InvalidDefinition {
@@ -594,15 +624,18 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
             },
         )
     };
-    if reg.get(&u.symbol).is_some() || reg.resolve_symbol(&u.symbol).is_ok() {
+    if !reg.name_is_free(&u.symbol) {
         return Err(bad(format!(
             "'{}' already means a unit and cannot be redefined",
             u.symbol
         )));
     }
-    let base = reg
-        .parse(&u.base)
-        .map_err(|e| bad(format!("base '{}': {e}", u.base)))?;
+    let base = reg.parse(&u.base).map_err(|e| {
+        bad(format!(
+            "base '{}': {e} (a base must be a table unit or a [[unit]] defined earlier; mapped names do not count)",
+            u.base
+        ))
+    })?;
     if base.kind() == Kind::AbsoluteTemperature || !base.offset().is_zero() {
         return Err(bad(format!(
             "base '{}' is a temperature point or has an offset; only linear units can be a base",
@@ -613,11 +646,16 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
         .factor()
         .checked_mul(u.factor)
         .map_err(|e| bad(format!("{e}")))?;
-    let note = if u.note.is_empty() {
+    // The base's own citation stays attached, so the chain of sources is not cut.
+    let base_sources = base.sources().join("; ");
+    let mut note = if u.note.is_empty() {
         format!("user unit: 1 {} = {} {}", u.symbol, u.factor, u.base)
     } else {
         u.note.clone()
     };
+    if !base_sources.is_empty() {
+        note = format!("{note} (base {}: {base_sources})", u.base);
+    }
     let unit = Unit::new(&u.symbol, base.dim(), base.kind(), factor, Ratio::ZERO)
         .map_err(|e| at(&u.origin, u.line, e))?
         .with_prefixes(u.prefixes)
@@ -667,13 +705,11 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
 pub fn apply(reg: &mut Registry, configs: &[Config]) -> Result<Applied> {
     let mut units: Vec<ConfigUnit> = Vec::new();
     for u in configs.iter().flat_map(Config::units) {
-        units.retain(|e| e.symbol != u.symbol);
-        units.push(u.clone());
+        upsert(&mut units, u.clone(), |e| e.symbol == u.symbol);
     }
     let mut mappings: Vec<Mapping> = Vec::new();
     for m in configs.iter().flat_map(Config::mappings) {
-        mappings.retain(|e| e.name != m.name);
-        mappings.push(m.clone());
+        upsert(&mut mappings, m.clone(), |e| e.name == m.name);
     }
     let mut staged = reg.clone();
     for u in &units {
@@ -686,6 +722,44 @@ pub fn apply(reg: &mut Registry, configs: &[Config]) -> Result<Applied> {
     }
     *reg = staged;
     Ok(Applied { units, mappings })
+}
+
+/// A section header: `[name]` or `[[name]]`, with the name trimmed.
+enum Header<'a> {
+    Single(&'a str),
+    Double(&'a str),
+}
+
+/// Reads a header line; `None` if it is not exactly a header (text after it, missing bracket).
+fn section_header(content: &str) -> Option<Header<'_>> {
+    if let Some(inner) = content.strip_prefix("[[") {
+        return Some(Header::Double(inner.strip_suffix("]]")?.trim()));
+    }
+    Some(Header::Single(
+        content.strip_prefix('[')?.strip_suffix(']')?.trim(),
+    ))
+}
+
+/// Splits `key = value` at the first `=` outside a quoted key.
+fn split_entry(content: &str) -> Option<(&str, &str)> {
+    if content.starts_with('"') {
+        let (mut escaped, mut close) = (false, None);
+        for (i, c) in content.char_indices().skip(1) {
+            match c {
+                _ if escaped => escaped = false,
+                '\\' => escaped = true,
+                '"' => {
+                    close = Some(i);
+                    break;
+                }
+                _ => {}
+            }
+        }
+        let end = close?.checked_add(1)?;
+        let (key, rest) = (content.get(..end)?, content.get(end..)?);
+        return Some((key, rest.trim_start().strip_prefix('=')?));
+    }
+    content.split_once('=')
 }
 
 /// Removes a `#` comment that is not inside a quoted string.
@@ -803,7 +877,7 @@ mod tests {
             ("[map]\nmt = \"t\"\nmt = \"u\"\n", "mapped twice"),
             ("[unit]\n", "reads [map], [[unit]] and [[bridge]]"),
             ("[[map]]\n", "reads [map], [[unit]] and [[bridge]]"),
-            ("[map\n", "unterminated"),
+            ("[map\n", "malformed section header"),
             ("[map]\nm t = \"tonne\"\n", "not a bare name"),
             ("[map]\nmt = \"a\\nb\"\n", "unsupported escape"),
         ] {
@@ -815,7 +889,7 @@ mod tests {
         }
     }
 
-    const WATER: &str = "[[bridge]]\nname = \"water_20C\"\nkind = \"density\"\nvalue = \"9982071/10000\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\nsource = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
+    const WATER: &str = "[[bridge]]\nname = \"water_20C\"\nkind = \"density\"\nvalue = \"9982067/10000\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\nsource = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
 
     #[test]
     fn parses_a_bridge_with_its_conditions_and_source() {
@@ -824,12 +898,12 @@ mod tests {
         let b = &cfg.bridges()[0];
         assert_eq!(b.name, "water_20C");
         assert_eq!(b.kind, BridgeKind::Density);
-        assert_eq!(b.value, Ratio::new(9_982_071, 10_000).unwrap());
+        assert_eq!(b.value, Ratio::new(9_982_067, 10_000).unwrap());
         assert_eq!(b.conditions, "air-free water, 20 degC, 101.325 kPa");
         assert!(b.source.contains("Tanaka"));
         assert_eq!((b.origin.as_str(), b.line), ("w.toml", 4));
         // A decimal value is the same exact number.
-        let d = Config::parse(&WATER.replace("9982071/10000", "998.2071"), "w").unwrap();
+        let d = Config::parse(&WATER.replace("9982067/10000", "998.2067"), "w").unwrap();
         assert_eq!(d.bridges()[0].value, b.value);
     }
 
@@ -855,10 +929,10 @@ mod tests {
                 WATER.replace("\"density\"", "\"molar_mass\""),
                 "only 'density'",
             ),
-            (WATER.replace("9982071/10000", "0"), "must be positive"),
-            (WATER.replace("9982071/10000", "-5"), "must be positive"),
+            (WATER.replace("9982067/10000", "0"), "must be positive"),
+            (WATER.replace("9982067/10000", "-5"), "must be positive"),
             (
-                WATER.replace("9982071/10000", "about 1000"),
+                WATER.replace("9982067/10000", "about 1000"),
                 "not an exact number",
             ),
             (
@@ -883,7 +957,7 @@ mod tests {
     #[test]
     fn a_later_config_overrides_a_bridge_of_the_same_name() {
         let a = Config::parse(WATER, "a.toml").unwrap();
-        let b = Config::parse(&WATER.replace("9982071/10000", "1000"), "b.toml").unwrap();
+        let b = Config::parse(&WATER.replace("9982067/10000", "1000"), "b.toml").unwrap();
         let effective = bridges(&[a, b]);
         assert_eq!(effective.len(), 1);
         assert_eq!(effective[0].value, Ratio::from_int(1000));
@@ -959,6 +1033,48 @@ mod tests {
             let msg = Config::parse(&text, "o.toml").unwrap_err().to_string();
             assert!(msg.contains(needle), "{needle}: {msg}");
         }
+    }
+
+    #[test]
+    fn header_forms_bom_and_quoted_keys_with_an_equals_sign() {
+        // A BOM, spaces inside the brackets and CRLF line ends are fine.
+        let cfg = Config::parse("\u{feff}[ map ]\r\nmt = \"tonne\"\r\n", "b.toml").unwrap();
+        assert_eq!(cfg.mappings()[0].name, "mt");
+        let cfg = Config::parse("[map]\n\"a=b\" = \"t\"\n\"q\\\"=\" = \"u\"\n", "q").unwrap();
+        let names: Vec<&str> = cfg.mappings().iter().map(|m| m.name.as_str()).collect();
+        assert_eq!(names, ["a=b", "q\"="]);
+        let cfg = Config::parse(&WATER.replace("[[bridge]]", "[[ bridge ]]"), "w").unwrap();
+        assert_eq!(cfg.bridges().len(), 1);
+    }
+
+    #[test]
+    fn malformed_headers_and_repeated_sections_are_refused() {
+        for (text, needle) in [
+            ("[[bridge]] trailing\n", "malformed section header"),
+            ("[[bridge]\n", "malformed section header"),
+            ("[map\n", "malformed section header"),
+            ("[map]\n[map]\n", "appears twice"),
+            ("[[map]]\n", "unknown section"),
+            ("[map]\n\"unterminated = \"x\"\n", "expected name"),
+        ] {
+            let msg = Config::parse(text, "h.toml").unwrap_err().to_string();
+            assert!(msg.contains(needle), "{text:?} -> {msg}");
+        }
+    }
+
+    #[test]
+    fn numbers_that_overflow_say_so() {
+        let big = BARREL.replace("\"42\"", "\"1e40\"");
+        let msg = Config::parse(&big, "o").unwrap_err().to_string();
+        assert!(msg.contains("too large") && msg.contains("'1e40'"), "{msg}");
+        let msg = Config::parse(&WATER.replace("9982067/10000", "1e40"), "w")
+            .unwrap_err()
+            .to_string();
+        assert!(msg.contains("too large"), "{msg}");
+        let msg = Config::parse(&BARREL.replace("\"42\"", "\"lots\""), "o")
+            .unwrap_err()
+            .to_string();
+        assert!(msg.contains("not an exact number"), "{msg}");
     }
 
     #[test]
