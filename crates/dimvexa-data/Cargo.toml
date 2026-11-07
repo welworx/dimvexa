@@ -13,6 +13,16 @@ authors.workspace = true
 keywords.workspace = true
 categories.workspace = true
 build = "build.rs"
+# Everything the crate needs is inside the crate directory, so the published package builds
+# on its own: the unit tables, the golden vectors, the build script and its tiny TOML reader.
+include = [
+    "/src/**",
+    "/tests/**",
+    "/tooling/**",
+    "/data/**",
+    "/build.rs",
+    "/README.md",
+]
 
 [dependencies]
 dimvexa-core = { workspace = true }

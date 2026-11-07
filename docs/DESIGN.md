@@ -121,7 +121,7 @@ dimvexa/
     python/
     wasm/
     excel/            # optional
-  data/               # unit tables (TOML)
+  crates/dimvexa-data/data/   # unit tables (TOML), inside the crate so it can be published
   benches/
   tests/
   docs/

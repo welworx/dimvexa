@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! Golden-vector tests: every vector in `data/vectors/*.toml` must reproduce exactly.
+//! Golden-vector tests: every vector in `crates/dimvexa-data/data/vectors/*.toml` must reproduce exactly.
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,
@@ -20,7 +20,7 @@ use dimvexa_core::Ratio;
 use toml_lite::Table;
 
 fn data_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../data")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data")
 }
 
 fn load(dir: &str) -> Vec<Table> {

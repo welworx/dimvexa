@@ -33,7 +33,7 @@ follows the same rule and drives the changelog.
 
 ## Adding or changing a unit
 
-Units are data (`data/units/*.toml`). Rules:
+Units are data (`crates/dimvexa-data/data/units/*.toml`). Rules:
 
 - Take the factor from a **primary definition** (BIPM SI Brochure, NIST SP 811 or
   Handbook 44/130, a statute or treaty). Write the definition chain in `note`.
@@ -41,7 +41,7 @@ Units are data (`data/units/*.toml`). Rules:
 - Give an exact rational factor `"num/den"` in lowest terms and mark `exactness` as
   `defined` or `measured`.
 - Ambiguous names (`ton`, `gal`, `oz`, ...) never become unit symbols; add explicit variants.
-- Add at least one golden vector in `data/vectors/` with its own citation.
+- Add at least one golden vector in `crates/dimvexa-data/data/vectors/` with its own citation.
 - Run `cargo xtask validate-data`.
 
 ## No equations, no guessing
