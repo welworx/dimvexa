@@ -77,6 +77,11 @@ case record stores the string actually used, so a wrong mapping is visible and c
 
 ## Running it
 
+One command does everything below (installs the competitors into `benchmarks/python/.venv` and
+`benchmarks/node/node_modules`, builds the runners, runs them one after another, regenerates the
+report): `benchmarks/run_all.sh`. Use `--quick` for a smoke test that writes to a temporary
+directory, and `--skip-install` to reuse an existing install. The individual steps:
+
 ```console
 python3 benchmarks/tools/gen_corpus.py --check       # corpus is current
 python3 -I benchmarks/tools/test_report.py           # tests of the corpus and the report generator
