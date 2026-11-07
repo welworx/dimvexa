@@ -12,6 +12,7 @@ symbol = "bbl_oil"
 base = "gal_us"
 factor = "42"
 exactness = "defined"
-prefixes = "si"                        # kbbl_oil, Mbbl_oil, ...
+# kbbl_oil, Mbbl_oil, ...
+prefixes = "si"
 source = "NIST SP 811 (2008), Appendix B (barrel, petroleum: 42 gallons)"
 note = "petroleum barrel = 42 US gallons"

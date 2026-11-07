@@ -464,16 +464,20 @@ fn conversion_laws_hold_exactly_across_the_seed_table() {
         );
         let x = gen_::small_ratio(&mut rng);
         let ab = reg.conversion(a, b).unwrap();
-        let ba = reg.conversion(b, a).unwrap();
+        let b_to_a = reg.conversion(b, a).unwrap();
         let bc = reg.conversion(b, c).unwrap();
         let ac = reg.conversion(a, c).unwrap();
         let attempt = || -> Result<(), Error> {
             // round trip a -> b -> a is the identity, exactly
-            assert_eq!(ba.apply_exact(ab.apply_exact(x)?)?, x, "{a} -> {b} -> {a}");
+            assert_eq!(
+                b_to_a.apply_exact(ab.apply_exact(x)?)?,
+                x,
+                "{a} -> {b} -> {a}"
+            );
             // the inverse conversion agrees with the explicitly prepared reverse
             assert_eq!(
                 ab.inverse()?.apply_exact(x)?,
-                ba.apply_exact(x)?,
+                b_to_a.apply_exact(x)?,
                 "inverse of {a}->{b}"
             );
             // composition: (a -> b) then (b -> c) == (a -> c)

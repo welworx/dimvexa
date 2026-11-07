@@ -14,8 +14,20 @@ msrv = "1.85"
 
 # Words that are not code in documentation.
 doc-valid-idents = [
-    "BIPM", "CODATA", "NIST", "IEEE", "ISO", "IEC", "UCUM", "KMW", "TOML", "GitHub",
-    "Dimvexa", "OpenAPI", "WebAssembly", "..",
+    "BIPM",
+    "CODATA",
+    "NIST",
+    "IEEE",
+    "ISO",
+    "IEC",
+    "UCUM",
+    "KMW",
+    "TOML",
+    "GitHub",
+    "Dimvexa",
+    "OpenAPI",
+    "WebAssembly",
+    "..",
 ]
 
 # Escape hatches that bypass the error handling above.

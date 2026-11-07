@@ -189,8 +189,10 @@ your own config, and select it by name:
 # examples/configs/water.toml
 [[bridge]]
 name = "water_20C"
-kind = "density"                       # kg/m3, mass <-> volume
-value = "9982067/10000"                # 998.2067 kg/m3
+# kg/m3, mass <-> volume
+kind = "density"
+# 998.2067 kg/m3
+value = "9982067/10000"
 conditions = "air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa"
 source = "Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1)"
 ```
@@ -231,7 +233,8 @@ symbol = "bbl_oil"
 base = "gal_us"
 factor = "42"
 exactness = "defined"
-prefixes = "si"                        # kbbl_oil, Mbbl_oil, ...
+# kbbl_oil, Mbbl_oil, ...
+prefixes = "si"
 source = "NIST SP 811 (2008), Appendix B (barrel, petroleum: 42 gallons)"
 note = "petroleum barrel = 42 US gallons"
 ```

@@ -8,7 +8,9 @@
 
 [[bridge]]
 name = "water_20C"
-kind = "density"                       # kg/m3, mass <-> volume
-value = "9982067/10000"                # 998.2067 kg/m3
+# kg/m3, mass <-> volume
+kind = "density"
+# 998.2067 kg/m3
+value = "9982067/10000"
 conditions = "air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa"
 source = "Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1)"
