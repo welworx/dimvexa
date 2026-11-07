@@ -1,0 +1,2794 @@
+{
+ "corpus_id": "510101612da39d1e",
+ "date_utc": "2026-11-07T18:55:53Z",
+ "fixture": false,
+ "kind": "library",
+ "library": {
+  "name": "js-quantities",
+  "version": "1.8.0"
+ },
+ "lockfile": "unknown",
+ "machine": {
+  "arch": "x64",
+  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "governor": null,
+  "logical_cores": 4,
+  "os": "Linux 6.18.44-fc-v310"
+ },
+ "modes": {
+  "plain": {
+   "description": "Qty(x, from).to(to).scalar per value",
+   "idiomatic": "plain"
+  },
+  "swift": {
+   "description": "Qty.swiftConverter(from, to) once, then call it per value",
+   "idiomatic": "fast"
+  }
+ },
+ "parameters": {
+  "batch_sizes": [
+   1000,
+   100000,
+   1000000
+  ],
+  "cold_samples": 5,
+  "min_sample_s": 0.05,
+  "quick": false,
+  "samples": 15,
+  "timer": "process.hrtime.bigint",
+  "tolerance_ulp": 4,
+  "warmup_s": 0.3
+ },
+ "performance": {
+  "plain": {
+   "affine_temperature": {
+    "batch": {},
+    "errors": {
+     "batch1000": "QtyError: Temperatures must not be less than absolute zero"
+    },
+    "loop_overhead": {
+     "mad": 0.042598187923431396,
+     "max": 2.3652383685112,
+     "median": 2.2214547991752625,
+     "min": 2.116514265537262,
+     "raw": [
+      2.1655710339546204,
+      2.116514265537262,
+      2.3652383685112,
+      2.26875901222229,
+      2.267225921154022,
+      2.209826171398163,
+      2.292336404323578,
+      2.264052987098694,
+      2.2214547991752625,
+      2.208661437034607,
+      2.1947956681251526,
+      2.28383207321167,
+      2.221468210220337,
+      2.216193437576294,
+      2.185291588306427
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 40.0384521484375,
+     "max": 5491.892639160156,
+     "median": 5367.1126708984375,
+     "min": 4346.5999755859375,
+     "raw": [
+      4346.5999755859375,
+      4483.1224365234375,
+      4520.689880371094,
+      5110.419860839844,
+      4903.7249755859375,
+      5491.892639160156,
+      5418.522521972656,
+      5407.151123046875,
+      5373.895324707031,
+      5386.378723144531,
+      5367.1126708984375,
+      5372.966979980469,
+      5365.176513671875,
+      5378.234802246094,
+      5365.8046875
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 9634,
+     "max": 50435,
+     "median": 22910,
+     "min": 13276,
+     "raw": [
+      42192,
+      19206,
+      22910,
+      13276,
+      50435
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 11.42755126953125,
+     "max": 6093.7344970703125,
+     "median": 5350.314880371094,
+     "min": 5315.193176269531,
+     "raw": [
+      5350.492126464844,
+      6093.7344970703125,
+      5462.6031494140625,
+      5394.952575683594,
+      5338.571228027344,
+      5350.314880371094,
+      5344.38330078125,
+      5315.193176269531,
+      5549.648254394531,
+      5327.68701171875,
+      5344.286865234375,
+      5360.914306640625,
+      5352.419921875,
+      5343.52880859375,
+      5338.8873291015625
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 81.8302001953125,
+     "max": 6151.2794189453125,
+     "median": 5314.7137451171875,
+     "min": 5170.686706542969,
+     "raw": [
+      5306.668518066406,
+      5684.893371582031,
+      5761.229064941406,
+      5191.5067138671875,
+      6151.2794189453125,
+      5314.7137451171875,
+      5273.919738769531,
+      5285.723205566406,
+      5232.883544921875,
+      5182.582580566406,
+      5170.686706542969,
+      5797.9764404296875,
+      5339.421691894531,
+      5390.4677734375,
+      5374.103332519531
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   },
+   "compound_cp": {
+    "error": "QtyError: Unit not recognized",
+    "unsupported": true
+   },
+   "linear_pressure": {
+    "batch": {
+     "1000": {
+      "mad": 26.21900000000005,
+      "max": 5920.841,
+      "median": 4346.68,
+      "min": 4240.242,
+      "raw": [
+       4304.177,
+       4381.271,
+       4618.219,
+       4355.388,
+       4320.461,
+       4350.718,
+       4313.007,
+       4357.149,
+       4342.924,
+       4341.08,
+       4240.242,
+       4346.68,
+       4334.658,
+       4400.675,
+       5920.841
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 196.16160000000036,
+      "max": 5926.98278,
+      "median": 5623.57657,
+      "min": 4601.03839,
+      "raw": [
+       4601.03839,
+       4713.21867,
+       4938.51087,
+       5489.56043,
+       5796.6357,
+       5881.41303,
+       5623.57657,
+       5720.56909,
+       5926.98278,
+       5578.24132,
+       5700.16434,
+       5427.41497,
+       4613.66841,
+       5914.29249,
+       5643.68987
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 57.185920000000806,
+      "max": 5651.139228,
+      "median": 5388.510503,
+      "min": 5331.324583,
+      "raw": [
+       5388.510503,
+       5331.324583,
+       5651.139228,
+       5332.903497,
+       5462.88937
+      ],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.06702017784118652,
+     "max": 5.536346852779388,
+     "median": 2.7057105898857117,
+     "min": 2.4228360056877136,
+     "raw": [
+      2.8801695704460144,
+      2.6833489537239075,
+      2.7057105898857117,
+      2.8986302614212036,
+      2.4228360056877136,
+      2.698336124420166,
+      3.165686547756195,
+      2.7226520776748657,
+      2.697776734828949,
+      5.485094785690308,
+      5.536346852779388,
+      4.918802320957184,
+      2.6403766870498657,
+      2.644882082939148,
+      2.638690412044525
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 254.9625244140625,
+     "max": 6382.7916259765625,
+     "median": 4466.479736328125,
+     "min": 4192.0557861328125,
+     "raw": [
+      5379.195556640625,
+      5392.27294921875,
+      5448.609619140625,
+      5053.805114746094,
+      6382.7916259765625,
+      5047.4361572265625,
+      4211.5172119140625,
+      4468.7032470703125,
+      4229.397155761719,
+      4293.728454589844,
+      4466.479736328125,
+      4234.6639404296875,
+      4192.0557861328125,
+      4212.721130371094,
+      4269.0875244140625
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 1025,
+     "max": 55298,
+     "median": 16242,
+     "min": 15217,
+     "raw": [
+      55298,
+      29177,
+      16242,
+      15888,
+      15217
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 424.47149658203125,
+     "max": 6613.690856933594,
+     "median": 5839.138000488281,
+     "min": 4620.72265625,
+     "raw": [
+      6613.690856933594,
+      6407.0833740234375,
+      5870.846984863281,
+      5864.314270019531,
+      5839.138000488281,
+      5923.959289550781,
+      5774.4498291015625,
+      5865.8577880859375,
+      5891.571594238281,
+      5414.66650390625,
+      4778.233825683594,
+      4743.029052734375,
+      4620.72265625,
+      4755.92041015625,
+      4775.356201171875
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 477.1171875,
+     "max": 6371.665588378906,
+     "median": 5291.33837890625,
+     "min": 4206.588073730469,
+     "raw": [
+      5291.33837890625,
+      5541.937744140625,
+      5388.8349609375,
+      6371.665588378906,
+      5768.45556640625,
+      5107.6768798828125,
+      4444.352600097656,
+      4236.292297363281,
+      4206.588073730469,
+      4295.658142089844,
+      4222.9927978515625,
+      4406.7452392578125,
+      5349.060241699219,
+      5524.405334472656,
+      5510.2579345703125
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   },
+   "linear_speed": {
+    "batch": {
+     "1000": {
+      "mad": 99.86499999999978,
+      "max": 5187.877,
+      "median": 4900.456,
+      "min": 4690.422,
+      "raw": [
+       4906.218,
+       4901.906,
+       4790.433,
+       5012.652,
+       4995.64,
+       4825.358,
+       4704.774,
+       5104.25,
+       4807.089,
+       4900.456,
+       4929.826,
+       4800.591,
+       4690.422,
+       4780.756,
+       5187.877
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 507.8516900000004,
+      "max": 5699.61609,
+      "median": 5065.60635,
+      "min": 3785.451,
+      "raw": [
+       5073.38215,
+       5299.75028,
+       5699.61609,
+       5651.01631,
+       5065.60635,
+       5573.45804,
+       5067.95958,
+       5415.5368,
+       4146.93987,
+       3785.451,
+       4454.03345,
+       4949.58273,
+       4821.9699,
+       4185.49616,
+       4374.33617
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 64.34818499999983,
+      "max": 4783.245652,
+      "median": 4718.897467,
+      "min": 4550.487773,
+      "raw": [
+       4718.897467,
+       4559.226206,
+       4550.487773,
+       4783.245652,
+       4745.988403
+      ],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.08882129192352295,
+     "max": 4.050426244735718,
+     "median": 2.3961517810821533,
+     "min": 2.1751754879951477,
+     "raw": [
+      2.9769167304039,
+      3.0707446932792664,
+      3.0686047077178955,
+      4.050426244735718,
+      2.73767226934433,
+      2.471268355846405,
+      2.3073304891586304,
+      2.3660966753959656,
+      2.6032654643058777,
+      2.3961517810821533,
+      2.381591022014618,
+      2.318962037563324,
+      2.3834537863731384,
+      2.3196216821670532,
+      2.1751754879951477
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 155.12158203125,
+     "max": 5582.438171386719,
+     "median": 4761.120788574219,
+     "min": 4497.506591796875,
+     "raw": [
+      4497.506591796875,
+      4949.4053955078125,
+      5582.438171386719,
+      5511.637268066406,
+      5546.981201171875,
+      4916.242370605469,
+      5046.714111328125,
+      4929.185302734375,
+      4630.3211669921875,
+      4721.186462402344,
+      4761.120788574219,
+      4710.635314941406,
+      4739.249450683594,
+      4734.329284667969,
+      4730.534118652344
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 30733,
+     "max": 413286,
+     "median": 79960,
+     "min": 38376,
+     "raw": [
+      413286,
+      49227,
+      79960,
+      100936,
+      38376
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 531.6832885742188,
+     "max": 8298.151794433594,
+     "median": 6159.1295166015625,
+     "min": 4809.530090332031,
+     "raw": [
+      7051.39990234375,
+      7347.64794921875,
+      8298.151794433594,
+      6690.812805175781,
+      6271.4425048828125,
+      6106.279968261719,
+      6182.875183105469,
+      6439.495788574219,
+      6159.1295166015625,
+      6128.810791015625,
+      5860.844177246094,
+      4809.530090332031,
+      4911.062805175781,
+      5604.276062011719,
+      5385.707763671875
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 228.27032470703125,
+     "max": 5110.4749755859375,
+     "median": 4583.791748046875,
+     "min": 3733.7368774414062,
+     "raw": [
+      4883.899597167969,
+      4881.111999511719,
+      4012.8302001953125,
+      3733.7368774414062,
+      3926.9713134765625,
+      4812.062072753906,
+      4599.7860107421875,
+      4535.30126953125,
+      4488.399719238281,
+      4720.7850341796875,
+      4583.791748046875,
+      5110.4749755859375,
+      4487.9732666015625,
+      3907.9020385742188,
+      4620.6932373046875
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   }
+  },
+  "swift": {
+   "affine_temperature": {
+    "batch": {},
+    "errors": {
+     "batch1000": "QtyError: Temperatures must not be less than absolute zero"
+    },
+    "loop_overhead": {
+     "mad": 0.006708800792694092,
+     "max": 2.108247995376587,
+     "median": 2.0791897773742676,
+     "min": 2.064390182495117,
+     "raw": [
+      2.0765491724014282,
+      2.087393045425415,
+      2.071612775325775,
+      2.071568191051483,
+      2.0791897773742676,
+      2.0822843313217163,
+      2.0837433338165283,
+      2.098102629184723,
+      2.080446243286133,
+      2.0724809765815735,
+      2.064390182495117,
+      2.10352224111557,
+      2.108247995376587,
+      2.0734742879867554,
+      2.075324594974518
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 80.70013427734375,
+     "max": 4581.085693359375,
+     "median": 4453.6031494140625,
+     "min": 4287.845886230469,
+     "raw": [
+      4296.199401855469,
+      4319.6455078125,
+      4287.845886230469,
+      4432.388122558594,
+      4505.528869628906,
+      4581.085693359375,
+      4473.040588378906,
+      4467.776306152344,
+      4458.32421875,
+      4537.2841796875,
+      4372.903015136719,
+      4310.6497802734375,
+      4453.6031494140625,
+      4474.220764160156,
+      4363.4576416015625
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 394,
+     "max": 10486,
+     "median": 4542,
+     "min": 3839,
+     "raw": [
+      10486,
+      4651,
+      4542,
+      4148,
+      3839
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 122.9197998046875,
+     "max": 4982.0863037109375,
+     "median": 3115.1633911132812,
+     "min": 2978.8651123046875,
+     "raw": [
+      3055.5034790039062,
+      3145.4365844726562,
+      3081.717041015625,
+      3109.9002075195312,
+      3351.8818359375,
+      3405.7778930664062,
+      3113.0427856445312,
+      3313.8444213867188,
+      3834.6049194335938,
+      3811.0604248046875,
+      4982.0863037109375,
+      3115.1633911132812,
+      3047.0745849609375,
+      2992.2435913085938,
+      2978.8651123046875
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 684.4044189453125,
+     "max": 7472.6502685546875,
+     "median": 5647.5010986328125,
+     "min": 3920.4449462890625,
+     "raw": [
+      3953.8345947265625,
+      5463.6187744140625,
+      7169.658142089844,
+      5725.867614746094,
+      7472.6502685546875,
+      6331.905517578125,
+      5730.003173828125,
+      5108.650390625,
+      5690.6392822265625,
+      5647.5010986328125,
+      5679.10498046875,
+      4577.3814697265625,
+      3966.9534301757812,
+      3920.4449462890625,
+      4318.733825683594
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   },
+   "compound_cp": {
+    "error": "QtyError: Unit not recognized",
+    "unsupported": true
+   },
+   "linear_pressure": {
+    "batch": {
+     "1000": {
+      "mad": 0.001000000000000112,
+      "max": 1.351,
+      "median": 1.292,
+      "min": 1.289,
+      "raw": [
+       1.351,
+       1.295,
+       1.292,
+       1.293,
+       1.289,
+       1.292,
+       1.29,
+       1.292,
+       1.291,
+       1.293,
+       1.29,
+       1.293,
+       1.292,
+       1.29,
+       1.29
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 0.005309999999999926,
+      "max": 1.78674,
+      "median": 1.23105,
+      "min": 1.22574,
+      "raw": [
+       1.41862,
+       1.78674,
+       1.29611,
+       1.22832,
+       1.22766,
+       1.31673,
+       1.23105,
+       1.22574,
+       1.22732,
+       1.61478,
+       1.24566,
+       1.22752,
+       1.22653,
+       1.2993,
+       1.22965
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 0.04083700000000001,
+      "max": 1.862744,
+      "median": 1.487074,
+      "min": 1.403479,
+      "raw": [
+       1.862744,
+       1.487074,
+       1.509836,
+       1.446237,
+       1.403479
+      ],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.03471642732620239,
+     "max": 4.253181159496307,
+     "median": 2.1245118975639343,
+     "min": 2.08710777759552,
+     "raw": [
+      2.4587260484695435,
+      2.1245118975639343,
+      2.1844521164894104,
+      2.1037949919700623,
+      2.0912193059921265,
+      2.133471190929413,
+      2.115982472896576,
+      2.105253756046295,
+      2.1113999485969543,
+      2.089795470237732,
+      2.08710777759552,
+      2.4715449810028076,
+      3.9252514839172363,
+      4.251763999462128,
+      4.253181159496307
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 182.43902587890625,
+     "max": 5864.9737548828125,
+     "median": 5617.862243652344,
+     "min": 4583.1441650390625,
+     "raw": [
+      5749.031188964844,
+      5788.36376953125,
+      5800.30126953125,
+      5609.922607421875,
+      5617.862243652344,
+      5741.353942871094,
+      5689.254638671875,
+      5680.04736328125,
+      5325.8902587890625,
+      4696.1259765625,
+      4822.6778564453125,
+      4626.63623046875,
+      5864.9737548828125,
+      4583.1441650390625,
+      4718.5537109375
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 1969,
+     "max": 23652,
+     "median": 6538,
+     "min": 4569,
+     "raw": [
+      23652,
+      6538,
+      8973,
+      6057,
+      4569
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 158.6368408203125,
+     "max": 4212.604187011719,
+     "median": 3997.7583618164062,
+     "min": 3037.0989990234375,
+     "raw": [
+      3037.0989990234375,
+      3098.6582641601562,
+      3167.8933715820312,
+      3110.8002319335938,
+      3359.4921875,
+      3110.9385986328125,
+      3997.7583618164062,
+      4212.604187011719,
+      3991.9851684570312,
+      4093.13720703125,
+      4156.395202636719,
+      4123.900085449219,
+      4079.07470703125,
+      4050.3392944335938,
+      4037.0613403320312
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 0.15308785438537598,
+     "max": 18.046730279922485,
+     "median": 9.512441873550415,
+     "min": 9.207385063171387,
+     "raw": [
+      18.046730279922485,
+      9.207385063171387,
+      9.850029945373535,
+      9.447041034698486,
+      9.963350296020508,
+      9.4542875289917,
+      9.46670150756836,
+      9.510154485702515,
+      9.512441873550415,
+      9.665529727935791,
+      9.357203722000122,
+      9.5834059715271,
+      9.5691499710083,
+      9.329152584075928,
+      9.701844453811646
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   },
+   "linear_speed": {
+    "batch": {
+     "1000": {
+      "mad": 0.001000000000000112,
+      "max": 1.418,
+      "median": 1.272,
+      "min": 1.269,
+      "raw": [
+       1.418,
+       1.291,
+       1.276,
+       1.272,
+       1.274,
+       1.271,
+       1.27,
+       1.272,
+       1.273,
+       1.272,
+       1.271,
+       1.272,
+       1.269,
+       1.271,
+       1.273
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 0.006000000000000005,
+      "max": 1.46699,
+      "median": 1.23078,
+      "min": 1.22422,
+      "raw": [
+       1.23957,
+       1.23245,
+       1.22511,
+       1.46699,
+       1.23142,
+       1.22463,
+       1.29315,
+       1.23078,
+       1.22663,
+       1.22638,
+       1.22422,
+       1.45096,
+       1.22847,
+       1.22478,
+       1.2979
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 0.03507400000000005,
+      "max": 1.496467,
+      "median": 1.446112,
+      "min": 1.406897,
+      "raw": [
+       1.406897,
+       1.47763,
+       1.411038,
+       1.446112,
+       1.496467
+      ],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.35345351696014404,
+     "max": 4.682210683822632,
+     "median": 2.6320959329605103,
+     "min": 2.0985090136528015,
+     "raw": [
+      3.245188355445862,
+      4.59711891412735,
+      4.682210683822632,
+      2.850609302520752,
+      2.3042006492614746,
+      2.6320959329605103,
+      2.68838894367218,
+      2.278642416000366,
+      2.1846187114715576,
+      2.1076878905296326,
+      2.109934628009796,
+      2.0985090136528015,
+      2.4702510237693787,
+      2.6901052594184875,
+      2.6845056414604187
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 60.343505859375,
+     "max": 5643.58740234375,
+     "median": 5043.6402587890625,
+     "min": 4942.2969970703125,
+     "raw": [
+      5337.39404296875,
+      5169.085693359375,
+      5146.6304931640625,
+      5063.3809814453125,
+      5048.716796875,
+      5009.6058349609375,
+      5643.58740234375,
+      5001.9444580078125,
+      5043.6402587890625,
+      5007.0362548828125,
+      4944.771484375,
+      4983.2967529296875,
+      5198.4700927734375,
+      5002.667236328125,
+      4942.2969970703125
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 598,
+     "max": 13303,
+     "median": 6386,
+     "min": 5788,
+     "raw": [
+      13303,
+      7613,
+      6386,
+      6031,
+      5788
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 42.43328857421875,
+     "max": 4323.089599609375,
+     "median": 3966.6366577148438,
+     "min": 3112.7176513671875,
+     "raw": [
+      3916.83447265625,
+      3951.6956787109375,
+      3924.203369140625,
+      3935.9830322265625,
+      3961.1607666015625,
+      3988.0614013671875,
+      4024.6133422851562,
+      4042.5591430664062,
+      3984.24560546875,
+      4013.54150390625,
+      3938.3405151367188,
+      3966.6366577148438,
+      4323.089599609375,
+      4010.756591796875,
+      3112.7176513671875
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 0.26186323165893555,
+     "max": 8.331803619861603,
+     "median": 6.2066802978515625,
+     "min": 5.761208653450012,
+     "raw": [
+      5.761208653450012,
+      6.021235704421997,
+      6.02003014087677,
+      8.331803619861603,
+      6.632784962654114,
+      5.970324218273163,
+      5.966255784034729,
+      6.17166543006897,
+      6.2066802978515625,
+      6.468543529510498,
+      7.9171804785728455,
+      6.959125876426697,
+      7.404702663421631,
+      6.645462512969971,
+      6.065662503242493
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   }
+  }
+ },
+ "runtime": {
+  "language": "javascript",
+  "name": "node",
+  "version": "v22.23.4"
+ },
+ "schema": "dimvexa.bench.result/1",
+ "semantics": {
+  "plain": {
+   "accuracy": {
+    "answered": 112,
+    "bit_identical": 79,
+    "cases": 164,
+    "max_ulp": 3535240928,
+    "median_ulp": 0,
+    "over_1_ulp": 29,
+    "tolerance_ulp": 4,
+    "unsupported": 52,
+    "worst": [
+     {
+      "got": "0.9997402",
+      "id": "hw-037",
+      "ulp": 3535240928,
+      "want": "0.9997398075094124"
+     },
+     {
+      "got": "14.695943005992959",
+      "id": "hw-042",
+      "ulp": 3247951291,
+      "want": "14.695948775513449"
+     },
+     {
+      "got": "14.50376807894691",
+      "id": "hw-038",
+      "ulp": 3205478699,
+      "want": "14.50377377302092"
+     },
+     {
+      "got": "6894.76",
+      "id": "dv-common-008",
+      "ulp": 2976192861,
+      "want": "6894.757293168362"
+     },
+     {
+      "got": "6894.76",
+      "id": "hw-036",
+      "ulp": 2976192861,
+      "want": "6894.757293168362"
+     }
+    ],
+    "wrong": 26
+   },
+   "cases": {
+    "must_convert": [
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km -> m",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kg -> g",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.001",
+      "id": "dv-base-003",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ms -> s",
+      "want": "0.001"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.001",
+      "id": "dv-base-004",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mA -> A",
+      "want": "0.001"
+     },
+     {
+      "category": "temperature",
+      "got": "1.8",
+      "id": "dv-base-005",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "degK -> tempR",
+      "want": "1.8"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-006",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kmol -> mol",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Incompatible units: ud and cd",
+      "id": "dv-base-007",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-008",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kHz -> 1/s",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-base-009",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-base-010",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-base-011",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-012",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "W -> J/s",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-base-013",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-014",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "V -> W/A",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-015",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ohm -> V/A",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-016",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ohm -> ohm",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-017",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "F -> C/V",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-018",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "S -> A/V",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-base-019",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-020",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "T -> Wb/m^2",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-021",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "H -> Wb/A",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "60",
+      "id": "dv-base-022",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "min -> s",
+      "want": "60.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "60",
+      "id": "dv-base-023",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "h -> min",
+      "want": "60.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "24",
+      "id": "dv-base-024",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "d -> h",
+      "want": "24.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-025",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mL -> cm^3",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.001",
+      "id": "dv-base-026",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "l -> m^3",
+      "want": "0.001"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-027",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tonne -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-028",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "t -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "3.6",
+      "id": "dv-base-029",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kWh -> MJ",
+      "want": "3.6"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "dv-base-030",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tempC -> degK",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "211.99999999999994",
+      "id": "dv-base-031",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "tempC -> tempF",
+      "want": "212.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "25",
+      "id": "dv-base-032",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tempC -> tempC",
+      "want": "25.0"
+     },
+     {
+      "category": "temperature",
+      "got": "1.8",
+      "id": "dv-base-033",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "degK -> degF",
+      "want": "1.8"
+     },
+     {
+      "category": "temperature",
+      "got": "1",
+      "id": "dv-base-034",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "degC -> degK",
+      "want": "1.0"
+     },
+     {
+      "category": "compound",
+      "got": "10",
+      "id": "dv-base-035",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km/h -> m/s",
+      "want": "10.0"
+     },
+     {
+      "category": "compound",
+      "got": "0.2777777777777778",
+      "id": "dv-base-036",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kmol/h -> mol/s",
+      "want": "0.2777777777777778"
+     },
+     {
+      "category": "temperature",
+      "got": "18",
+      "id": "dv-base-037",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "degK -> degF",
+      "want": "18.0"
+     },
+     {
+      "category": "compound",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-base-038",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-base-039",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "100",
+      "id": "dv-common-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "bar -> kPa",
+      "want": "100.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "101325",
+      "id": "dv-common-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "atm -> Pa",
+      "want": "101325.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "133.322368",
+      "id": "dv-common-003",
+      "outcome": "wrong_value",
+      "ulp": 683104584,
+      "used": "mmHg -> Pa",
+      "want": "133.322387415"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.9999999968418455",
+      "id": "dv-common-004",
+      "outcome": "wrong_value",
+      "ulp": 28446127,
+      "used": "torr -> atm",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "133.322368",
+      "id": "dv-common-005",
+      "outcome": "wrong_value",
+      "ulp": 14814472,
+      "used": "torr -> Pa",
+      "want": "133.32236842105263"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-006",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "4.448222",
+      "id": "dv-common-007",
+      "outcome": "wrong_value",
+      "ulp": 433178168,
+      "used": "lbf -> N",
+      "want": "4.4482216152605"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "6894.76",
+      "id": "dv-common-008",
+      "outcome": "wrong_value",
+      "ulp": 2976192861,
+      "used": "psi -> Pa",
+      "want": "6894.757293168362"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1.0000003060998304",
+      "id": "dv-common-009",
+      "outcome": "wrong_value",
+      "ulp": 1378551082,
+      "used": "psi -> lbf/in^2",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "4.184",
+      "id": "dv-common-010",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "cal -> J",
+      "want": "4.184"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-011",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-013",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "745.699872",
+      "id": "dv-common-014",
+      "outcome": "wrong_value",
+      "ulp": 3674390,
+      "used": "hp -> W",
+      "want": "745.6998715822702"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-015",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "25.4",
+      "id": "dv-common-016",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "in -> mm",
+      "want": "25.4"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "12.000000000000002",
+      "id": "dv-common-017",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "ft -> in",
+      "want": "12.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "3",
+      "id": "dv-common-018",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "yd -> ft",
+      "want": "3.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1609.344",
+      "id": "dv-common-019",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mi -> m",
+      "want": "1609.344"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1852",
+      "id": "dv-common-020",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "nmi -> m",
+      "want": "1852.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-021",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-022",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "453.59237",
+      "id": "dv-common-023",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "lb -> g",
+      "want": "453.59237"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.9999999991181509",
+      "id": "dv-common-024",
+      "outcome": "wrong_value",
+      "ulp": 7942991,
+      "used": "oz -> lb",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-025",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "2000",
+      "id": "dv-common-026",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ton -> lb",
+      "want": "2000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-027",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "3.7854118",
+      "id": "dv-common-028",
+      "outcome": "wrong_value",
+      "ulp": 36028797,
+      "used": "gal -> l",
+      "want": "3.785411784"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-029",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-030",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "pt -> gal",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-031",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-032",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-033",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "got": "0",
+      "id": "dv-common-034",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tempF -> tempC",
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "-40",
+      "id": "dv-common-035",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tempF -> tempC",
+      "want": "-40.0"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "dv-common-036",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tempR -> degK",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "0.5555555555555556",
+      "id": "dv-common-037",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "degF -> degK",
+      "want": "0.5555555555555556"
+     },
+     {
+      "category": "temperature",
+      "got": "1",
+      "id": "dv-common-038",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "degR -> degF",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-039",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "5",
+      "id": "dv-common-040",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "degF -> degK",
+      "want": "5.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-041",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "QtyError: Unit not recognized",
+      "id": "dv-common-042",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "got": "1000",
+      "id": "hw-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km -> m",
+      "want": "1000.0"
+     },
+     {
+      "category": "si",
+      "got": "10",
+      "id": "hw-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km/h -> m/s",
+      "want": "10.0"
+     },
+     {
+      "category": "si",
+      "got": "3.6",
+      "id": "hw-003",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kWh -> MJ",
+      "want": "3.6"
+     },
+     {
+      "category": "si",
+      "got": "10",
+      "id": "hw-004",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "MPa -> bar",
+      "want": "10.0"
+     },
+     {
+      "category": "si",
+      "got": "1",
+      "id": "hw-005",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Pa -> atm",
+      "want": "1.0"
+     },
+     {
+      "category": "si",
+      "got": "0.001",
+      "id": "hw-006",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "l -> m^3",
+      "want": "0.001"
+     },
+     {
+      "category": "si",
+      "got": "9000",
+      "id": "hw-007",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "h -> s",
+      "want": "9000.0"
+     },
+     {
+      "category": "si",
+      "got": "1440",
+      "id": "hw-008",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "d -> min",
+      "want": "1440.0"
+     },
+     {
+      "category": "si",
+      "got": "1000",
+      "id": "hw-009",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tonne -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "si",
+      "got": "39.37007874015748",
+      "id": "hw-010",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mm -> in",
+      "want": "39.37007874015748"
+     },
+     {
+      "category": "si",
+      "got": "1",
+      "id": "hw-011",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "m^3 -> l",
+      "want": "1.0"
+     },
+     {
+      "category": "si",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "25.4",
+      "id": "hw-013",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "in -> mm",
+      "want": "25.4"
+     },
+     {
+      "category": "imperial_us",
+      "got": "0.3048",
+      "id": "hw-014",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ft -> m",
+      "want": "0.3048"
+     },
+     {
+      "category": "imperial_us",
+      "got": "1.609344",
+      "id": "hw-015",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mi -> km",
+      "want": "1.609344"
+     },
+     {
+      "category": "imperial_us",
+      "got": "1852",
+      "id": "hw-016",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "nmi -> m",
+      "want": "1852.0"
+     },
+     {
+      "category": "imperial_us",
+      "got": "45.359237",
+      "id": "hw-017",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "lb -> kg",
+      "want": "45.359237"
+     },
+     {
+      "category": "imperial_us",
+      "got": "28.3495231",
+      "id": "hw-018",
+      "outcome": "wrong_value",
+      "ulp": 7036875,
+      "used": "oz -> g",
+      "want": "28.349523125"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-019",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "907.18474",
+      "id": "hw-020",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ton -> kg",
+      "want": "907.18474"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-021",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "3.7854118",
+      "id": "hw-022",
+      "outcome": "wrong_value",
+      "ulp": 36028797,
+      "used": "gal -> l",
+      "want": "3.785411784"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-023",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-024",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "473.176475",
+      "id": "hw-025",
+      "outcome": "wrong_value",
+      "ulp": 35184372,
+      "used": "pt -> mL",
+      "want": "473.176473"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-026",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-027",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-028",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "4.184",
+      "id": "hw-029",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "cal -> J",
+      "want": "4.184"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-030",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-031",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-032",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "745.699872",
+      "id": "hw-033",
+      "outcome": "wrong_value",
+      "ulp": 3674390,
+      "used": "hp -> W",
+      "want": "745.6998715822702"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-034",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "4.448222",
+      "id": "hw-035",
+      "outcome": "wrong_value",
+      "ulp": 433178168,
+      "used": "lbf -> N",
+      "want": "4.4482216152605"
+     },
+     {
+      "category": "pressure",
+      "got": "6894.76",
+      "id": "hw-036",
+      "outcome": "wrong_value",
+      "ulp": 2976192861,
+      "used": "psi -> Pa",
+      "want": "6894.757293168362"
+     },
+     {
+      "category": "pressure",
+      "got": "0.9997402",
+      "id": "hw-037",
+      "outcome": "wrong_value",
+      "ulp": 3535240928,
+      "used": "psi -> bar",
+      "want": "0.9997398075094124"
+     },
+     {
+      "category": "pressure",
+      "got": "14.50376807894691",
+      "id": "hw-038",
+      "outcome": "wrong_value",
+      "ulp": 3205478699,
+      "used": "bar -> psi",
+      "want": "14.50377377302092"
+     },
+     {
+      "category": "pressure",
+      "got": "133.322368",
+      "id": "hw-039",
+      "outcome": "wrong_value",
+      "ulp": 683104584,
+      "used": "mmHg -> Pa",
+      "want": "133.322387415"
+     },
+     {
+      "category": "pressure",
+      "got": "0.9999999968418455",
+      "id": "hw-040",
+      "outcome": "wrong_value",
+      "ulp": 28446127,
+      "used": "torr -> atm",
+      "want": "1.0"
+     },
+     {
+      "category": "pressure",
+      "got": "760.0000024001973",
+      "id": "hw-041",
+      "outcome": "wrong_value",
+      "ulp": 973503954,
+      "used": "atm -> mmHg",
+      "want": "759.9998917256113"
+     },
+     {
+      "category": "pressure",
+      "got": "14.695943005992959",
+      "id": "hw-042",
+      "outcome": "wrong_value",
+      "ulp": 3247951291,
+      "used": "atm -> psi",
+      "want": "14.695948775513449"
+     },
+     {
+      "category": "process",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-043",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "got": "0.2777777777777778",
+      "id": "hw-044",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kmol/h -> mol/s",
+      "want": "0.2777777777777778"
+     },
+     {
+      "category": "process",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-045",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-046",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-047",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "got": "0.0000010000000000000002",
+      "id": "hw-048",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "cSt -> m^2/s",
+      "want": "1e-06"
+     },
+     {
+      "category": "process",
+      "got": "1.0000000000000002",
+      "id": "hw-049",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "cSt -> mm^2/s",
+      "want": "1.0"
+     },
+     {
+      "category": "process",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-050",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-051",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-052",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-053",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-054",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-055",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-056",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-057",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-058",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "got": "158.987294928",
+      "id": "hw-059",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "bbl -> l",
+      "want": "158.987294928"
+     },
+     {
+      "category": "process",
+      "got": "158.987294928",
+      "id": "hw-060",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "bbl -> m^3",
+      "want": "158.987294928"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "hw-061",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tempC -> degK",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "211.99999999999994",
+      "id": "hw-062",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "tempC -> tempF",
+      "want": "212.0"
+     },
+     {
+      "category": "temperature",
+      "got": "-40.00000000000006",
+      "id": "hw-063",
+      "outcome": "wrong_value",
+      "ulp": 8,
+      "used": "tempC -> tempF",
+      "want": "-40.0"
+     },
+     {
+      "category": "temperature",
+      "got": "0",
+      "id": "hw-064",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tempF -> tempC",
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "98.59999999999997",
+      "id": "hw-065",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "tempC -> tempF",
+      "want": "98.6"
+     },
+     {
+      "category": "temperature",
+      "got": "26.850000000000023",
+      "id": "hw-066",
+      "outcome": "wrong_value",
+      "ulp": 6,
+      "used": "degK -> tempC",
+      "want": "26.85"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "hw-067",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tempR -> degK",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "0",
+      "id": "hw-068",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "degK -> tempR",
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "293.15000000000003",
+      "id": "hw-069",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "tempF -> degK",
+      "want": "293.15"
+     },
+     {
+      "category": "temperature",
+      "got": "18",
+      "id": "hw-070",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "degC -> degF",
+      "want": "18.0"
+     },
+     {
+      "category": "temperature",
+      "got": "10",
+      "id": "hw-071",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "degF -> degK",
+      "want": "10.0"
+     },
+     {
+      "category": "temperature",
+      "got": "1",
+      "id": "hw-072",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "degK -> degC",
+      "want": "1.0"
+     },
+     {
+      "category": "compound",
+      "got": "3.6",
+      "id": "hw-073",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "m/s -> km/h",
+      "want": "3.6"
+     },
+     {
+      "category": "compound",
+      "got": "1",
+      "id": "hw-074",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kg/m^3 -> g/l",
+      "want": "1.0"
+     },
+     {
+      "category": "compound",
+      "got": "1000",
+      "id": "hw-075",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "g/cm^3 -> kg/m^3",
+      "want": "1000.0"
+     },
+     {
+      "category": "compound",
+      "got": "16.018463373960138",
+      "id": "hw-076",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "lb/ft^3 -> kg/m^3",
+      "want": "16.018463373960138"
+     },
+     {
+      "category": "compound",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-077",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-078",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "got": "0.0001450376807894691",
+      "id": "hw-079",
+      "outcome": "wrong_value",
+      "ulp": 2100742520,
+      "used": "N/m^2 -> psi",
+      "want": "0.0001450377377302092"
+     },
+     {
+      "category": "compound",
+      "got": "3.1545098333333335",
+      "id": "hw-080",
+      "outcome": "wrong_value",
+      "ulp": 30023998,
+      "used": "gal/min -> l/s",
+      "want": "3.15450982"
+     },
+     {
+      "category": "compound",
+      "got": "52.834410248311684",
+      "id": "hw-081",
+      "outcome": "wrong_value",
+      "ulp": 31429214,
+      "used": "m^3/h -> gal/min",
+      "want": "52.83441047162968"
+     },
+     {
+      "category": "compound",
+      "got": "0.00012599788055555556",
+      "id": "hw-082",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "lb/h -> kg/s",
+      "want": "0.00012599788055555556"
+     },
+     {
+      "category": "compound",
+      "detail": "QtyError: Unit not recognized",
+      "id": "hw-083",
+      "outcome": "unsupported"
+     }
+    ],
+    "must_refuse": [
+     {
+      "category": "ambiguous_name",
+      "got": "907.18474",
+      "id": "ref-001",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "ton is short (2000 lb), long (2240 lb) or metric (1000 kg): up to 10 percent apart"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "3.7854118",
+      "id": "ref-002",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "US gallon 3.785 L versus imperial gallon 4.546 L: 20 percent apart"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "28.3495231",
+      "id": "ref-003",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "avoirdupois 28.35 g, troy 31.10 g (fluid ounces are volumes)"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "0.473176475",
+      "id": "ref-004",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "US pint, imperial pint, dry pint, and also the typographic point"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "4.184",
+      "id": "ref-005",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "thermochemical 4.184 J versus International Table 4.1868 J"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "QtyError: Unit not recognized",
+      "id": "ref-006",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "745.699872",
+      "id": "ref-007",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "mechanical 745.70 W versus metric 735.50 W (and electric 746 W)"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "1.609344",
+      "id": "ref-008",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "international mile versus US survey mile (about 3.2 mm per mile apart)"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "0.3048",
+      "id": "ref-009",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "international foot versus US survey foot (2 ppm apart); only matters for geodetic work, listed because the request does not say which"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "0.0001",
+      "id": "ref-010",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "ppm may be by mass, by mole or by volume; the factor 1e-6 hides the basis"
+     },
+     {
+      "category": "missing_context",
+      "detail": "QtyError: Unit not recognized",
+      "id": "ref-011",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "QtyError: Unit not recognized",
+      "id": "ref-012",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "QtyError: Unit not recognized",
+      "id": "ref-013",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "QtyError: Unit not recognized",
+      "id": "ref-014",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "QtyError: Incompatible units: wt% and mol*%",
+      "id": "ref-015",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "QtyError: Incompatible units: kg and l",
+      "id": "ref-016",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "QtyError: Incompatible units: mol and kg",
+      "id": "ref-017",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "QtyError: Unit not recognized",
+      "id": "ref-018",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "QtyError: Unit not recognized",
+      "id": "ref-019",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "QtyError: Unit not recognized",
+      "id": "ref-020",
+      "outcome": "refused"
+     },
+     {
+      "category": "kind",
+      "detail": "QtyError: Cannot add two temperatures",
+      "id": "ref-021",
+      "outcome": "refused"
+     },
+     {
+      "category": "kind",
+      "got": "25 tempC",
+      "id": "ref-022",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "a point plus a plain K is ambiguous between a point and an interval"
+     },
+     {
+      "category": "kind",
+      "detail": "QtyError: Cannot add two temperatures",
+      "id": "ref-023",
+      "outcome": "refused"
+     },
+     {
+      "category": "kind",
+      "got": "10",
+      "id": "ref-024",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "an absolute temperature is not an interval"
+     },
+     {
+      "category": "kind",
+      "got": "-263.15",
+      "id": "ref-025",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "an interval is not an absolute temperature"
+     },
+     {
+      "category": "dimension",
+      "detail": "QtyError: Incompatible units: m and s",
+      "id": "ref-026",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "QtyError: Incompatible units: kg and N",
+      "id": "ref-027",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "QtyError: Incompatible units: psi and N",
+      "id": "ref-028",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "QtyError: Incompatible units: W and J",
+      "id": "ref-029",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "QtyError: Incompatible units: bar and W",
+      "id": "ref-030",
+      "outcome": "refused"
+     }
+    ]
+   },
+   "coverage": {
+    "compound": {
+     "known": 7,
+     "total": 11,
+     "unknown": [
+      "J/(mol.K)",
+      "kg.m2/s2",
+      "W/(m2.K)",
+      "kg/(m2.s)"
+     ]
+    },
+    "dimvexa_seed_table": {
+     "known": 51,
+     "total": 63,
+     "unknown": [
+      "g_n",
+      "cal_IT",
+      "Btu_IT",
+      "Btu_th",
+      "hp_metric",
+      "ft_us_survey",
+      "mi_us_survey",
+      "oz_troy",
+      "ton_long",
+      "gal_imp",
+      "pt_imp",
+      "lbmol"
+     ]
+    },
+    "imperial_us": {
+     "known": 14,
+     "total": 24,
+     "unknown": [
+      "oz_troy",
+      "ton_long",
+      "gal_imp",
+      "pt_imp",
+      "Btu_IT",
+      "Btu_th",
+      "cal_IT",
+      "hp_metric",
+      "ft_us_survey",
+      "mi_us_survey"
+     ]
+    },
+    "pressure": {
+     "known": 6,
+     "total": 10,
+     "unknown": [
+      "barg",
+      "psig",
+      "kgf/cm2",
+      "mH2O"
+     ]
+    },
+    "process": {
+     "known": 9,
+     "total": 19,
+     "unknown": [
+      "lbmol/h",
+      "W/(m.K)",
+      "kJ/(kg.K)",
+      "Btu_IT/(lb.delta_degF)",
+      "Nm3",
+      "Nm3/h",
+      "scf",
+      "scf/min",
+      "kg/(m.s)",
+      "mPa.s"
+     ]
+    },
+    "si": {
+     "known": 25,
+     "total": 25,
+     "unknown": []
+    },
+    "si_prefixed": {
+     "known": 17,
+     "total": 17,
+     "unknown": []
+    },
+    "temperature": {
+     "known": 8,
+     "total": 8,
+     "unknown": []
+    }
+   },
+   "must_convert": {
+    "by_category": {
+     "compound": {
+      "correct": 7,
+      "total": 16,
+      "unsupported": 6,
+      "wrong_value": 3
+     },
+     "dimvexa_vector": {
+      "correct": 35,
+      "total": 65,
+      "unsupported": 21,
+      "wrong_value": 9
+     },
+     "imperial_us": {
+      "correct": 7,
+      "total": 23,
+      "unsupported": 11,
+      "wrong_value": 5
+     },
+     "pressure": {
+      "correct": 0,
+      "total": 7,
+      "unsupported": 0,
+      "wrong_value": 7
+     },
+     "process": {
+      "correct": 5,
+      "total": 18,
+      "unsupported": 13,
+      "wrong_value": 0
+     },
+     "si": {
+      "correct": 11,
+      "total": 12,
+      "unsupported": 1,
+      "wrong_value": 0
+     },
+     "temperature": {
+      "correct": 21,
+      "total": 23,
+      "unsupported": 0,
+      "wrong_value": 2
+     }
+    },
+    "correct": 86,
+    "total": 164,
+    "unsupported": 52,
+    "wrong_value": 26
+   },
+   "must_refuse": {
+    "by_category": {
+     "ambiguous_name": {
+      "not_applicable": 0,
+      "refused": 1,
+      "silently_accepted": 9,
+      "total": 10
+     },
+     "dimension": {
+      "not_applicable": 0,
+      "refused": 5,
+      "silently_accepted": 0,
+      "total": 5
+     },
+     "kind": {
+      "not_applicable": 0,
+      "refused": 2,
+      "silently_accepted": 3,
+      "total": 5
+     },
+     "missing_context": {
+      "not_applicable": 0,
+      "refused": 10,
+      "silently_accepted": 0,
+      "total": 10
+     }
+    },
+    "not_applicable": 0,
+    "refused": 18,
+    "silently_accepted": 12,
+    "total": 30
+   }
+  }
+ },
+ "startup": {
+  "import_ms": {
+   "interpreter_baseline_ms": 31.631826,
+   "mad": 0.23377999999999943,
+   "max": 7.636877999999999,
+   "median": 0.23377999999999943,
+   "min": 0,
+   "raw": [
+    5.317986000000001,
+    0.23377999999999943,
+    7.636877999999999,
+    0,
+    0
+   ],
+   "samples": 5,
+   "unit": "ms"
+  },
+  "package_bytes": 588127,
+  "peak_rss_kb": 103144
+ }
+}

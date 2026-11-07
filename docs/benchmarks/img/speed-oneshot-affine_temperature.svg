@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="482" viewBox="0 0 900 482" role="img" aria-label="One-shot parse and convert, affine_temperature">
+<rect width="900" height="482" fill="#ffffff"/>
+<text x="12" y="24" font-family="sans-serif" font-size="16" font-weight="bold" fill="#1a1a1a">One-shot parse and convert, affine_temperature</text>
+<text x="12" y="44" font-family="sans-serif" font-size="12" fill="#444444">lower is better, logarithmic axis</text>
+<text x="322" y="74" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+ddb7292-dirty / prepared</text>
+<rect x="330" y="60" width="39.4" height="20" fill="#2a6fb0"/>
+<text x="375.4" y="74" font-family="sans-serif" font-size="12" fill="#1a1a1a">1.69 us</text>
+<text x="322" y="102" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+ddb7292-dirty / exact</text>
+<rect x="330" y="88" width="47.8" height="20" fill="#2a6fb0"/>
+<text x="383.8" y="102" font-family="sans-serif" font-size="12" fill="#1a1a1a">1.96 us</text>
+<text x="322" y="130" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">js-quantities 1.8.0 / swift</text>
+<rect x="330" y="116" width="94.8" height="20" fill="#2a6fb0"/>
+<text x="430.8" y="130" font-family="sans-serif" font-size="12" fill="#1a1a1a">4.45 us</text>
+<text x="322" y="158" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">js-quantities 1.8.0 / plain</text>
+<rect x="330" y="144" width="105.4" height="20" fill="#2a6fb0"/>
+<text x="441.4" y="158" font-family="sans-serif" font-size="12" fill="#1a1a1a">5.37 us</text>
+<text x="322" y="186" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">mathjs 13.2.0 / plain</text>
+<rect x="330" y="172" width="107.0" height="20" fill="#2a6fb0"/>
+<text x="443.0" y="186" font-family="sans-serif" font-size="12" fill="#1a1a1a">5.52 us</text>
+<text x="322" y="214" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">mathjs 13.2.0 / factor</text>
+<rect x="330" y="200" width="108.0" height="20" fill="#2a6fb0"/>
+<text x="444.0" y="214" font-family="sans-serif" font-size="12" fill="#1a1a1a">5.62 us</text>
+<text x="322" y="242" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">astropy 8.0.2 / unit_to</text>
+<rect x="330" y="228" width="242.8" height="20" fill="#2a6fb0"/>
+<text x="578.8" y="242" font-family="sans-serif" font-size="12" fill="#1a1a1a">59.6 us</text>
+<text x="322" y="270" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">astropy 8.0.2 / plain</text>
+<rect x="330" y="256" width="245.0" height="20" fill="#2a6fb0"/>
+<text x="581.0" y="270" font-family="sans-serif" font-size="12" fill="#1a1a1a">62 us</text>
+<text x="322" y="298" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">pint 0.26.2 / plain</text>
+<rect x="330" y="284" width="251.7" height="20" fill="#2a6fb0"/>
+<text x="587.7" y="298" font-family="sans-serif" font-size="12" fill="#1a1a1a">69.6 us</text>
+<text x="322" y="326" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">pint 0.26.2 / wraps</text>
+<rect x="330" y="312" width="252.1" height="20" fill="#2a6fb0"/>
+<text x="588.1" y="326" font-family="sans-serif" font-size="12" fill="#1a1a1a">70.2 us</text>
+<text x="322" y="354" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">pint 0.26.2 / factor</text>
+<rect x="330" y="340" width="252.7" height="20" fill="#2a6fb0"/>
+<text x="588.7" y="354" font-family="sans-serif" font-size="12" fill="#1a1a1a">70.9 us</text>
+<text x="322" y="382" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">unyt 3.2.0 / to_value</text>
+<rect x="330" y="368" width="261.0" height="20" fill="#2a6fb0"/>
+<text x="597.0" y="382" font-family="sans-serif" font-size="12" fill="#1a1a1a">82 us</text>
+<text x="322" y="410" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">unyt 3.2.0 / plain</text>
+<rect x="330" y="396" width="261.7" height="20" fill="#2a6fb0"/>
+<text x="597.7" y="410" font-family="sans-serif" font-size="12" fill="#1a1a1a">83.1 us</text>
+<text x="322" y="438" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+ddb7292-dirty / cli</text>
+<rect x="330" y="424" width="420.0" height="20" fill="#2a6fb0"/>
+<text x="756.0" y="438" font-family="sans-serif" font-size="12" fill="#1a1a1a">1.33 ms</text>
+</svg>
