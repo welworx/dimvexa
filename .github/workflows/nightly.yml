@@ -1,5 +1,6 @@
-# Scheduled checks that must not block pull requests but must not be forgotten either.
-# Not yet executed on GitHub (see docs/ci-pinning.md).
+# Scheduled checks that must not block pull requests but must not be forgotten either. When one
+# fails, the `alert` job opens (or comments on) a GitHub issue; it has `issues: write` and
+# nothing else. Not yet executed on GitHub (see docs/ci-pinning.md).
 name: nightly
 
 on:
@@ -13,7 +14,7 @@ permissions:
 
 concurrency:
   group: nightly-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always
@@ -36,11 +37,57 @@ jobs:
       # The advisory database changes daily even when our lock file does not.
       - run: cargo deny --locked check advisories
 
-  extras:
-    name: extras (network-only dev tooling, advisory)
-    # extras/ (proptest, criterion, insta, assert_cmd, iai-callgrind) was written without
-    # registry access and has never been compiled. Until it has, a failure here is
-    # information, not a verdict.
+  properties:
+    name: property tests with more cases and a fresh seed
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DIMVEXA_PROP_SCALE: "20"
+    steps:
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned toolchain
+        run: |
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --no-self-update
+          rustup default "$v"
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - name: Run the property and differential suites
+        run: |
+          # A different seed every day; the seed is printed so that a failure can be replayed
+          # with DIMVEXA_PROP_SEED=<value> cargo test -p dimvexa-testkit.
+          export DIMVEXA_PROP_SEED=$(date -u +%Y%m%d)
+          echo "DIMVEXA_PROP_SEED=$DIMVEXA_PROP_SEED DIMVEXA_PROP_SCALE=$DIMVEXA_PROP_SCALE"
+          cargo test -p dimvexa-testkit --locked --release
+
+  latest-stable:
+    name: build and clippy on the latest stable (drift detector)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Overrides rust-toolchain.toml: this job deliberately does not use the pinned compiler.
+      RUSTUP_TOOLCHAIN: stable
+    steps:
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the latest stable
+        run: rustup toolchain install stable --profile minimal --component clippy --no-self-update
+      - run: rustc -V
+      - run: cargo build --workspace --all-targets --all-features --locked
+      - run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+
+  coverage:
+    name: line coverage (advisory)
+    # What it measures: lines of dimvexa-core and dimvexa-data executed by ALL tests of the
+    # workspace, including the integration suites in dimvexa-testkit (property, differential,
+    # exact path, overflow) and the golden vectors, but not the test code itself, xtask,
+    # examples or benches. No gate yet: set --fail-under-lines after the first measured
+    # baseline, so the number is a fact and not a guess.
     continue-on-error: true
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -49,13 +96,67 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install the stable toolchain
+      - name: Install the pinned toolchain with llvm-tools
         run: |
-          rustup toolchain install stable --profile minimal --no-self-update
-          rustup default stable
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --component llvm-tools-preview --no-self-update
+          rustup default "$v"
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+        with:
+          # Not version-pinned (see docs/ci-pinning.md).
+          tool: cargo-llvm-cov
+      - run: >
+          cargo llvm-cov --workspace --all-features --locked --summary-only
+          --ignore-filename-regex '(/tests/|/benches/|/examples/|xtask/|dimvexa-testkit/)'
+
+  extras:
+    name: extras (network-only dev tooling, advisory)
+    # extras/ (proptest, criterion, insta, assert_cmd, iai-callgrind) was written without
+    # registry access and has never been compiled, so a failure here is information, not a
+    # verdict. It runs only here (never in the required ci workflow), and the benchmark step
+    # runs after the test step so a benchmark is not attempted on code that does not compile.
+    # Once it is green on a recorded run, remove continue-on-error and commit extras/Cargo.lock.
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned toolchain
+        run: |
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --no-self-update
+          rustup default "$v"
       # copied from a widely used repo, verify against the action's release page before enabling
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           workspaces: extras
       - run: cargo test --manifest-path extras/Cargo.toml
       - run: cargo bench --manifest-path extras/Cargo.toml --no-run
+
+  alert:
+    name: open an issue when a nightly job failed
+    if: always() && contains(needs.*.result, 'failure')
+    needs: [advisories, properties, latest-stable]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the nightly issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="nightly: a scheduled check failed"
+          existing=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')
+          body="The nightly workflow failed: $RUN_URL"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi

@@ -21,10 +21,10 @@ step will fail with "unable to find version" (the safe failure). Do the same for
 
 | Action | SHA (full) | Version comment | Used in |
 |---|---|---|---|
-| `actions/checkout` | `3d3c42e5aac5ba805825da76410c181273ba90b1` | v7.0.1 | ci, nightly, dco |
+| `actions/checkout` | `3d3c42e5aac5ba805825da76410c181273ba90b1` | v7.0.1 | ci, nightly, dco, fuzz, mutants |
 | `Swatinem/rust-cache` | `6323deb102c322ba6fcbdcafc7e3dddab59af2b6` | v2.9.2 | ci, nightly |
-| `taiki-e/install-action` | `1168f6810a3cb30a3514bf5756a3b7f0422c6df8` | v2.87.28 | ci (`deny`, `text`), nightly |
-| `actions/upload-artifact` | `cf430e030ddbb5b0abf93d22962f4752f3646cd9` | v7.0.2 | not used yet; listed so that a future workflow can reuse the same reviewed SHA |
+| `taiki-e/install-action` | `1168f6810a3cb30a3514bf5756a3b7f0422c6df8` | v2.87.28 | ci (`deny`, `text`, `workflows`), nightly, fuzz, mutants |
+| `actions/upload-artifact` | `cf430e030ddbb5b0abf93d22962f4752f3646cd9` | v7.0.2 | mutants |
 
 ## What is not an action
 
@@ -43,6 +43,8 @@ step will fail with "unable to find version" (the safe failure). Do the same for
 | Tool | Version | Pinned? |
 |---|---|---|
 | `cargo-deny` | `0.18.3` | yes, in `ci.yml` and `nightly.yml` (unverified: confirm the release exists and that `deny.toml` is accepted by it) |
+| `actionlint` | `1.7.7` | yes, in `ci.yml` (unverified: confirm the release exists) |
+| `cargo-fuzz`, `cargo-mutants`, `cargo-llvm-cov` | latest | no (weekly and nightly workflows only) |
 | `typos-cli`, `taplo-cli` | latest | no. Choose versions and pin them (`typos-cli@X.Y.Z`) once the first run is green |
 
 ## Checklist for adding or changing an action
