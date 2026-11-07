@@ -22,7 +22,7 @@ Commits by `release-plz` once releases start (planned for M1).
 - `xtask validate-data`.
 - ADR-001 to ADR-008, benchmark report for M0.
 - ADR-009: user config files with name mappings, extra units and caller-supplied bridge
-  constants such as a density. Accepted for step 1.
+  constants such as a density. Accepted for `[map]`, density bridges and `[[unit]]`.
 - `--config FILE` (repeatable): your own names for units in `[map]`, e.g. `mt = "tonne"`, and
   `[[bridge]]` densities for mass to volume (`--bridge NAME`, e.g. litres of water to kilograms
   with a density you state, its conditions and its source; the result is `measured`, the
@@ -31,8 +31,9 @@ Commits by `release-plz` once releases start (planned for M1).
   never take an existing name; `units` marks them and the JSON has an `origin`). Examples:
   `examples/configs/water.toml`, `examples/configs/oil.toml`.
   The new `dimvexa-config` crate holds `Config` and `apply`; the core only gains
-  `Registry::add_alias`. JSON output gains `config` (files and hashes) and `dimvexa.units/1`
-  gains `config` and `mappings`.
+  `Registry::add_alias`. JSON output gains `config` (files and hashes) and `bridge`;
+  `dimvexa.units/1` gains `config`, `mappings`, `bridges`, a per-unit `origin` and, for a
+  queried name of yours, `mapping`.
 - `Conversion::apply_exact_f64`: the correctly rounded `f64` of the exact result (0 ulp), with
   a test that proves the rounding against both neighbours.
 - `docs/precision.md`: ulps, the guarantee (linear at most 1 ulp, affine at most 2 ulp),

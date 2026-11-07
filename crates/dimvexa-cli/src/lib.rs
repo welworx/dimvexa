@@ -135,12 +135,20 @@ fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), UsageEr
             "--config" | "--bridge" => {
                 let value = match inline {
                     Some(v) => v,
-                    None => it.next().cloned().ok_or_else(|| missing(name))?,
+                    // The next word must be a value, not another option (`--config --json`).
+                    None => it
+                        .next()
+                        .filter(|v| !v.starts_with("--"))
+                        .cloned()
+                        .ok_or_else(|| missing(name))?,
                 };
                 if name == "--config" {
                     opts.configs.push(value);
-                } else {
-                    opts.bridge = Some(value);
+                } else if opts.bridge.replace(value).is_some() {
+                    return Err(UsageError {
+                        message: "'--bridge' is given twice; name one bridge".to_string(),
+                        ..missing(name)
+                    });
                 }
             }
             _ => rest.push(a.clone()),
@@ -812,6 +820,8 @@ fn units_json(
 
 /// Everything shown for one unit (a table unit, or an expression such as `km`).
 struct Detail {
+    /// What was asked for (a symbol, an alias or a mapped name).
+    queried: String,
     symbol: String,
     group: String,
     aliases: Vec<String>,
@@ -827,11 +837,19 @@ struct Detail {
     note: Option<String>,
     /// `(file, line)` of the config that defines the unit, if it is a user unit.
     origin: Option<(String, usize)>,
+    /// `(file, line)` of the config `[map]` entry that makes the queried name mean this unit.
+    mapping: Option<(String, usize)>,
 }
 
-fn unit_detail(reg: &Registry, user: &[ConfigUnit], query: &str) -> Result<Detail, Error> {
+fn unit_detail(
+    reg: &Registry,
+    user: &[ConfigUnit],
+    mappings: &[Mapping],
+    query: &str,
+) -> Result<Detail, Error> {
     if let Some(u) = reg.get(query) {
         return Ok(Detail {
+            queried: query.to_string(),
             symbol: u.symbol().to_string(),
             group: group_name(u.dim()),
             aliases: u.aliases().to_vec(),
@@ -845,12 +863,17 @@ fn unit_detail(reg: &Registry, user: &[ConfigUnit], query: &str) -> Result<Detai
             sources: vec![u.source().to_string()],
             note: Some(u.note().to_string()),
             origin: user_unit(user, u.symbol()).map(|c| (c.origin.clone(), c.line)),
+            mapping: mappings
+                .iter()
+                .find(|m| m.name == query)
+                .map(|m| (m.origin.clone(), m.line)),
         });
     }
     // Not a table symbol: a prefixed or compound expression such as km or kW.h, or an
     // error (unknown, ambiguous) that the library words.
     let e = reg.parse(query)?;
     Ok(Detail {
+        queried: query.to_string(),
         symbol: query.to_string(),
         group: group_name(e.dim()),
         aliases: Vec::new(),
@@ -864,6 +887,7 @@ fn unit_detail(reg: &Registry, user: &[ConfigUnit], query: &str) -> Result<Detai
         sources: e.sources().to_vec(),
         note: None,
         origin: None,
+        mapping: None,
     })
 }
 
@@ -898,6 +922,15 @@ fn detail_text(d: &Detail) -> String {
     if let Some(n) = d.note.as_deref().filter(|n| !n.is_empty()) {
         line("note", n.to_string());
     }
+    if let Some((file, at)) = &d.mapping {
+        line(
+            "your name",
+            format!(
+                "'{query}' means this unit in your config ({file}:{at})",
+                query = d.queried
+            ),
+        );
+    }
     if let Some((file, at)) = &d.origin {
         line(
             "defined in",
@@ -917,7 +950,7 @@ fn detail_json(d: &Detail) -> String {
     let opt = |v: Option<&str>| v.map_or_else(|| "null".to_string(), json_string);
     let dims: Vec<String> = d.dim.exponents().iter().map(ToString::to_string).collect();
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"symbol\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"note\":{},\"origin\":{}}}}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"symbol\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"note\":{},\"origin\":{},\"mapping\":{}}}}}",
         json_string(&format!("{}.units/1", dimvexa::PROJECT_NAME)),
         json_string(&dimvexa::data_version()),
         json_string(&d.symbol),
@@ -935,6 +968,16 @@ fn detail_json(d: &Detail) -> String {
         d.origin.as_ref().map_or_else(
             || "null".to_string(),
             |(f, l)| format!("{{\"file\":{},\"line\":{l}}}", json_string(f)),
+        ),
+        d.mapping.as_ref().map_or_else(
+            || "null".to_string(),
+            |(f, l)| {
+                format!(
+                    "{{\"name\":{},\"file\":{},\"line\":{l}}}",
+                    json_string(&d.queried),
+                    json_string(f)
+                )
+            },
         ),
     )
 }
@@ -984,7 +1027,7 @@ fn run_units(
             if groups.iter().any(|(g, _)| *g == q_lower) {
                 (Some(q_lower.clone()), Some(q_lower))
             } else {
-                return match unit_detail(reg, &loaded.units, q) {
+                return match unit_detail(reg, &loaded.units, &loaded.mappings, q) {
                     Ok(d) => {
                         let text = if json {
                             detail_json(&d)
@@ -1126,8 +1169,19 @@ where
                 render_text(&outcome)
             };
             let _ = writeln!(out, "{text}");
-            if let (Some(b), false) = (outcome.bridge, args.json) {
-                let _ = writeln!(err, "{}", bridge_note(b));
+            if !args.json {
+                match (outcome.bridge, &args.bridge) {
+                    (Some(b), _) => {
+                        let _ = writeln!(err, "{}", bridge_note(b));
+                    }
+                    (None, Some(name)) => {
+                        let _ = writeln!(
+                            err,
+                            "note: bridge {name} was not needed: both units have the same dimension"
+                        );
+                    }
+                    (None, None) => {}
+                }
             }
             0
         }

@@ -93,12 +93,37 @@ impl Registry {
         &self.units
     }
 
+    /// Whether `name` is free to be given a new meaning (see [`add_alias`](Self::add_alias)):
+    /// it is not a symbol or alias, and it is either a bare name declared ambiguous (`ton`) or
+    /// plainly unknown. A prefixed form of anything that exists is not free, including a
+    /// prefix on an ambiguous name (`kcal`): defining it would silently drop the prefix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_core::{Dim, Ratio, Registry, Unit};
+    /// let mut reg = Registry::new();
+    /// reg.register(Unit::linear("g", Dim::KG, Ratio::new(1, 1000)?)?)?;
+    /// assert!(reg.name_is_free("pallet"));
+    /// assert!(!reg.name_is_free("g"));
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    #[must_use]
+    pub fn name_is_free(&self, name: &str) -> bool {
+        if self.by_symbol.contains_key(name) {
+            return false;
+        }
+        self.ambiguous.contains_key(name)
+            || matches!(self.resolve_symbol(name), Err(Error::UnknownUnit { .. }))
+    }
+
     /// Makes `alias` another name of the registered unit `target`, so prefixes and compound
     /// expressions work with it (`kmt` is `ktonne` once `mt` names the tonne).
     ///
     /// This is the one extension point for callers that bring their own vocabulary (see
     /// ADR-009). It can resolve a name that is declared ambiguous or unknown (`mt`, `ton`);
-    /// it can never redefine an existing symbol, alias or prefixed form (`t`, `m`, `km`), and
+    /// it can never redefine an existing symbol, alias or prefixed form (`t`, `m`, `km`), nor
+    /// a prefix on an ambiguous name (`kcal`, which would silently lose its prefix), and
     /// it carries no factor: the alias means exactly what `target` means.
     ///
     /// # Errors
@@ -126,18 +151,23 @@ impl Registry {
             message,
         };
         if !is_valid_symbol(alias) {
-            return Err(bad(alias, "not a well-formed unit name".to_string()));
-        }
-        if self.by_symbol.contains_key(alias) || self.resolve_symbol(alias).is_ok() {
             return Err(bad(
                 alias,
-                "already means a unit and cannot be redefined".to_string(),
+                format!("'{alias}' is not a well-formed unit name"),
+            ));
+        }
+        if !self.name_is_free(alias) {
+            return Err(bad(
+                alias,
+                format!("'{alias}' already means a unit and cannot be redefined"),
             ));
         }
         let Some(&index) = self.by_symbol.get(target) else {
             return Err(bad(
                 alias,
-                format!("'{target}' is not a unit symbol or alias of the table"),
+                format!(
+                    "'{target}' is not a unit symbol or alias known at this point (a target must be a table unit, a [[unit]], or a name mapped earlier)"
+                ),
             ));
         };
         self.lowered
