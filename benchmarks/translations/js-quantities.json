@@ -1,0 +1,11 @@
+{
+  "_note": "UNVERIFIED best-effort spellings from memory of js-quantities (temperature points are tempC/tempF/tempK/tempR, intervals are degC/degF/degK/degR; parentheses are flattened a/(b*c) -> a/b/c). Not checked against an installed js-quantities. Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template.",
+  "ops": {},
+  "pow": "^",
+  "flatten_parens": true,
+  "units": {
+    "1": "1", "degC": "tempC", "degF": "tempF", "degR": "tempR", "delta_degC": "degC", "delta_degF": "degF", "delta_K": "degK", "delta_degR": "degR",
+    "tonne": "tonne", "ton_short": "ton", "oz_av": "oz", "gal_us": "gal", "pt_us": "pt", "cal_th": "cal", "Btu_IT": "Btu", "hp_mech": "hp",
+    "nmi": "nmi", "mi": "mi", "lbf": "lbf", "psi": "psi", "mmHg": "mmHg", "torr": "torr", "atm": "atm", "bar": "bar", "cP": "cP", "cSt": "cSt", "L": "l", "K": "degK"
+  }
+}

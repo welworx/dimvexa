@@ -1,0 +1,10 @@
+{
+  "_note": "UNVERIFIED best-effort spellings from memory of unyt's unit system; not checked against an installed unyt. Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template.",
+  "ops": {".": "*"},
+  "pow": "**",
+  "units": {
+    "1": "dimensionless", "tonne": "tonne", "ton_short": "ton", "oz_av": "oz", "gal_us": "gal", "pt_us": "pint",
+    "cal_th": "cal", "Btu_IT": "BTU", "hp_mech": "hp", "mi": "mile", "nmi": "nautical_mile", "cP": "cP", "cSt": "cSt",
+    "mmHg": "mmHg", "degC": "degC", "degF": "degF", "degR": "R", "mol": "mol", "lbf": "lbf", "psi": "psi"
+  }
+}

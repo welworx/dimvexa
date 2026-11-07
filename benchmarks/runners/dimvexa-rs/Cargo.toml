@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Benchmark runner for Dimvexa itself. Own workspace (the empty [workspace] table below), NOT a
+# member of the main workspace, so `cargo xtask ci` never builds it. It depends only on the local
+# crates, so it builds offline. Also contains the Rust ceilings (plain loop, memcpy).
+[package]
+name = "dimvexa-bench"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+dimvexa = { path = "../../../crates/dimvexa" }
+
+[profile.release]
+debug = 1
+lto = "thin"
+codegen-units = 1

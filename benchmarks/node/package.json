@@ -1,0 +1,13 @@
+{
+  "name": "dimvexa-bench-node",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Competitor libraries for the Dimvexa comparison benchmarks (not published)",
+  "license": "MIT OR Apache-2.0",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "convert-units": "2.3.4",
+    "js-quantities": "1.8.0",
+    "mathjs": "13.2.0"
+  }
+}

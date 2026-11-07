@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Benchmark runner for the Rust `uom` crate (compile-time units). Own workspace; needs the crates
+# registry, so it is NOT built offline and NOT by the main CI. STATUS: written, never compiled
+# (the sandbox that produced it could not reach crates.io). The first networked run may need
+# small fixes to unit names. Commit Cargo.lock after the first successful build (see
+# docs/benchmarking.md) and build with --locked afterwards.
+[package]
+name = "dimvexa-bench-uom"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+uom = "0.36"
+
+[profile.release]
+debug = 1
+lto = "thin"
+codegen-units = 1

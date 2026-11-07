@@ -1,0 +1,10 @@
+{
+  "_note": "UNVERIFIED best-effort spellings from memory of mathjs units; not checked against an installed mathjs. Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template.",
+  "ops": {".": " "},
+  "pow": "^",
+  "units": {
+    "1": "", "tonne": "tonne", "ton_short": "ton", "oz_av": "oz", "gal_us": "gallon", "pt_us": "pint", "cal_th": "cal", "Btu_IT": "BTU",
+    "hp_mech": "hp", "nmi": "nauticalmile", "mi": "mile", "lbf": "lbf", "degR": "degR", "delta_K": "K", "delta_degC": "K", "delta_degF": "degR", "delta_degR": "degR",
+    "mmHg": "mmHg", "torr": "torr", "psi": "psi", "bar": "bar", "atm": "atm", "cP": "cP", "L": "L"
+  }
+}
