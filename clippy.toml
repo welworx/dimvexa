@@ -1,7 +1,24 @@
-# Tests may use unwrap/expect/indexing; library code may not.
+# Library code may not unwrap, expect, panic, index or print (the workspace lints deny them);
+# tests may, because a panic is how a test fails. These switches apply to #[test] functions and
+# #[cfg(test)] modules. Integration-test files that need helpers outside #[test] functions say
+# so with an explicit `#![allow(...)]` at the top, which keeps the exception visible in review.
 allow-unwrap-in-tests = true
 allow-expect-in-tests = true
 allow-indexing-slicing-in-tests = true
 allow-panic-in-tests = true
 allow-print-in-tests = true
+allow-dbg-in-tests = false
+
+# Do not suggest syntax newer than the minimum supported Rust version (see Cargo.toml).
 msrv = "1.85"
+
+# Words that are not code in documentation.
+doc-valid-idents = [
+    "BIPM", "CODATA", "NIST", "IEEE", "ISO", "IEC", "UCUM", "KMW", "TOML", "GitHub",
+    "Dimvexa", "OpenAPI", "WebAssembly", "..",
+]
+
+# Escape hatches that bypass the error handling above.
+disallowed-methods = [
+    { path = "std::process::exit", reason = "return an exit code from main instead" },
+]
