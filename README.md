@@ -18,6 +18,7 @@ $ dimvexa convert 10 m/s km/h
 36 km/h
 $ dimvexa convert 1 ton kg
 error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne, or choose a profile
+$ dimvexa units volume      # which volume units exist? (also: length, mass, pressure, ...)
 ```
 
 **Status:** pre-release 0.0.0, not on crates.io yet; use it from git (`dimvexa = { git = "https://github.com/welworx/dimvexa" }`).

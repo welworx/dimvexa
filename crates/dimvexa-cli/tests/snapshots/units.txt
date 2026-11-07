@@ -1,0 +1,150 @@
+# columns: symbol, quantity_kind, exactness, prefixes, aliases, source
+
+## length
+m	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+
+## mass
+g	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+
+## time
+s	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+
+## electric_current
+A	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+
+## temperature
+K	absolute_temperature	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+
+## amount_of_substance
+mol	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+
+## luminous_intensity
+cd	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+
+## frequency
+Hz	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+
+## force
+N	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+
+## pressure
+Pa	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+
+## energy
+J	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+
+## power
+W	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+
+## electric_charge
+C	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+
+## voltage
+V	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+
+## resistance
+ohm	plain	defined	si	Ω, Ω	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+
+## capacitance
+F	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+
+## conductance
+S	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+
+## magnetic_flux
+Wb	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+
+## magnetic_flux_density
+T	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+
+## inductance
+H	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+
+## time
+min	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)
+h	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)
+d	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)
+
+## volume
+L	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)
+
+## mass
+tonne	plain	defined	si	t	BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)
+
+## energy
+Wh	plain	defined	si	-	definition: watt (SI Brochure 9th ed., Table 4) times hour (SI Brochure 9th ed., ch. 4); NIST SP 811 (2008), Appendix B lists kW h = 3.6E+06 J
+
+## temperature
+degC	absolute_temperature	defined	none	°C	BIPM SI Brochure, 9th ed. (2019), ch. 2 (degree Celsius, t/degC = T/K - 273.15)
+delta_K	temperature_difference	defined	none	ΔK	BIPM SI Brochure, 9th ed. (2019), ch. 2 (kelvin, temperature intervals)
+delta_degC	temperature_difference	defined	none	Δ°C	BIPM SI Brochure, 9th ed. (2019), ch. 2 (degree Celsius, temperature intervals)
+
+## pressure
+bar	plain	defined	si	-	NIST SP 811 (2008), Appendix B (bar = 100 kPa)
+atm	plain	defined	none	-	NIST SP 811 (2008), Appendix B (standard atmosphere); 10th CGPM (1954), Resolution 4
+
+## acceleration
+g_n	plain	defined	none	-	NIST SP 811 (2008), Appendix B (standard acceleration of gravity); 3rd CGPM (1901)
+
+## force
+lbf	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pound-force)
+
+## pressure
+psi	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pound-force per square inch)
+mmHg	plain	defined	none	-	NIST SP 811 (2008), Appendix B (conventional millimeter of mercury); ISO 80000-4:2019
+torr	plain	defined	none	-	NIST SP 811 (2008), Appendix B (torr = 101325/760 Pa)
+
+## energy
+cal_th	plain	defined	si	-	NIST SP 811 (2008), Appendix B (calorie_th)
+cal_IT	plain	defined	si	-	NIST SP 811 (2008), Appendix B (calorie_IT); 5th International Conference on the Properties of Steam (1956)
+Btu_IT	plain	defined	si	-	NIST SP 811 (2008), Appendix B (Btu_IT)
+Btu_th	plain	defined	si	-	NIST SP 811 (2008), Appendix B (Btu_th)
+
+## power
+hp_mech	plain	defined	none	-	NIST SP 811 (2008), Appendix B (horsepower, 550 ft lbf/s)
+hp_metric	plain	defined	none	-	DIN 66036 (metric horsepower, PS); NIST SP 811 (2008), Appendix B
+
+## length
+in	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
+ft	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
+yd	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
+mi	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
+nmi	plain	defined	none	-	NIST SP 811 (2008), Appendix B (nautical mile); International Hydrographic Conference (1929)
+ft_us_survey	plain	defined	none	-	NIST SP 811 (2008), Appendix B (foot, U.S. survey); Mendenhall Order (1893)
+mi_us_survey	plain	defined	none	-	NIST SP 811 (2008), Appendix B (mile, U.S. statute)
+
+## mass
+lb	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
+oz_av	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
+oz_troy	plain	defined	none	-	NIST SP 811 (2008), Appendix B (ounce, troy or apothecary)
+ton_short	plain	defined	none	-	NIST SP 811 (2008), Appendix B (ton, short, 2000 lb)
+ton_long	plain	defined	none	-	NIST SP 811 (2008), Appendix B (ton, long, 2240 lb)
+
+## volume
+gal_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gallon, U.S. liquid = 231 in^3)
+gal_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1 (4.54609 L); NIST SP 811 (2008), Appendix B
+pt_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pint, U.S. liquid)
+pt_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1
+
+## amount_of_substance
+lbmol	plain	defined	none	-	derived from the pound definition (International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B); standard process-engineering convention
+
+## temperature
+degF	absolute_temperature	defined	none	°F	NIST SP 811 (2008), Appendix B (degree Fahrenheit)
+degR	absolute_temperature	defined	none	°R	NIST SP 811 (2008), Appendix B (degree Rankine)
+delta_degF	temperature_difference	defined	none	Δ°F	NIST SP 811 (2008), Appendix B (degree Fahrenheit, temperature interval)
+delta_degR	temperature_difference	defined	none	Δ°R	NIST SP 811 (2008), Appendix B (degree Rankine, temperature interval)
+
+## ambiguous symbols (refused; use an explicit symbol)
+# columns: symbol, candidates, planned, note
+ton	ton_short, ton_long, tonne	-	short ton (2000 lb), long ton (2240 lb) and metric tonne (1000 kg) are all called ton
+gal	gal_us, gal_imp	-	US liquid gallon (3.785411784 L) and imperial gallon (4.54609 L) differ by about 20 percent
+oz	oz_av, oz_troy	fl_oz_us, fl_oz_imp	avoirdupois ounce, troy ounce and the fluid ounces (US and imperial) share the symbol
+pt	pt_us, pt_imp	-	US liquid pint (473.176473 mL), imperial pint (568.26125 mL), dry pint, and pt is also the point and the pico-tonne
+cal	cal_th, cal_IT	-	thermochemical calorie (4.184 J) and International Table calorie (4.1868 J) differ by about 0.07 percent
+BTU	Btu_IT, Btu_th	-	British thermal unit exists in several definitions (IT, thermochemical, 39 F, 59 F, 60 F, mean)
+Btu	Btu_IT, Btu_th	-	same as BTU
+btu	Btu_IT, Btu_th	-	same as BTU
+mile	mi, mi_us_survey	mi_nautical_uk	international mile, US survey mile and nautical miles differ
+hp	hp_mech, hp_metric	hp_electric, hp_boiler	mechanical (745.7 W), metric (735.5 W), electrical (746 W) and boiler horsepower differ
+ppm	-	ppmw, ppmv, ppmmol	parts per million by mass, by volume or by amount of substance are different quantities (composition kinds arrive in M2)

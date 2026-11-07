@@ -257,11 +257,13 @@ pub fn check_units_schema(v: &V) {
     assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
     assert!(v.get("ok").unwrap().as_bool());
     assert!(v.get("data_version").unwrap().as_str().starts_with('v'));
+    assert!(v.get("group").is_some(), "missing group");
     let units = v.get("units").unwrap().as_array();
     assert!(!units.is_empty());
     for u in units {
         for k in [
             "symbol",
+            "group",
             "aliases",
             "dimension",
             "quantity_kind",

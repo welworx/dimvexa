@@ -326,17 +326,74 @@ fn ambiguous_candidates_are_listed_in_json() {
 }
 
 #[test]
-fn units_lists_every_table_entry() {
+fn units_lists_every_table_entry_by_group() {
+    let n = dimvexa_data::registry().unwrap().len();
     let r = dimvexa(&["units"]);
     assert_eq!(r.code, 0);
+    // Unit rows have six tab-separated columns; the ambiguous rows have four.
+    let rows = r.stdout.lines().filter(|l| l.split('\t').count() == 6);
+    assert_eq!(rows.count(), n);
+    assert!(r.stdout.lines().any(|l| l == "## volume"));
     assert!(r.stdout.lines().any(|l| l.starts_with("psi\t")));
-    let n = dimvexa_data::registry().unwrap().len();
-    assert_eq!(r.stdout.lines().take_while(|l| !l.is_empty()).count(), n);
-    assert!(r.stdout.contains("# ambiguous symbols"));
-    assert!(r.stdout.lines().any(|l| l.starts_with("ton\tcandidates:")));
+    assert!(r.stdout.lines().any(|l| l.starts_with("ton\tton_short, ")));
+    snapshot("units.txt", &r.stdout);
+
     let j = dimvexa(&["units", "--json"]);
     assert_eq!(j.code, 0);
     let v = json::parse(&j.stdout).unwrap();
     json::check_units_schema(&v);
     assert_eq!(v.get("units").unwrap().as_array().len(), n);
+    snapshot("units.json", &stable(&j.stdout));
+}
+
+#[test]
+fn units_can_be_narrowed_to_a_group() {
+    let r = dimvexa(&["units", "Volume"]);
+    assert_eq!(r.code, 0);
+    snapshot("units_volume.txt", &r.stdout);
+    for sym in ["L\t", "gal_us\t", "pt_imp\t", "gal\t", "pt\t"] {
+        assert!(r.stdout.lines().any(|l| l.starts_with(sym)), "{sym}");
+    }
+    assert!(!r.stdout.contains("psi\t") && !r.stdout.contains("ton\t"));
+    let v = json::parse(&dimvexa(&["units", "mass", "--json"]).stdout).unwrap();
+    json::check_units_schema(&v);
+    assert_eq!(v.get("group").unwrap().as_str(), "mass");
+    for u in v.get("units").unwrap().as_array() {
+        assert_eq!(u.get("group").unwrap().as_str(), "mass");
+    }
+}
+
+#[test]
+fn units_misuse_is_a_usage_error_in_the_units_schema() {
+    for args in [
+        &["units", "nope"][..],
+        &["units", "length", "mass"],
+        &["units", "--exact"],
+    ] {
+        let mut a = args.to_vec();
+        a.push("--json");
+        let r = dimvexa(&a);
+        assert_eq!(r.code, 2, "{args:?}");
+        let v = json::parse(&r.stdout).unwrap();
+        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+        assert!(!v.get("ok").unwrap().as_bool());
+        assert_eq!(
+            v.get("error").unwrap().get("code").unwrap().as_str(),
+            "usage"
+        );
+        assert!(dimvexa(args).stderr.starts_with("error[usage]"));
+    }
+    // 'units' is a command only on its own; after 'convert' it is a missing-argument error.
+    let r = dimvexa(&["convert", "units"]);
+    assert_eq!(r.code, 2);
+    assert!(r.stderr.contains("expected VALUE FROM TO"));
+    // The unknown group lists what exists.
+    let v = json::parse(&dimvexa(&["units", "nope", "--json"]).stdout).unwrap();
+    let s = v
+        .get("error")
+        .unwrap()
+        .get("suggestions")
+        .unwrap()
+        .as_array();
+    assert!(s.iter().any(|g| g.as_str() == "volume"));
 }

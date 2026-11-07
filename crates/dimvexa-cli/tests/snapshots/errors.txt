@@ -67,12 +67,13 @@ error[usage]: expected VALUE FROM TO, got 2 argument(s); try 'dimvexa --help'
 Usage:
   dimvexa convert VALUE FROM TO [--exact] [--json]
   dimvexa VALUE FROM TO [--exact] [--json]
-  dimvexa units [--json]
+  dimvexa units [GROUP] [--json]
 
 Converts VALUE from unit FROM to unit TO.
 
 Commands:
-  units        list all supported units (symbol, kind, exactness, prefixes, source, aliases) and ambiguous symbols
+  units        list the supported units grouped by quantity (length, mass, volume, ...) and
+               the ambiguous symbols that are refused; GROUP shows one group only
 
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal

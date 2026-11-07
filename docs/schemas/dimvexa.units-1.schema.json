@@ -3,19 +3,23 @@
   "$id": "dimvexa.units/1",
   "title": "dimvexa.units/1",
   "description": "Output of `dimvexa units --json`: every unit in the compiled table and every deliberately rejected ambiguous symbol. Adding fields is allowed within a schema version; removing or changing them requires /2.",
+  "oneOf": [
+    {
   "type": "object",
-  "required": ["schema", "ok", "data_version", "units", "ambiguous"],
+  "required": ["schema", "ok", "data_version", "group", "units", "ambiguous"],
   "properties": {
     "schema": { "const": "dimvexa.units/1" },
     "ok": { "const": true },
     "data_version": { "type": "string", "description": "Table identifier, `v<version>+<hash>`." },
+    "group": { "type": ["string", "null"], "description": "The group the listing was narrowed to (`dimvexa units GROUP`), or null for the whole table. With a group, `ambiguous` only holds the symbols that have a candidate in it." },
     "units": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["symbol", "aliases", "dimension", "quantity_kind", "exactness", "prefixes", "namespace", "source"],
+        "required": ["symbol", "group", "aliases", "dimension", "quantity_kind", "exactness", "prefixes", "namespace", "source"],
         "properties": {
           "symbol": { "type": "string", "description": "Primary symbol, accepted as written in `dimvexa convert`." },
+          "group": { "type": "string", "description": "Quantity group by dimension: length, mass, time, volume, pressure, energy, ... Dimensions without a name read `dimension[<exponents>]`. The set of names may grow." },
           "aliases": { "type": "array", "items": { "type": "string" }, "description": "Alternative symbols, for example the degree-sign spelling of degC." },
           "dimension": { "type": "array", "items": { "type": "integer" }, "minItems": 7, "maxItems": 7, "description": "Exponents of kg, m, s, A, K, mol, cd." },
           "quantity_kind": { "enum": ["plain", "absolute_temperature", "temperature_difference"] },
@@ -40,5 +44,25 @@
         }
       }
     }
-  }
+  },
+    "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": ["schema", "ok", "error"],
+      "properties": {
+        "schema": { "const": "dimvexa.units/1" },
+        "ok": { "const": false },
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": { "type": "string", "description": "`usage` for a bad command line (unknown group, extra arguments, --exact); a library error code if the table cannot be loaded." },
+            "message": { "type": "string" },
+            "suggestions": { "type": "array", "items": { "type": "string" }, "description": "For an unknown group: the known groups." }
+          }
+        }
+      }
+    }
+  ]
 }

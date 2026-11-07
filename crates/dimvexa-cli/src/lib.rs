@@ -4,7 +4,7 @@
 //! ```text
 //! dimvexa convert VALUE FROM TO [--exact] [--json]
 //! dimvexa VALUE FROM TO [--exact] [--json]        shorthand
-//! dimvexa units [--json]                          list all supported units
+//! dimvexa units [GROUP] [--json]                  list the supported units by quantity
 //! ```
 //!
 //! This crate contains **no conversion logic**: it parses arguments, calls the public
@@ -22,18 +22,19 @@
 use std::fmt::Write as _;
 use std::io::Write;
 
-use dimvexa::{Conversion, Error, Ratio, Registry, UnitExpr, registry};
+use dimvexa::{Conversion, Dim, Error, Ratio, Registry, Unit, UnitExpr, registry};
 
 const USAGE: &str = "\
 Usage:
   dimvexa convert VALUE FROM TO [--exact] [--json]
   dimvexa VALUE FROM TO [--exact] [--json]
-  dimvexa units [--json]
+  dimvexa units [GROUP] [--json]
 
 Converts VALUE from unit FROM to unit TO.
 
 Commands:
-  units        list all supported units (symbol, kind, exactness, prefixes, source, aliases) and ambiguous symbols
+  units        list the supported units grouped by quantity (length, mass, volume, ...) and
+               the ambiguous symbols that are refused; GROUP shows one group only
 
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
@@ -64,7 +65,7 @@ struct Args {
 
 enum Parsed {
     Convert(Args),
-    Units { json: bool },
+    Units { group: Option<String>, json: bool },
     Help,
     Version,
 }
@@ -73,11 +74,24 @@ enum Parsed {
 struct UsageError {
     message: String,
     json: bool,
+    /// JSON schema id of the failed command (`convert` or `units`).
+    schema: &'static str,
+    suggestions: Vec<String>,
 }
 
 fn parse_args(args: &[String]) -> Result<Parsed, UsageError> {
     let json = args.iter().any(|a| a == "--json");
-    let usage = |message: String| UsageError { message, json };
+    let is_units = args
+        .iter()
+        .find(|a| !a.starts_with('-'))
+        .is_some_and(|a| a == "units");
+    let schema = if is_units { "units" } else { "convert" };
+    let usage = |message: String| UsageError {
+        message,
+        json,
+        schema,
+        suggestions: Vec::new(),
+    };
     let mut positional: Vec<&str> = Vec::new();
     let (mut exact, mut want_json) = (false, false);
     for a in args {
@@ -90,14 +104,27 @@ fn parse_args(args: &[String]) -> Result<Parsed, UsageError> {
             s => positional.push(s),
         }
     }
-    if positional.first() == Some(&"convert") {
-        positional.remove(0);
-    }
-    if positional.as_slice() == ["units"] {
+    if let Some((&"units", rest)) = positional.split_first() {
         if exact {
             return Err(usage("'units' does not take --exact".to_string()));
         }
-        return Ok(Parsed::Units { json: want_json });
+        return match rest {
+            [] => Ok(Parsed::Units {
+                group: None,
+                json: want_json,
+            }),
+            [group] => Ok(Parsed::Units {
+                group: Some((*group).to_string()),
+                json: want_json,
+            }),
+            _ => Err(usage(format!(
+                "'units' takes at most one argument (a group such as 'length'), got {}",
+                rest.len()
+            ))),
+        };
+    }
+    if positional.first() == Some(&"convert") {
+        positional.remove(0);
     }
     match positional.as_slice() {
         [value, from, to] => Ok(Parsed::Convert(Args {
@@ -150,10 +177,16 @@ fn schema_id() -> String {
     format!("{}.convert/1", dimvexa::PROJECT_NAME)
 }
 
-fn json_error(code: &str, message: &str, candidates: &[String], suggestions: &[String]) -> String {
+fn json_error(
+    schema: &str,
+    code: &str,
+    message: &str,
+    candidates: &[String],
+    suggestions: &[String],
+) -> String {
     let mut s = format!(
         "{{\"schema\":{},\"ok\":false,\"error\":{{\"code\":{},\"message\":{}",
-        json_string(&schema_id()),
+        json_string(&format!("{}.{schema}/1", dimvexa::PROJECT_NAME)),
         json_string(code),
         json_string(message)
     );
@@ -249,54 +282,153 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
     ))
 }
 
-fn units_text(reg: &Registry) -> String {
-    let mut s = String::new();
-    for u in reg.units() {
-        let aliases = if u.aliases().is_empty() {
-            String::new()
-        } else {
-            format!("  (aliases: {})", u.aliases().join(", "))
-        };
+/// Quantity group of a dimension (`[kg, m, s, A, K, mol, cd]` exponents), for listing.
+/// Presentation only: it never takes part in a conversion.
+fn group_name(dim: Dim) -> String {
+    let name = match dim.exponents() {
+        [0, 1, 0, 0, 0, 0, 0] => "length",
+        [1, 0, 0, 0, 0, 0, 0] => "mass",
+        [0, 0, 1, 0, 0, 0, 0] => "time",
+        [0, 0, 0, 1, 0, 0, 0] => "electric_current",
+        [0, 0, 0, 0, 1, 0, 0] => "temperature",
+        [0, 0, 0, 0, 0, 1, 0] => "amount_of_substance",
+        [0, 0, 0, 0, 0, 0, 1] => "luminous_intensity",
+        [0, 2, 0, 0, 0, 0, 0] => "area",
+        [0, 3, 0, 0, 0, 0, 0] => "volume",
+        [0, 1, -1, 0, 0, 0, 0] => "speed",
+        [0, 1, -2, 0, 0, 0, 0] => "acceleration",
+        [0, 0, -1, 0, 0, 0, 0] => "frequency",
+        [1, 1, -2, 0, 0, 0, 0] => "force",
+        [1, -1, -2, 0, 0, 0, 0] => "pressure",
+        [1, 2, -2, 0, 0, 0, 0] => "energy",
+        [1, 2, -3, 0, 0, 0, 0] => "power",
+        [0, 0, 1, 1, 0, 0, 0] => "electric_charge",
+        [1, 2, -3, -1, 0, 0, 0] => "voltage",
+        [1, 2, -3, -2, 0, 0, 0] => "resistance",
+        [-1, -2, 4, 2, 0, 0, 0] => "capacitance",
+        [-1, -2, 3, 2, 0, 0, 0] => "conductance",
+        [1, 2, -2, -1, 0, 0, 0] => "magnetic_flux",
+        [1, 0, -2, -1, 0, 0, 0] => "magnetic_flux_density",
+        [1, 2, -2, -2, 0, 0, 0] => "inductance",
+        _ => return format!("dimension[{dim}]"),
+    };
+    name.to_string()
+}
+
+/// The units of the table to list: `(group, unit)` pairs in table order, narrowed to one
+/// group when asked. An unknown group is a usage error that names the known groups.
+fn select_units<'a>(
+    reg: &'a Registry,
+    group: Option<&str>,
+) -> Result<Vec<(String, &'a Unit)>, UsageError> {
+    let all: Vec<(String, &Unit)> = reg
+        .units()
+        .iter()
+        .map(|u| (group_name(u.dim()), u))
+        .collect();
+    let mut groups: Vec<String> = Vec::new();
+    for (g, _) in &all {
+        if !groups.contains(g) {
+            groups.push(g.clone());
+        }
+    }
+    let Some(want) = group else {
+        return Ok(all);
+    };
+    let want = want.to_ascii_lowercase();
+    if !groups.contains(&want) {
+        return Err(UsageError {
+            message: format!(
+                "unknown group '{want}'; known groups: {}",
+                groups.join(", ")
+            ),
+            json: false,
+            schema: "units",
+            suggestions: groups,
+        });
+    }
+    Ok(all.into_iter().filter(|(g, _)| *g == want).collect())
+}
+
+/// The ambiguous symbols to list: all of them, or with a group the ones that have a
+/// candidate in it.
+fn select_ambiguous(
+    units: &[(String, &Unit)],
+    filtered: bool,
+) -> Vec<&'static dimvexa::AmbiguousDef> {
+    dimvexa::AMBIGUOUS
+        .iter()
+        .filter(|a| {
+            !filtered
+                || a.candidates
+                    .iter()
+                    .any(|c| units.iter().any(|(_, u)| u.symbol() == *c))
+        })
+        .collect()
+}
+
+/// A text-table field: tabs and line breaks would break the columns.
+fn cell(s: &str) -> String {
+    let t: String = s
+        .chars()
+        .map(|c| if c.is_control() { ' ' } else { c })
+        .collect();
+    if t.is_empty() { "-".to_string() } else { t }
+}
+
+fn units_text(units: &[(String, &Unit)], ambiguous: &[&dimvexa::AmbiguousDef]) -> String {
+    let mut s =
+        String::from("# columns: symbol, quantity_kind, exactness, prefixes, aliases, source\n");
+    let mut current: Option<&str> = None;
+    for (g, u) in units {
+        if current != Some(g.as_str()) {
+            let _ = writeln!(s, "\n## {g}");
+            current = Some(g.as_str());
+        }
         let _ = writeln!(
             s,
-            "{}\t{}\t{}\t{}\t{}{}",
-            u.symbol(),
+            "{}\t{}\t{}\t{}\t{}\t{}",
+            cell(u.symbol()),
             u.kind().name(),
             u.exactness().name(),
             u.prefixes().name(),
-            u.source(),
-            aliases
+            cell(&u.aliases().join(", ")),
+            cell(u.source())
         );
     }
-    s.push_str("\n# ambiguous symbols (rejected; use an explicit symbol)\n");
-    for a in dimvexa::AMBIGUOUS {
-        let planned = if a.planned.is_empty() {
-            String::new()
-        } else {
-            format!("; planned: {}", a.planned.join(", "))
-        };
-        let _ = writeln!(
-            s,
-            "{}\tcandidates: {}{}\t{}",
-            a.symbol,
-            a.candidates.join(", "),
-            planned,
-            a.note
+    if !ambiguous.is_empty() {
+        s.push_str(
+            "\n## ambiguous symbols (refused; use an explicit symbol)\n\
+# columns: symbol, candidates, planned, note\n",
         );
+        for a in ambiguous {
+            let _ = writeln!(
+                s,
+                "{}\t{}\t{}\t{}",
+                cell(a.symbol),
+                cell(&a.candidates.join(", ")),
+                cell(&a.planned.join(", ")),
+                cell(a.note)
+            );
+        }
     }
     s
 }
 
-fn units_json(reg: &Registry) -> String {
-    let items: Vec<String> = reg
-        .units()
+fn units_json(
+    units: &[(String, &Unit)],
+    ambiguous: &[&dimvexa::AmbiguousDef],
+    group: Option<&str>,
+) -> String {
+    let items: Vec<String> = units
         .iter()
-        .map(|u| {
+        .map(|(g, u)| {
             let aliases: Vec<String> = u.aliases().iter().map(|a| json_string(a)).collect();
             let dims: Vec<String> = u.dim().exponents().iter().map(ToString::to_string).collect();
             format!(
-                "{{\"symbol\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"source\":{}}}",
+                "{{\"symbol\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"source\":{}}}",
                 json_string(u.symbol()),
+                json_string(g),
                 aliases.join(","),
                 dims.join(","),
                 json_string(u.kind().name()),
@@ -313,7 +445,7 @@ fn units_json(reg: &Registry) -> String {
             .collect::<Vec<_>>()
             .join(",")
     };
-    let ambiguous: Vec<String> = dimvexa::AMBIGUOUS
+    let ambiguous: Vec<String> = ambiguous
         .iter()
         .map(|a| {
             format!(
@@ -325,13 +457,59 @@ fn units_json(reg: &Registry) -> String {
             )
         })
         .collect();
+    let group = group.map_or_else(
+        || "null".to_string(),
+        |g| json_string(&g.to_ascii_lowercase()),
+    );
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"units\":[{}],\"ambiguous\":[{}]}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"group\":{},\"units\":[{}],\"ambiguous\":[{}]}}",
         json_string(&format!("{}.units/1", dimvexa::PROJECT_NAME)),
         json_string(&dimvexa::data_version()),
+        group,
         items.join(","),
         ambiguous.join(",")
     )
+}
+
+/// Runs `dimvexa units`; returns the exit code.
+fn run_units(group: Option<&str>, json: bool, out: &mut dyn Write, err: &mut dyn Write) -> u8 {
+    let fail_json = |code: &str, message: &str, suggestions: &[String], out: &mut dyn Write| {
+        let _ = writeln!(
+            out,
+            "{}",
+            json_error("units", code, message, &[], suggestions)
+        );
+    };
+    let reg = match registry() {
+        Ok(r) => r,
+        Err(e) => {
+            if json {
+                fail_json(e.code(), &e.to_string(), &[], out);
+            } else {
+                let _ = writeln!(err, "error[{}]: {e}", e.code());
+            }
+            return 1;
+        }
+    };
+    match select_units(&reg, group) {
+        Ok(units) => {
+            let ambiguous = select_ambiguous(&units, group.is_some());
+            if json {
+                let _ = writeln!(out, "{}", units_json(&units, &ambiguous, group));
+            } else {
+                let _ = write!(out, "{}", units_text(&units, &ambiguous));
+            }
+            0
+        }
+        Err(u) => {
+            if json {
+                fail_json("usage", &u.message, &u.suggestions, out);
+            } else {
+                let _ = writeln!(err, "error[usage]: {}", u.message);
+            }
+            2
+        }
+    }
 }
 
 /// Runs the command line `args` (without the program name), writing to `out` and `err`.
@@ -345,7 +523,11 @@ where
         Ok(p) => p,
         Err(u) => {
             if u.json {
-                let _ = writeln!(out, "{}", json_error("usage", &u.message, &[], &[]));
+                let _ = writeln!(
+                    out,
+                    "{}",
+                    json_error(u.schema, "usage", &u.message, &[], &u.suggestions)
+                );
             } else {
                 let _ = writeln!(err, "error[usage]: {}\n\n{USAGE}", u.message);
             }
@@ -367,22 +549,7 @@ where
             );
             return 0;
         }
-        Parsed::Units { json } => {
-            return match registry() {
-                Ok(reg) => {
-                    if json {
-                        let _ = writeln!(out, "{}", units_json(&reg));
-                    } else {
-                        let _ = write!(out, "{}", units_text(&reg));
-                    }
-                    0
-                }
-                Err(e) => {
-                    let _ = writeln!(err, "error[{}]: {e}", e.code());
-                    1
-                }
-            };
-        }
+        Parsed::Units { group, json } => return run_units(group.as_deref(), json, out, err),
         Parsed::Convert(a) => a,
     };
     match compute(&args) {
@@ -407,7 +574,13 @@ fn fail(args: &Args, e: &Error, out: &mut dyn Write, err: &mut dyn Write) -> u8 
         let _ = writeln!(
             out,
             "{}",
-            json_error(e.code(), &e.to_string(), e.candidates(), e.suggestions())
+            json_error(
+                "convert",
+                e.code(),
+                &e.to_string(),
+                e.candidates(),
+                e.suggestions()
+            )
         );
     } else {
         let _ = writeln!(err, "error[{}]: {e}", e.code());
@@ -456,12 +629,20 @@ mod tests {
     fn units_lists_the_table() {
         let (code, out, _) = run_str(&["units"]);
         assert_eq!(code, 0);
+        assert!(out.lines().any(|l| l == "## pressure"));
         assert!(out.lines().any(|l| l.starts_with("psi\t")));
-        assert!(out.lines().any(|l| l.starts_with("ton\tcandidates:")));
+        assert!(out.lines().any(|l| l.starts_with("ton\t")));
+        let (code, out, _) = run_str(&["units", "volume"]);
+        assert_eq!(code, 0);
+        assert!(out.contains("gal_us\t") && !out.contains("psi\t"));
+        assert!(out.contains("\ngal\t"), "ambiguous gal belongs to volume");
         let (code, out, _) = run_str(&["units", "--json"]);
         assert_eq!(code, 0);
         assert!(out.contains("\"schema\":\"dimvexa.units/1\""));
         assert_eq!(run_str(&["units", "--exact"]).0, 2);
+        assert_eq!(run_str(&["units", "nope"]).0, 2);
+        assert_eq!(run_str(&["units", "length", "mass"]).0, 2);
+        assert_eq!(run_str(&["convert", "units"]).0, 2);
     }
 
     #[test]

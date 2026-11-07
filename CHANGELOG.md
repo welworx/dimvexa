@@ -13,9 +13,10 @@ Commits by `release-plz` once releases start (planned for M1).
 - `dimvexa-core`: `Dim`, `Ratio`, `Error`, `Kind`, `Shape`, parser, `Registry`, `Conversion`, `Quantity`.
 - `dimvexa-data`: seed table of about 60 units with sources and golden vectors.
 - `dimvexa-cli`: `convert` with `--exact` and `--json`.
-- `dimvexa-cli`: `dimvexa units [--json]` lists every supported unit (symbol, aliases, kind,
-  exactness, prefixes, source, plus the rejected ambiguous symbols with their candidates; JSON
-  schema `dimvexa.units/1` in `docs/schemas/`).
+- `dimvexa-cli`: `dimvexa units [GROUP] [--json]` lists the supported units grouped by quantity
+  (length, mass, volume, pressure, ...) with kind, exactness, prefixes, aliases and source, plus
+  the refused ambiguous symbols and their candidates; `GROUP` narrows the list. JSON schema
+  `dimvexa.units/1` in `docs/schemas/`, errors included.
 - `xtask validate-data`.
 - ADR-001 to ADR-008, benchmark report for M0.
 - `Conversion::apply_exact_f64`: the correctly rounded `f64` of the exact result (0 ulp), with
