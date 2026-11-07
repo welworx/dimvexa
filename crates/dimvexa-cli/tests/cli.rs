@@ -331,8 +331,7 @@ fn units_lists_every_table_entry() {
     assert_eq!(r.code, 0);
     assert!(r.stdout.lines().any(|l| l.starts_with("psi\t")));
     let n = dimvexa_data::registry().unwrap().len();
-    let table: Vec<&str> = r.stdout.lines().take_while(|l| !l.is_empty()).collect();
-    assert_eq!(table.len(), n);
+    assert_eq!(r.stdout.lines().take_while(|l| !l.is_empty()).count(), n);
     assert!(r.stdout.contains("# ambiguous symbols"));
     assert!(r.stdout.lines().any(|l| l.starts_with("ton\tcandidates:")));
     let j = dimvexa(&["units", "--json"]);
