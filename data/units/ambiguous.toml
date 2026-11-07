@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Bare symbols that are deliberately rejected. Each lists the explicit units to use instead.
+# `planned` entries are not in the table yet; they are shown to the user with a (planned) mark.
+
+[[ambiguous]]
+symbol = "ton"
+candidates = ["ton_short", "ton_long", "tonne"]
+planned = []
+note = "short ton (2000 lb), long ton (2240 lb) and metric tonne (1000 kg) are all called ton"
+
+[[ambiguous]]
+symbol = "gal"
+candidates = ["gal_us", "gal_imp"]
+planned = []
+note = "US liquid gallon (3.785411784 L) and imperial gallon (4.54609 L) differ by about 20 percent"
+
+[[ambiguous]]
+symbol = "oz"
+candidates = ["oz_av", "oz_troy"]
+planned = ["fl_oz_us", "fl_oz_imp"]
+note = "avoirdupois ounce, troy ounce and the fluid ounces (US and imperial) share the symbol"
+
+[[ambiguous]]
+symbol = "pt"
+candidates = ["pt_us", "pt_imp"]
+planned = []
+note = "US liquid pint (473.176473 mL), imperial pint (568.26125 mL), dry pint, and pt is also the point and the pico-tonne"
+
+[[ambiguous]]
+symbol = "cal"
+candidates = ["cal_th", "cal_IT"]
+planned = []
+note = "thermochemical calorie (4.184 J) and International Table calorie (4.1868 J) differ by about 0.07 percent"
+
+[[ambiguous]]
+symbol = "BTU"
+candidates = ["Btu_IT", "Btu_th"]
+planned = []
+note = "British thermal unit exists in several definitions (IT, thermochemical, 39 F, 59 F, 60 F, mean)"
+
+[[ambiguous]]
+symbol = "Btu"
+candidates = ["Btu_IT", "Btu_th"]
+planned = []
+note = "same as BTU"
+
+[[ambiguous]]
+symbol = "btu"
+candidates = ["Btu_IT", "Btu_th"]
+planned = []
+note = "same as BTU"
+
+[[ambiguous]]
+symbol = "mile"
+candidates = ["mi", "mi_us_survey"]
+planned = ["mi_nautical_uk"]
+note = "international mile, US survey mile and nautical miles differ"
+
+[[ambiguous]]
+symbol = "hp"
+candidates = ["hp_mech", "hp_metric"]
+planned = ["hp_electric", "hp_boiler"]
+note = "mechanical (745.7 W), metric (735.5 W), electrical (746 W) and boiler horsepower differ"
+
+[[ambiguous]]
+symbol = "ppm"
+candidates = []
+planned = ["ppmw", "ppmv", "ppmmol"]
+note = "parts per million by mass, by volume or by amount of substance are different quantities (composition kinds arrive in M2)"

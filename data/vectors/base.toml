@@ -1,0 +1,292 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Golden vectors for the base pack: value in `from` converts exactly to `expect` in `to`.
+# `expect` is a fraction, an integer or a decimal. With `rel_tol` the comparison is approximate
+# (used where the source publishes a rounded number). `source` says where the number comes from.
+
+[[vector]]
+unit = "m"
+value = "1"
+from = "km"
+to = "m"
+expect = "1000"
+source = "BIPM SI Brochure, 9th ed. (2019), SI prefixes (kilo = 10^3)"
+
+[[vector]]
+unit = "g"
+value = "1"
+from = "kg"
+to = "g"
+expect = "1000"
+source = "BIPM SI Brochure, 9th ed. (2019), SI prefixes (kilo = 10^3); kg is the SI base unit"
+
+[[vector]]
+unit = "s"
+value = "1"
+from = "ms"
+to = "s"
+expect = "1/1000"
+source = "BIPM SI Brochure, 9th ed. (2019), SI prefixes (milli = 10^-3)"
+
+[[vector]]
+unit = "A"
+value = "1"
+from = "mA"
+to = "A"
+expect = "1/1000"
+source = "BIPM SI Brochure, 9th ed. (2019), SI prefixes (milli = 10^-3)"
+
+[[vector]]
+unit = "K"
+value = "1"
+from = "K"
+to = "degR"
+expect = "9/5"
+source = "NIST SP 811 (2008), Appendix B (degree Rankine = 5/9 K)"
+
+[[vector]]
+unit = "mol"
+value = "1"
+from = "kmol"
+to = "mol"
+expect = "1000"
+source = "BIPM SI Brochure, 9th ed. (2019), SI prefixes (kilo = 10^3)"
+
+[[vector]]
+unit = "cd"
+value = "1"
+from = "mcd"
+to = "cd"
+expect = "1/1000"
+source = "BIPM SI Brochure, 9th ed. (2019), SI prefixes (milli = 10^-3)"
+
+[[vector]]
+unit = "Hz"
+value = "1"
+from = "kHz"
+to = "s-1"
+expect = "1000"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4 (Hz = s^-1)"
+
+[[vector]]
+unit = "N"
+value = "1"
+from = "N"
+to = "kg.m/s2"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4 (N = kg m s^-2)"
+
+[[vector]]
+unit = "Pa"
+value = "1"
+from = "Pa"
+to = "kg/(m.s2)"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4 (Pa = N/m^2)"
+
+[[vector]]
+unit = "J"
+value = "1"
+from = "kJ"
+to = "N.m"
+expect = "1000"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4 (J = N m)"
+
+[[vector]]
+unit = "W"
+value = "1"
+from = "W"
+to = "J/s"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4 (W = J/s)"
+
+[[vector]]
+unit = "C"
+value = "1"
+from = "C"
+to = "A.s"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4 (C = A s)"
+
+[[vector]]
+unit = "V"
+value = "1"
+from = "V"
+to = "W/A"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4 (V = W/A)"
+
+[[vector]]
+unit = "ohm"
+value = "1"
+from = "ohm"
+to = "V/A"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4 (ohm = V/A)"
+
+[[vector]]
+unit = "ohm"
+value = "1"
+from = "Ω"
+to = "ohm"
+expect = "1"
+source = "alias check: Greek capital omega is the ohm symbol"
+
+[[vector]]
+unit = "F"
+value = "1"
+from = "F"
+to = "C/V"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4 (F = C/V)"
+
+[[vector]]
+unit = "S"
+value = "1"
+from = "S"
+to = "A/V"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4 (S = A/V)"
+
+[[vector]]
+unit = "Wb"
+value = "1"
+from = "Wb"
+to = "V.s"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4 (Wb = V s)"
+
+[[vector]]
+unit = "T"
+value = "1"
+from = "T"
+to = "Wb/m2"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4 (T = Wb/m^2)"
+
+[[vector]]
+unit = "H"
+value = "1"
+from = "H"
+to = "Wb/A"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4 (H = Wb/A)"
+
+[[vector]]
+unit = "min"
+value = "1"
+from = "min"
+to = "s"
+expect = "60"
+source = "BIPM SI Brochure, 9th ed. (2019), non-SI units accepted for use with the SI"
+
+[[vector]]
+unit = "h"
+value = "1"
+from = "h"
+to = "min"
+expect = "60"
+source = "BIPM SI Brochure, 9th ed. (2019), non-SI units accepted for use with the SI"
+
+[[vector]]
+unit = "d"
+value = "1"
+from = "d"
+to = "h"
+expect = "24"
+source = "BIPM SI Brochure, 9th ed. (2019), non-SI units accepted for use with the SI"
+
+[[vector]]
+unit = "L"
+value = "1"
+from = "mL"
+to = "cm3"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), litre = dm^3; 1 mL = 1 cm^3"
+
+[[vector]]
+unit = "L"
+value = "1"
+from = "L"
+to = "m3"
+expect = "1/1000"
+source = "BIPM SI Brochure, 9th ed. (2019), litre = 10^-3 m^3"
+
+[[vector]]
+unit = "tonne"
+value = "1"
+from = "tonne"
+to = "kg"
+expect = "1000"
+source = "BIPM SI Brochure, 9th ed. (2019), tonne = 10^3 kg"
+
+[[vector]]
+unit = "tonne"
+value = "1"
+from = "t"
+to = "kg"
+expect = "1000"
+source = "BIPM SI Brochure, 9th ed. (2019), tonne symbol t"
+
+[[vector]]
+unit = "Wh"
+value = "1"
+from = "kWh"
+to = "MJ"
+expect = "18/5"
+source = "NIST SP 811 (2008), Appendix B (kW h = 3.6E+06 J)"
+
+[[vector]]
+unit = "degC"
+value = "0"
+from = "degC"
+to = "K"
+expect = "273.15"
+source = "BIPM SI Brochure, 9th ed. (2019), t/degC = T/K - 273.15"
+
+[[vector]]
+unit = "degC"
+value = "100"
+from = "degC"
+to = "degF"
+expect = "212"
+source = "NIST SP 811 (2008): water boils at 100 degC = 212 degF"
+
+[[vector]]
+unit = "degC"
+value = "25"
+from = "°C"
+to = "degC"
+expect = "25"
+source = "alias check: degree sign + C"
+
+[[vector]]
+unit = "delta_K"
+value = "1"
+from = "delta_K"
+to = "delta_degF"
+expect = "9/5"
+source = "interval of 1 K = 9/5 degF interval"
+
+[[vector]]
+unit = "delta_degC"
+value = "1"
+from = "delta_degC"
+to = "delta_K"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019) (intervals of degC and K are equal)"
+
+[[vector]]
+unit = "m"
+value = "36"
+from = "km/h"
+to = "m/s"
+expect = "10"
+source = "derived: 1 km/h = 1000 m / 3600 s"
+
+[[vector]]
+unit = "mol"
+value = "1"
+from = "kmol/h"
+to = "mol/s"
+expect = "5/18"
+source = "derived: 1000 mol / 3600 s"
