@@ -18,7 +18,7 @@ dimvexa = { path = "../crates/dimvexa" }
 dimvexa-core = { path = "../crates/dimvexa-core" }
 dimvexa-data = { path = "../crates/dimvexa-data" }
 proptest = "1"
-criterion = "0.5"
+criterion = "0.8"
 # The library and its runner must be the same version: pin both exactly. Install the runner
 # with `cargo install iai-callgrind-runner --version 0.14.0 --locked`.
 iai-callgrind = "=0.14.0"
