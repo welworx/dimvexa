@@ -1,6 +1,7 @@
 # ADR-009: User config files: name mappings, extra units and caller-supplied bridge constants
 
-Status: Proposed (the owner has to accept it before anything below is implemented)
+Status: Accepted for step 1 (`--config` with `[map]` only), confirmed by the owner on 2026-11-07.
+`[[unit]]`, `[[bridge]]`, `--bridge` and shipped profiles stay Proposed until confirmed.
 
 ## Context
 
@@ -67,14 +68,18 @@ Rules, so a config cannot make a result silently wrong:
 
 Open sub-decisions (recommended default first; not implemented before the owner confirms):
 
-* **OPEN 1: first step.** `--config` with `[map]` only, then `[[unit]]`, then `[[bridge]]`.
+* **OPEN 1: first step.** Confirmed and implemented: `--config` with `[map]` only. Then
+  `[[unit]]`, then `[[bridge]]`.
 * **OPEN 2: how `[[unit]]` states a dimension.** Recommended: a `base` unit (`base = "kg"`)
   and an exact `factor`, so the dimension cannot be mistyped.
 * **OPEN 3: bridge kinds.** Recommended: `density` and `molar_mass` first. `ratio` between two
   named standard-volume units (for example `Nm3` to `Sm3`) is the caller's own number for the
   ratio, never computed from temperature and pressure, and comes later.
-* **OPEN 4: parser.** The workspace has no dependencies (ADR-003). Recommended: move the small
-  TOML subset reader that `xtask` uses into core and keep the format inside that subset.
+* **OPEN 4: parser.** The workspace has no dependencies (ADR-003). The shipped reader
+  (`toml_lite`) lives inside the data crate and cannot be reached from core when the crates are
+  published, so step 1 has its own small reader in core (`config.rs`, `[map]` only, errors with
+  file and line). Revisit when `[[unit]]` needs the full subset: either grow that reader or move
+  `toml_lite` into core.
 * **OPEN 5: names of the shipped profiles** and which symbols each one maps.
 
 ## Consequences

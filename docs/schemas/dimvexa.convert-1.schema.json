@@ -6,61 +6,222 @@
   "oneOf": [
     {
       "type": "object",
-      "required": ["schema", "ok", "input", "output", "exact", "exactness", "dimension", "kind", "quantity_kind", "profile", "packs", "data_version", "sources"],
+      "required": [
+        "schema",
+        "ok",
+        "input",
+        "output",
+        "exact",
+        "exactness",
+        "dimension",
+        "kind",
+        "quantity_kind",
+        "profile",
+        "packs",
+        "data_version",
+        "sources",
+        "config"
+      ],
       "properties": {
-        "schema": { "const": "dimvexa.convert/1" },
-        "ok": { "const": true },
+        "schema": {
+          "const": "dimvexa.convert/1"
+        },
+        "ok": {
+          "const": true
+        },
         "input": {
           "type": "object",
-          "required": ["value", "unit"],
-          "properties": { "value": { "type": "string" }, "unit": { "type": "string" } }
+          "required": [
+            "value",
+            "unit"
+          ],
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "unit": {
+              "type": "string"
+            }
+          }
         },
         "output": {
           "type": "object",
-          "required": ["value", "unit", "f64", "truncated"],
+          "required": [
+            "value",
+            "unit",
+            "f64",
+            "truncated"
+          ],
           "properties": {
-            "value": { "type": "string", "description": "Decimal expansion of the exact result, at most 15 fraction digits." },
-            "unit": { "type": "string" },
-            "f64": { "type": "number", "description": "The exact result rounded once to the nearest f64." },
-            "truncated": { "type": "boolean", "description": "True if value was cut at 15 fraction digits." }
+            "value": {
+              "type": "string",
+              "description": "Decimal expansion of the exact result, at most 15 fraction digits."
+            },
+            "unit": {
+              "type": "string"
+            },
+            "f64": {
+              "type": "number",
+              "description": "The exact result rounded once to the nearest f64."
+            },
+            "truncated": {
+              "type": "boolean",
+              "description": "True if value was cut at 15 fraction digits."
+            }
           }
         },
         "exact": {
           "type": "object",
-          "required": ["value", "factor", "offset"],
+          "required": [
+            "value",
+            "factor",
+            "offset"
+          ],
           "properties": {
-            "value": { "type": "string", "pattern": "^-?[0-9]+/[0-9]+$" },
-            "factor": { "type": "string", "pattern": "^-?[0-9]+/[0-9]+$" },
-            "offset": { "type": "string", "pattern": "^-?[0-9]+/[0-9]+$" }
+            "value": {
+              "type": "string",
+              "pattern": "^-?[0-9]+/[0-9]+$"
+            },
+            "factor": {
+              "type": "string",
+              "pattern": "^-?[0-9]+/[0-9]+$"
+            },
+            "offset": {
+              "type": "string",
+              "pattern": "^-?[0-9]+/[0-9]+$"
+            }
           }
         },
-        "exactness": { "enum": ["defined", "measured"] },
-        "dimension": { "type": "array", "items": { "type": "integer" }, "minItems": 7, "maxItems": 7, "description": "Exponents of kg, m, s, A, K, mol, cd." },
-        "kind": { "enum": ["linear", "affine"], "description": "Conversion shape (named `kind` in the plan's sketch; see quantity_kind for the quantity kind)." },
-        "quantity_kind": { "enum": ["plain", "absolute_temperature", "temperature_difference"] },
-        "profile": { "type": ["string", "null"] },
-        "packs": { "type": "array", "items": { "type": "string" } },
-        "data_version": { "type": "string" },
-        "sources": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+        "exactness": {
+          "enum": [
+            "defined",
+            "measured"
+          ]
+        },
+        "dimension": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 7,
+          "maxItems": 7,
+          "description": "Exponents of kg, m, s, A, K, mol, cd."
+        },
+        "kind": {
+          "enum": [
+            "linear",
+            "affine"
+          ],
+          "description": "Conversion shape (named `kind` in the plan's sketch; see quantity_kind for the quantity kind)."
+        },
+        "quantity_kind": {
+          "enum": [
+            "plain",
+            "absolute_temperature",
+            "temperature_difference"
+          ]
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "packs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "data_version": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "config": {
+          "type": "array",
+          "description": "The user config files applied with --config, in order (empty if none): the file as given and a content hash (fnv1a64), so a result can be reproduced.",
+          "items": {
+            "type": "object",
+            "required": [
+              "file",
+              "hash"
+            ],
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "hash": {
+                "type": "string",
+                "pattern": "^fnv1a64:[0-9a-f]{16}$"
+              }
+            }
+          }
+        }
       }
     },
     {
       "type": "object",
-      "required": ["schema", "ok", "error"],
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
       "properties": {
-        "schema": { "const": "dimvexa.convert/1" },
-        "ok": { "const": false },
+        "schema": {
+          "const": "dimvexa.convert/1"
+        },
+        "ok": {
+          "const": false
+        },
         "error": {
           "type": "object",
-          "required": ["code", "message"],
+          "required": [
+            "code",
+            "message"
+          ],
           "properties": {
             "code": {
-              "enum": ["parse_error", "invalid_number", "unknown_unit", "ambiguous_symbol", "ambiguous_expression", "dimension_mismatch", "kind_mismatch", "overflow", "division_by_zero", "length_mismatch", "refused", "invalid_definition", "duplicate_symbol", "usage"],
+              "enum": [
+                "parse_error",
+                "invalid_number",
+                "unknown_unit",
+                "ambiguous_symbol",
+                "ambiguous_expression",
+                "dimension_mismatch",
+                "kind_mismatch",
+                "overflow",
+                "division_by_zero",
+                "length_mismatch",
+                "refused",
+                "invalid_definition",
+                "duplicate_symbol",
+                "usage"
+              ],
               "description": "Library error codes (stable, non-exhaustive list) plus `usage` for command-line mistakes."
             },
-            "message": { "type": "string" },
-            "candidates": { "type": "array", "items": { "type": "string" }, "description": "Explicit symbols or close matches (ambiguous_symbol, unknown_unit)." },
-            "suggestions": { "type": "array", "items": { "type": "string" }, "description": "Everything the error recommends instead: candidates, or the delta unit (delta_K, delta_degC, ...) for temperature kind errors and refused offset units." }
+            "message": {
+              "type": "string"
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Explicit symbols or close matches (ambiguous_symbol, unknown_unit)."
+            },
+            "suggestions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Everything the error recommends instead: candidates, or the delta unit (delta_K, delta_degC, ...) for temperature kind errors and refused offset units."
+            }
           }
         }
       }

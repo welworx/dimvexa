@@ -136,6 +136,37 @@ $ dimvexa convert 1 mtonne kg
 compound expressions such as `km` or `m/s`; an unknown or ambiguous name is an error that lists
 the close matches or the candidates.
 
+## Your own names: `--config`
+
+Dimvexa refuses ambiguous names such as `ton` and `mt`, and it never guesses. If your trade or
+your plant uses a name consistently, say so in a small config file and load it explicitly:
+
+```toml
+# trade.toml
+[map]
+mt  = "tonne"      # we mean the metric ton
+ton = "ton_short"  # we are a US shop
+```
+
+```console
+$ dimvexa convert 1 mt kg --config trade.toml
+1000 kg
+$ dimvexa convert 1 ton kg --config trade.toml
+907.18474 kg
+$ dimvexa convert 1 gal L --config trade.toml
+error[ambiguous_symbol]: 'gal' is ambiguous: use gal_us or gal_imp, or choose a profile
+$ dimvexa units mass --config trade.toml     # ... ends with the names your config resolves
+```
+
+Rules (ADR-009, [`docs/adr/009-user-config.md`](docs/adr/009-user-config.md)):
+- Nothing is loaded unless you name the file; `--config` can be repeated and a later file
+  overrides an earlier one.
+- A mapping only points at an existing unit, so it cannot carry a factor, and it can never
+  redefine an existing symbol (`t`, `m`, `psi`, `km`): that is an error naming the file and line.
+- A mapped name behaves like an alias, so prefixes work (`kmt` is `ktonne`).
+- `--json` output lists the config files used with a content hash (`"config"`), and
+  `dimvexa units` shows which names come from your config.
+
 ## Repository layout
 
 | Path | Purpose |

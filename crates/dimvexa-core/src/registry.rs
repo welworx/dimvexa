@@ -3,6 +3,7 @@
 
 use std::collections::HashMap;
 
+use crate::config::{Config, Mapping};
 use crate::conversion::Conversion;
 use crate::error::{Error, Result};
 use crate::expr::{Expr, is_valid_symbol};
@@ -49,6 +50,8 @@ pub struct Registry {
     ambiguous: HashMap<String, Vec<String>>,
     /// Lower-cased name -> original spellings, for case-insensitive suggestions without a scan.
     lowered: HashMap<String, Vec<String>>,
+    /// Names added by user configs (ADR-009), in application order.
+    mappings: Vec<Mapping>,
 }
 
 impl Registry {
@@ -91,6 +94,87 @@ impl Registry {
     #[must_use]
     pub fn units(&self) -> &[Unit] {
         &self.units
+    }
+
+    /// The names added by [`apply_config`](Self::apply_config), in application order.
+    #[must_use]
+    pub fn mappings(&self) -> &[Mapping] {
+        &self.mappings
+    }
+
+    /// Applies a user config (ADR-009): every `[map]` entry makes its name stand for an
+    /// existing unit, as if it were an alias of that unit (so prefixes work: with
+    /// `mt = "tonne"`, `kmt` is `ktonne`).
+    ///
+    /// A mapping may resolve a name that is declared ambiguous or unknown (`mt`, `ton`). It
+    /// can never redefine an existing symbol, alias or prefixed form (`t`, `m`, `km`), and
+    /// its target must be a symbol or alias of a registered unit. A name mapped by an earlier
+    /// config is replaced by a later one. The registry is unchanged if any entry is refused.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidDefinition`] (symbol `origin:line`) for a malformed name, a name that
+    /// already means a unit, or a target that is not a registered unit.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_core::{Config, Dim, Ratio, Registry, Unit};
+    /// let mut reg = Registry::new();
+    /// reg.register(Unit::linear("kg", Dim::KG, Ratio::ONE)?)?;
+    /// reg.register(Unit::linear("t", Dim::KG, Ratio::from_int(1000))?)?;
+    /// let cfg = Config::parse("[map]\nmetric_ton = \"t\"\n", "my.toml")?;
+    /// reg.apply_config(&cfg)?;
+    /// assert_eq!(reg.conversion("metric_ton", "kg")?.factor(), Ratio::from_int(1000));
+    /// // An existing symbol cannot be redefined.
+    /// let bad = Config::parse("[map]\nkg = \"t\"\n", "my.toml")?;
+    /// assert_eq!(reg.apply_config(&bad).unwrap_err().code(), "invalid_definition");
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn apply_config(&mut self, config: &Config) -> Result<()> {
+        let mut staged = self.clone();
+        for m in config.mappings() {
+            staged.apply_mapping(m)?;
+        }
+        *self = staged;
+        Ok(())
+    }
+
+    fn apply_mapping(&mut self, m: &Mapping) -> Result<()> {
+        let bad = |message: String| Error::InvalidDefinition {
+            symbol: format!("{}:{}", m.origin, m.line),
+            message,
+        };
+        if !is_valid_symbol(&m.name) {
+            return Err(bad(format!("'{}' is not a well-formed unit name", m.name)));
+        }
+        let previous = self.mappings.iter().position(|x| x.name == m.name);
+        if previous.is_none()
+            && (self.by_symbol.contains_key(&m.name) || self.resolve_symbol(&m.name).is_ok())
+        {
+            return Err(bad(format!(
+                "'{}' already means a unit and cannot be redefined",
+                m.name
+            )));
+        }
+        let Some(&index) = self.by_symbol.get(&m.target) else {
+            return Err(bad(format!(
+                "'{}' is not a unit symbol or alias of the table",
+                m.target
+            )));
+        };
+        if let Some(p) = previous {
+            self.mappings.remove(p);
+        } else {
+            self.lowered
+                .entry(m.name.to_lowercase())
+                .or_default()
+                .push(m.name.clone());
+        }
+        self.ambiguous.remove(&m.name);
+        self.by_symbol.insert(m.name.clone(), index);
+        self.mappings.push(m.clone());
+        Ok(())
     }
 
     /// Declares a bare symbol as ambiguous.

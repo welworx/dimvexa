@@ -223,6 +223,7 @@ pub fn check_convert_schema(v: &V) {
         "packs",
         "data_version",
         "sources",
+        "config",
     ] {
         assert!(v.get(key).is_some(), "missing key {key}");
     }
@@ -241,6 +242,7 @@ pub fn check_convert_schema(v: &V) {
     assert_eq!(v.get("dimension").unwrap().as_array().len(), 7);
     assert!(["defined", "measured"].contains(&v.get("exactness").unwrap().as_str()));
     assert!(["linear", "affine"].contains(&v.get("kind").unwrap().as_str()));
+    check_config_array(v);
     assert!(!v.get("sources").unwrap().as_array().is_empty());
     assert!(
         v.get("exact")
@@ -261,6 +263,12 @@ pub fn check_units_schema(v: &V) {
     assert!(v.get("ok").unwrap().as_bool());
     assert!(v.get("data_version").unwrap().as_str().starts_with('v'));
     assert!(v.get("group").is_some(), "missing group");
+    check_config_array(v);
+    for m in v.get("mappings").unwrap().as_array() {
+        for k in ["name", "unit", "file", "line"] {
+            assert!(m.get(k).is_some(), "missing mappings[].{k}");
+        }
+    }
     let groups = v.get("groups").unwrap().as_array();
     assert!(!groups.is_empty());
     for g in groups {
@@ -328,4 +336,16 @@ fn check_unit_detail_schema(v: &V) {
     assert_eq!(u.get("dimension").unwrap().as_array().len(), 7);
     assert!(u.get("factor").unwrap().as_str().contains('/'));
     assert!(u.get("offset").unwrap().as_str().contains('/'));
+}
+
+/// The `config` array of `dimvexa.convert/1` and `dimvexa.units/1`: `[{file, hash}]`.
+fn check_config_array(v: &V) {
+    for c in v.get("config").expect("missing config").as_array() {
+        assert!(!c.get("file").unwrap().as_str().is_empty());
+        let hash = c.get("hash").unwrap().as_str();
+        assert!(
+            hash.starts_with("fnv1a64:") && hash.len() == 8 + 16,
+            "{hash}"
+        );
+    }
 }

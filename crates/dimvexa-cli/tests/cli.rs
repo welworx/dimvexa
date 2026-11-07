@@ -616,3 +616,228 @@ fn mt_is_ambiguous_and_the_explicit_spellings_work() {
     assert_eq!(c.len(), 1);
     assert_eq!(c[0].as_str(), "tonne");
 }
+
+/// Writes a config file under the test target directory and returns its path.
+fn config_file(name: &str, text: &str) -> String {
+    let path = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join(name);
+    std::fs::write(&path, text).unwrap();
+    path.to_str().unwrap().to_string()
+}
+
+const TRADE: &str = "# trade vocabulary\n[map]\nmt = \"tonne\"\nton = \"ton_short\"\n";
+
+#[test]
+fn config_resolves_names_the_table_refuses() {
+    let cfg = config_file("trade.toml", TRADE);
+    // Without a config the names stay refused.
+    assert_eq!(dimvexa(&["convert", "1", "mt", "kg"]).code, 1);
+    // With it they resolve; both spellings of the flag work, before or after the arguments.
+    assert_eq!(
+        dimvexa(&["convert", "1", "mt", "kg", "--config", &cfg]).stdout,
+        "1000 kg\n"
+    );
+    assert_eq!(
+        dimvexa(&[&format!("--config={cfg}"), "1", "ton", "kg"]).stdout,
+        "907.18474 kg\n"
+    );
+    // Only the mapped names change: every other ambiguous symbol is still an error.
+    let r = dimvexa(&["convert", "1", "gal", "L", "--config", &cfg]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.starts_with("error[ambiguous_symbol]"));
+    // Explicit spellings are unaffected.
+    assert_eq!(
+        dimvexa(&["convert", "1", "ton_long", "tonne", "--config", &cfg]).stdout,
+        "1.0160469088 tonne\n"
+    );
+}
+
+#[test]
+fn json_records_the_config_used() {
+    let cfg = config_file("trade_json.toml", TRADE);
+    let hash = dimvexa::Config::parse(TRADE, &cfg)
+        .unwrap()
+        .hash()
+        .to_string();
+    let r = dimvexa(&["convert", "1", "mt", "kg", "--json", "--config", &cfg]);
+    let v = json::parse(&r.stdout).unwrap();
+    json::check_convert_schema(&v);
+    let used = v.get("config").unwrap().as_array();
+    assert_eq!(used.len(), 1);
+    assert_eq!(used[0].get("file").unwrap().as_str(), cfg);
+    assert_eq!(used[0].get("hash").unwrap().as_str(), hash);
+    // No config: the field is there and empty.
+    let v = json::parse(&dimvexa(&["convert", "1", "t", "kg", "--json"]).stdout).unwrap();
+    assert!(v.get("config").unwrap().as_array().is_empty());
+}
+
+#[test]
+fn a_later_config_overrides_an_earlier_one() {
+    let a = config_file("first.toml", "[map]\nton = \"ton_short\"\n");
+    let b = config_file("second.toml", "[map]\nton = \"ton_long\"\n");
+    let r = dimvexa(&["convert", "1", "ton", "kg", "--config", &a, "--config", &b]);
+    assert_eq!(r.stdout, "1016.0469088 kg\n");
+    let r = dimvexa(&["convert", "1", "ton", "kg", "--config", &b, "--config", &a]);
+    assert_eq!(r.stdout, "907.18474 kg\n");
+}
+
+#[test]
+fn a_config_can_never_redefine_an_existing_symbol() {
+    let cfg = config_file("redefine.toml", "[map]\nmt = \"tonne\"\nt = \"kg\"\n");
+    for args in [
+        &["convert", "1", "t", "kg"][..],
+        &["units"],
+        &["units", "--groups"],
+    ] {
+        let mut a = args.to_vec();
+        a.extend(["--config", cfg.as_str()]);
+        let r = dimvexa(&a);
+        assert_eq!(r.code, 1, "{args:?}");
+        assert!(
+            r.stderr.starts_with("error[invalid_definition]"),
+            "{}",
+            r.stderr
+        );
+        assert!(r.stderr.contains("redefine.toml:3"), "{}", r.stderr);
+        assert!(r.stderr.contains("already means a unit"), "{}", r.stderr);
+    }
+    // In JSON the failure uses the schema of the command.
+    let v = json::parse(&dimvexa(&["convert", "1", "t", "kg", "--json", "--config", &cfg]).stdout)
+        .unwrap();
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/1");
+    assert_eq!(
+        v.get("error").unwrap().get("code").unwrap().as_str(),
+        "invalid_definition"
+    );
+    let v = json::parse(&dimvexa(&["units", "--json", "--config", &cfg]).stdout).unwrap();
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+    // Unknown targets, unknown sections and bad syntax are errors too.
+    for (name, text, needle) in [
+        (
+            "target.toml",
+            "[map]\nfoo = \"nope\"\n",
+            "not a unit symbol or alias",
+        ),
+        ("section.toml", "[unit]\n", "only [map]"),
+        ("syntax.toml", "[map]\nfoo = tonne\n", "quoted string"),
+    ] {
+        let path = config_file(name, text);
+        let r = dimvexa(&["convert", "1", "m", "km", "--config", &path]);
+        assert_eq!(r.code, 1, "{name}");
+        assert!(r.stderr.contains(needle), "{name}: {}", r.stderr);
+    }
+}
+
+#[test]
+fn config_usage_errors_exit_2() {
+    let r = dimvexa(&["convert", "1", "m", "km", "--config"]);
+    assert_eq!(r.code, 2);
+    assert!(r.stderr.contains("'--config' needs a file name"));
+    let r = dimvexa(&[
+        "convert",
+        "1",
+        "m",
+        "km",
+        "--config",
+        "/nonexistent/dimvexa.toml",
+    ]);
+    assert_eq!(r.code, 2);
+    assert!(
+        r.stderr.starts_with("error[usage]: cannot read config"),
+        "{}",
+        r.stderr
+    );
+    let v =
+        json::parse(&dimvexa(&["units", "--json", "--config", "/nonexistent/dimvexa.toml"]).stdout)
+            .unwrap();
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+    assert_eq!(
+        v.get("error").unwrap().get("code").unwrap().as_str(),
+        "usage"
+    );
+}
+
+#[test]
+fn units_shows_where_a_mapped_name_comes_from() {
+    let cfg = config_file("trade_units.toml", TRADE);
+    let r = dimvexa(&["units", "mass", "--config", &cfg]);
+    assert_eq!(r.code, 0);
+    assert!(r.stdout.contains("## config mappings"));
+    assert!(r.stdout.lines().any(|l| l == format!("mt\ttonne\t{cfg}:3")));
+    // The refused row says it is resolved now.
+    assert!(
+        r.stdout
+            .lines()
+            .any(|l| l.starts_with("mt\t") && l.contains("resolved by config as tonne"))
+    );
+    // Without a config there is no such section.
+    assert!(
+        !dimvexa(&["units", "mass"])
+            .stdout
+            .contains("config mappings")
+    );
+
+    let v = json::parse(&dimvexa(&["units", "--json", "--config", &cfg]).stdout).unwrap();
+    json::check_units_schema(&v);
+    let m = v.get("mappings").unwrap().as_array();
+    assert_eq!(m.len(), 2);
+    assert_eq!(m[0].get("name").unwrap().as_str(), "mt");
+    assert_eq!(m[0].get("unit").unwrap().as_str(), "tonne");
+    assert_eq!(m[0].get("file").unwrap().as_str(), cfg);
+    assert_eq!(v.get("config").unwrap().as_array().len(), 1);
+    // The details of a mapped name are those of its unit.
+    let d = json::parse(&dimvexa(&["units", "mt", "--json", "--config", &cfg]).stdout).unwrap();
+    assert_eq!(
+        d.get("unit").unwrap().get("symbol").unwrap().as_str(),
+        "tonne"
+    );
+}
+
+/// The `--config` section of the README: its TOML block and every command it shows are real.
+#[test]
+fn readme_config_example_is_real() {
+    let readme = readme();
+    let section = readme_section(&readme, "## Your own names: `--config`");
+    let toml = section
+        .split("```toml\n")
+        .nth(1)
+        .and_then(|b| b.split("```").next())
+        .unwrap();
+    let dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("readme_config");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("trade.toml"), toml).unwrap();
+    let run = |args: &[&str]| {
+        let out = Command::new(env!("CARGO_BIN_EXE_dimvexa"))
+            .args(args)
+            .current_dir(&dir)
+            .output()
+            .unwrap();
+        (
+            out.status.code().unwrap(),
+            String::from_utf8(out.stdout).unwrap(),
+            String::from_utf8(out.stderr).unwrap(),
+        )
+    };
+    for args in [
+        &["convert", "1", "mt", "kg", "--config", "trade.toml"][..],
+        &["convert", "1", "ton", "kg", "--config", "trade.toml"],
+        &["convert", "1", "gal", "L", "--config", "trade.toml"],
+    ] {
+        let (code, stdout, stderr) = run(args);
+        let output = if code == 0 { stdout } else { stderr };
+        let shown = format!("$ dimvexa {}\n{output}", args.join(" "));
+        assert!(section.contains(&shown), "README does not show:\n{shown}");
+    }
+    let (code, stdout, _) = run(&["units", "mass", "--config", "trade.toml"]);
+    assert_eq!(code, 0);
+    assert!(stdout.contains("## config mappings"));
+    assert!(section.contains("$ dimvexa units mass --config trade.toml"));
+    // The rules the README states.
+    assert_eq!(
+        run(&["convert", "1", "kmt", "t", "--config", "trade.toml"]).1,
+        "1000 t\n"
+    );
+    std::fs::write(dir.join("bad.toml"), "[map]\nt = \"kg\"\n").unwrap();
+    let (code, _, stderr) = run(&["convert", "1", "t", "kg", "--config", "bad.toml"]);
+    assert_eq!(code, 1);
+    assert!(stderr.contains("bad.toml:2") && stderr.contains("already means a unit"));
+}
