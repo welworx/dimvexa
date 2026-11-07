@@ -1,14 +1,16 @@
 Usage:
   dimvexa convert VALUE FROM TO [--exact] [--json]
   dimvexa VALUE FROM TO [--exact] [--json]
-  dimvexa units [GROUP] [--json]
+  dimvexa units [--groups | GROUP | UNIT] [--json]
 
 Converts VALUE from unit FROM to unit TO.
 
 Commands:
-  units        list the supported units grouped by quantity (length, mass, volume, ...) and
-               the ambiguous symbols that are refused; the listing starts with the groups, and
-               GROUP shows one of them only
+  units            list the supported units grouped by quantity, and the ambiguous symbols
+                   that are refused
+  units --groups   list only the groups (length, mass, volume, ...) with their sizes
+  units GROUP      list one group, for example: dimvexa units volume
+  units UNIT       show the details of one unit, for example: dimvexa units psi
 
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal

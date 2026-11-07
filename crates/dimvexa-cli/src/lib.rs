@@ -4,7 +4,7 @@
 //! ```text
 //! dimvexa convert VALUE FROM TO [--exact] [--json]
 //! dimvexa VALUE FROM TO [--exact] [--json]        shorthand
-//! dimvexa units [GROUP] [--json]                  list the supported units by quantity
+//! dimvexa units [--groups | GROUP | UNIT] [--json]  list units by quantity, one group, or one unit
 //! ```
 //!
 //! This crate contains **no conversion logic**: it parses arguments, calls the public
@@ -28,14 +28,16 @@ const USAGE: &str = "\
 Usage:
   dimvexa convert VALUE FROM TO [--exact] [--json]
   dimvexa VALUE FROM TO [--exact] [--json]
-  dimvexa units [GROUP] [--json]
+  dimvexa units [--groups | GROUP | UNIT] [--json]
 
 Converts VALUE from unit FROM to unit TO.
 
 Commands:
-  units        list the supported units grouped by quantity (length, mass, volume, ...) and
-               the ambiguous symbols that are refused; the listing starts with the groups, and
-               GROUP shows one of them only
+  units            list the supported units grouped by quantity, and the ambiguous symbols
+                   that are refused
+  units --groups   list only the groups (length, mass, volume, ...) with their sizes
+  units GROUP      list one group, for example: dimvexa units volume
+  units UNIT       show the details of one unit, for example: dimvexa units psi
 
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
@@ -64,9 +66,19 @@ struct Args {
     json: bool,
 }
 
+/// What `dimvexa units` was asked for.
+enum UnitsTarget {
+    /// The whole table, grouped.
+    All,
+    /// Only the names of the groups.
+    Groups,
+    /// One group (`volume`) or one unit (`psi`, `km`).
+    Query(String),
+}
+
 enum Parsed {
     Convert(Args),
-    Units { group: Option<String>, json: bool },
+    Units { target: UnitsTarget, json: bool },
     Help,
     Version,
 }
@@ -94,11 +106,12 @@ fn parse_args(args: &[String]) -> Result<Parsed, UsageError> {
         suggestions: Vec::new(),
     };
     let mut positional: Vec<&str> = Vec::new();
-    let (mut exact, mut want_json) = (false, false);
+    let (mut exact, mut want_json, mut want_groups) = (false, false, false);
     for a in args {
         match a.as_str() {
             "--exact" => exact = true,
             "--json" => want_json = true,
+            "--groups" => want_groups = true,
             "-h" | "--help" => return Ok(Parsed::Help),
             "-V" | "--version" => return Ok(Parsed::Version),
             s if s.starts_with("--") => return Err(usage(format!("unknown option '{s}'"))),
@@ -109,20 +122,31 @@ fn parse_args(args: &[String]) -> Result<Parsed, UsageError> {
         if exact {
             return Err(usage("'units' does not take --exact".to_string()));
         }
-        return match rest {
-            [] => Ok(Parsed::Units {
-                group: None,
-                json: want_json,
+        let json = want_json;
+        return match (rest, want_groups) {
+            ([], false) => Ok(Parsed::Units {
+                target: UnitsTarget::All,
+                json,
             }),
-            [group] => Ok(Parsed::Units {
-                group: Some((*group).to_string()),
-                json: want_json,
+            ([], true) => Ok(Parsed::Units {
+                target: UnitsTarget::Groups,
+                json,
+            }),
+            ([_], true) => Err(usage(
+                "'--groups' lists the groups and takes no GROUP or UNIT".to_string(),
+            )),
+            ([query], false) => Ok(Parsed::Units {
+                target: UnitsTarget::Query((*query).to_string()),
+                json,
             }),
             _ => Err(usage(format!(
-                "'units' takes at most one argument (a group such as 'length'), got {}",
+                "'units' takes at most one argument (a group such as 'length' or a unit such as 'psi'), got {}",
                 rest.len()
             ))),
         };
+    }
+    if want_groups {
+        return Err(usage("'--groups' only applies to 'units'".to_string()));
     }
     if positional.first() == Some(&"convert") {
         positional.remove(0);
@@ -316,41 +340,6 @@ fn group_name(dim: Dim) -> String {
     name.to_string()
 }
 
-/// The units of the table to list: `(group, unit)` pairs in table order, narrowed to one
-/// group when asked. An unknown group is a usage error that names the known groups.
-fn select_units<'a>(
-    reg: &'a Registry,
-    group: Option<&str>,
-) -> Result<Vec<(String, &'a Unit)>, UsageError> {
-    let all: Vec<(String, &Unit)> = reg
-        .units()
-        .iter()
-        .map(|u| (group_name(u.dim()), u))
-        .collect();
-    let mut groups: Vec<String> = Vec::new();
-    for (g, _) in &all {
-        if !groups.contains(g) {
-            groups.push(g.clone());
-        }
-    }
-    let Some(want) = group else {
-        return Ok(all);
-    };
-    let want = want.to_ascii_lowercase();
-    if !groups.contains(&want) {
-        return Err(UsageError {
-            message: format!(
-                "unknown group '{want}'; known groups: {}",
-                groups.join(", ")
-            ),
-            json: false,
-            schema: "units",
-            suggestions: groups,
-        });
-    }
-    Ok(all.into_iter().filter(|(g, _)| *g == want).collect())
-}
-
 /// The ambiguous symbols to list: all of them, or with a group the ones that have a
 /// candidate in it.
 fn select_ambiguous(
@@ -391,21 +380,18 @@ fn group_counts(reg: &Registry) -> Vec<(String, usize)> {
     groups
 }
 
-fn units_text(
-    groups: &[(String, usize)],
-    units: &[(String, &Unit)],
-    ambiguous: &[&dimvexa::AmbiguousDef],
-    filtered: bool,
-) -> String {
-    let mut s = String::new();
-    if !filtered {
-        s.push_str("## groups (list one with: dimvexa units GROUP)\n# columns: group, units\n");
-        for (g, n) in groups {
-            let _ = writeln!(s, "{g}\t{n}");
-        }
-        s.push('\n');
+/// The group overview: one `group<TAB>units` row per group.
+fn groups_text(groups: &[(String, usize)]) -> String {
+    let mut s = String::from("# columns: group, units\n");
+    for (g, n) in groups {
+        let _ = writeln!(s, "{g}\t{n}");
     }
-    s.push_str("# columns: symbol, quantity_kind, exactness, prefixes, aliases, source\n");
+    s
+}
+
+fn units_text(units: &[(String, &Unit)], ambiguous: &[&dimvexa::AmbiguousDef]) -> String {
+    let mut s =
+        String::from("# columns: symbol, quantity_kind, exactness, prefixes, aliases, source\n");
     let mut current: Option<&str> = None;
     for (g, u) in units {
         if current != Some(g.as_str()) {
@@ -504,50 +490,204 @@ fn units_json(
     )
 }
 
+/// Everything shown for one unit (a table unit, or an expression such as `km`).
+struct Detail {
+    symbol: String,
+    group: String,
+    aliases: Vec<String>,
+    dim: Dim,
+    quantity_kind: &'static str,
+    exactness: &'static str,
+    /// Only for a table unit.
+    prefixes: Option<&'static str>,
+    namespace: Option<String>,
+    factor: String,
+    offset: String,
+    sources: Vec<String>,
+    note: Option<String>,
+}
+
+fn unit_detail(reg: &Registry, query: &str) -> Result<Detail, Error> {
+    if let Some(u) = reg.get(query) {
+        return Ok(Detail {
+            symbol: u.symbol().to_string(),
+            group: group_name(u.dim()),
+            aliases: u.aliases().to_vec(),
+            dim: u.dim(),
+            quantity_kind: u.kind().name(),
+            exactness: u.exactness().name(),
+            prefixes: Some(u.prefixes().name()),
+            namespace: Some(u.namespace().to_string()),
+            factor: u.factor().to_fraction_string(),
+            offset: u.offset().to_fraction_string(),
+            sources: vec![u.source().to_string()],
+            note: Some(u.note().to_string()),
+        });
+    }
+    // Not a table symbol: a prefixed or compound expression such as km or kW.h, or an
+    // error (unknown, ambiguous) that the library words.
+    let e = reg.parse(query)?;
+    Ok(Detail {
+        symbol: query.to_string(),
+        group: group_name(e.dim()),
+        aliases: Vec::new(),
+        dim: e.dim(),
+        quantity_kind: e.kind().name(),
+        exactness: e.exactness().name(),
+        prefixes: None,
+        namespace: None,
+        factor: e.factor().to_fraction_string(),
+        offset: e.offset().to_fraction_string(),
+        sources: e.sources().to_vec(),
+        note: None,
+    })
+}
+
+fn detail_text(d: &Detail) -> String {
+    let none = |s: &str| {
+        if s.is_empty() {
+            "-".to_string()
+        } else {
+            s.to_string()
+        }
+    };
+    let mut s = format!("{}\n", d.symbol);
+    let mut line = |k: &str, v: String| {
+        let _ = writeln!(s, "  {k:<14}{}", cell(&v));
+    };
+    line("group", d.group.clone());
+    line("aliases", none(&d.aliases.join(", ")));
+    line("dimension", d.dim.to_string());
+    line("quantity kind", d.quantity_kind.to_string());
+    line("exactness", d.exactness.to_string());
+    if let Some(p) = d.prefixes {
+        line("prefixes", p.to_string());
+    }
+    if let Some(n) = &d.namespace {
+        line("namespace", n.clone());
+    }
+    line("factor to SI", d.factor.clone());
+    line("offset to SI", d.offset.clone());
+    for src in &d.sources {
+        line("source", src.clone());
+    }
+    if let Some(n) = d.note.as_deref().filter(|n| !n.is_empty()) {
+        line("note", n.to_string());
+    }
+    s
+}
+
+fn detail_json(d: &Detail) -> String {
+    let list = |v: &[String]| {
+        v.iter()
+            .map(|x| json_string(x))
+            .collect::<Vec<_>>()
+            .join(",")
+    };
+    let opt = |v: Option<&str>| v.map_or_else(|| "null".to_string(), json_string);
+    let dims: Vec<String> = d.dim.exponents().iter().map(ToString::to_string).collect();
+    format!(
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"symbol\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"note\":{}}}}}",
+        json_string(&format!("{}.units/1", dimvexa::PROJECT_NAME)),
+        json_string(&dimvexa::data_version()),
+        json_string(&d.symbol),
+        json_string(&d.group),
+        list(&d.aliases),
+        dims.join(","),
+        json_string(d.quantity_kind),
+        json_string(d.exactness),
+        opt(d.prefixes),
+        opt(d.namespace.as_deref()),
+        json_string(&d.factor),
+        json_string(&d.offset),
+        list(&d.sources),
+        opt(d.note.as_deref()),
+    )
+}
+
 /// Runs `dimvexa units`; returns the exit code.
-fn run_units(group: Option<&str>, json: bool, out: &mut dyn Write, err: &mut dyn Write) -> u8 {
-    let fail_json = |code: &str, message: &str, suggestions: &[String], out: &mut dyn Write| {
-        let _ = writeln!(
-            out,
-            "{}",
-            json_error("units", code, message, &[], suggestions)
-        );
+fn run_units(target: &UnitsTarget, json: bool, out: &mut dyn Write, err: &mut dyn Write) -> u8 {
+    let mut fail = |code: &str, message: &str, suggestions: &[String], status: u8| -> u8 {
+        if json {
+            let _ = writeln!(
+                out,
+                "{}",
+                json_error("units", code, message, &[], suggestions)
+            );
+        } else {
+            let _ = writeln!(err, "error[{code}]: {message}");
+        }
+        status
     };
     let reg = match registry() {
         Ok(r) => r,
-        Err(e) => {
-            if json {
-                fail_json(e.code(), &e.to_string(), &[], out);
-            } else {
-                let _ = writeln!(err, "error[{}]: {e}", e.code());
-            }
-            return 1;
-        }
+        Err(e) => return fail(e.code(), &e.to_string(), &[], 1),
     };
     let groups = group_counts(&reg);
-    match select_units(&reg, group) {
-        Ok(units) => {
-            let ambiguous = select_ambiguous(&units, group.is_some());
-            if json {
-                let _ = writeln!(out, "{}", units_json(&groups, &units, &ambiguous, group));
+    let (selected, group) = match target {
+        UnitsTarget::Groups => {
+            let text = if json {
+                units_json(&groups, &[], &[], None)
             } else {
-                let _ = write!(
-                    out,
-                    "{}",
-                    units_text(&groups, &units, &ambiguous, group.is_some())
-                );
-            }
-            0
-        }
-        Err(u) => {
+                groups_text(&groups)
+            };
+            let _ = write!(out, "{text}");
             if json {
-                fail_json("usage", &u.message, &u.suggestions, out);
-            } else {
-                let _ = writeln!(err, "error[usage]: {}", u.message);
+                let _ = writeln!(out);
             }
-            2
+            return 0;
         }
+        UnitsTarget::All => (None, None),
+        UnitsTarget::Query(q) => {
+            let q_lower = q.to_ascii_lowercase();
+            if groups.iter().any(|(g, _)| *g == q_lower) {
+                (Some(q_lower.clone()), Some(q_lower))
+            } else {
+                return match unit_detail(&reg, q) {
+                    Ok(d) => {
+                        let text = if json {
+                            detail_json(&d)
+                        } else {
+                            detail_text(&d)
+                        };
+                        let _ = write!(out, "{text}");
+                        if json {
+                            let _ = writeln!(out);
+                        }
+                        0
+                    }
+                    Err(e) => {
+                        let hint = if e.code() == "unknown_unit" {
+                            "; it is not a group either (see 'dimvexa units --groups')".to_string()
+                        } else {
+                            String::new()
+                        };
+                        let mut near = e.candidates().to_vec();
+                        near.extend(e.suggestions().iter().cloned());
+                        near.dedup();
+                        fail(e.code(), &format!("{e}{hint}"), &near, 1)
+                    }
+                };
+            }
+        }
+    };
+    let units: Vec<(String, &Unit)> = reg
+        .units()
+        .iter()
+        .map(|u| (group_name(u.dim()), u))
+        .filter(|(g, _)| selected.as_ref().is_none_or(|want| g == want))
+        .collect();
+    let ambiguous = select_ambiguous(&units, group.is_some());
+    if json {
+        let _ = writeln!(
+            out,
+            "{}",
+            units_json(&groups, &units, &ambiguous, group.as_deref())
+        );
+    } else {
+        let _ = write!(out, "{}", units_text(&units, &ambiguous));
     }
+    0
 }
 
 /// Runs the command line `args` (without the program name), writing to `out` and `err`.
@@ -587,7 +727,7 @@ where
             );
             return 0;
         }
-        Parsed::Units { group, json } => return run_units(group.as_deref(), json, out, err),
+        Parsed::Units { target, json } => return run_units(&target, json, out, err),
         Parsed::Convert(a) => a,
     };
     match compute(&args) {
@@ -670,6 +810,12 @@ mod tests {
         assert!(out.lines().any(|l| l == "## pressure"));
         assert!(out.lines().any(|l| l.starts_with("psi\t")));
         assert!(out.lines().any(|l| l.starts_with("ton\t")));
+        let (code, out, _) = run_str(&["units", "--groups"]);
+        assert_eq!(code, 0);
+        assert!(out.lines().any(|l| l == "volume\t5"));
+        let (code, out, _) = run_str(&["units", "psi"]);
+        assert_eq!(code, 0);
+        assert!(out.contains("group         pressure"));
         let (code, out, _) = run_str(&["units", "volume"]);
         assert_eq!(code, 0);
         assert!(out.contains("gal_us\t") && !out.contains("psi\t"));
@@ -678,7 +824,9 @@ mod tests {
         assert_eq!(code, 0);
         assert!(out.contains("\"schema\":\"dimvexa.units/1\""));
         assert_eq!(run_str(&["units", "--exact"]).0, 2);
-        assert_eq!(run_str(&["units", "nope"]).0, 2);
+        assert_eq!(run_str(&["units", "nope"]).0, 1);
+        assert_eq!(run_str(&["units", "--groups", "psi"]).0, 2);
+        assert_eq!(run_str(&["1", "m", "km", "--groups"]).0, 2);
         assert_eq!(run_str(&["units", "length", "mass"]).0, 2);
         assert_eq!(run_str(&["convert", "units"]).0, 2);
     }
