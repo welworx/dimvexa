@@ -1,10 +1,41 @@
 {
-  "_note": "UNVERIFIED best-effort spellings from memory of astropy.units (imperial units enabled with u.add_enabled_units(u.imperial)); not checked against an installed astropy. Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template.",
-  "ops": {".": "*"},
+  "_note": "astropy 8.0.2: Spellings checked against the installed library (see docs/benchmarks/comparison-run-1.md). Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template. Temperature differences map to K / deg_R (no delta units exist); points use the temperature() equivalency.",
+  "ops": {
+    ".": "*"
+  },
   "pow": "**",
   "units": {
-    "1": "", "degC": "deg_C", "degF": "deg_F", "degR": "deg_R", "delta_K": "K", "delta_degC": "K", "delta_degF": "deg_R", "delta_degR": "deg_R",
-    "tonne": "t", "ton_short": "ton", "oz_av": "oz", "gal_us": "gallon", "pt_us": "pint", "cal_th": "cal", "Btu_IT": "BTU",
-    "hp_mech": "hp", "mi": "mi", "nmi": "nmi", "lbf": "lbf", "psi": "psi", "mmHg": "mmHg", "cP": "cP", "cSt": "cSt", "ft": "ft", "in": "inch", "lb": "lb"
+    "1": "",
+    "degC": "deg_C",
+    "degF": "deg_F",
+    "degR": "deg_R",
+    "delta_K": "K",
+    "delta_degC": "K",
+    "delta_degF": "deg_R",
+    "delta_degR": "deg_R",
+    "tonne": "t",
+    "ton_short": "ton",
+    "oz_av": "oz",
+    "gal_us": "gallon",
+    "pt_us": "pint",
+    "cal_th": "cal",
+    "Btu_IT": "BTU",
+    "hp_mech": "hp",
+    "mi": "mi",
+    "nmi": "nmi",
+    "lbf": "lbf",
+    "psi": "psi",
+    "mmHg": "mmHg",
+    "cP": "cP",
+    "cSt": "cSt",
+    "ft": "ft",
+    "in": "inch",
+    "lb": "lb",
+    "s-1": "1/s",
+    "kWh": "kW*h",
+    "Ω": "Ohm",
+    "°C": "deg_C",
+    "°F": "deg_F",
+    "Δ°F": "deg_R"
   }
 }
