@@ -1,10 +1,11 @@
-# Dimvexa: unit conversion for Rust
+# Dimvexa: exact unit conversion
 
 **Exact factors. Loud failures. Zero guessing.**
 
-Dimvexa is a unit conversion library (with a command-line tool) for engineers and scientists
-who need conversions they can trust: every factor is an exact fraction with a cited source,
-and anything ambiguous is an error instead of a guess.
+Dimvexa is a unit conversion library with a Rust core and a command-line tool. Python, WASM,
+MCP and Excel interfaces are planned and not available yet (see [`ROADMAP.md`](ROADMAP.md)).
+It is for engineers and scientists who need conversions they can trust: every factor is an
+exact fraction with a cited source, and anything ambiguous is an error instead of a guess.
 
 ```rust
 use dimvexa::registry;
@@ -20,8 +21,9 @@ $ dimvexa convert 1 ton kg
 error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne, or choose a profile
 ```
 
-**Status: pre-release (version 0.0.0).** Nothing is published to crates.io yet and the API may
-change; use it from a git checkout (`dimvexa = { git = "https://github.com/welworx/dimvexa" }`).
+**Status: pre-release (version 0.0.0).** The library is a Rust crate and the tool a Rust binary;
+nothing is published to crates.io yet and the API may change. Use it from a git checkout
+(`dimvexa = { git = "https://github.com/welworx/dimvexa" }`).
 The name *Dimvexa* is a working name (`docs/PLAN.md`, section 14).
 
 ## Why
@@ -67,7 +69,7 @@ request a missing unit, and [`SECURITY.md`](SECURITY.md) to report a vulnerabili
 Plain text:
 
 ```text
-Liemberger, W. (2026). Dimvexa: exact, fast unit conversion for Rust. https://github.com/welworx/dimvexa
+Liemberger, W. (2026). Dimvexa: exact, fast unit conversion. https://github.com/welworx/dimvexa
 ```
 
 BibTeX:
@@ -75,7 +77,7 @@ BibTeX:
 ```bibtex
 @software{liemberger_dimvexa_2026,
   author = {Liemberger, Werner},
-  title  = {Dimvexa: exact, fast unit conversion for Rust},
+  title  = {Dimvexa: exact, fast unit conversion},
   year   = {2026},
   url    = {https://github.com/welworx/dimvexa},
 }
