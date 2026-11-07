@@ -224,6 +224,7 @@ pub fn check_convert_schema(v: &V) {
         "data_version",
         "sources",
         "config",
+        "bridge",
     ] {
         assert!(v.get(key).is_some(), "missing key {key}");
     }
@@ -243,6 +244,10 @@ pub fn check_convert_schema(v: &V) {
     assert!(["defined", "measured"].contains(&v.get("exactness").unwrap().as_str()));
     assert!(["linear", "affine"].contains(&v.get("kind").unwrap().as_str()));
     check_config_array(v);
+    match v.get("bridge").expect("missing bridge") {
+        V::Null => {}
+        b => check_bridge(b),
+    }
     assert!(!v.get("sources").unwrap().as_array().is_empty());
     assert!(
         v.get("exact")
@@ -264,6 +269,9 @@ pub fn check_units_schema(v: &V) {
     assert!(v.get("data_version").unwrap().as_str().starts_with('v'));
     assert!(v.get("group").is_some(), "missing group");
     check_config_array(v);
+    for b in v.get("bridges").expect("missing bridges").as_array() {
+        check_bridge(b);
+    }
     for m in v.get("mappings").unwrap().as_array() {
         for k in ["name", "unit", "file", "line"] {
             assert!(m.get(k).is_some(), "missing mappings[].{k}");
@@ -348,4 +356,24 @@ fn check_config_array(v: &V) {
             "{hash}"
         );
     }
+}
+
+/// A bridge object of `dimvexa.convert/1` and `dimvexa.units/1`.
+fn check_bridge(b: &V) {
+    for k in [
+        "name",
+        "kind",
+        "value",
+        "unit",
+        "conditions",
+        "source",
+        "file",
+        "line",
+    ] {
+        assert!(b.get(k).is_some(), "missing bridge.{k}");
+    }
+    assert_eq!(b.get("kind").unwrap().as_str(), "density");
+    assert_eq!(b.get("unit").unwrap().as_str(), "kg/m3");
+    assert!(!b.get("conditions").unwrap().as_str().is_empty());
+    assert!(!b.get("source").unwrap().as_str().is_empty());
 }

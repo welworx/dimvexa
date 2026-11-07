@@ -167,6 +167,46 @@ Rules (ADR-009, [`docs/adr/009-user-config.md`](docs/adr/009-user-config.md)):
 - `--json` output lists the config files used with a content hash (`"config"`), and
   `dimvexa units` shows which names come from your config.
 
+### Example: how much does a litre of water weigh?
+
+Mass and volume are different quantities, so `convert 1 L kg` is refused. A conversion needs a
+density, and the density depends on the liquid, the temperature and the pressure. Dimvexa never
+looks one up or computes one (ADR-001). You state it once, with its conditions and source, in
+your own config, and select it by name:
+
+```toml
+# examples/configs/water.toml
+[[bridge]]
+name = "water_20C"
+kind = "density"                       # kg/m3, mass <-> volume
+value = "9982071/10000"                # 998.2071 kg/m3
+conditions = "air-free water, 20 degC (ITS-90), 101.325 kPa"
+source = "Tanaka et al., Metrologia 38 (2001) 301-309, recommended table for the density of water"
+```
+
+```console
+$ dimvexa convert 1 L kg
+error[dimension_mismatch]: dimension mismatch: [m^3] cannot be converted to [kg]
+hint: mass and volume need a density. Define a [[bridge]] in a config file and pass --config FILE --bridge NAME (docs/adr/009-user-config.md)
+$ dimvexa convert 1 L kg --config examples/configs/water.toml --bridge water_20C
+0.9982071 kg
+note: used bridge water_20C (density 998.2071 kg/m3; air-free water, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309, recommended table for the density of water; examples/configs/water.toml:8)
+$ dimvexa convert 1 gal_us tonne --config examples/configs/water.toml --bridge water_20C --exact
+4723281149015583/1250000000000000000 tonne
+note: used bridge water_20C (density 998.2071 kg/m3; air-free water, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309, recommended table for the density of water; examples/configs/water.toml:8)
+```
+
+What the bridge does and does not do:
+- It multiplies by the number you wrote and nothing else: no temperature or pressure
+  correction, no lookup. For water at another temperature, write another bridge.
+- It applies only to mass to volume and back (also per time, `kg/h` to `m3/h`), never to a
+  temperature or any other unit, and only when you ask with `--bridge`.
+- The assumption travels with the result: the note above on stderr, and in `--json` a `bridge`
+  object (name, value, conditions, source, file and line). The result's `exactness` is
+  `measured`, because the density is your number and not a definition, and the bridge source is
+  added to `sources`.
+- `dimvexa units --config FILE` lists the bridges your config defines.
+
 ## Repository layout
 
 | Path | Purpose |

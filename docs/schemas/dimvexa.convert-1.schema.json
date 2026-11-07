@@ -20,7 +20,8 @@
         "packs",
         "data_version",
         "sources",
-        "config"
+        "config",
+        "bridge"
       ],
       "properties": {
         "schema": {
@@ -162,6 +163,59 @@
               }
             }
           }
+        },
+        "bridge": {
+          "description": "The caller-supplied constant the conversion went through (ADR-009), or null. A bridge is used only when requested with --bridge and only when the plain conversion is refused (mass <-> volume needs a density). The result's exactness is then `measured`, and the bridge source is also listed in `sources`.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "name",
+                "kind",
+                "value",
+                "unit",
+                "conditions",
+                "source",
+                "file",
+                "line"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "density"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "pattern": "^-?[0-9]+(/[0-9]+)?$",
+                  "description": "Exact value in `unit`."
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "kg/m3 for a density."
+                },
+                "conditions": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          ]
         }
       }
     },

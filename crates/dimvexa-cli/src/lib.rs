@@ -23,12 +23,12 @@ use std::fmt::Write as _;
 use std::io::Write;
 
 use dimvexa::{Conversion, Dim, Error, Ratio, Registry, Unit, UnitExpr, registry};
-use dimvexa_config::{Config, Mapping};
+use dimvexa_config::{Bridge, Config, Mapping};
 
 const USAGE: &str = "\
 Usage:
-  dimvexa convert VALUE FROM TO [--exact] [--json] [--config FILE]...
-  dimvexa VALUE FROM TO [--exact] [--json] [--config FILE]...
+  dimvexa convert VALUE FROM TO [--exact] [--json] [--config FILE]... [--bridge NAME]
+  dimvexa VALUE FROM TO [--exact] [--json] [--config FILE]... [--bridge NAME]
   dimvexa units [--groups | GROUP | UNIT] [--json] [--config FILE]...
 
 Converts VALUE from unit FROM to unit TO.
@@ -45,6 +45,8 @@ Options:
   --json       machine-readable output (schema dimvexa.convert/1; dimvexa.units/1 for units)
   --config FILE  apply your own name mappings, for example mt = \"tonne\" (repeatable; see
                docs/adr/009-user-config.md). Nothing is loaded unless you name the file
+  --bridge NAME  use a density from a [[bridge]] in your config for mass <-> volume, e.g.
+               --config water.toml --bridge water_20C; the assumption is printed with the result
   --version    print version and data table version
   -h, --help   print this help
 
@@ -53,6 +55,7 @@ Examples:
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
   dimvexa convert 1 mt kg --config trade.toml
+  dimvexa convert 1 L kg --config water.toml --bridge water_20C
 
 Precision: the CLI always uses the exact path, so the number printed is the exact result
 rounded once to the nearest f64 (0 ulp). The library's fast f64 path is within 1 ulp (linear
@@ -63,6 +66,8 @@ Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
 
 /// Parsed command line.
 struct Args {
+    /// The bridge named with `--bridge`, if any.
+    bridge: Option<String>,
     value: String,
     from: String,
     to: String,
@@ -96,38 +101,56 @@ struct UsageError {
     suggestions: Vec<String>,
 }
 
-/// Splits `--config FILE` / `--config=FILE` (repeatable) off the command line.
-fn split_configs(args: &[String]) -> Result<(Vec<String>, Vec<String>), UsageError> {
-    let (mut configs, mut rest) = (Vec::new(), Vec::new());
+/// The options that take a value, split off the command line before the rest is read.
+struct ValueOptions {
+    configs: Vec<String>,
+    bridge: Option<String>,
+}
+
+/// Splits `--config FILE` (repeatable) and `--bridge NAME`, also as `--opt=value`.
+fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), UsageError> {
+    let mut opts = ValueOptions {
+        configs: Vec::new(),
+        bridge: None,
+    };
+    let mut rest = Vec::new();
+    let missing = |what: &str| UsageError {
+        message: format!("'{what}' needs a value"),
+        json: args.iter().any(|x| x == "--json"),
+        schema: if args.iter().any(|x| x == "units") {
+            "units"
+        } else {
+            "convert"
+        },
+        suggestions: Vec::new(),
+    };
     let mut it = args.iter();
     while let Some(a) = it.next() {
-        if a == "--config" {
-            match it.next() {
-                Some(v) => configs.push(v.clone()),
-                None => {
-                    return Err(UsageError {
-                        message: "'--config' needs a file name".to_string(),
-                        json: args.iter().any(|x| x == "--json"),
-                        schema: if args.iter().any(|x| x == "units") {
-                            "units"
-                        } else {
-                            "convert"
-                        },
-                        suggestions: Vec::new(),
-                    });
+        let (name, inline) = match a.split_once('=') {
+            Some((n @ ("--config" | "--bridge"), v)) => (n, Some(v.to_string())),
+            _ => (a.as_str(), None),
+        };
+        match name {
+            "--config" | "--bridge" => {
+                let value = match inline {
+                    Some(v) => v,
+                    None => it.next().cloned().ok_or_else(|| missing(name))?,
+                };
+                if name == "--config" {
+                    opts.configs.push(value);
+                } else {
+                    opts.bridge = Some(value);
                 }
             }
-        } else if let Some(v) = a.strip_prefix("--config=") {
-            configs.push(v.to_string());
-        } else {
-            rest.push(a.clone());
+            _ => rest.push(a.clone()),
         }
     }
-    Ok((configs, rest))
+    Ok((opts, rest))
 }
 
 fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
-    let (configs, args) = split_configs(all)?;
+    let (opts, args) = split_options(all)?;
+    let configs = opts.configs;
     let args = args.as_slice();
     let json = args.iter().any(|a| a == "--json");
     let is_units = args
@@ -157,6 +180,11 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     if let Some((&"units", rest)) = positional.split_first() {
         if exact {
             return Err(usage("'units' does not take --exact".to_string()));
+        }
+        if opts.bridge.is_some() {
+            return Err(usage(
+                "'--bridge' selects a bridge for a conversion; 'units' lists them".to_string(),
+            ));
         }
         let json = want_json;
         return match (rest, want_groups) {
@@ -193,12 +221,14 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     if want_groups {
         return Err(usage("'--groups' only applies to 'units'".to_string()));
     }
+    let bridge = opts.bridge;
     if positional.first() == Some(&"convert") {
         positional.remove(0);
     }
     match positional.as_slice() {
         [value, from, to] => Ok((
             Parsed::Convert(Args {
+                bridge,
                 value: (*value).to_string(),
                 from: (*from).to_string(),
                 to: (*to).to_string(),
@@ -280,6 +310,8 @@ struct Loaded {
     reg: Registry,
     /// The name mappings in effect (empty without a config).
     mappings: Vec<Mapping>,
+    /// The bridges in effect (empty without a config).
+    bridges: Vec<Bridge>,
     /// `(file, content hash)` of each config, in the order given.
     configs: Vec<(String, String)>,
 }
@@ -303,9 +335,11 @@ fn load(config_files: &[String]) -> Result<Loaded, LoadError> {
         parsed.push(cfg);
     }
     let mappings = dimvexa_config::apply(&mut reg, &parsed).map_err(LoadError::Lib)?;
+    let bridges = dimvexa_config::bridges(&parsed);
     Ok(Loaded {
         reg,
         mappings,
+        bridges,
         configs,
     })
 }
@@ -349,6 +383,8 @@ fn configs_json(configs: &[(String, String)]) -> String {
 struct Outcome<'a> {
     args: &'a Args,
     configs: &'a [(String, String)],
+    /// The bridge the conversion went through, if it needed one.
+    bridge: Option<&'a Bridge>,
     from: UnitExpr,
     to: UnitExpr,
     conv: Conversion,
@@ -362,12 +398,29 @@ fn compute<'a>(args: &'a Args, loaded: &'a Loaded) -> Result<Outcome<'a>, Error>
     let value: Ratio = args.value.parse()?;
     let from = reg.parse(&args.from)?;
     let to = reg.parse(&args.to)?;
-    let conv = Conversion::between(&from, &to)?;
+    // A bridge is used only when asked for and only when the plain conversion is refused
+    // for lack of a density; otherwise the ordinary exact conversion stands.
+    let (conv, bridge) = match (Conversion::between(&from, &to), &args.bridge) {
+        (Ok(conv), _) => (conv, None),
+        (Err(Error::DimensionMismatch { .. }), Some(name)) => {
+            let bridge = loaded
+                .bridges
+                .iter()
+                .find(|b| b.name == *name)
+                .ok_or_else(|| Error::Refused {
+                    reason: format!("no bridge named '{name}' is loaded"),
+                    suggestions: loaded.bridges.iter().map(|b| b.name.clone()).collect(),
+                })?;
+            (bridge.conversion(&from, &to)?, Some(bridge))
+        }
+        (Err(e), _) => return Err(e),
+    };
     let exact = conv.apply_exact(value)?;
     let approx = exact.to_f64()?;
     Ok(Outcome {
         args,
         configs: &loaded.configs,
+        bridge,
         from,
         to,
         conv,
@@ -384,6 +437,40 @@ fn render_text(o: &Outcome<'_>) -> String {
     }
 }
 
+/// The JSON object describing a bridge: everything a reader needs to judge the assumption.
+fn bridge_json(b: &Bridge) -> String {
+    format!(
+        "{{\"name\":{},\"kind\":{},\"value\":{},\"unit\":{},\"conditions\":{},\"source\":{},\"file\":{},\"line\":{}}}",
+        json_string(&b.name),
+        json_string(b.kind.name()),
+        json_string(&b.value.to_fraction_string()),
+        json_string(b.kind.unit()),
+        json_string(&b.conditions),
+        json_string(&b.source),
+        json_string(&b.origin),
+        b.line
+    )
+}
+
+/// One line for people: the assumption behind a bridged result.
+fn bridge_note(b: &Bridge) -> String {
+    let decimal = b
+        .value
+        .to_decimal(15)
+        .map_or_else(|_| b.value.to_fraction_string(), |(d, _)| d);
+    format!(
+        "note: used bridge {} ({} {} {}; {}; source: {}; {}:{})",
+        b.name,
+        b.kind.name(),
+        decimal,
+        b.kind.unit(),
+        b.conditions,
+        b.source,
+        b.origin,
+        b.line
+    )
+}
+
 fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
     let (decimal, complete) = o.exact.to_decimal(15)?;
     let dims: Vec<String> =
@@ -398,7 +485,19 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
             sources.push(s.clone());
         }
     }
+    if let Some(b) = o.bridge {
+        sources.push(format!("{} (bridge {})", b.source, b.name));
+    }
     let sources: Vec<String> = sources.iter().map(|s| json_string(s)).collect();
+    let exactness = o.bridge.map_or_else(
+        || o.from.exactness().combine(o.to.exactness()),
+        |b| {
+            o.from
+                .exactness()
+                .combine(o.to.exactness())
+                .combine(b.exactness())
+        },
+    );
     let packs: Vec<String> = dimvexa::PACKS.iter().map(|p| json_string(p)).collect();
     Ok(format!(
         "{{\"schema\":{},\"ok\":true,\
@@ -406,7 +505,7 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
 \"output\":{{\"value\":{},\"unit\":{},\"f64\":{},\"truncated\":{}}},\
 \"exact\":{{\"value\":{},\"factor\":{},\"offset\":{}}},\
 \"exactness\":{},\"dimension\":[{}],\"kind\":{},\"quantity_kind\":{},\
-\"profile\":null,\"packs\":[{}],\"data_version\":{},\"sources\":[{}],\"config\":{}}}",
+\"profile\":null,\"packs\":[{}],\"data_version\":{},\"sources\":[{}],\"config\":{},\"bridge\":{}}}",
         json_string(&schema_id()),
         json_string(&o.args.value),
         json_string(&o.from.to_string()),
@@ -417,7 +516,7 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
         json_string(&o.exact.to_fraction_string()),
         json_string(&o.conv.factor().to_fraction_string()),
         json_string(&o.conv.offset().to_fraction_string()),
-        json_string(o.from.exactness().combine(o.to.exactness()).name()),
+        json_string(exactness.name()),
         dims.join(","),
         json_string(o.conv.shape().name()),
         json_string(o.to.kind().name()),
@@ -425,6 +524,7 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
         json_string(&dimvexa::data_version()),
         sources.join(","),
         configs_json(o.configs),
+        o.bridge.map_or_else(|| "null".to_string(), bridge_json),
     ))
 }
 
@@ -514,6 +614,7 @@ fn units_text(
     units: &[(String, &Unit)],
     ambiguous: &[&dimvexa::AmbiguousDef],
     mappings: &[Mapping],
+    bridges: &[Bridge],
 ) -> String {
     let mut s =
         String::from("# columns: symbol, quantity_kind, exactness, prefixes, aliases, source\n");
@@ -571,6 +672,26 @@ fn units_text(
                 cell(&m.target),
                 cell(&m.origin),
                 m.line
+            );
+        }
+    }
+    if !bridges.is_empty() {
+        s.push_str(
+            "\n## config bridges (constants you supply; use with --bridge NAME)\n\
+# columns: name, kind, value, unit, conditions, source, file:line\n",
+        );
+        for b in bridges {
+            let _ = writeln!(
+                s,
+                "{}\t{}\t{}\t{}\t{}\t{}\t{}:{}",
+                cell(&b.name),
+                b.kind.name(),
+                b.value.to_fraction_string(),
+                b.kind.unit(),
+                cell(&b.conditions),
+                cell(&b.source),
+                cell(&b.origin),
+                b.line
             );
         }
     }
@@ -643,7 +764,7 @@ fn units_json(
         |g| json_string(&g.to_ascii_lowercase()),
     );
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"group\":{},\"groups\":[{}],\"units\":[{}],\"ambiguous\":[{}],\"config\":{},\"mappings\":[{}]}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"group\":{},\"groups\":[{}],\"units\":[{}],\"ambiguous\":[{}],\"config\":{},\"mappings\":[{}],\"bridges\":[{}]}}",
         json_string(&format!("{}.units/1", dimvexa::PROJECT_NAME)),
         json_string(&dimvexa::data_version()),
         group,
@@ -651,7 +772,13 @@ fn units_json(
         items.join(","),
         ambiguous.join(","),
         configs_json(&loaded.configs),
-        mappings.join(",")
+        mappings.join(","),
+        loaded
+            .bridges
+            .iter()
+            .map(bridge_json)
+            .collect::<Vec<_>>()
+            .join(",")
     )
 }
 
@@ -860,7 +987,11 @@ fn run_units(
             units_json(&groups, &units, &ambiguous, group.as_deref(), &loaded)
         );
     } else {
-        let _ = write!(out, "{}", units_text(&units, &ambiguous, &loaded.mappings));
+        let _ = write!(
+            out,
+            "{}",
+            units_text(&units, &ambiguous, &loaded.mappings, &loaded.bridges)
+        );
     }
     0
 }
@@ -911,6 +1042,31 @@ where
         Ok(l) => l,
         Err(e) => return report_load_error(&e, args.json, "convert", out, err),
     };
+    if let Some(name) = &args.bridge {
+        if !loaded.bridges.iter().any(|b| b.name == *name) {
+            let known: Vec<String> = loaded.bridges.iter().map(|b| b.name.clone()).collect();
+            let message = if known.is_empty() {
+                format!(
+                    "no bridge named '{name}': no config with a [[bridge]] is loaded (use --config FILE)"
+                )
+            } else {
+                format!(
+                    "no bridge named '{name}'; loaded bridges: {}",
+                    known.join(", ")
+                )
+            };
+            if args.json {
+                let _ = writeln!(
+                    out,
+                    "{}",
+                    json_error("convert", "usage", &message, &[], &known)
+                );
+            } else {
+                let _ = writeln!(err, "error[usage]: {message}");
+            }
+            return 2;
+        }
+    }
     match compute(&args, &loaded) {
         Ok(outcome) => {
             let text = if args.json {
@@ -922,6 +1078,9 @@ where
                 render_text(&outcome)
             };
             let _ = writeln!(out, "{text}");
+            if let (Some(b), false) = (outcome.bridge, args.json) {
+                let _ = writeln!(err, "{}", bridge_note(b));
+            }
             0
         }
         Err(e) => fail(&args, &e, out, err),
@@ -943,6 +1102,15 @@ fn fail(args: &Args, e: &Error, out: &mut dyn Write, err: &mut dyn Write) -> u8 
         );
     } else {
         let _ = writeln!(err, "error[{}]: {e}", e.code());
+        if let Error::DimensionMismatch { from, to } = e {
+            if Bridge::density_needed(*from, *to) && args.bridge.is_none() {
+                let _ = writeln!(
+                    err,
+                    "hint: mass and volume need a density. Define a [[bridge]] in a config file and pass \
+--config FILE --bridge NAME (docs/adr/009-user-config.md)"
+                );
+            }
+        }
     }
     1
 }

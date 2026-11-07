@@ -126,3 +126,69 @@ fn applying_twice_is_refused_so_overrides_stay_explicit() {
     let err = apply(&mut reg, &[cfg("[map]\nton = \"ton_long\"\n", "b.toml")]).unwrap_err();
     assert!(err.to_string().contains("already means a unit"), "{err}");
 }
+
+const WATER: &str = "[[bridge]]\nname = \"water_20C\"\nkind = \"density\"\n\
+value = \"9982071/10000\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\n\
+source = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
+
+fn water() -> dimvexa_config::Bridge {
+    cfg(WATER, "water.toml").bridges()[0].clone()
+}
+
+#[test]
+fn a_density_bridge_turns_volume_into_mass_and_back_exactly() {
+    let (reg, b) = (registry().unwrap(), water());
+    let density = Ratio::new(9_982_071, 10_000).unwrap(); // kg/m3
+    let (litre, kg) = (reg.parse("L").unwrap(), reg.parse("kg").unwrap());
+    // 1 L = 0.001 m3, so 1 L of this water is 0.9982071 kg, exactly.
+    let c = b.conversion(&litre, &kg).unwrap();
+    assert_eq!(c.factor(), Ratio::new(9_982_071, 10_000_000).unwrap());
+    // And back: the two directions are exact inverses.
+    let back = b.conversion(&kg, &litre).unwrap();
+    assert_eq!(c.factor().checked_mul(back.factor()).unwrap(), Ratio::ONE);
+    // Other units of the same dimensions, and flows (per time).
+    let m3 = reg.parse("m3").unwrap();
+    assert_eq!(b.conversion(&m3, &kg).unwrap().factor(), density);
+    let gal = reg.parse("gal_us").unwrap();
+    let t = reg.parse("tonne").unwrap();
+    let want = gal
+        .factor()
+        .checked_mul(density)
+        .unwrap()
+        .checked_div(t.factor())
+        .unwrap();
+    assert_eq!(b.conversion(&gal, &t).unwrap().factor(), want);
+    let (lph, kgph) = (reg.parse("L/h").unwrap(), reg.parse("kg/h").unwrap());
+    assert_eq!(
+        b.conversion(&lph, &kgph).unwrap().factor(),
+        c.factor(),
+        "a per-time flow converts with the same factor"
+    );
+}
+
+#[test]
+fn a_bridge_does_nothing_for_anything_but_a_density() {
+    let (reg, b) = (registry().unwrap(), water());
+    // Not mass <-> volume: refused with the ordinary mismatch error, not guessed.
+    for (from, to) in [
+        ("L", "m"),
+        ("kg", "s"),
+        ("L", "L2"),
+        ("kg", "kg"),
+        ("m3/h", "kg"),
+    ] {
+        let (Ok(f), Ok(t)) = (reg.parse(from), reg.parse(to)) else {
+            continue;
+        };
+        let err = b.conversion(&f, &t).unwrap_err();
+        assert_eq!(err.code(), "dimension_mismatch", "{from} -> {to}");
+    }
+    // A unit with an offset is refused outright.
+    let (degc, kg) = (reg.parse("degC").unwrap(), reg.parse("kg").unwrap());
+    assert!(b.conversion(&degc, &kg).is_err());
+    assert!(dimvexa_config::Bridge::density_needed(
+        reg.parse("L").unwrap().dim(),
+        kg.dim()
+    ));
+    assert!(!dimvexa_config::Bridge::density_needed(kg.dim(), kg.dim()));
+}
