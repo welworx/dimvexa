@@ -15,7 +15,8 @@
         "units",
         "ambiguous",
         "config",
-        "mappings"
+        "mappings",
+        "bridges"
       ],
       "properties": {
         "schema": {
@@ -200,6 +201,55 @@
               "unit": {
                 "type": "string",
                 "description": "The table unit the name stands for."
+              },
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        "bridges": {
+          "type": "array",
+          "description": "Bridges defined by the --config files (empty if none), in application order.",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "kind",
+              "value",
+              "unit",
+              "conditions",
+              "source",
+              "file",
+              "line"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "density"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "pattern": "^-?[0-9]+(/[0-9]+)?$",
+                "description": "Exact value in `unit`."
+              },
+              "unit": {
+                "type": "string",
+                "description": "kg/m3 for a density."
+              },
+              "conditions": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
               },
               "file": {
                 "type": "string"

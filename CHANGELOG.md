@@ -23,7 +23,10 @@ Commits by `release-plz` once releases start (planned for M1).
 - ADR-001 to ADR-008, benchmark report for M0.
 - ADR-009: user config files with name mappings, extra units and caller-supplied bridge
   constants such as a density. Accepted for step 1.
-- `--config FILE` (repeatable, `[map]` only): your own names for units, e.g. `mt = "tonne"`.
+- `--config FILE` (repeatable): your own names for units in `[map]`, e.g. `mt = "tonne"`, and
+  `[[bridge]]` densities for mass to volume (`--bridge NAME`, e.g. litres of water to kilograms
+  with a density you state, its conditions and its source; the result is `measured`, the
+  assumption is printed and recorded in the JSON `bridge`). Example: `examples/configs/water.toml`.
   The new `dimvexa-config` crate holds `Config` and `apply`; the core only gains
   `Registry::add_alias`. JSON output gains `config` (files and hashes) and `dimvexa.units/1`
   gains `config` and `mappings`.

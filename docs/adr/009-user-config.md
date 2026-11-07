@@ -1,7 +1,8 @@
 # ADR-009: User config files: name mappings, extra units and caller-supplied bridge constants
 
-Status: Accepted for step 1 (`--config` with `[map]` only), confirmed by the owner on 2026-11-07.
-`[[unit]]`, `[[bridge]]`, `--bridge` and shipped profiles stay Proposed until confirmed.
+Status: Accepted for step 1 (`--config` with `[map]`) and for density bridges (`[[bridge]]` with
+`kind = "density"`, `--bridge`), confirmed by the owner on 2026-11-07 (the water example).
+`[[unit]]`, the other bridge kinds and shipped profiles stay Proposed until confirmed.
 
 ## Context
 
@@ -62,6 +63,10 @@ Rules, so a config cannot make a result silently wrong:
    number the caller supplied. It does not derive a density from temperature, apply the ideal
    gas law or use any correlation. The bridge, its `conditions` and `source` are echoed in the
    output, so a number never appears without the assumption behind it.
+   Implemented behavior: the result's `exactness` is `measured` (the number is the caller's,
+   not a definition), the bridge's source is added to `sources`, the note is printed on stderr
+   in text mode (stdout stays the bare result) and a `bridge` object is added to the JSON
+   (`null` when none). A bridge applies to linear units only, never to a unit with an offset.
 5. **A bridge is used only on request** (`--bridge NAME`, or the API equivalent). Without it,
    mass to volume and the other bridged conversions stay refused with the ADR-001 error, which
    now also names the option.
@@ -74,11 +79,12 @@ Rules, so a config cannot make a result silently wrong:
 
 Open sub-decisions (recommended default first; not implemented before the owner confirms):
 
-* **OPEN 1: first step.** Confirmed and implemented: `--config` with `[map]` only. Then
-  `[[unit]]`, then `[[bridge]]`.
+* **OPEN 1: first step.** Confirmed and implemented: `--config` with `[map]`. The density
+  bridge came before `[[unit]]` because the water example needed it; `[[unit]]` is next.
 * **OPEN 2: how `[[unit]]` states a dimension.** Recommended: a `base` unit (`base = "kg"`)
   and an exact `factor`, so the dimension cannot be mistyped.
-* **OPEN 3: bridge kinds.** Recommended: `density` and `molar_mass` first. `ratio` between two
+* **OPEN 3: bridge kinds.** `density` is confirmed and implemented (value in kg/m^3, mass to
+  volume and back, also per time). Recommended next: `molar_mass`. `ratio` between two
   named standard-volume units (for example `Nm3` to `Sm3`) is the caller's own number for the
   ratio, never computed from temperature and pressure, and comes later.
 * **OPEN 4: parser.** The workspace has no dependencies (ADR-003). The shipped reader
