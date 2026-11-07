@@ -1,5 +1,9 @@
 # dimvexa-config
 
+**Beta.** Younger and less proven than `dimvexa-core`: the file format and the API may still
+change, and the known limitations are in `docs/known-limitations.md`. The core does not depend
+on this crate.
+
 User config files for [dimvexa](../../README.md) (ADR-009): your own names for units, such as
 `mt = "tonne"`, in a small TOML file that you load explicitly. A separate crate on purpose,
 so the core stays free of file formats and vocabulary: it only offers

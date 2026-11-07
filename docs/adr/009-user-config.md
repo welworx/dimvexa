@@ -1,5 +1,8 @@
 # ADR-009: User config files: name mappings, extra units and caller-supplied bridge constants
 
+Maturity: beta. The config layer is less proven than the core: expect format and option
+changes before a release (see `docs/known-limitations.md`).
+
 Status: Accepted for `--config` with `[map]`, density bridges (`[[bridge]]` with
 `kind = "density"`, `--bridge`) and `[[unit]]`, confirmed by the owner on 2026-11-07. The molar-mass
 bridge (not needed for now), the other bridge kinds and shipped profiles stay Proposed.

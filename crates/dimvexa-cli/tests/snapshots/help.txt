@@ -15,7 +15,7 @@ Commands:
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
   --json       machine-readable output (schema dimvexa.convert/1; dimvexa.units/1 for units)
-  --config FILE  apply your own names, units and densities, e.g. mt = "tonne" (repeatable; see
+  --config FILE  (beta) apply your own names, units and densities, e.g. mt = "tonne" (repeatable; see
                docs/adr/009-user-config.md). Nothing is loaded unless you name the file
   --bridge NAME  use a density from a [[bridge]] in your config for mass <-> volume, e.g.
                --config water.toml --bridge water_20C; the assumption is printed with the result

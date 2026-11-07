@@ -138,6 +138,13 @@ the close matches or the candidates.
 
 ## Your own names: `--config`
 
+> **Beta.** The config layer (`--config`, `dimvexa-config`) is younger and less proven than the
+> core. Two review rounds found and fixed name-resolution bugs in it, a property test now guards
+> that class, and the open limitations are listed in
+> [`docs/known-limitations.md`](docs/known-limitations.md). The file format, the JSON fields it
+> adds and the CLI options may still change before a release; the core conversions do not
+> depend on it and are unaffected.
+
 Dimvexa refuses ambiguous names such as `ton` and `mt`, and it never guesses. If your trade or
 your plant uses a name consistently, say so in a small config file and load it explicitly:
 
