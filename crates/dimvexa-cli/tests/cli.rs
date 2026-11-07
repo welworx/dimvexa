@@ -466,12 +466,40 @@ fn units_misuse_is_a_usage_error_in_the_units_schema() {
     assert_eq!(dimvexa(&["1", "m", "km", "--groups"]).code, 2);
 }
 
-/// The README lists every unit by group; it must match what `dimvexa units` prints.
+fn readme() -> String {
+    std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../README.md"))
+        .unwrap()
+}
+
+/// The text of the README section that starts with `heading`, up to the next `## ` heading.
+fn readme_section(readme: &str, heading: &str) -> String {
+    let start = readme
+        .find(heading)
+        .unwrap_or_else(|| panic!("no section {heading}"));
+    let body = readme[start..].strip_prefix(heading).unwrap();
+    let end = body.find("\n## ").unwrap_or(body.len());
+    body[..end].to_string()
+}
+
+/// Asserts that the README shows `dimvexa <args>` with exactly the output the CLI prints
+/// (stdout, or stderr when the command fails).
+fn assert_readme_shows(readme: &str, args: &[&str]) {
+    let r = dimvexa(args);
+    let output = if r.code == 0 { &r.stdout } else { &r.stderr };
+    let shown = format!("$ dimvexa {}\n{output}", args.join(" "));
+    assert!(
+        readme.contains(&shown),
+        "README.md does not show this exact output:\n{shown}"
+    );
+}
+
+/// The README's "Supported units" table is exactly `dimvexa units`: every group in order,
+/// every symbol in order, no stale or extra row.
 #[test]
-fn readme_unit_table_matches_the_cli() {
-    let readme =
-        std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../README.md"))
-            .unwrap();
+fn readme_supported_units_table_is_exactly_the_cli_table() {
+    let section = readme_section(&readme(), "## Supported units");
+    let actual: Vec<&str> = section.lines().filter(|l| l.starts_with("| ")).collect();
+
     let v = json::parse(&dimvexa(&["units", "--json"]).stdout).unwrap();
     let mut groups: Vec<(String, Vec<String>)> = Vec::new();
     for u in v.get("units").unwrap().as_array() {
@@ -484,12 +512,71 @@ fn readme_unit_table_matches_the_cli() {
             None => groups.push((g, vec![s])),
         }
     }
-    for (g, syms) in groups {
+    let mut expected = vec!["| Group | Unit symbols |".to_string()];
+    for (g, syms) in &groups {
         let cells: Vec<String> = syms.iter().map(|s| format!("`{s}`")).collect();
-        let row = format!("| {g} | {} |", cells.join(", "));
-        assert!(
-            readme.lines().any(|l| l == row),
-            "README.md is missing or has a stale row:\n{row}"
-        );
+        expected.push(format!("| {g} | {} |", cells.join(", ")));
     }
+    assert_eq!(actual, expected);
+}
+
+/// The prefix claim in the README ("`km`, `mg` and `kPa` work") and the group names it uses.
+#[test]
+fn readme_prefix_examples_and_commands_work() {
+    let readme = readme();
+    assert!(readme.contains("`km`, `mg` and `kPa` work"));
+    for unit in ["km", "mg", "kPa"] {
+        assert_eq!(dimvexa(&["units", unit]).code, 0, "{unit}");
+        assert_eq!(dimvexa(&["convert", "1", unit, unit]).code, 0, "{unit}");
+    }
+    // Every command shown in the 'Finding a unit' overview runs.
+    for args in [
+        &["units", "--groups"][..],
+        &["units", "mass"],
+        &["units", "tonne"],
+        &["units", "--json"],
+    ] {
+        assert_eq!(dimvexa(args).code, 0, "{args:?}");
+    }
+}
+
+/// The ton example in the README is real output, and its factor table matches the data.
+#[test]
+fn readme_ton_example_is_real_output() {
+    let readme = readme();
+    let section = readme_section(&readme, "### Example: which \"ton\"?");
+    assert_readme_shows(&section, &["convert", "1", "ton", "kg"]);
+    assert_readme_shows(&section, &["units", "ton_short"]);
+    // US ton to SI tonne, rounded and exact, and the long ton for contrast.
+    assert_readme_shows(&section, &["convert", "1", "ton_short", "tonne"]);
+    assert_readme_shows(&section, &["convert", "1", "ton_short", "tonne", "--exact"]);
+    assert_readme_shows(&section, &["convert", "1", "ton_short", "kg"]);
+    assert_readme_shows(&section, &["convert", "1", "ton_long", "tonne"]);
+    // The factor table agrees with the unit data.
+    for (sym, factor) in [
+        ("tonne", "1000/1"),
+        ("ton_short", "45359237/50000"),
+        ("ton_long", "317514659/312500"),
+    ] {
+        let v = json::parse(&dimvexa(&["units", sym, "--json"]).stdout).unwrap();
+        assert_eq!(
+            v.get("unit").unwrap().get("factor").unwrap().as_str(),
+            factor,
+            "{sym}"
+        );
+        assert!(section.contains(&format!("`{factor}`")), "{sym}: {factor}");
+    }
+    // The example claims 'ton' is ambiguous between exactly these three.
+    let r = dimvexa(&["units", "ton", "--json"]);
+    let v = json::parse(&r.stdout).unwrap();
+    let c: Vec<&str> = v
+        .get("error")
+        .unwrap()
+        .get("suggestions")
+        .unwrap()
+        .as_array()
+        .iter()
+        .map(json::V::as_str)
+        .collect();
+    assert_eq!(c, ["ton_short", "ton_long", "tonne"]);
 }

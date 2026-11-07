@@ -663,8 +663,11 @@ fn run_units(target: &UnitsTarget, json: bool, out: &mut dyn Write, err: &mut dy
                             String::new()
                         };
                         let mut near = e.candidates().to_vec();
-                        near.extend(e.suggestions().iter().cloned());
-                        near.dedup();
+                        for sug in e.suggestions() {
+                            if !near.contains(sug) {
+                                near.push(sug.clone());
+                            }
+                        }
                         fail(e.code(), &format!("{e}{hint}"), &near, 1)
                     }
                 };

@@ -77,18 +77,16 @@ $ dimvexa units tonne        # the details of one unit
 $ dimvexa units --json       # the same, machine-readable (schema docs/schemas/dimvexa.units-1.schema.json)
 ```
 
-Take `ton`. It is refused on purpose, because three different masses are called a ton:
+### Example: which "ton"?
+
+`ton` is refused on purpose, because three different masses are called a ton. The error names
+the explicit symbols, and `units` shows what each one is:
 
 ```console
 $ dimvexa convert 1 ton kg
 error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne, or choose a profile
-$ dimvexa units mass         # (excerpt)
-tonne      plain  defined  si    t  BIPM SI Brochure, 9th ed. (2019), ch. 4 ...
-ton_short  plain  defined  none  -  NIST SP 811 (2008), Appendix B (ton, short, 2000 lb)
-ton_long   plain  defined  none  -  NIST SP 811 (2008), Appendix B (ton, long, 2240 lb)
-ton        candidates: ton_short, ton_long, tonne   (refused: all three are called ton)
-$ dimvexa units ton_long
-ton_long
+$ dimvexa units ton_short
+ton_short
   group         mass
   aliases       -
   dimension     kg
@@ -96,16 +94,30 @@ ton_long
   exactness     defined
   prefixes      none
   namespace     std
-  factor to SI  317514659/312500
+  factor to SI  45359237/50000
   offset to SI  0/1
-  source        NIST SP 811 (2008), Appendix B (ton, long, 2240 lb)
+  source        NIST SP 811 (2008), Appendix B (ton, short, 2000 lb)
+  note          short ton = 2000 lb = 907.18474 kg
 ```
 
 | Symbol | Meaning | Exact factor to kg |
 |---|---|---|
-| `tonne` (alias `t`) | metric ton, 1000 kg | `1000/1` |
+| `tonne` (alias `t`) | metric ton, the SI-accepted tonne, 1000 kg | `1000/1` |
 | `ton_short` | US short ton, 2000 lb | `45359237/50000` |
 | `ton_long` | UK long ton, 2240 lb | `317514659/312500` |
+
+Convert a US ton to the metric (SI) tonne by naming both explicitly:
+
+```console
+$ dimvexa convert 1 ton_short tonne
+0.90718474 tonne
+$ dimvexa convert 1 ton_short tonne --exact
+45359237/50000000 tonne
+$ dimvexa convert 1 ton_short kg
+907.18474 kg
+$ dimvexa convert 1 ton_long tonne
+1.0160469088 tonne
+```
 
 `dimvexa units NAME` also takes an alias (`degC` or its degree-sign spelling) and prefixed or
 compound expressions such as `km` or `m/s`; an unknown or ambiguous name is an error that lists
