@@ -1,0 +1,409 @@
+{
+ "_fixture_note": "INVENTED NUMBERS to test the report generator. Not a measurement of any library.",
+ "corpus_id": "fixture",
+ "date_utc": "2000-01-01T00:00:00Z",
+ "fixture": true,
+ "kind": "library",
+ "library": {
+  "name": "FIXTURE-lib-a",
+  "version": "0"
+ },
+ "lockfile": "pinned",
+ "machine": {
+  "arch": "none",
+  "cpu_model": "FIXTURE CPU",
+  "governor": null,
+  "logical_cores": 1,
+  "os": "FIXTURE OS"
+ },
+ "modes": {
+  "plain": {
+   "description": "fixture",
+   "idiomatic": "plain"
+  }
+ },
+ "parameters": {
+  "quick": true,
+  "samples": 3
+ },
+ "performance": {
+  "plain": {
+   "affine_temperature": {
+    "batch": {
+     "1000": {
+      "mad": 0.2,
+      "max": 2.2,
+      "median": 2,
+      "min": 1.8,
+      "raw": [
+       1.8,
+       2,
+       2.2
+      ],
+      "samples": 3,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 0.1,
+      "max": 1.6,
+      "median": 1.5,
+      "min": 1.4,
+      "raw": [
+       1.4,
+       1.5,
+       1.6
+      ],
+      "samples": 3,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 1,
+     "max": 6,
+     "median": 5,
+     "min": 4,
+     "raw": [
+      4,
+      5,
+      6
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 50,
+     "max": 1050,
+     "median": 1000,
+     "min": 950,
+     "raw": [
+      950,
+      1000,
+      1050
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 100,
+     "max": 1100,
+     "median": 1000,
+     "min": 900,
+     "raw": [
+      900,
+      1000,
+      1100
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 10,
+     "max": 110,
+     "median": 100,
+     "min": 90,
+     "raw": [
+      90,
+      100,
+      110
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 1,
+     "max": 11,
+     "median": 10,
+     "min": 9,
+     "raw": [
+      9,
+      10,
+      11
+     ],
+     "samples": 3,
+     "unit": "ns"
+    }
+   },
+   "linear_speed": {
+    "batch": {
+     "1000": {
+      "mad": 0.2,
+      "max": 2.2,
+      "median": 2,
+      "min": 1.8,
+      "raw": [
+       1.8,
+       2,
+       2.2
+      ],
+      "samples": 3,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 0.1,
+      "max": 1.6,
+      "median": 1.5,
+      "min": 1.4,
+      "raw": [
+       1.4,
+       1.5,
+       1.6
+      ],
+      "samples": 3,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 1,
+     "max": 6,
+     "median": 5,
+     "min": 4,
+     "raw": [
+      4,
+      5,
+      6
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 50,
+     "max": 1050,
+     "median": 1000,
+     "min": 950,
+     "raw": [
+      950,
+      1000,
+      1050
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 100,
+     "max": 1100,
+     "median": 1000,
+     "min": 900,
+     "raw": [
+      900,
+      1000,
+      1100
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 10,
+     "max": 110,
+     "median": 100,
+     "min": 90,
+     "raw": [
+      90,
+      100,
+      110
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 1,
+     "max": 11,
+     "median": 10,
+     "min": 9,
+     "raw": [
+      9,
+      10,
+      11
+     ],
+     "samples": 3,
+     "unit": "ns"
+    }
+   }
+  }
+ },
+ "runtime": {
+  "language": "fixture",
+  "name": "fixture-runtime",
+  "version": "0"
+ },
+ "schema": "dimvexa.bench.result/1",
+ "semantics": {
+  "plain": {
+   "accuracy": {
+    "answered": 8,
+    "bit_identical": 8,
+    "cases": 10,
+    "max_ulp": 0,
+    "median_ulp": 0,
+    "over_1_ulp": 0,
+    "tolerance_ulp": 4,
+    "unsupported": 2,
+    "worst": [],
+    "wrong": 0
+   },
+   "cases": {
+    "must_convert": [
+     {
+      "category": "si",
+      "got": "1.0",
+      "id": "hw-000",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "1.0"
+     },
+     {
+      "category": "si",
+      "got": "1.0",
+      "id": "hw-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "1.0"
+     },
+     {
+      "category": "si",
+      "got": "1.0",
+      "id": "hw-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "1.0"
+     },
+     {
+      "category": "si",
+      "got": "1.0",
+      "id": "hw-003",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "1.0"
+     },
+     {
+      "category": "si",
+      "got": "1.0",
+      "id": "hw-004",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "1.0"
+     },
+     {
+      "category": "si",
+      "got": "1.0",
+      "id": "hw-005",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "1.0"
+     },
+     {
+      "category": "si",
+      "got": "1.0",
+      "id": "hw-006",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "1.0"
+     },
+     {
+      "category": "si",
+      "got": "1.0",
+      "id": "hw-007",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "1.0"
+     },
+     {
+      "category": "process",
+      "detail": "fixture",
+      "id": "hw-008",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "fixture",
+      "id": "hw-009",
+      "outcome": "unsupported"
+     }
+    ],
+    "must_refuse": [
+     {
+      "category": "ambiguous_name",
+      "detail": "fixture",
+      "id": "ref-001",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "fixture",
+      "id": "ref-002",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "fixture",
+      "id": "ref-003",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "fixture",
+      "id": "ref-004",
+      "outcome": "refused"
+     }
+    ]
+   },
+   "coverage": {
+    "process": {
+     "known": 6,
+     "total": 10,
+     "unknown": [
+      "Nm3"
+     ]
+    },
+    "si": {
+     "known": 8,
+     "total": 10,
+     "unknown": []
+    }
+   },
+   "must_convert": {
+    "by_category": {
+     "process": {
+      "correct": 0,
+      "total": 2,
+      "unsupported": 2,
+      "wrong_value": 0
+     },
+     "si": {
+      "correct": 8,
+      "total": 8,
+      "unsupported": 0,
+      "wrong_value": 0
+     }
+    },
+    "correct": 8,
+    "total": 10,
+    "unsupported": 2,
+    "wrong_value": 0
+   },
+   "must_refuse": {
+    "by_category": {},
+    "not_applicable": 0,
+    "refused": 4,
+    "silently_accepted": 0,
+    "total": 4
+   }
+  }
+ },
+ "startup": {
+  "import_ms": {
+   "mad": 1,
+   "max": 11,
+   "median": 10,
+   "min": 9,
+   "raw": [
+    9,
+    10,
+    11
+   ],
+   "samples": 3,
+   "unit": "ms"
+  },
+  "package_bytes": 1000000,
+  "peak_rss_kb": 50000
+ }
+}

@@ -1,0 +1,246 @@
+{
+ "_fixture_note": "INVENTED NUMBERS to test the report generator. Not a measurement of any library.",
+ "corpus_id": "fixture",
+ "date_utc": "2000-01-01T00:00:00Z",
+ "fixture": true,
+ "kind": "ceiling",
+ "library": {
+  "name": "FIXTURE-ceiling",
+  "version": "0"
+ },
+ "lockfile": "pinned",
+ "machine": {
+  "arch": "none",
+  "cpu_model": "FIXTURE CPU",
+  "governor": null,
+  "logical_cores": 1,
+  "os": "FIXTURE OS"
+ },
+ "modes": {
+  "plain": {
+   "description": "fixture",
+   "idiomatic": "plain"
+  }
+ },
+ "parameters": {
+  "quick": true,
+  "samples": 3
+ },
+ "performance": {
+  "plain": {
+   "affine_temperature": {
+    "batch": {
+     "1000": {
+      "mad": 0.2,
+      "max": 1.2,
+      "median": 1.0,
+      "min": 0.8,
+      "raw": [
+       0.8,
+       1.0,
+       1.2
+      ],
+      "samples": 3,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 0.1,
+      "max": 0.85,
+      "median": 0.75,
+      "min": 0.65,
+      "raw": [
+       0.65,
+       0.75,
+       0.85
+      ],
+      "samples": 3,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 1,
+     "max": 6,
+     "median": 5,
+     "min": 4,
+     "raw": [
+      4,
+      5,
+      6
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 50,
+     "max": 550.0,
+     "median": 500.0,
+     "min": 450.0,
+     "raw": [
+      450.0,
+      500.0,
+      550.0
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 100,
+     "max": 600.0,
+     "median": 500.0,
+     "min": 400.0,
+     "raw": [
+      400.0,
+      500.0,
+      600.0
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 10,
+     "max": 60.0,
+     "median": 50.0,
+     "min": 40.0,
+     "raw": [
+      40.0,
+      50.0,
+      60.0
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 1,
+     "max": 6.0,
+     "median": 5.0,
+     "min": 4.0,
+     "raw": [
+      4.0,
+      5.0,
+      6.0
+     ],
+     "samples": 3,
+     "unit": "ns"
+    }
+   },
+   "linear_speed": {
+    "batch": {
+     "1000": {
+      "mad": 0.2,
+      "max": 1.2,
+      "median": 1.0,
+      "min": 0.8,
+      "raw": [
+       0.8,
+       1.0,
+       1.2
+      ],
+      "samples": 3,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 0.1,
+      "max": 0.85,
+      "median": 0.75,
+      "min": 0.65,
+      "raw": [
+       0.65,
+       0.75,
+       0.85
+      ],
+      "samples": 3,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 1,
+     "max": 6,
+     "median": 5,
+     "min": 4,
+     "raw": [
+      4,
+      5,
+      6
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 50,
+     "max": 550.0,
+     "median": 500.0,
+     "min": 450.0,
+     "raw": [
+      450.0,
+      500.0,
+      550.0
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 100,
+     "max": 600.0,
+     "median": 500.0,
+     "min": 400.0,
+     "raw": [
+      400.0,
+      500.0,
+      600.0
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 10,
+     "max": 60.0,
+     "median": 50.0,
+     "min": 40.0,
+     "raw": [
+      40.0,
+      50.0,
+      60.0
+     ],
+     "samples": 3,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 1,
+     "max": 6.0,
+     "median": 5.0,
+     "min": 4.0,
+     "raw": [
+      4.0,
+      5.0,
+      6.0
+     ],
+     "samples": 3,
+     "unit": "ns"
+    }
+   }
+  }
+ },
+ "runtime": {
+  "language": "fixture",
+  "name": "fixture-runtime",
+  "version": "0"
+ },
+ "schema": "dimvexa.bench.result/1",
+ "startup": {
+  "import_ms": {
+   "mad": 1,
+   "max": 11,
+   "median": 10,
+   "min": 9,
+   "raw": [
+    9,
+    10,
+    11
+   ],
+   "samples": 3,
+   "unit": "ms"
+  },
+  "package_bytes": 1000000,
+  "peak_rss_kb": 50000
+ }
+}
