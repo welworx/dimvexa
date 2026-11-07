@@ -5,6 +5,8 @@
 //! maximum nanoseconds per operation over repeated samples. Nothing here is cached by the
 //! library (plan section 6.2); "prepared" means the caller keeps the `Conversion` handle.
 #![allow(
+    clippy::suboptimal_flops,
+    clippy::items_after_statements,
     clippy::unwrap_used,
     clippy::expect_used,
     clippy::cast_precision_loss,
