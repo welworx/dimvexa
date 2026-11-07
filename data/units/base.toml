@@ -1,0 +1,409 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Base pack: SI base and derived units, non-SI units accepted for use with the SI, temperature kinds.
+# Factors are exact fractions num/den of the coherent SI unit: si = factor * x + offset.
+
+[[unit]]
+symbol = "m"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+note = "metre, defined by the fixed value of the speed of light"
+
+[[unit]]
+symbol = "g"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+note = "gram = 1/1000 of the SI base unit kilogram; kg is resolved as k + g"
+
+[[unit]]
+symbol = "s"
+aliases = []
+dim = [0, 0, 1, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+note = "second, defined by the caesium hyperfine frequency"
+
+[[unit]]
+symbol = "A"
+aliases = []
+dim = [0, 0, 0, 1, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+note = "ampere, defined by the fixed value of the elementary charge"
+
+[[unit]]
+symbol = "K"
+aliases = []
+dim = [0, 0, 0, 0, 1, 0, 0]
+kind = "absolute_temperature"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+note = "kelvin, defined by the fixed value of the Boltzmann constant; absolute temperature kind"
+
+[[unit]]
+symbol = "mol"
+aliases = []
+dim = [0, 0, 0, 0, 0, 1, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+note = "mole, defined by the fixed value of the Avogadro constant"
+
+[[unit]]
+symbol = "cd"
+aliases = []
+dim = [0, 0, 0, 0, 0, 0, 1]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+note = "candela, defined by the luminous efficacy of 540 THz radiation"
+
+[[unit]]
+symbol = "Hz"
+aliases = []
+dim = [0, 0, -1, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "hertz = 1/s"
+
+[[unit]]
+symbol = "N"
+aliases = []
+dim = [1, 1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "newton = kg m/s^2"
+
+[[unit]]
+symbol = "Pa"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "pascal = N/m^2"
+
+[[unit]]
+symbol = "J"
+aliases = []
+dim = [1, 2, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "joule = N m"
+
+[[unit]]
+symbol = "W"
+aliases = []
+dim = [1, 2, -3, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "watt = J/s"
+
+[[unit]]
+symbol = "C"
+aliases = []
+dim = [0, 0, 1, 1, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "coulomb = A s"
+
+[[unit]]
+symbol = "V"
+aliases = []
+dim = [1, 2, -3, -1, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "volt = W/A"
+
+[[unit]]
+symbol = "ohm"
+aliases = ["Ω", "Ω"]
+dim = [1, 2, -3, -2, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "ohm = V/A; Greek capital omega and the ohm sign are aliases"
+
+[[unit]]
+symbol = "F"
+aliases = []
+dim = [-1, -2, 4, 2, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "farad = C/V"
+
+[[unit]]
+symbol = "S"
+aliases = []
+dim = [-1, -2, 3, 2, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "siemens = A/V"
+
+[[unit]]
+symbol = "Wb"
+aliases = []
+dim = [1, 2, -2, -1, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "weber = V s"
+
+[[unit]]
+symbol = "T"
+aliases = []
+dim = [1, 0, -2, -1, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "tesla = Wb/m^2"
+
+[[unit]]
+symbol = "H"
+aliases = []
+dim = [1, 2, -2, -2, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "henry = Wb/A"
+
+[[unit]]
+symbol = "min"
+aliases = []
+dim = [0, 0, 1, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "60/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)"
+note = "minute = 60 s"
+
+[[unit]]
+symbol = "h"
+aliases = []
+dim = [0, 0, 1, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "3600/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)"
+note = "hour = 60 min = 3600 s"
+
+[[unit]]
+symbol = "d"
+aliases = []
+dim = [0, 0, 1, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "86400/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)"
+note = "day = 24 h = 86400 s (not a sidereal or calendar day)"
+
+[[unit]]
+symbol = "L"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)"
+note = "litre = 1 dm^3 = 1/1000 m^3"
+
+[[unit]]
+symbol = "tonne"
+aliases = ["t"]
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1000/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)"
+note = "tonne (metric ton) = 1000 kg; t is an alias; the bare word ton is ambiguous and rejected"
+
+[[unit]]
+symbol = "Wh"
+aliases = []
+dim = [1, 2, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "3600/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "definition: watt (SI Brochure 9th ed., Table 4) times hour (SI Brochure 9th ed., ch. 4); NIST SP 811 (2008), Appendix B lists kW h = 3.6E+06 J"
+note = "watt hour = 3600 J; kWh and MWh come from the SI prefixes"
+
+[[unit]]
+symbol = "degC"
+aliases = ["°C"]
+dim = [0, 0, 0, 0, 1, 0, 0]
+kind = "absolute_temperature"
+shape = "affine"
+factor = "1/1"
+offset = "5463/20"
+exactness = "defined"
+prefixes = "none"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (degree Celsius, t/degC = T/K - 273.15)"
+note = "degree Celsius: K = degC + 273.15; absolute temperature"
+
+[[unit]]
+symbol = "delta_K"
+aliases = []
+dim = [0, 0, 0, 0, 1, 0, 0]
+kind = "temperature_difference"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (kelvin, temperature intervals)"
+note = "temperature difference of 1 K"
+
+[[unit]]
+symbol = "delta_degC"
+aliases = ["Δ°C"]
+dim = [0, 0, 0, 0, 1, 0, 0]
+kind = "temperature_difference"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (degree Celsius, temperature intervals)"
+note = "temperature difference of 1 degC = 1 K"

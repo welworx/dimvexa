@@ -1,0 +1,318 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Golden vectors for the common pack: value in `from` converts exactly to `expect` in `to`.
+# `expect` is a fraction, an integer or a decimal. With `rel_tol` the comparison is approximate
+# (used where the source publishes a rounded number). `source` says where the number comes from.
+
+[[vector]]
+unit = "bar"
+value = "1"
+from = "bar"
+to = "kPa"
+expect = "100"
+source = "NIST SP 811 (2008), Appendix B (bar = 100 kPa)"
+
+[[vector]]
+unit = "atm"
+value = "1"
+from = "atm"
+to = "Pa"
+expect = "101325"
+source = "NIST SP 811 (2008), Appendix B (standard atmosphere = 101 325 Pa)"
+
+[[vector]]
+unit = "mmHg"
+value = "1"
+from = "mmHg"
+to = "Pa"
+expect = "133.322387415"
+source = "NIST SP 811 (2008), Appendix B (conventional mmHg = 133.322 387 415 Pa)"
+
+[[vector]]
+unit = "torr"
+value = "760"
+from = "torr"
+to = "atm"
+expect = "1"
+source = "NIST SP 811 (2008), Appendix B (torr = (101 325/760) Pa)"
+
+[[vector]]
+unit = "torr"
+value = "1"
+from = "torr"
+to = "Pa"
+expect = "101325/760"
+source = "NIST SP 811 (2008), Appendix B (torr = (101 325/760) Pa)"
+
+[[vector]]
+unit = "g_n"
+value = "1"
+from = "g_n"
+to = "m/s2"
+expect = "9.80665"
+source = "NIST SP 811 (2008), Appendix B (standard gravity 9.806 65 m/s^2)"
+
+[[vector]]
+unit = "lbf"
+value = "1"
+from = "lbf"
+to = "N"
+expect = "4.4482216152605"
+source = "NIST SP 811 (2008), Appendix B (lbf = 4.448 221 615 260 5 N)"
+
+[[vector]]
+unit = "psi"
+value = "1"
+from = "psi"
+to = "Pa"
+expect = "6894.757293168"
+rel_tol = "1e-12"
+source = "NIST SP 811 (2008), Appendix B (psi = 6.894 757 293 168 E+03 Pa, published to 13 digits)"
+
+[[vector]]
+unit = "psi"
+value = "1"
+from = "psi"
+to = "lbf/in2"
+expect = "1"
+source = "by definition: psi = lbf/in^2"
+
+[[vector]]
+unit = "cal_th"
+value = "1"
+from = "cal_th"
+to = "J"
+expect = "4.184"
+source = "NIST SP 811 (2008), Appendix B (calorie_th = 4.184 J)"
+
+[[vector]]
+unit = "cal_IT"
+value = "1"
+from = "cal_IT"
+to = "J"
+expect = "4.1868"
+source = "NIST SP 811 (2008), Appendix B (calorie_IT = 4.1868 J)"
+
+[[vector]]
+unit = "Btu_IT"
+value = "1"
+from = "Btu_IT"
+to = "J"
+expect = "1055.05585262"
+source = "NIST SP 811 (2008), Appendix B (Btu_IT = 1055.055 852 62 J)"
+
+[[vector]]
+unit = "Btu_th"
+value = "1"
+from = "Btu_th"
+to = "J"
+expect = "1054.350"
+rel_tol = "1e-6"
+source = "NIST SP 811 (2008), Appendix B (Btu_th = 1.054 350 E+03 J, published rounded)"
+
+[[vector]]
+unit = "hp_mech"
+value = "1"
+from = "hp_mech"
+to = "W"
+expect = "745.69987158227022"
+source = "NIST SP 811 (2008), Appendix B (horsepower 550 ft lbf/s = 745.699 871 582 270 22 W)"
+
+[[vector]]
+unit = "hp_metric"
+value = "1"
+from = "hp_metric"
+to = "W"
+expect = "735.49875"
+source = "DIN 66036 (75 kgf m/s with kgf = 9.80665 N)"
+
+[[vector]]
+unit = "in"
+value = "1"
+from = "in"
+to = "mm"
+expect = "25.4"
+source = "NIST SP 811 (2008), Appendix B (inch = 0.0254 m)"
+
+[[vector]]
+unit = "ft"
+value = "1"
+from = "ft"
+to = "in"
+expect = "12"
+source = "International yard and pound agreement (1959)"
+
+[[vector]]
+unit = "yd"
+value = "1"
+from = "yd"
+to = "ft"
+expect = "3"
+source = "International yard and pound agreement (1959)"
+
+[[vector]]
+unit = "mi"
+value = "1"
+from = "mi"
+to = "m"
+expect = "1609.344"
+source = "NIST SP 811 (2008), Appendix B (mile = 1609.344 m)"
+
+[[vector]]
+unit = "nmi"
+value = "1"
+from = "nmi"
+to = "m"
+expect = "1852"
+source = "NIST SP 811 (2008), Appendix B (nautical mile = 1852 m)"
+
+[[vector]]
+unit = "ft_us_survey"
+value = "1"
+from = "ft_us_survey"
+to = "m"
+expect = "1200/3937"
+source = "NIST SP 811 (2008), Appendix B (foot, U.S. survey = 1200/3937 m)"
+
+[[vector]]
+unit = "mi_us_survey"
+value = "1"
+from = "mi_us_survey"
+to = "ft_us_survey"
+expect = "5280"
+source = "NIST SP 811 (2008), Appendix B (mile, U.S. statute = 5280 survey feet)"
+
+[[vector]]
+unit = "lb"
+value = "1"
+from = "lb"
+to = "g"
+expect = "453.59237"
+source = "International yard and pound agreement (1959)"
+
+[[vector]]
+unit = "oz_av"
+value = "16"
+from = "oz_av"
+to = "lb"
+expect = "1"
+source = "avoirdupois: 16 ounces = 1 pound"
+
+[[vector]]
+unit = "oz_troy"
+value = "1"
+from = "oz_troy"
+to = "g"
+expect = "31.1034768"
+source = "NIST SP 811 (2008), Appendix B (ounce, troy = 31.103 476 8 g)"
+
+[[vector]]
+unit = "ton_short"
+value = "1"
+from = "ton_short"
+to = "lb"
+expect = "2000"
+source = "NIST SP 811 (2008), Appendix B (ton, short = 2000 lb)"
+
+[[vector]]
+unit = "ton_long"
+value = "1"
+from = "ton_long"
+to = "lb"
+expect = "2240"
+source = "NIST SP 811 (2008), Appendix B (ton, long = 2240 lb)"
+
+[[vector]]
+unit = "gal_us"
+value = "1"
+from = "gal_us"
+to = "L"
+expect = "3.785411784"
+source = "NIST SP 811 (2008), Appendix B (gallon, U.S. liquid = 3.785 411 784 L)"
+
+[[vector]]
+unit = "gal_imp"
+value = "1"
+from = "gal_imp"
+to = "L"
+expect = "4.54609"
+source = "UK Weights and Measures Act 1985 (4.546 09 L)"
+
+[[vector]]
+unit = "pt_us"
+value = "8"
+from = "pt_us"
+to = "gal_us"
+expect = "1"
+source = "US liquid measure: 8 pints = 1 gallon"
+
+[[vector]]
+unit = "pt_imp"
+value = "8"
+from = "pt_imp"
+to = "gal_imp"
+expect = "1"
+source = "imperial measure: 8 pints = 1 gallon"
+
+[[vector]]
+unit = "lbmol"
+value = "1"
+from = "lbmol"
+to = "mol"
+expect = "453.59237"
+source = "pound-mole: 1 lb = 453.592 37 g, so 453.592 37 mol"
+
+[[vector]]
+unit = "lbmol"
+value = "1"
+from = "lbmol"
+to = "kmol"
+expect = "0.45359237"
+source = "pound-mole = 0.453 592 37 kmol"
+
+[[vector]]
+unit = "degF"
+value = "32"
+from = "degF"
+to = "degC"
+expect = "0"
+source = "NIST SP 811 (2008): water freezes at 32 degF = 0 degC"
+
+[[vector]]
+unit = "degF"
+value = "-40"
+from = "degF"
+to = "degC"
+expect = "-40"
+source = "the scales meet at -40"
+
+[[vector]]
+unit = "degR"
+value = "491.67"
+from = "degR"
+to = "K"
+expect = "273.15"
+source = "degR = 5/9 K; 491.67 degR = 273.15 K"
+
+[[vector]]
+unit = "delta_degF"
+value = "1"
+from = "delta_degF"
+to = "delta_K"
+expect = "5/9"
+source = "NIST SP 811 (2008), Appendix B (degF interval = 5/9 K)"
+
+[[vector]]
+unit = "delta_degR"
+value = "1"
+from = "delta_degR"
+to = "delta_degF"
+expect = "1"
+source = "degR and degF intervals are equal"
+
+[[vector]]
+unit = "cal_th"
+value = "1"
+from = "kcal_th"
+to = "J"
+expect = "4184"
+source = "derived: kilo prefix on 4.184 J"

@@ -1,0 +1,480 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Common pack (seed): US customary, imperial, pressure, energy and process units.
+# Every factor derives from the primary definition cited in `source`; see `note`.
+# si = factor * x + offset.
+
+[[unit]]
+symbol = "bar"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "100000/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (bar = 100 kPa)"
+note = "bar = 1e5 Pa by definition"
+
+[[unit]]
+symbol = "atm"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "101325/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (standard atmosphere); 10th CGPM (1954), Resolution 4"
+note = "standard atmosphere = 101325 Pa exactly"
+
+[[unit]]
+symbol = "g_n"
+aliases = []
+dim = [0, 1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "196133/20000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (standard acceleration of gravity); 3rd CGPM (1901)"
+note = "standard acceleration of gravity 9.80665 m/s^2 exactly"
+
+[[unit]]
+symbol = "lbf"
+aliases = []
+dim = [1, 1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "8896443230521/2000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (pound-force)"
+note = "lbf = lb * g_n = 0.45359237 kg * 9.80665 m/s^2"
+
+[[unit]]
+symbol = "psi"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "8896443230521/1290320000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (pound-force per square inch)"
+note = "psi = lbf/in^2 = (0.45359237 * 9.80665) / 0.0254^2 Pa, derived exactly from lb, g_n and in"
+
+[[unit]]
+symbol = "mmHg"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "26664477483/200000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (conventional millimeter of mercury); ISO 80000-4:2019"
+note = "conventional mercury density 13595.1 kg/m^3 * g_n * 1 mm = 133.322387415 Pa; distinct from torr"
+
+[[unit]]
+symbol = "torr"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "20265/152"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (torr = 101325/760 Pa)"
+note = "torr = atm/760 exactly; differs from mmHg by about 1.4e-7 relative"
+
+[[unit]]
+symbol = "cal_th"
+aliases = []
+dim = [1, 2, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "523/125"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (calorie_th)"
+note = "thermochemical calorie = 4.184 J exactly"
+
+[[unit]]
+symbol = "cal_IT"
+aliases = []
+dim = [1, 2, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "10467/2500"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (calorie_IT); 5th International Conference on the Properties of Steam (1956)"
+note = "International Table calorie = 4.1868 J exactly"
+
+[[unit]]
+symbol = "Btu_IT"
+aliases = []
+dim = [1, 2, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "52752792631/50000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (Btu_IT)"
+note = "Btu_IT = cal_IT/g * lb * (5/9 K) = 4.1868 * 453.59237 / 1.8 J = 1055.05585262 J, derived exactly"
+
+[[unit]]
+symbol = "Btu_th"
+aliases = []
+dim = [1, 2, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "23722880951/22500000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (Btu_th)"
+note = "Btu_th = cal_th/g * lb * (5/9 K) = 4.184 * 453.59237 / 1.8 J, derived exactly (about 1054.3503 J)"
+
+[[unit]]
+symbol = "hp_mech"
+aliases = []
+dim = [1, 2, -3, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "37284993579113511/50000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (horsepower, 550 ft lbf/s)"
+note = "mechanical horsepower = 550 ft lbf/s = 550 * 0.3048 * 0.45359237 * 9.80665 W"
+
+[[unit]]
+symbol = "hp_metric"
+aliases = []
+dim = [1, 2, -3, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "588399/800"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "DIN 66036 (metric horsepower, PS); NIST SP 811 (2008), Appendix B"
+note = "metric horsepower = 75 kgf m/s = 75 * 9.80665 W = 735.49875 W"
+
+[[unit]]
+symbol = "in"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "127/5000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B"
+note = "inch = 0.0254 m exactly"
+
+[[unit]]
+symbol = "ft"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "381/1250"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B"
+note = "international foot = 0.3048 m exactly"
+
+[[unit]]
+symbol = "yd"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1143/1250"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B"
+note = "international yard = 0.9144 m exactly"
+
+[[unit]]
+symbol = "mi"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "201168/125"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B"
+note = "international mile = 5280 ft = 1609.344 m; the US survey mile is mi_us_survey"
+
+[[unit]]
+symbol = "nmi"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1852/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (nautical mile); International Hydrographic Conference (1929)"
+note = "international nautical mile = 1852 m exactly"
+
+[[unit]]
+symbol = "ft_us_survey"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1200/3937"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (foot, U.S. survey); Mendenhall Order (1893)"
+note = "US survey foot = 1200/3937 m; deprecated by NIST and NGS from 2023-01-01, kept for legacy data"
+
+[[unit]]
+symbol = "mi_us_survey"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "6336000/3937"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (mile, U.S. statute)"
+note = "US statute mile = 5280 US survey feet"
+
+[[unit]]
+symbol = "lb"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "45359237/100000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B"
+note = "avoirdupois pound = 0.45359237 kg exactly"
+
+[[unit]]
+symbol = "oz_av"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "45359237/1600000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B"
+note = "avoirdupois ounce = lb/16 (mass)"
+
+[[unit]]
+symbol = "oz_troy"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "19439673/625000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (ounce, troy or apothecary)"
+note = "troy ounce = 480 grains, grain = 64.79891 mg, so 31.1034768 g exactly"
+
+[[unit]]
+symbol = "ton_short"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "45359237/50000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (ton, short, 2000 lb)"
+note = "short ton = 2000 lb = 907.18474 kg"
+
+[[unit]]
+symbol = "ton_long"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "317514659/312500"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (ton, long, 2240 lb)"
+note = "long ton = 2240 lb = 1016.0469088 kg"
+
+[[unit]]
+symbol = "gal_us"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "473176473/125000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (gallon, U.S. liquid = 231 in^3)"
+note = "US liquid gallon = 231 in^3 = 3.785411784 L exactly"
+
+[[unit]]
+symbol = "gal_imp"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "454609/100000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "UK Weights and Measures Act 1985, Schedule 1 (4.54609 L); NIST SP 811 (2008), Appendix B"
+note = "imperial gallon = 4.54609 L exactly"
+
+[[unit]]
+symbol = "pt_us"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "473176473/1000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (pint, U.S. liquid)"
+note = "US liquid pint = gal_us/8; the dry pint is a different unit and not included"
+
+[[unit]]
+symbol = "pt_imp"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "454609/800000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "UK Weights and Measures Act 1985, Schedule 1"
+note = "imperial pint = gal_imp/8"
+
+[[unit]]
+symbol = "lbmol"
+aliases = []
+dim = [0, 0, 0, 0, 0, 1, 0]
+kind = "plain"
+shape = "linear"
+factor = "45359237/100000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "derived from the pound definition (International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B); standard process-engineering convention"
+note = "pound-mole = 1 lb expressed in grams as a number of moles = 453.59237 mol exactly; kmol is k + mol"
+
+[[unit]]
+symbol = "degF"
+aliases = ["°F"]
+dim = [0, 0, 0, 0, 1, 0, 0]
+kind = "absolute_temperature"
+shape = "affine"
+factor = "5/9"
+offset = "45967/180"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (degree Fahrenheit)"
+note = "K = (degF + 459.67) * 5/9; absolute temperature"
+
+[[unit]]
+symbol = "degR"
+aliases = ["°R"]
+dim = [0, 0, 0, 0, 1, 0, 0]
+kind = "absolute_temperature"
+shape = "linear"
+factor = "5/9"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (degree Rankine)"
+note = "K = degR * 5/9; absolute temperature, linear (zero at absolute zero)"
+
+[[unit]]
+symbol = "delta_degF"
+aliases = []
+dim = [0, 0, 0, 0, 1, 0, 0]
+kind = "temperature_difference"
+shape = "linear"
+factor = "5/9"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (degree Fahrenheit, temperature interval)"
+note = "temperature difference of 1 degF = 5/9 K"
+
+[[unit]]
+symbol = "delta_degR"
+aliases = []
+dim = [0, 0, 0, 0, 1, 0, 0]
+kind = "temperature_difference"
+shape = "linear"
+factor = "5/9"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (degree Rankine, temperature interval)"
+note = "temperature difference of 1 degR = 5/9 K"

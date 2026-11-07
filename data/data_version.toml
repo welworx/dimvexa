@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Version and hash of data/units/*.toml. `cargo xtask validate-data` fails if the hash no
+# longer matches the files; `cargo xtask update-data-hash` bumps the version and rewrites it.
+[[data]]
+version = 1
+hash = "fnv1a64:161c737872031e32"
