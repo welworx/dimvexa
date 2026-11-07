@@ -34,7 +34,8 @@ Converts VALUE from unit FROM to unit TO.
 
 Commands:
   units        list the supported units grouped by quantity (length, mass, volume, ...) and
-               the ambiguous symbols that are refused; GROUP shows one group only
+               the ambiguous symbols that are refused; the listing starts with the groups, and
+               GROUP shows one of them only
 
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
@@ -376,9 +377,35 @@ fn cell(s: &str) -> String {
     if t.is_empty() { "-".to_string() } else { t }
 }
 
-fn units_text(units: &[(String, &Unit)], ambiguous: &[&dimvexa::AmbiguousDef]) -> String {
-    let mut s =
-        String::from("# columns: symbol, quantity_kind, exactness, prefixes, aliases, source\n");
+/// Every group of the whole table with its number of units, in table order. These are the
+/// values `dimvexa units GROUP` accepts, whatever the current listing is narrowed to.
+fn group_counts(reg: &Registry) -> Vec<(String, usize)> {
+    let mut groups: Vec<(String, usize)> = Vec::new();
+    for u in reg.units() {
+        let g = group_name(u.dim());
+        match groups.iter_mut().find(|(name, _)| *name == g) {
+            Some((_, n)) => *n = n.saturating_add(1),
+            None => groups.push((g, 1)),
+        }
+    }
+    groups
+}
+
+fn units_text(
+    groups: &[(String, usize)],
+    units: &[(String, &Unit)],
+    ambiguous: &[&dimvexa::AmbiguousDef],
+    filtered: bool,
+) -> String {
+    let mut s = String::new();
+    if !filtered {
+        s.push_str("## groups (list one with: dimvexa units GROUP)\n# columns: group, units\n");
+        for (g, n) in groups {
+            let _ = writeln!(s, "{g}\t{n}");
+        }
+        s.push('\n');
+    }
+    s.push_str("# columns: symbol, quantity_kind, exactness, prefixes, aliases, source\n");
     let mut current: Option<&str> = None;
     for (g, u) in units {
         if current != Some(g.as_str()) {
@@ -416,6 +443,7 @@ fn units_text(units: &[(String, &Unit)], ambiguous: &[&dimvexa::AmbiguousDef]) -
 }
 
 fn units_json(
+    groups: &[(String, usize)],
     units: &[(String, &Unit)],
     ambiguous: &[&dimvexa::AmbiguousDef],
     group: Option<&str>,
@@ -457,15 +485,20 @@ fn units_json(
             )
         })
         .collect();
+    let group_list: Vec<String> = groups
+        .iter()
+        .map(|(g, n)| format!("{{\"name\":{},\"units\":{n}}}", json_string(g)))
+        .collect();
     let group = group.map_or_else(
         || "null".to_string(),
         |g| json_string(&g.to_ascii_lowercase()),
     );
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"group\":{},\"units\":[{}],\"ambiguous\":[{}]}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"group\":{},\"groups\":[{}],\"units\":[{}],\"ambiguous\":[{}]}}",
         json_string(&format!("{}.units/1", dimvexa::PROJECT_NAME)),
         json_string(&dimvexa::data_version()),
         group,
+        group_list.join(","),
         items.join(","),
         ambiguous.join(",")
     )
@@ -491,13 +524,18 @@ fn run_units(group: Option<&str>, json: bool, out: &mut dyn Write, err: &mut dyn
             return 1;
         }
     };
+    let groups = group_counts(&reg);
     match select_units(&reg, group) {
         Ok(units) => {
             let ambiguous = select_ambiguous(&units, group.is_some());
             if json {
-                let _ = writeln!(out, "{}", units_json(&units, &ambiguous, group));
+                let _ = writeln!(out, "{}", units_json(&groups, &units, &ambiguous, group));
             } else {
-                let _ = write!(out, "{}", units_text(&units, &ambiguous));
+                let _ = write!(
+                    out,
+                    "{}",
+                    units_text(&groups, &units, &ambiguous, group.is_some())
+                );
             }
             0
         }

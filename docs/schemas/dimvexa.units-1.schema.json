@@ -6,12 +6,24 @@
   "oneOf": [
     {
   "type": "object",
-  "required": ["schema", "ok", "data_version", "group", "units", "ambiguous"],
+  "required": ["schema", "ok", "data_version", "group", "groups", "units", "ambiguous"],
   "properties": {
     "schema": { "const": "dimvexa.units/1" },
     "ok": { "const": true },
     "data_version": { "type": "string", "description": "Table identifier, `v<version>+<hash>`." },
     "group": { "type": ["string", "null"], "description": "The group the listing was narrowed to (`dimvexa units GROUP`), or null for the whole table. With a group, `ambiguous` only holds the symbols that have a candidate in it." },
+    "groups": {
+      "type": "array",
+      "description": "Every group of the whole table, also when the listing is narrowed: the values `dimvexa units GROUP` accepts.",
+      "items": {
+        "type": "object",
+        "required": ["name", "units"],
+        "properties": {
+          "name": { "type": "string" },
+          "units": { "type": "integer", "minimum": 1, "description": "Number of units in the group." }
+        }
+      }
+    },
     "units": {
       "type": "array",
       "items": {

@@ -73,7 +73,8 @@ Converts VALUE from unit FROM to unit TO.
 
 Commands:
   units        list the supported units grouped by quantity (length, mass, volume, ...) and
-               the ambiguous symbols that are refused; GROUP shows one group only
+               the ambiguous symbols that are refused; the listing starts with the groups, and
+               GROUP shows one of them only
 
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
