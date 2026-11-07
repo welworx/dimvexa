@@ -15,10 +15,12 @@ use crate::unit::UnitExpr;
 /// # Fast path
 ///
 /// * Linear: `y = x * a`.
-/// * Affine: `y = (x + s) * a` where `s = b / a` rounded once to `f64`. Shifting before
-///   scaling makes the result exactly zero at the scale's zero point whenever `s` is
-///   exactly representable (for example 32 degF maps to exactly 0 degC) instead of a
-///   rounding residue of `x * a + b`.
+/// * Affine: `y = ((x + s_hi) + s_lo) * a` where `s = b / a` is split into two `f64`
+///   values (`s_hi` is `s` rounded, `s_lo` the rounded remainder). Shifting before scaling
+///   makes the result exactly zero at the scale's zero point whenever `s` is exactly
+///   representable (for example 32 degF maps to exactly 0 degC) instead of a rounding
+///   residue of `x * a + b`, and the second part removes the error of an inexact shift such
+///   as 273.15.
 ///
 /// Both are separate IEEE multiply and add operations, never a fused multiply-add: the
 /// result does not depend on whether the target has an FMA instruction (and the loop
@@ -28,7 +30,9 @@ use crate::unit::UnitExpr;
 ///
 /// The factor `a` is rounded once from the exact rational (relative error at most
 /// 2^-53), then each operation rounds again. The measured agreement with the exact path
-/// is reported in `docs/benchmarks/M0.md` and tested in `tests/differential.rs`.
+/// is reported in `docs/benchmarks/M0.md` and tested in
+/// `crates/dimvexa-testkit/tests/differential.rs`: at most 1 ulp for linear conversions of the
+/// seed table, at most 2 ulps for affine ones (theory allows about 2 ulps for both).
 ///
 /// # Examples
 ///
@@ -53,6 +57,7 @@ pub struct Conversion {
     factor_f64: f64,
     offset_f64: f64,
     shift_f64: f64,
+    shift_lo_f64: f64,
 }
 
 impl Conversion {
@@ -88,13 +93,21 @@ impl Conversion {
             Shape::Affine
         };
         let shift = offset.checked_div(factor)?;
+        let shift_f64 = shift.to_f64()?;
+        // Second part of the shift (shift - shift_f64, rounded): makes the shift accurate to
+        // about 106 bits, so an inexact shift such as 273.15 no longer limits the result.
+        let shift_lo_f64 = Ratio::from_f64(shift_f64)
+            .and_then(|hi| shift.checked_sub(hi))
+            .and_then(Ratio::to_f64)
+            .unwrap_or(0.0);
         Ok(Self {
             shape,
             factor,
             offset,
             factor_f64: factor.to_f64()?,
             offset_f64: offset.to_f64()?,
-            shift_f64: shift.to_f64()?,
+            shift_f64,
+            shift_lo_f64,
         })
     }
 
@@ -201,7 +214,7 @@ impl Conversion {
     #[must_use]
     pub fn apply(&self, x: f64) -> f64 {
         match self.shape {
-            Shape::Affine => (x + self.shift_f64) * self.factor_f64,
+            Shape::Affine => ((x + self.shift_f64) + self.shift_lo_f64) * self.factor_f64,
             Shape::Linear => x * self.factor_f64,
         }
     }
@@ -225,9 +238,9 @@ impl Conversion {
         let a = self.factor_f64;
         match self.shape {
             Shape::Affine => {
-                let s = self.shift_f64;
+                let (s, lo) = (self.shift_f64, self.shift_lo_f64);
                 for (y, x) in output.iter_mut().zip(input) {
-                    *y = (*x + s) * a;
+                    *y = ((*x + s) + lo) * a;
                 }
             }
             Shape::Linear => {
@@ -245,9 +258,9 @@ impl Conversion {
         let a = self.factor_f64;
         match self.shape {
             Shape::Affine => {
-                let s = self.shift_f64;
+                let (s, lo) = (self.shift_f64, self.shift_lo_f64);
                 for v in data.iter_mut() {
-                    *v = (*v + s) * a;
+                    *v = ((*v + s) + lo) * a;
                 }
             }
             Shape::Linear => {
