@@ -23,13 +23,13 @@
 <text x="322" y="242" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">pint 0.26.2 / plain</text>
 <rect x="330" y="228" width="409.2" height="20" fill="#2a6fb0"/>
 <text x="745.2" y="242" font-family="sans-serif" font-size="12" fill="#1a1a1a">151 </text>
-<text x="322" y="270" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+ddb7292-dirty / exact_f64</text>
+<text x="322" y="270" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+a31bbb8 / exact_f64</text>
 <rect x="330" y="256" width="420.0" height="20" fill="#2a6fb0"/>
 <text x="756.0" y="270" font-family="sans-serif" font-size="12" fill="#1a1a1a">155 </text>
-<text x="322" y="298" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+ddb7292-dirty / fast_f64</text>
+<text x="322" y="298" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+a31bbb8 / fast_f64</text>
 <rect x="330" y="284" width="420.0" height="20" fill="#2a6fb0"/>
 <text x="756.0" y="298" font-family="sans-serif" font-size="12" fill="#1a1a1a">155 </text>
-<text x="322" y="326" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+ddb7292-dirty / text</text>
+<text x="322" y="326" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+a31bbb8 / text</text>
 <rect x="330" y="312" width="420.0" height="20" fill="#2a6fb0"/>
 <text x="756.0" y="326" font-family="sans-serif" font-size="12" fill="#1a1a1a">155 </text>
 </svg>
