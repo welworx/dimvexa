@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Report a security problem (private)
+    url: https://github.com/welworx/dimvexa/security/advisories/new
+    about: A crash, hang, undetected overflow or silent wrong result caused by the code, or a supply-chain problem. Use this private form, not a public issue. See SECURITY.md.
   - name: Documentation
     url: https://github.com/welworx/dimvexa/tree/main/docs
-    about: Read the plan, design and ADRs before opening a feature request.
+    about: Read the plan, design, precision notes and ADRs before opening a feature request.

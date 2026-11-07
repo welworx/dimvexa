@@ -1,173 +1,159 @@
-# Untested in M0: this file could not be run from the authoring session (no GitHub Actions).
-# TODO(owner): pin every third-party action by commit SHA (Dependabot keeps them current);
-# the SHAs could not be looked up offline, so version tags are used for now.
+# The CI pipeline. The heavy lifting is `cargo xtask ci`, the same command you run locally,
+# so "green on my machine" and "green in CI" mean the same thing.
+#
+# Not yet executed on GitHub: this file was written without access to Actions. Expect small
+# fixes on the first run. Third-party actions are pinned by commit SHA; read docs/ci-pinning.md
+# before enabling, because the SHAs below were copied, not looked up.
+#
+# Branch protection: require ONLY the `ci-success` job. It aggregates every job below, so
+# adding or renaming a job never needs a settings change.
 name: ci
+
 on:
   pull_request:
   push:
     branches: [main]
+  merge_group:
+  workflow_dispatch:
+
+# Least privilege: nothing here writes to the repository.
 permissions:
   contents: read
+
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
-  RUSTFLAGS: -D warnings
-  RUSTDOCFLAGS: -D warnings
+  CARGO_INCREMENTAL: "0"
+  RUST_BACKTRACE: "1"
 
 jobs:
-  fmt:
+  check:
+    name: check (fmt, clippy, tests, docs, data, example)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          components: rustfmt
-      - run: cargo fmt --all --check
+          persist-credentials: false
+      - name: Install the stable toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt --component clippy --no-self-update
+          rustup default stable
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - name: cargo xtask ci
+        run: cargo xtask ci
 
-  clippy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
-
-  test:
-    name: test (${{ matrix.os }}, ${{ matrix.toolchain }})
+  test-os:
+    name: test (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        toolchain: [stable]
-        include:
-          # MSRV. Edition 2024 needs at least 1.85; the value is declared in Cargo.toml
-          # (rust-version) and was NOT verified by a build in M0 (only stable was installed).
-          - { os: ubuntu-latest, toolchain: "1.85" }
+        os: [macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@master
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          toolchain: ${{ matrix.toolchain }}
-      - uses: Swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@nextest
-      - run: cargo nextest run --workspace --all-features
-      - run: cargo test --workspace --all-features --doc
-      - run: cargo test --workspace --no-default-features
-      - run: cargo run --example pool_pump -p dimvexa
+          persist-credentials: false
+      - name: Install the stable toolchain
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - name: cargo xtask ci test doctest example
+        run: cargo xtask ci test doctest example
 
-  docs:
+  msrv:
+    name: msrv (1.85)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # 1.85 is the lowest version that supports edition 2024. Keep in step with
+      # `rust-version` in Cargo.toml and `msrv` in clippy.toml.
+      RUSTUP_TOOLCHAIN: "1.85"
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo doc --workspace --all-features --no-deps
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the MSRV toolchain
+        run: rustup toolchain install 1.85 --profile minimal --no-self-update
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - run: cargo --version && rustc --version
+      - run: cargo check --workspace --all-targets --all-features --locked
+      - run: cargo test --workspace --all-features --locked --profile ci
 
   wasm:
+    name: wasm32 build of the core
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo build -p dimvexa-core --target wasm32-unknown-unknown
-
-  minimal-versions:
-    # The workspace has no external dependencies in M0, so this is trivially green; it
-    # starts to matter when dependencies appear.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo +nightly update -Z direct-minimal-versions && cargo +nightly check --workspace --all-features
+          persist-credentials: false
+      - name: Install the stable toolchain with the wasm target
+        run: |
+          rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown --no-self-update
+          rustup default stable
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - run: cargo build -p dimvexa-core --target wasm32-unknown-unknown --locked
 
   deny:
+    name: cargo-deny (licenses, bans, sources, advisories)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: EmbarkStudios/cargo-deny-action@v2
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+        with:
+          # Pinned. Keep in step with .github/workflows/nightly.yml.
+          tool: cargo-deny@0.18.3
+      - run: cargo deny --locked check
 
-  typos:
+  text:
+    name: typos and TOML format
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: crate-ci/typos@master
-
-  taplo:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: taiki-e/install-action@taplo
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+        with:
+          # Not version-pinned (see docs/ci-pinning.md): pin them once you have chosen versions.
+          tool: typos-cli,taplo-cli
+      - run: typos
       - run: taplo fmt --check
 
-  data:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo xtask validate-data
-
-  extras:
-    # Network-only dev tooling (proptest, criterion, insta, assert_cmd, iai-callgrind).
-    # Written in M0 without registry access, so this job is the first real compile of
-    # extras/. Expect small fixes.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: extras
-      - run: cargo test --manifest-path extras/Cargo.toml
-      - run: cargo bench --manifest-path extras/Cargo.toml --no-run
-
-  coverage:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: llvm-tools-preview
-      - uses: Swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@cargo-llvm-cov
-      - run: cargo llvm-cov -p dimvexa-core --all-features --fail-under-lines 90 --lcov --output-path lcov.info
-
-  semver:
-    # Enable after the first release exists (cargo-semver-checks needs a baseline).
-    if: false
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: obi1kenobi/cargo-semver-checks-action@v2
-
-  bench-regression:
-    # Deterministic instruction counts. Advisory in M0 (no stored baseline yet).
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: extras
-      - run: sudo apt-get update && sudo apt-get install -y valgrind
-      # The runner version must match the iai-callgrind library version in extras/Cargo.toml.
-      - run: cargo install iai-callgrind-runner --version 0.14.0 --locked
-      - run: cargo bench --manifest-path extras/Cargo.toml --bench iai
-
+  # The only check branch protection needs. It fails if any job above failed or was cancelled
+  # and is the required status check for the merge queue as well.
   ci-success:
+    name: ci-success
     if: always()
-    needs: [fmt, clippy, test, docs, wasm, minimal-versions, deny, typos, taplo, data, extras, coverage]
+    needs: [check, test-os, msrv, wasm, deny, text]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Require all needed jobs to succeed
+      - name: Require every job to have succeeded
+        env:
+          NEEDS: ${{ toJSON(needs) }}
         run: |
-          echo '${{ toJSON(needs) }}' | grep -q '"result": "\(failure\|cancelled\)"' && exit 1 || exit 0
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null

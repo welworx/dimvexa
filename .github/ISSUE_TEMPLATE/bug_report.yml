@@ -1,18 +1,55 @@
 name: Bug report
-description: A wrong result, a panic, a crash or a confusing error.
+description: A wrong result, a confusing error, or a documented promise that does not hold.
+title: "bug: "
 labels: [bug]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        **Security?** If a crafted input makes Dimvexa hang, run out of memory, panic or return a
+        silently wrong number caused by the code, please do not file it here. Use the private
+        form linked on the "New issue" page (also described in SECURITY.md).
+
+        A wrong conversion factor in the unit table is an ordinary bug: file it here and cite
+        the source.
   - type: textarea
     id: what
     attributes:
       label: What happened?
-      description: Include the exact input, for example `dimvexa convert 1 psi Pa --exact`.
+      description: The exact input and the exact output. For the command line, for example `dimvexa convert 1 psi Pa --exact`.
     validations: { required: true }
   - type: textarea
     id: expected
     attributes:
       label: What did you expect, and what is your source?
+      description: A link or citation (BIPM, NIST, a standard, a statute) if the expected value differs from the output. A hand calculation is fine for a logic bug.
+    validations: { required: true }
   - type: input
     id: version
     attributes:
-      label: Version and data hash (`dimvexa --version`)
+      label: Version and data hash
+      description: The output of `dimvexa --version`, or the crate version and git commit.
+      placeholder: "dimvexa 0.0.0 (data v2+fnv1a64:...)"
+    validations: { required: true }
+  - type: dropdown
+    id: path
+    attributes:
+      label: Which path produced the result?
+      options:
+        - Fast f64 path (apply, apply_slice, apply_in_place)
+        - Exact path (apply_exact, apply_exact_f64, Quantity)
+        - Command line
+        - Parser or unit lookup
+        - Not sure
+    validations: { required: true }
+  - type: input
+    id: platform
+    attributes:
+      label: Rust version and operating system
+      placeholder: "rustc 1.85.0, Ubuntu 24.04"
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: A few lines of Rust or one command line.
+      render: shell

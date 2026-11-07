@@ -1,24 +1,51 @@
+# Developer Certificate of Origin: every commit in a pull request carries a Signed-off-by line
+# (git commit -s). See CONTRIBUTING.md. Read-only permissions, no third-party action, and
+# never pull_request_target: the code of the pull request is only read as git history.
 name: dco
+
 on:
   pull_request:
+  merge_group:
+
 permissions:
   contents: read
   pull-requests: read
+
+concurrency:
+  group: dco-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   dco:
+    name: dco
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      # copied from a widely used repo, verify against the action's release page before enabling
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Check Signed-off-by on every commit
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          base="${{ github.event.pull_request.base.sha }}"
-          head="${{ github.event.pull_request.head.sha }}"
+          if [ "$EVENT" = "merge_group" ]; then
+            echo "merge queue: commits were checked on the pull request"
+            exit 0
+          fi
           missing=0
-          for c in $(git rev-list "$base..$head"); do
-            if ! git show -s --format=%B "$c" | grep -qi '^Signed-off-by: .* <.*>$'; then
-              echo "commit $c has no Signed-off-by line"; missing=1
+          # Merge commits are skipped; so are commits authored by GitHub bots (Dependabot).
+          for c in $(git rev-list --no-merges "$BASE_SHA..$HEAD_SHA"); do
+            email=$(git show -s --format=%ae "$c")
+            case "$email" in
+              *"[bot]@users.noreply.github.com") continue ;;
+            esac
+            if ! git show -s --format=%B "$c" | grep -Eq '^Signed-off-by: .+ <[^<>]+@[^<>]+>[[:space:]]*$'; then
+              echo "::error::commit $c has no Signed-off-by line (use: git commit -s --amend)"
+              missing=1
             fi
           done
           exit $missing

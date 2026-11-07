@@ -4,6 +4,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
     groups:
       minor-and-patch:
         update-types: [minor, patch]
@@ -11,13 +13,18 @@ updates:
     directory: /extras
     schedule:
       interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+  # Keeps the SHA-pinned actions current (the version comment next to each SHA is updated too).
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: "ci(deps)"
     groups:
       actions:
         patterns: ["*"]
