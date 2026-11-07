@@ -6,3 +6,7 @@
 /fuzz/artifacts
 *.profraw
 callgrind.out.*
+/benchmarks/runners/*/target
+/benchmarks/node/node_modules
+/benchmarks/python/.venv
+__pycache__/
