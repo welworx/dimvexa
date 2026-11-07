@@ -23,7 +23,7 @@ use std::fmt::Write as _;
 use std::io::Write;
 
 use dimvexa::{Conversion, Dim, Error, Ratio, Registry, Unit, UnitExpr, registry};
-use dimvexa_config::{Bridge, Config, Mapping};
+use dimvexa_config::{Bridge, Config, ConfigUnit, Mapping};
 
 const USAGE: &str = "\
 Usage:
@@ -43,7 +43,7 @@ Commands:
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
   --json       machine-readable output (schema dimvexa.convert/1; dimvexa.units/1 for units)
-  --config FILE  apply your own name mappings, for example mt = \"tonne\" (repeatable; see
+  --config FILE  apply your own names, units and densities, e.g. mt = \"tonne\" (repeatable; see
                docs/adr/009-user-config.md). Nothing is loaded unless you name the file
   --bridge NAME  use a density from a [[bridge]] in your config for mass <-> volume, e.g.
                --config water.toml --bridge water_20C; the assumption is printed with the result
@@ -56,6 +56,7 @@ Examples:
   dimvexa convert 100 degC degF --json
   dimvexa convert 1 mt kg --config trade.toml
   dimvexa convert 1 L kg --config water.toml --bridge water_20C
+  dimvexa convert 1 bbl_oil L --config oil.toml
 
 Precision: the CLI always uses the exact path, so the number printed is the exact result
 rounded once to the nearest f64 (0 ulp). The library's fast f64 path is within 1 ulp (linear
@@ -310,6 +311,8 @@ struct Loaded {
     reg: Registry,
     /// The name mappings in effect (empty without a config).
     mappings: Vec<Mapping>,
+    /// The user units in effect (empty without a config).
+    units: Vec<ConfigUnit>,
     /// The bridges in effect (empty without a config).
     bridges: Vec<Bridge>,
     /// `(file, content hash)` of each config, in the order given.
@@ -334,11 +337,12 @@ fn load(config_files: &[String]) -> Result<Loaded, LoadError> {
         configs.push((file.clone(), cfg.hash().to_string()));
         parsed.push(cfg);
     }
-    let mappings = dimvexa_config::apply(&mut reg, &parsed).map_err(LoadError::Lib)?;
+    let applied = dimvexa_config::apply(&mut reg, &parsed).map_err(LoadError::Lib)?;
     let bridges = dimvexa_config::bridges(&parsed);
     Ok(Loaded {
         reg,
-        mappings,
+        mappings: applied.mappings,
+        units: applied.units,
         bridges,
         configs,
     })
@@ -578,6 +582,25 @@ fn select_ambiguous(
         .collect()
 }
 
+/// The config unit that defines `symbol`, if the unit comes from a `--config` file.
+fn user_unit<'a>(user: &'a [ConfigUnit], symbol: &str) -> Option<&'a ConfigUnit> {
+    user.iter().find(|u| u.symbol == symbol)
+}
+
+/// JSON for where a unit was defined: `{"file":..,"line":..}` or `null`.
+fn origin_json(u: Option<&ConfigUnit>) -> String {
+    u.map_or_else(
+        || "null".to_string(),
+        |u| {
+            format!(
+                "{{\"file\":{},\"line\":{}}}",
+                json_string(&u.origin),
+                u.line
+            )
+        },
+    )
+}
+
 /// A text-table field: tabs and line breaks would break the columns.
 fn cell(s: &str) -> String {
     let t: String = s
@@ -615,6 +638,7 @@ fn units_text(
     ambiguous: &[&dimvexa::AmbiguousDef],
     mappings: &[Mapping],
     bridges: &[Bridge],
+    user: &[ConfigUnit],
 ) -> String {
     let mut s =
         String::from("# columns: symbol, quantity_kind, exactness, prefixes, aliases, source\n");
@@ -632,7 +656,10 @@ fn units_text(
             u.exactness().name(),
             u.prefixes().name(),
             cell(&u.aliases().join(", ")),
-            cell(u.source())
+            cell(&user_unit(user, u.symbol()).map_or_else(
+                || u.source().to_string(),
+                |c| format!("{} [yours: {}:{}]", u.source(), c.origin, c.line)
+            ))
         );
     }
     if !ambiguous.is_empty() {
@@ -711,7 +738,7 @@ fn units_json(
             let aliases: Vec<String> = u.aliases().iter().map(|a| json_string(a)).collect();
             let dims: Vec<String> = u.dim().exponents().iter().map(ToString::to_string).collect();
             format!(
-                "{{\"symbol\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"source\":{}}}",
+                "{{\"symbol\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"source\":{},\"origin\":{}}}",
                 json_string(u.symbol()),
                 json_string(g),
                 aliases.join(","),
@@ -721,6 +748,7 @@ fn units_json(
                 json_string(u.prefixes().name()),
                 json_string(u.namespace()),
                 json_string(u.source()),
+                origin_json(user_unit(&loaded.units, u.symbol())),
             )
         })
         .collect();
@@ -797,9 +825,11 @@ struct Detail {
     offset: String,
     sources: Vec<String>,
     note: Option<String>,
+    /// `(file, line)` of the config that defines the unit, if it is a user unit.
+    origin: Option<(String, usize)>,
 }
 
-fn unit_detail(reg: &Registry, query: &str) -> Result<Detail, Error> {
+fn unit_detail(reg: &Registry, user: &[ConfigUnit], query: &str) -> Result<Detail, Error> {
     if let Some(u) = reg.get(query) {
         return Ok(Detail {
             symbol: u.symbol().to_string(),
@@ -814,6 +844,7 @@ fn unit_detail(reg: &Registry, query: &str) -> Result<Detail, Error> {
             offset: u.offset().to_fraction_string(),
             sources: vec![u.source().to_string()],
             note: Some(u.note().to_string()),
+            origin: user_unit(user, u.symbol()).map(|c| (c.origin.clone(), c.line)),
         });
     }
     // Not a table symbol: a prefixed or compound expression such as km or kW.h, or an
@@ -832,6 +863,7 @@ fn unit_detail(reg: &Registry, query: &str) -> Result<Detail, Error> {
         offset: e.offset().to_fraction_string(),
         sources: e.sources().to_vec(),
         note: None,
+        origin: None,
     })
 }
 
@@ -866,6 +898,12 @@ fn detail_text(d: &Detail) -> String {
     if let Some(n) = d.note.as_deref().filter(|n| !n.is_empty()) {
         line("note", n.to_string());
     }
+    if let Some((file, at)) = &d.origin {
+        line(
+            "defined in",
+            format!("{file}:{at} (your config, not the shipped table)"),
+        );
+    }
     s
 }
 
@@ -879,7 +917,7 @@ fn detail_json(d: &Detail) -> String {
     let opt = |v: Option<&str>| v.map_or_else(|| "null".to_string(), json_string);
     let dims: Vec<String> = d.dim.exponents().iter().map(ToString::to_string).collect();
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"symbol\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"note\":{}}}}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"symbol\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"note\":{},\"origin\":{}}}}}",
         json_string(&format!("{}.units/1", dimvexa::PROJECT_NAME)),
         json_string(&dimvexa::data_version()),
         json_string(&d.symbol),
@@ -894,6 +932,10 @@ fn detail_json(d: &Detail) -> String {
         json_string(&d.offset),
         list(&d.sources),
         opt(d.note.as_deref()),
+        d.origin.as_ref().map_or_else(
+            || "null".to_string(),
+            |(f, l)| format!("{{\"file\":{},\"line\":{l}}}", json_string(f)),
+        ),
     )
 }
 
@@ -942,7 +984,7 @@ fn run_units(
             if groups.iter().any(|(g, _)| *g == q_lower) {
                 (Some(q_lower.clone()), Some(q_lower))
             } else {
-                return match unit_detail(reg, q) {
+                return match unit_detail(reg, &loaded.units, q) {
                     Ok(d) => {
                         let text = if json {
                             detail_json(&d)
@@ -990,7 +1032,13 @@ fn run_units(
         let _ = write!(
             out,
             "{}",
-            units_text(&units, &ambiguous, &loaded.mappings, &loaded.bridges)
+            units_text(
+                &units,
+                &ambiguous,
+                &loaded.mappings,
+                &loaded.bridges,
+                &loaded.units,
+            )
         );
     }
     0

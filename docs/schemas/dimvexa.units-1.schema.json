@@ -70,7 +70,8 @@
               "exactness",
               "prefixes",
               "namespace",
-              "source"
+              "source",
+              "origin"
             ],
             "properties": {
               "symbol": {
@@ -124,6 +125,30 @@
               "source": {
                 "type": "string",
                 "description": "Primary citation of the definition."
+              },
+              "origin": {
+                "description": "Where the unit was defined when it comes from a `--config` file (`[[unit]]`), else null.",
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "file",
+                      "line"
+                    ],
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  }
+                ]
               }
             }
           }
@@ -267,7 +292,7 @@
     },
     {
       "type": "object",
-      "description": "`dimvexa units UNIT --json`: one table unit (looked up by symbol or alias), or a resolved prefixed or compound expression such as `km` or `kW.h`, for which prefixes, namespace and note are null.",
+      "description": "`dimvexa units UNIT --json`: one table unit (looked up by symbol or alias), or a resolved prefixed or compound expression such as `km` or `kW.h`, for which prefixes, namespace, note and origin are null.",
       "required": [
         "schema",
         "ok",
@@ -298,7 +323,8 @@
             "factor",
             "offset",
             "sources",
-            "note"
+            "note",
+            "origin"
           ],
           "properties": {
             "symbol": {
@@ -370,6 +396,30 @@
               "type": [
                 "string",
                 "null"
+              ]
+            },
+            "origin": {
+              "description": "Where the unit was defined when it comes from a `--config` file (`[[unit]]`), else null.",
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "file",
+                    "line"
+                  ],
+                  "properties": {
+                    "file": {
+                      "type": "string"
+                    },
+                    "line": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
               ]
             }
           }

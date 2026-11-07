@@ -1,8 +1,8 @@
 # ADR-009: User config files: name mappings, extra units and caller-supplied bridge constants
 
-Status: Accepted for step 1 (`--config` with `[map]`) and for density bridges (`[[bridge]]` with
-`kind = "density"`, `--bridge`), confirmed by the owner on 2026-11-07 (the water example).
-`[[unit]]`, the other bridge kinds and shipped profiles stay Proposed until confirmed.
+Status: Accepted for `--config` with `[map]`, density bridges (`[[bridge]]` with
+`kind = "density"`, `--bridge`) and `[[unit]]`, confirmed by the owner on 2026-11-07. The molar-mass
+bridge (not needed for now), the other bridge kinds and shipped profiles stay Proposed.
 
 ## Context
 
@@ -54,7 +54,8 @@ directory file.
 
 Rules, so a config cannot make a result silently wrong:
 
-1. **Core is never shadowed (ADR-008).** `[map]` may resolve a name that is declared ambiguous
+1. **Core is never shadowed (ADR-008).** A `[[unit]]` can never take the name of an existing
+   symbol, alias or prefixed form (`kg`, `mm`), nor a declared-ambiguous bare name. `[map]` may resolve a name that is declared ambiguous
    or unknown (`mt`, `ton`). It may not redefine an existing symbol or alias (`t`, `m`, `psi`).
 2. **A mapping only points at an existing unit.** It cannot carry a factor.
 3. **Everything is validated like the shipped data.** A bad fraction, duplicate symbol,
@@ -79,12 +80,15 @@ Rules, so a config cannot make a result silently wrong:
 
 Open sub-decisions (recommended default first; not implemented before the owner confirms):
 
-* **OPEN 1: first step.** Confirmed and implemented: `--config` with `[map]`. The density
-  bridge came before `[[unit]]` because the water example needed it; `[[unit]]` is next.
-* **OPEN 2: how `[[unit]]` states a dimension.** Recommended: a `base` unit (`base = "kg"`)
-  and an exact `factor`, so the dimension cannot be mistyped.
+* **OPEN 1: order.** Confirmed and implemented: `[map]`, then the density bridge (the water
+  example), then `[[unit]]`.
+* **OPEN 2: how `[[unit]]` states a dimension.** Confirmed and implemented: `base` is a unit
+  expression (`gal_us`, `kg`, or an earlier user unit) and `factor` an exact positive number, so
+  the dimension comes from the base and cannot be mistyped. The base must be linear. The unit's
+  exactness is the stated one combined with the base's (a `measured` base makes it `measured`),
+  its namespace is `user`, and `prefixes` defaults to `none`.
 * **OPEN 3: bridge kinds.** `density` is confirmed and implemented (value in kg/m^3, mass to
-  volume and back, also per time). Recommended next: `molar_mass`. `ratio` between two
+  volume and back, also per time). `molar_mass` is not needed for now. `ratio` between two
   named standard-volume units (for example `Nm3` to `Sm3`) is the caller's own number for the
   ratio, never computed from temperature and pressure, and comes later.
 * **OPEN 4: parser.** The workspace has no dependencies (ADR-003). The shipped reader

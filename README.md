@@ -207,6 +207,53 @@ What the bridge does and does not do:
   added to `sources`.
 - `dimvexa units --config FILE` lists the bridges your config defines.
 
+### Example: a unit of your own
+
+A `[[unit]]` is an exact multiple of a unit that already exists, so its dimension comes from the
+base and cannot be mistyped. It needs a factor, whether the definition is `defined` or
+`measured`, and a source, like every shipped unit:
+
+```toml
+# examples/configs/oil.toml
+[[unit]]
+symbol = "bbl_oil"
+base = "gal_us"
+factor = "42"
+exactness = "defined"
+prefixes = "si"                        # kbbl_oil, Mbbl_oil, ...
+source = "NIST SP 811 (2008), Appendix B (barrel, petroleum: 42 gallons)"
+note = "petroleum barrel = 42 US gallons"
+```
+
+```console
+$ dimvexa convert 1 bbl_oil L --config examples/configs/oil.toml
+158.987294928 L
+$ dimvexa convert 1 Mbbl_oil m3 --config examples/configs/oil.toml --exact
+9936705933/62500 m^3
+$ dimvexa units bbl_oil --config examples/configs/oil.toml
+bbl_oil
+  group         volume
+  aliases       -
+  dimension     m^3
+  quantity kind plain
+  exactness     defined
+  prefixes      si
+  namespace     user
+  factor to SI  9936705933/62500000000
+  offset to SI  0/1
+  source        NIST SP 811 (2008), Appendix B (barrel, petroleum: 42 gallons)
+  note          petroleum barrel = 42 US gallons
+  defined in    examples/configs/oil.toml:10 (your config, not the shipped table)
+```
+
+Rules for your units:
+- They can build on each other, in file order, and a mapping (`[map]`) can point at them.
+- They can never take the name of an existing unit, alias or prefixed form (`mm`, `kg`, `psi`),
+  and a bare name the table refuses (`ton`) is resolved with `[map]`, not by defining a unit.
+- The base must be linear: no temperature points and no units with an offset.
+- If the base is `measured`, so is the new unit, whatever you state.
+- `dimvexa units` marks them (`[yours: file:line]`) and the JSON has an `origin` for each.
+
 ## Repository layout
 
 | Path | Purpose |
