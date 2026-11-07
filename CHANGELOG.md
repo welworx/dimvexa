@@ -14,7 +14,8 @@ Commits by `release-plz` once releases start (planned for M1).
 - `dimvexa-data`: seed table of about 60 units with sources and golden vectors.
 - `dimvexa-cli`: `convert` with `--exact` and `--json`.
 - `dimvexa-cli`: `dimvexa units [--json]` lists every supported unit (symbol, aliases, kind,
-  exactness, prefixes; JSON schema id `dimvexa.units/1`).
+  exactness, prefixes, source, plus the rejected ambiguous symbols with their candidates; JSON
+  schema id `dimvexa.units/1`).
 - `xtask validate-data`.
 - ADR-001 to ADR-008, benchmark report for M0.
 - `Conversion::apply_exact_f64`: the correctly rounded `f64` of the exact result (0 ulp), with

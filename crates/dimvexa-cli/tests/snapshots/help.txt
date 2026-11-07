@@ -6,7 +6,7 @@ Usage:
 Converts VALUE from unit FROM to unit TO.
 
 Commands:
-  units        list all supported units (symbol, aliases, kind, exactness, prefixes)
+  units        list all supported units (symbol, kind, exactness, prefixes, source, aliases) and ambiguous symbols
 
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
