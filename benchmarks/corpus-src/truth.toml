@@ -1,0 +1,353 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Independent oracle for the benchmark corpus. These definitions are typed here from the
+# primary sources named in each entry; they are NOT read from the Dimvexa unit tables, so the
+# corpus can disagree with Dimvexa (and then tells us something). Exact rationals only.
+#
+# Fields: symbol; base = "m|kg|s|K|mol|A|cd" (the SI base units, factor 1) or
+#         def = "<number> <unit expression>" (evaluated from other entries) or
+#         factor (an exact decimal or fraction) with dims = {kg=..,m=..,s=..,K=..,mol=..};
+#         offset (exact, in the target SI unit, for temperature points);
+#         prefixable = true lets SI prefixes apply; tag marks a stated-reference unit.
+
+[[unit]]
+symbol = "m"
+dims = { m = 1 }
+factor = "1"
+prefixable = true
+source = "BIPM SI Brochure, 9th ed. (2019)"
+
+[[unit]]
+symbol = "g"
+dims = { kg = 1 }
+factor = "1/1000"
+prefixable = true
+source = "BIPM SI Brochure, 9th ed. (2019): kg is the SI base unit, g = 1e-3 kg"
+
+[[unit]]
+symbol = "s"
+dims = { s = 1 }
+factor = "1"
+prefixable = true
+source = "BIPM SI Brochure, 9th ed. (2019)"
+
+[[unit]]
+symbol = "K"
+dims = { K = 1 }
+factor = "1"
+prefixable = true
+source = "BIPM SI Brochure, 9th ed. (2019)"
+
+[[unit]]
+symbol = "mol"
+dims = { mol = 1 }
+factor = "1"
+prefixable = true
+source = "BIPM SI Brochure, 9th ed. (2019)"
+
+[[unit]]
+symbol = "min"
+def = "60 s"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 8: 1 min = 60 s"
+
+[[unit]]
+symbol = "h"
+def = "3600 s"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 8: 1 h = 3600 s"
+
+[[unit]]
+symbol = "d"
+def = "86400 s"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 8: 1 d = 86400 s"
+
+[[unit]]
+symbol = "N"
+def = "1 kg.m/s2"
+prefixable = true
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4"
+
+[[unit]]
+symbol = "Pa"
+def = "1 N/m2"
+prefixable = true
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4"
+
+[[unit]]
+symbol = "J"
+def = "1 N.m"
+prefixable = true
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4"
+
+[[unit]]
+symbol = "W"
+def = "1 J/s"
+prefixable = true
+source = "BIPM SI Brochure, 9th ed. (2019), Table 4"
+
+[[unit]]
+symbol = "Wh"
+def = "3600 J"
+prefixable = true
+source = "1 Wh = 1 W x 3600 s"
+
+[[unit]]
+symbol = "L"
+def = "1/1000 m3"
+prefixable = true
+source = "BIPM SI Brochure, 9th ed. (2019), Table 8: 1 L = 1 dm3"
+
+[[unit]]
+symbol = "tonne"
+def = "1000 kg"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 8: 1 t = 1000 kg"
+
+[[unit]]
+symbol = "bar"
+def = "100000 Pa"
+prefixable = true
+source = "NIST SP 811 (2008), Appendix B.8: 1 bar = 100 kPa"
+
+[[unit]]
+symbol = "atm"
+def = "101325 Pa"
+source = "NIST SP 811 (2008), Appendix B.8: standard atmosphere = 101 325 Pa"
+
+[[unit]]
+symbol = "in"
+def = "254/10000 m"
+source = "International yard and pound agreement (1959): 1 in = 0.0254 m"
+
+[[unit]]
+symbol = "ft"
+def = "12 in"
+source = "International yard and pound agreement (1959): 1 ft = 0.3048 m"
+
+[[unit]]
+symbol = "yd"
+def = "3 ft"
+source = "International yard and pound agreement (1959): 1 yd = 0.9144 m"
+
+[[unit]]
+symbol = "mi"
+def = "5280 ft"
+source = "NIST SP 811 (2008), Appendix B.8 (international mile = 1609.344 m)"
+
+[[unit]]
+symbol = "nmi"
+def = "1852 m"
+source = "NIST SP 811 (2008), Appendix B.8 (nautical mile = 1852 m)"
+
+[[unit]]
+symbol = "ft_us_survey"
+def = "1200/3937 m"
+source = "NIST SP 811 (2008), Appendix B.8 (U.S. survey foot = 1200/3937 m)"
+
+[[unit]]
+symbol = "mi_us_survey"
+def = "5280 ft_us_survey"
+source = "NIST SP 811 (2008), Appendix B.8 (U.S. survey mile = 5280 survey feet)"
+
+[[unit]]
+symbol = "lb"
+def = "45359237/100000000 kg"
+source = "International yard and pound agreement (1959): 1 lb = 0.45359237 kg"
+
+[[unit]]
+symbol = "oz_av"
+def = "1/16 lb"
+source = "NIST HB 44 (2023) Appendix C: 1 oz avoirdupois = 1/16 lb"
+
+[[unit]]
+symbol = "oz_troy"
+def = "311034768/10000000 g"
+source = "NIST SP 811 (2008), Appendix B.8 (troy ounce = 31.103 476 8 g)"
+
+[[unit]]
+symbol = "ton_short"
+def = "2000 lb"
+source = "NIST HB 44 (2023) Appendix C: short ton = 2000 lb"
+
+[[unit]]
+symbol = "ton_long"
+def = "2240 lb"
+source = "NIST HB 44 (2023) Appendix C: long ton = 2240 lb"
+
+[[unit]]
+symbol = "g_n"
+def = "980665/100000 m/s2"
+source = "3rd CGPM (1901); NIST SP 811 (2008): standard gravity 9.80665 m/s2"
+
+[[unit]]
+symbol = "lbf"
+def = "1 lb.g_n"
+source = "NIST SP 811 (2008), Appendix B.8: lbf = lb x g_n"
+
+[[unit]]
+symbol = "psi"
+def = "1 lbf/in2"
+prefixable = true
+source = "NIST SP 811 (2008), Appendix B.8: psi = lbf per square inch"
+
+[[unit]]
+symbol = "torr"
+def = "101325/760 Pa"
+source = "NIST SP 811 (2008), Appendix B.8: torr = (101 325/760) Pa"
+
+[[unit]]
+symbol = "mmHg"
+def = "133322387415/1000000000 Pa"
+source = "NIST SP 811 (2008), Appendix B.8: conventional mmHg = 133.322 387 415 Pa (13595.1 kg/m3 x 9.80665 m/s2 x 1 mm)"
+
+[[unit]]
+symbol = "cal_th"
+def = "4184/1000 J"
+source = "NIST SP 811 (2008), Appendix B.8: thermochemical calorie = 4.184 J"
+
+[[unit]]
+symbol = "cal_IT"
+def = "41868/10000 J"
+source = "NIST SP 811 (2008), Appendix B.8: International Table calorie = 4.1868 J"
+
+[[unit]]
+symbol = "delta_K"
+dims = { K = 1 }
+factor = "1"
+prefixable = true
+source = "BIPM SI Brochure, 9th ed. (2019): temperature interval of 1 K"
+
+[[unit]]
+symbol = "delta_degC"
+dims = { K = 1 }
+factor = "1"
+source = "BIPM SI Brochure, 9th ed. (2019): an interval of 1 degC equals 1 K"
+
+[[unit]]
+symbol = "delta_degR"
+dims = { K = 1 }
+factor = "5/9"
+source = "NIST SP 811 (2008): 1 degR = 5/9 K (interval)"
+
+[[unit]]
+symbol = "delta_degF"
+dims = { K = 1 }
+factor = "5/9"
+source = "NIST SP 811 (2008): an interval of 1 degF = 5/9 K"
+
+[[unit]]
+symbol = "Btu_IT"
+def = "5/9 cal_IT.lb/g"
+source = "NIST SP 811 (2008), Appendix B.8: Btu_IT = 1 lb x 1 degR x (cal_IT/g/K) = 1055.055 852 62 J"
+
+[[unit]]
+symbol = "Btu_th"
+def = "5/9 cal_th.lb/g"
+source = "NIST SP 811 (2008), Appendix B.8: Btu_th = 1 lb x 1 degR x (cal_th/g/K) = 1054.350 264 4 J"
+
+[[unit]]
+symbol = "lbmol"
+def = "45359237/100000 mol"
+source = "1 lbmol = 453.59237 mol (1 lb = 453.59237 g)"
+
+[[unit]]
+symbol = "P"
+dims = { kg = 1, m = -1, s = -1 }
+factor = "1/10"
+prefixable = true
+source = "NIST SP 811 (2008), Appendix B.8: 1 poise = 0.1 Pa s"
+
+[[unit]]
+symbol = "St"
+dims = { m = 2, s = -1 }
+factor = "1/10000"
+prefixable = true
+source = "NIST SP 811 (2008), Appendix B.8: 1 stokes = 1e-4 m2/s"
+
+# Stated-reference volumes. The factor is relative to the unit's own tagged volume, so a
+# conversion to plain m3 is a dimension mismatch (it needs the reference state AND a statement
+# of the actual conditions, which is exactly what must not be guessed).
+[[unit]]
+symbol = "Nm3"
+dims = { m = 3 }
+tag = "N"
+factor = "1"
+source = "Normal cubic metre: volume at a stated reference state (commonly 0 degC and 101.325 kPa; other references exist)"
+
+[[unit]]
+symbol = "scf"
+dims = { m = 3 }
+tag = "S"
+factor = "28316846592/1000000000000"
+source = "Standard cubic foot: ft3 = 0.3048^3 m3 at a stated reference state (60 degF and 14.696 psia is common; others exist)"
+
+[[unit]]
+symbol = "gal_us"
+def = "231 in3"
+source = "NIST HB 44 (2023) Appendix C: US liquid gallon = 231 in3"
+
+[[unit]]
+symbol = "gal_imp"
+def = "454609/100000 L"
+source = "Weights and Measures Act 1985 (UK): imperial gallon = 4.54609 L"
+
+[[unit]]
+symbol = "pt_us"
+def = "1/8 gal_us"
+source = "NIST HB 44 (2023) Appendix C: US liquid pint = 1/8 US gallon"
+
+[[unit]]
+symbol = "pt_imp"
+def = "1/8 gal_imp"
+source = "Weights and Measures Act 1985 (UK): imperial pint = 1/8 imperial gallon"
+
+[[unit]]
+symbol = "hp_mech"
+def = "550 ft.lbf/s"
+source = "NIST SP 811 (2008), Appendix B.8: mechanical horsepower = 550 ft lbf/s"
+
+[[unit]]
+symbol = "hp_metric"
+def = "75 kg.g_n.m/s"
+source = "DIN 66036: metric horsepower = 75 kgf m/s"
+
+[[unit]]
+symbol = "bbl"
+def = "42 gal_us"
+source = "Petroleum industry convention (API/NIST HB 44): 1 oil barrel = 42 US gallons"
+
+# Temperature points (affine): K_value = factor * x + offset.
+[[point]]
+symbol = "K"
+factor = "1"
+offset = "0"
+source = "BIPM SI Brochure, 9th ed. (2019)"
+
+[[point]]
+symbol = "degC"
+factor = "1"
+offset = "27315/100"
+source = "BIPM SI Brochure, 9th ed. (2019): t/degC = T/K - 273.15"
+
+[[point]]
+symbol = "degF"
+factor = "5/9"
+offset = "45967/180"
+source = "NIST SP 811 (2008), Appendix B.8: T/degF = 9/5 (T/K) - 459.67, so K = (5/9) F + 45967/180"
+
+[[point]]
+symbol = "degR"
+factor = "5/9"
+offset = "0"
+source = "NIST SP 811 (2008): T/degR = 9/5 (T/K)"
+
+# Gauge pressures: a gauge unit is only comparable with another gauge unit (same unstated
+# atmospheric reference). Converting to an absolute unit needs the atmospheric pressure.
+[[unit]]
+symbol = "psig"
+def = "1 psi"
+tag = "G"
+source = "Gauge pressure: psi relative to ambient; reference pressure not part of the unit"
+
+[[unit]]
+symbol = "barg"
+def = "1 bar"
+tag = "G"
+source = "Gauge pressure: bar relative to ambient; reference pressure not part of the unit"
