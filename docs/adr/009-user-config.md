@@ -101,6 +101,11 @@ Open sub-decisions (recommended default first; not implemented before the owner 
   more of TOML: either grow that reader or move `toml_lite` into core.
 * **OPEN 5: names of the shipped profiles** and which symbols each one maps.
 
+## Known limitations
+
+Listed with ids, effects and fix ideas in [`docs/known-limitations.md`](../known-limitations.md)
+(KL-1 to KL-13); the ones that can be checked are pinned by tests.
+
 ## Consequences
 
 Users can fix their local vocabulary without a project change and without the shared table ever

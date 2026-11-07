@@ -1375,3 +1375,41 @@ fn a_prefix_on_an_ambiguous_name_is_refused_even_with_a_config() {
         "4184 J\n"
     );
 }
+
+/// KL-10: `units tonne` does not list the names your config gives the unit.
+#[test]
+fn known_limitation_kl_10_shipped_name_lookup_does_not_list_your_names() {
+    let cfg = config_file("kl10.toml", TRADE);
+    let v = json::parse(&dimvexa(&["units", "tonne", "--json", "--config", &cfg]).stdout).unwrap();
+    let aliases = v.get("unit").unwrap().get("aliases").unwrap().as_array();
+    let aliases: Vec<&str> = aliases.iter().map(json::V::as_str).collect();
+    assert_eq!(aliases, ["t"], "KL-10 fixed? then `mt` is listed for tonne");
+}
+
+/// KL-12: the density hint is in the text error only; the JSON error has none.
+#[test]
+fn known_limitation_kl_12_density_hint_is_text_only() {
+    let text = dimvexa(&["convert", "1", "L", "kg"]);
+    assert!(text.stderr.contains("hint: mass and volume need a density"));
+    let json_err = dimvexa(&["convert", "1", "L", "kg", "--json"]);
+    assert!(
+        !json_err.stdout.contains("hint"),
+        "KL-12 fixed? then the JSON carries the hint"
+    );
+}
+
+/// `docs/known-limitations.md` lists every limitation these tests pin.
+#[test]
+fn known_limitations_document_lists_the_pinned_entries() {
+    let doc = std::fs::read_to_string(repo_root().join("docs/known-limitations.md")).unwrap();
+    for id in [1, 4, 6, 7, 8, 9, 10, 12] {
+        assert!(
+            doc.contains(&format!("| KL-{id} |")),
+            "docs/known-limitations.md lacks KL-{id}"
+        );
+        assert!(
+            doc.contains(&format!("known_limitation_kl_{id}"))
+                || doc.contains("known_limitation_kl_<n>")
+        );
+    }
+}

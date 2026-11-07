@@ -37,4 +37,6 @@ All are thin shells over the Rust core, after the API is stable.
 | C ABI | Planned |
 | GPU experiments, only through the gates in `docs/PLAN.md` section 6.2 | Planned |
 
+Known limitations that we intend to fix later: [`docs/known-limitations.md`](docs/known-limitations.md).
+
 Out of scope: equations of state, empirical correlations and silent guessing (ADR-001).
