@@ -30,7 +30,7 @@ Own-performance numbers (the M0 spike) are in [`docs/benchmarks/M0.md`](benchmar
 | 5 | Startup and size | Import time over an empty interpreter, peak RSS, installed package size (Rust: registry build time, runner binary size) |
 | 6 | Accuracy | Every must-convert case against the exact rational truth: max and median error in ulp, count above the tolerance (4 ulp), count above 1 ulp |
 | 7 | Coverage and safety | Every case classified as correct, wrong value, unsupported error, or (for ambiguous or invalid requests) refused versus **silently accepted** |
-| 8 | Dimvexa itself | The same checks, including the cases where it fails. Dimvexa is run through its Rust API (fast and exact paths) and the CLI; Python and WASM entries are stubs until those bindings exist |
+| 8 | Dimvexa itself | The same checks, including the cases where it fails. Dimvexa is run through its Rust API (fast and exact paths) and the CLI; the WASM binding runs in Node (`benchmarks/node/run_dimvexa_wasm.js`); the Python entry is a stub until that binding exists |
 
 Conversions timed: `m/s` to `km/h` (linear), `psi` to `kPa` (linear), `degC` to `degF` (affine),
 `kJ/(kg.K)` to `Btu_IT/(lb.delta_degF)` (compound).
@@ -117,7 +117,7 @@ indicative, not a basis for a "fastest" claim.
 | pint 0.26.2, unyt 3.2.0, astropy 8.0.2, NumPy ceiling | yes; spellings checked against the installed libraries |
 | mathjs 13.2.0, js-quantities 1.8.0, convert-units 2.3.4, JavaScript ceiling | yes; spellings checked |
 | ucum-units | not written |
-| Dimvexa Python and WASM bindings | stub (bindings do not exist) |
+| Dimvexa Python binding | stub (binding does not exist) |
 | `bench-compare.yml` | not run on GitHub yet (its action pins are verified; use `benchmarks/run_all.sh` locally) |
 
 Python packages in this run were installed without hashes (`lockfile: unknown`). Expect residual
