@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""Runner for unyt. NOT yet run: unyt could not be installed where this was written.
+"""Runner for unyt. Run in the first comparison (docs/benchmarks/comparison-run-1.md).
 
 Modes: "plain" is `unyt_quantity(x, from).to(to).value` (array: `unyt_array`); "to_value" uses
 `.to_value(unit)`; "factor" uses `Unit.get_conversion_factor` (linear conversions only: unyt
 returns an offset for temperature and that mode then reports unsupported).
 """
+import re
 import sys
 from pathlib import Path
 
@@ -75,7 +76,13 @@ class Unyt(common.Adapter):
 
     def oneshot_fn(self, mode, conv):
         v, u = common.split_quantity(conv["oneshot"])
-        text = v + " " + self.translated(u)
+        tu = self.translated(u)
+        # unyt_quantity.from_string rejects parentheses ('1 kJ/(kg*K)' is an invalid expression,
+        # checked on unyt 3.2.0) but accepts the flattened form '1 kJ/kg/K'; use that for a/(b*c).
+        m = re.fullmatch(r"(.+?)/\((.+)\)", tu)
+        if m:
+            tu = m.group(1) + "/" + "/".join(m.group(2).split("*"))
+        text = v + " " + tu
         to = self.translated(conv["to"])
         q = self.unyt.unyt_quantity
         if not hasattr(q, "from_string"):

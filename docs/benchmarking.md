@@ -77,6 +77,11 @@ case record stores the string actually used, so a wrong mapping is visible and c
 
 ## Running it
 
+One command does everything below (installs the competitors into `benchmarks/python/.venv` and
+`benchmarks/node/node_modules`, builds the runners, runs them one after another, regenerates the
+report): `benchmarks/run_all.sh`. Use `--quick` for a smoke test that writes to a temporary
+directory, and `--skip-install` to reuse an existing install. The individual steps:
+
 ```console
 python3 benchmarks/tools/gen_corpus.py --check       # corpus is current
 python3 -I benchmarks/tools/test_report.py           # tests of the corpus and the report generator
@@ -98,26 +103,22 @@ on a networked machine.
 
 ## Status of the runners
 
-Written on a machine that could reach none of the package registries, so no competitor library was
-ever installed. Only Dimvexa and the ceilings were run, and only as smoke tests.
+First full run: 2026-11-07, see [`benchmarks/comparison-run-1.md`](benchmarks/comparison-run-1.md) for
+the summary, the caveats and the cases where Dimvexa is slower, and
+[`benchmarks/comparison.md`](benchmarks/comparison.md) for every table. One run on one shared VM:
+indicative, not a basis for a "fastest" claim.
 
-| Runner | Runner written | Verified offline | Run on a networked machine |
-|---|---|---|---|
-| Corpus generator | yes | yes (reproducible, 63 vectors cross-checked) | not needed |
-| Report generator | yes | yes, on fixture data only | no |
-| Dimvexa, Rust API (`benchmarks/runners/dimvexa-rs`) | yes | built and smoke-run (`--quick`) | no full run yet |
-| Dimvexa CLI (spawn per conversion) | yes | smoke-run | no full run yet |
-| Rust ceilings (plain loop, memcpy) | yes | smoke-run | no |
-| Python ceilings (pure Python, NumPy) | yes | smoke-run | no |
-| JavaScript ceiling (raw loop) | yes | smoke-run | no |
-| uom | yes | **no: never compiled**, unit names unchecked | no |
-| ucum-units | **not written** (crate and API not verified) | no | no |
-| pint, unyt, astropy.units | yes | syntax only; library calls unchecked | no |
-| mathjs, js-quantities, convert-units | yes | syntax only; library calls unchecked | no |
-| Dimvexa Python and WASM bindings | stub (bindings do not exist) | no | no |
-| `bench-compare.yml` | yes | YAML parse only; `actionlint` not available; two action SHAs are placeholders | no |
+| Runner | Run on a networked machine |
+|---|---|
+| Corpus generator, report generator | yes |
+| Dimvexa, Rust API, and Rust ceilings | yes, full run |
+| Dimvexa CLI (spawn per conversion) | yes, full run |
+| uom (needed a one-line fix to compile) | yes, 20 typed pairs only |
+| pint 0.26.2, unyt 3.2.0, astropy 8.0.2, NumPy ceiling | yes; spellings checked against the installed libraries |
+| mathjs 13.2.0, js-quantities 1.8.0, convert-units 2.3.4, JavaScript ceiling | yes; spellings checked |
+| ucum-units | not written |
+| Dimvexa Python and WASM bindings | stub (bindings do not exist) |
+| `bench-compare.yml` | not run; two action SHAs are still placeholders |
 
-The `translations/*.json` files and the `lockfile` policy are likewise unverified. Expect small
-fixes on the first run; fix the runner, never the numbers. Smoke runs showed, among other things,
-that the M0 unit table has no `cP`, `cSt`, `psig`, `Nm3`, `scf` or `bbl` yet; those cases are
-reported as unsupported for Dimvexa until the process pack exists.
+Python packages in this run were installed without hashes (`lockfile: unknown`). Expect residual
+mapping errors in the translation files and fix the runner, never the numbers.

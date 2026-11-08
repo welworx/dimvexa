@@ -1,0 +1,2163 @@
+{
+ "corpus_id": "cf193cbf0159731e",
+ "date_utc": "2026-11-07T19:57:05Z",
+ "fixture": false,
+ "kind": "library",
+ "library": {
+  "name": "convert-units",
+  "version": "2.3.4"
+ },
+ "lockfile": "requirements.lock.txt+package-lock.json+Cargo.lock",
+ "machine": {
+  "arch": "x64",
+  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "governor": null,
+  "logical_cores": 4,
+  "os": "Linux 6.18.44-fc-v310"
+ },
+ "modes": {
+  "plain": {
+   "description": "convert(x).from(a).to(b) per value (the only API)",
+   "idiomatic": "plain"
+  }
+ },
+ "parameters": {
+  "batch_sizes": [
+   1000,
+   100000,
+   1000000
+  ],
+  "cold_samples": 5,
+  "min_sample_s": 0.05,
+  "quick": false,
+  "samples": 15,
+  "timer": "process.hrtime.bigint",
+  "tolerance_ulp": 4,
+  "warmup_s": 0.3
+ },
+ "performance": {
+  "plain": {
+   "affine_temperature": {
+    "batch": {
+     "1000": {
+      "mad": 91.88300000000027,
+      "max": 2458.972,
+      "median": 2244.112,
+      "min": 2152.229,
+      "raw": [
+       2244.112,
+       2449.912,
+       2226.362,
+       2384.359,
+       2187.917,
+       2364.877,
+       2203.578,
+       2377.346,
+       2213.922,
+       2355.35,
+       2152.229,
+       2458.972,
+       2166.351,
+       2341.005,
+       2210.878
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 66.96888000000035,
+      "max": 3629.3325,
+      "median": 2993.18717,
+      "min": 2675.15611,
+      "raw": [
+       3119.54996,
+       2675.15611,
+       3071.97232,
+       3123.1525,
+       3173.75014,
+       3629.3325,
+       3010.82835,
+       2940.54383,
+       2960.93456,
+       2968.49279,
+       2932.20808,
+       2988.21092,
+       3140.33623,
+       2926.21829,
+       2993.18717
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 187.1992150000001,
+      "max": 3145.524005,
+      "median": 2873.553218,
+      "min": 2351.475666,
+      "raw": [
+       2351.475666,
+       2839.834909,
+       2873.553218,
+       3145.524005,
+       3060.752433
+      ],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.041228652000427246,
+     "max": 4.412431120872498,
+     "median": 2.105449080467224,
+     "min": 2.0629671216011047,
+     "raw": [
+      2.0629671216011047,
+      2.064220428466797,
+      3.114802896976471,
+      4.374750733375549,
+      4.3759660720825195,
+      4.412431120872498,
+      3.0003609657287598,
+      2.168816030025482,
+      2.1256223917007446,
+      2.0799888968467712,
+      2.1040090918540955,
+      2.105449080467224,
+      2.0686054825782776,
+      2.069783568382263,
+      2.0697032809257507
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": null,
+    "prepare_cold": {
+     "mad": 450,
+     "max": 16542,
+     "median": 3859,
+     "min": 3409,
+     "raw": [
+      16542,
+      8262,
+      3859,
+      3450,
+      3409
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 452.139892578125,
+     "max": 4268.8231201171875,
+     "median": 3016.966552734375,
+     "min": 2307.3158569335938,
+     "raw": [
+      3069.8670654296875,
+      3011.8466796875,
+      3469.1064453125,
+      3066.2603759765625,
+      3041.9066772460938,
+      4268.8231201171875,
+      3053.4415283203125,
+      3016.966552734375,
+      3061.148681640625,
+      2463.5576782226562,
+      2456.3392333984375,
+      2392.0151977539062,
+      2307.3158569335938,
+      2331.6989135742188,
+      2343.46923828125
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 41.7001953125,
+     "max": 3158.0572509765625,
+     "median": 3073.702392578125,
+     "min": 2401.2379150390625,
+     "raw": [
+      3117.7749633789062,
+      3077.685791015625,
+      3073.702392578125,
+      3028.7642822265625,
+      3030.2280883789062,
+      3057.70751953125,
+      3041.3720703125,
+      3032.002197265625,
+      3158.0572509765625,
+      3076.2190551757812,
+      3076.9454345703125,
+      3108.9268798828125,
+      3117.462890625,
+      2966.5765380859375,
+      2401.2379150390625
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   },
+   "compound_cp": {
+    "error": "Error: Unsupported unit kJ/(kg.K), use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3, cm3, ml, cl, dl, l, kl, m3, km3,",
+    "unsupported": true
+   },
+   "linear_pressure": {
+    "batch": {
+     "1000": {
+      "mad": 109.67799999999988,
+      "max": 6030.198,
+      "median": 5621.023,
+      "min": 5402.775,
+      "raw": [
+       5868.179,
+       5868.736,
+       5813.021,
+       5759.514,
+       5648.71,
+       5520.039,
+       6030.198,
+       5402.775,
+       5511.345,
+       5551.802,
+       5621.023,
+       5431.71,
+       5572.25,
+       5693.972,
+       5604.345
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 107.16228000000046,
+      "max": 6774.99933,
+      "median": 5620.6207,
+      "min": 5027.38879,
+      "raw": [
+       5027.38879,
+       5531.59472,
+       6774.99933,
+       6076.12485,
+       5620.6207,
+       5719.63975,
+       5513.45842,
+       5825.36075,
+       5432.0708,
+       5637.91855,
+       5555.04044,
+       5611.76876,
+       5556.74114,
+       5753.57983,
+       6180.81281
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 122.97935499999949,
+      "max": 5785.672306,
+      "median": 5661.829023,
+      "min": 4740.266739,
+      "raw": [
+       5785.672306,
+       4740.266739,
+       5620.785193,
+       5784.808378,
+       5661.829023
+      ],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.13548457622528076,
+     "max": 3.621732175350189,
+     "median": 2.795106887817383,
+     "min": 2.6467365622520447,
+     "raw": [
+      3.273007571697235,
+      2.825283169746399,
+      2.70334529876709,
+      3.4222360253334045,
+      3.621732175350189,
+      3.004863917827606,
+      2.8611600399017334,
+      3.329345703125,
+      2.692113161087036,
+      2.795106887817383,
+      2.659622311592102,
+      2.659384071826935,
+      2.6467365622520447,
+      2.6816871762275696,
+      2.6902941465377808
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": null,
+    "prepare_cold": {
+     "mad": 346,
+     "max": 15419,
+     "median": 6322,
+     "min": 5976,
+     "raw": [
+      15419,
+      8087,
+      6322,
+      6194,
+      5976
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 14.79644775390625,
+     "max": 8391.994445800781,
+     "median": 5463.767822265625,
+     "min": 5444.456787109375,
+     "raw": [
+      5463.767822265625,
+      8391.994445800781,
+      5456.8729248046875,
+      5444.456787109375,
+      5448.971374511719,
+      5463.164123535156,
+      5450.727111816406,
+      5451.2203369140625,
+      5459.710266113281,
+      5487.448913574219,
+      5475.189147949219,
+      5708.593200683594,
+      5670.563232421875,
+      5578.9473876953125,
+      6100.477783203125
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 43.4359130859375,
+     "max": 4490.3382568359375,
+     "median": 4377.92041015625,
+     "min": 4301.6435546875,
+     "raw": [
+      4450.0604248046875,
+      4387.88671875,
+      4394.514404296875,
+      4334.052734375,
+      4425.5872802734375,
+      4355.33154296875,
+      4303.790283203125,
+      4379.791015625,
+      4377.92041015625,
+      4353.0394287109375,
+      4490.3382568359375,
+      4449.867431640625,
+      4301.6435546875,
+      4334.4844970703125,
+      4340.36083984375
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   },
+   "linear_speed": {
+    "batch": {
+     "1000": {
+      "mad": 66.35600000000068,
+      "max": 4809.639,
+      "median": 4097.364,
+      "min": 3928.291,
+      "raw": [
+       4028.053,
+       3998.436,
+       4809.639,
+       4223.74,
+       4240.377,
+       4163.72,
+       4051.965,
+       4103.065,
+       4111.561,
+       4104.651,
+       4087.955,
+       4067.142,
+       4097.364,
+       4021.603,
+       3928.291
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 184.16235999999935,
+      "max": 5453.11246,
+      "median": 4707.89276,
+      "min": 3770.63849,
+      "raw": [
+       4057.97796,
+       5363.64719,
+       4725.84117,
+       4776.73895,
+       4769.98096,
+       4753.83308,
+       4680.50081,
+       4707.89276,
+       4696.88193,
+       5453.11246,
+       4523.7304,
+       3770.63849,
+       4206.88305,
+       5313.24396,
+       3828.9528
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 21.205762999999934,
+      "max": 4642.654758,
+      "median": 4621.448995,
+      "min": 4451.114213,
+      "raw": [
+       4642.654758,
+       4621.448995,
+       4626.580224,
+       4451.114213,
+       4544.018515
+      ],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.007328629493713379,
+     "max": 3.1879249811172485,
+     "median": 2.796125590801239,
+     "min": 2.276908040046692,
+     "raw": [
+      3.0175236463546753,
+      2.785155713558197,
+      2.8004764318466187,
+      2.796378254890442,
+      3.1879249811172485,
+      2.7887969613075256,
+      2.800472915172577,
+      2.790714383125305,
+      2.7865413427352905,
+      2.8014824986457825,
+      2.7891802191734314,
+      2.796125590801239,
+      3.028132438659668,
+      2.6474406123161316,
+      2.276908040046692
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": null,
+    "prepare_cold": {
+     "mad": 2511,
+     "max": 135989,
+     "median": 30368,
+     "min": 27857,
+     "raw": [
+      135989,
+      44432,
+      27857,
+      28069,
+      30368
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 89.4267578125,
+     "max": 7076.9166259765625,
+     "median": 4834.795654296875,
+     "min": 4726.240234375,
+     "raw": [
+      7076.9166259765625,
+      6751.8253173828125,
+      6907.6011962890625,
+      4753.330322265625,
+      4745.368896484375,
+      4726.240234375,
+      4731.939208984375,
+      4777.8076171875,
+      4748.8294677734375,
+      4880.31787109375,
+      4941.1278076171875,
+      4855.7269287109375,
+      4787.496826171875,
+      4834.795654296875,
+      5271.286865234375
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 124.7967529296875,
+     "max": 4566.899719238281,
+     "median": 4159.0404052734375,
+     "min": 3916.0572509765625,
+     "raw": [
+      4566.899719238281,
+      4159.0404052734375,
+      4309.9801025390625,
+      4200.24169921875,
+      4205.4949951171875,
+      4407.802490234375,
+      4315.590026855469,
+      4132.231201171875,
+      4034.24365234375,
+      4268.427551269531,
+      4069.1865844726562,
+      4067.0748291015625,
+      3946.7754516601562,
+      3916.0572509765625,
+      3955.8148193359375
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   }
+  }
+ },
+ "runtime": {
+  "language": "javascript",
+  "name": "node",
+  "version": "v22.23.4"
+ },
+ "schema": "dimvexa.bench.result/1",
+ "semantics": {
+  "plain": {
+   "accuracy": {
+    "answered": 54,
+    "bit_identical": 35,
+    "cases": 164,
+    "max_ulp": 4409024035195715600,
+    "median_ulp": 0,
+    "over_1_ulp": 19,
+    "tolerance_ulp": 4,
+    "unsupported": 110,
+    "worst": [
+     {
+      "got": "5.684341886080802e-14",
+      "id": "hw-068",
+      "ulp": 4409024035195715600,
+      "want": "0.0"
+     },
+     {
+      "got": "453.592",
+      "id": "dv-common-023",
+      "ulp": 6509108837,
+      "want": "453.59237"
+     },
+     {
+      "got": "28.3495",
+      "id": "hw-018",
+      "ulp": 6509108837,
+      "want": "28.349523125"
+     },
+     {
+      "got": "45.359199999999994",
+      "id": "hw-017",
+      "ulp": 5207287070,
+      "want": "45.359237"
+     },
+     {
+      "got": "0.9997402000652704",
+      "id": "hw-037",
+      "ulp": 3535828832,
+      "want": "0.9997398075094124"
+     }
+    ],
+    "wrong": 19
+   },
+   "cases": {
+    "must_convert": [
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km -> m",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kg -> g",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.001",
+      "id": "dv-base-003",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ms -> s",
+      "want": "0.001"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.001",
+      "id": "dv-base-004",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mA -> A",
+      "want": "0.001"
+     },
+     {
+      "category": "temperature",
+      "got": "1.8000000000000682",
+      "id": "dv-base-005",
+      "outcome": "wrong_value",
+      "ulp": 307,
+      "used": "K -> R",
+      "want": "1.8"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit kmol, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "dv-base-006",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit mcd, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-base-007",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit s1, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "id": "dv-base-008",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit N, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3, ",
+      "id": "dv-base-009",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit kg/(m.s^2), use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "dv-base-010",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit N.m, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-base-011",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit J/s, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-base-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit A.s, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-base-013",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit W/A, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-base-014",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit ohm, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-base-015",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit , use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3, c",
+      "id": "dv-base-016",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit C/V, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-base-017",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit S, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3, ",
+      "id": "dv-base-018",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit Wb, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "id": "dv-base-019",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit T, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3, ",
+      "id": "dv-base-020",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit H, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3, ",
+      "id": "dv-base-021",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "60",
+      "id": "dv-base-022",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "min -> s",
+      "want": "60.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "60",
+      "id": "dv-base-023",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "h -> min",
+      "want": "60.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "24",
+      "id": "dv-base-024",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "d -> h",
+      "want": "24.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit mL, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "id": "dv-base-025",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit m^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-base-026",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-027",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mt -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-028",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mt -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit MJ, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "id": "dv-base-029",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "dv-base-030",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "C -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "212",
+      "id": "dv-base-031",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "C -> F",
+      "want": "212.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit °C, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "id": "dv-base-032",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "Error: Unsupported unit delta_K, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "dv-base-033",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "Error: Unsupported unit delta_degC, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "dv-base-034",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "got": "10",
+      "id": "dv-base-035",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km/h -> m/s",
+      "want": "10.0"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit kmol/h, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "dv-base-036",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "Error: Unsupported unit delta_degF, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "dv-base-037",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit W/(m.K), use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "dv-base-038",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit kJ/(kg.K), use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "dv-base-039",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "100",
+      "id": "dv-common-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "bar -> kPa",
+      "want": "100.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit atm, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-common-002",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit mmHg, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "dv-common-003",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit atm, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-common-004",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "133.32236842105263",
+      "id": "dv-common-005",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "torr -> Pa",
+      "want": "133.32236842105263"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit g_n, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-common-006",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit lbf, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-common-007",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "6894.76000045014",
+      "id": "dv-common-008",
+      "outcome": "wrong_value",
+      "ulp": 2976687795,
+      "used": "psi -> Pa",
+      "want": "6894.757293168362"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit lbf/in^2, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
+      "id": "dv-common-009",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit cal_th, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "dv-common-010",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit cal_IT, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "dv-common-011",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit Btu, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-common-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit Btu_th, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "dv-common-013",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit hp_mech, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "dv-common-014",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit hp_metric, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "dv-common-015",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "25.399999187200024",
+      "id": "dv-common-016",
+      "outcome": "wrong_value",
+      "ulp": 228782854,
+      "used": "in -> mm",
+      "want": "25.4"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "12",
+      "id": "dv-common-017",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ft -> in",
+      "want": "12.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "3",
+      "id": "dv-common-018",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "yd -> ft",
+      "want": "3.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1609.3439485009937",
+      "id": "dv-common-019",
+      "outcome": "wrong_value",
+      "ulp": 226495025,
+      "used": "mi -> m",
+      "want": "1609.344"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit nmi, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-common-020",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit ft_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, l",
+      "id": "dv-common-021",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit mi_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, l",
+      "id": "dv-common-022",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "453.592",
+      "id": "dv-common-023",
+      "outcome": "wrong_value",
+      "ulp": 6509108837,
+      "used": "lb -> g",
+      "want": "453.59237"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-024",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "oz -> lb",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit oz_troy, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "dv-common-025",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit ton, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-common-026",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit ton_long, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
+      "id": "dv-common-027",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "3.7854117954011186",
+      "id": "dv-common-028",
+      "outcome": "wrong_value",
+      "ulp": 25673037,
+      "used": "gal -> l",
+      "want": "3.785411784"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit gal_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "dv-common-029",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-030",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "pnt -> gal",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit pt_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "dv-common-031",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit lbmol, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, m",
+      "id": "dv-common-032",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit lbmol, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, m",
+      "id": "dv-common-033",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "got": "0",
+      "id": "dv-common-034",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "F -> C",
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "-40",
+      "id": "dv-common-035",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "F -> C",
+      "want": "-40.0"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "dv-common-036",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "R -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "detail": "Error: Unsupported unit delta_degF, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "dv-common-037",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "Error: Unsupported unit delta_degR, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "dv-common-038",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit kcal_th, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "dv-common-039",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit °F, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "id": "dv-common-040",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit °R, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "id": "dv-common-041",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit Btu/(lb.delta_degF), use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt",
+      "id": "dv-common-042",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "got": "1000",
+      "id": "hw-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km -> m",
+      "want": "1000.0"
+     },
+     {
+      "category": "si",
+      "got": "10",
+      "id": "hw-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km/h -> m/s",
+      "want": "10.0"
+     },
+     {
+      "category": "si",
+      "detail": "Error: Unsupported unit MJ, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "id": "hw-003",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "got": "10",
+      "id": "hw-004",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "MPa -> bar",
+      "want": "10.0"
+     },
+     {
+      "category": "si",
+      "detail": "Error: Unsupported unit atm, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-005",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "detail": "Error: Unsupported unit m^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-006",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "got": "9000",
+      "id": "hw-007",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "h -> s",
+      "want": "9000.0"
+     },
+     {
+      "category": "si",
+      "got": "1440",
+      "id": "hw-008",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "d -> min",
+      "want": "1440.0"
+     },
+     {
+      "category": "si",
+      "got": "1000",
+      "id": "hw-009",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mt -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "si",
+      "got": "39.37008",
+      "id": "hw-010",
+      "outcome": "wrong_value",
+      "ulp": 177307072,
+      "used": "mm -> in",
+      "want": "39.37007874015748"
+     },
+     {
+      "category": "si",
+      "detail": "Error: Unsupported unit m^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-011",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "detail": "Error: Unsupported unit N, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3, ",
+      "id": "hw-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "25.399999187200024",
+      "id": "hw-013",
+      "outcome": "wrong_value",
+      "ulp": 228782854,
+      "used": "in -> mm",
+      "want": "25.4"
+     },
+     {
+      "category": "imperial_us",
+      "got": "0.3047999902464003",
+      "id": "hw-014",
+      "outcome": "wrong_value",
+      "ulp": 175705232,
+      "used": "ft -> m",
+      "want": "0.3048"
+     },
+     {
+      "category": "imperial_us",
+      "got": "1.6093439485009937",
+      "id": "hw-015",
+      "outcome": "wrong_value",
+      "ulp": 231930906,
+      "used": "mi -> km",
+      "want": "1.609344"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit nmi, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-016",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "45.359199999999994",
+      "id": "hw-017",
+      "outcome": "wrong_value",
+      "ulp": 5207287070,
+      "used": "lb -> kg",
+      "want": "45.359237"
+     },
+     {
+      "category": "imperial_us",
+      "got": "28.3495",
+      "id": "hw-018",
+      "outcome": "wrong_value",
+      "ulp": 6509108837,
+      "used": "oz -> g",
+      "want": "28.349523125"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit oz_troy, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "hw-019",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit ton, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-020",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit ton_long, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
+      "id": "hw-021",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "3.7854117954011186",
+      "id": "hw-022",
+      "outcome": "wrong_value",
+      "ulp": 25673037,
+      "used": "gal -> l",
+      "want": "3.785411784"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit gal_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "hw-023",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit gal_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "hw-024",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit mL, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "id": "hw-025",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit pt_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "hw-026",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit ft_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, l",
+      "id": "hw-027",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit mi_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, l",
+      "id": "hw-028",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit cal_th, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "hw-029",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit cal_IT, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "hw-030",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit Btu, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-031",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit Btu_th, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "hw-032",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit hp_mech, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "hw-033",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit hp_metric, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "hw-034",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: Unsupported unit lbf, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-035",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "pressure",
+      "got": "6894.76000045014",
+      "id": "hw-036",
+      "outcome": "wrong_value",
+      "ulp": 2976687795,
+      "used": "psi -> Pa",
+      "want": "6894.757293168362"
+     },
+     {
+      "category": "pressure",
+      "got": "0.9997402000652704",
+      "id": "hw-037",
+      "outcome": "wrong_value",
+      "ulp": 3535828832,
+      "used": "psi -> bar",
+      "want": "0.9997398075094124"
+     },
+     {
+      "category": "pressure",
+      "got": "14.503768077999998",
+      "id": "hw-038",
+      "outcome": "wrong_value",
+      "ulp": 3206011763,
+      "used": "bar -> psi",
+      "want": "14.50377377302092"
+     },
+     {
+      "category": "pressure",
+      "detail": "Error: Unsupported unit mmHg, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "hw-039",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "pressure",
+      "detail": "Error: Unsupported unit atm, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-040",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "pressure",
+      "detail": "Error: Unsupported unit atm, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-041",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "pressure",
+      "detail": "Error: Unsupported unit atm, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-042",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit psig, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "hw-043",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit kmol/h, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "hw-044",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit lbmol/h, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "hw-045",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit lbmol/h, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "hw-046",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit cP, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "id": "hw-047",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit cSt, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-048",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit cSt, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-049",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit W/(m.K), use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "hw-050",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit kJ/(kg.K), use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "hw-051",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit kJ/(kg.K), use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "hw-052",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit Btu/(lb.delta_degF), use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt",
+      "id": "hw-053",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit W/(m.K), use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "hw-054",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit W/(m^2.K), use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "hw-055",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit Nm^3/h, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "hw-056",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit Nm^3/h, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "hw-057",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit scf/min, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "hw-058",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit bbl, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-059",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: Unsupported unit bbl, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "hw-060",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "hw-061",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "C -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "212",
+      "id": "hw-062",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "C -> F",
+      "want": "212.0"
+     },
+     {
+      "category": "temperature",
+      "got": "-40",
+      "id": "hw-063",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "C -> F",
+      "want": "-40.0"
+     },
+     {
+      "category": "temperature",
+      "got": "0",
+      "id": "hw-064",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "F -> C",
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "98.6",
+      "id": "hw-065",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "C -> F",
+      "want": "98.6"
+     },
+     {
+      "category": "temperature",
+      "got": "26.850000000000023",
+      "id": "hw-066",
+      "outcome": "wrong_value",
+      "ulp": 6,
+      "used": "K -> C",
+      "want": "26.85"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "hw-067",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "R -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "5.684341886080802e-14",
+      "id": "hw-068",
+      "outcome": "wrong_value",
+      "ulp": 4409024035195715600,
+      "used": "K -> R",
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "293.15",
+      "id": "hw-069",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "F -> K",
+      "want": "293.15"
+     },
+     {
+      "category": "temperature",
+      "detail": "Error: Unsupported unit delta_degC, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "hw-070",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "Error: Unsupported unit delta_degF, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "hw-071",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "Error: Unsupported unit delta_K, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "hw-072",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "got": "3.6",
+      "id": "hw-073",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "m/s -> km/h",
+      "want": "3.6"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit kg/m^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "hw-074",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit g/cm^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "hw-075",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit lb/ft^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "hw-076",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit kW.h, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "hw-077",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit J/(mol.K), use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "hw-078",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit N/m^2, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, m",
+      "id": "hw-079",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "got": "3.154509820171933",
+      "id": "hw-080",
+      "outcome": "wrong_value",
+      "ulp": 387159,
+      "used": "gal/min -> l/s",
+      "want": "3.15450982"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit m^3/h, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, m",
+      "id": "hw-081",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit lb/h, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "hw-082",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit psi.in^2, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
+      "id": "hw-083",
+      "outcome": "unsupported"
+     }
+    ],
+    "must_refuse": [
+     {
+      "category": "ambiguous_name",
+      "detail": "Error: Unsupported unit ton, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "ref-001",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "3.7854117954011186",
+      "id": "ref-002",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "US gallon 3.785 L versus imperial gallon 4.546 L: 20 percent apart"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "28.3495",
+      "id": "ref-003",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "avoirdupois 28.35 g, troy 31.10 g (fluid ounces are volumes)"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "Error: Unsupported unit pt, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "id": "ref-004",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "Error: Unsupported unit cal, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "ref-005",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "Error: Unsupported unit Btu, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "ref-006",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "Error: Unsupported unit hp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "id": "ref-007",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "Error: Unsupported unit mile, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "ref-008",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "Error: Unsupported unit foot, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "ref-009",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "Error: Unsupported unit 1, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3, ",
+      "id": "ref-010",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: Unsupported unit Nm^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "ref-011",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: Unsupported unit m^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "ref-012",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: Unsupported unit scf, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "ref-013",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: Unsupported unit Nm^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "ref-014",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: Unsupported unit wt%, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "ref-015",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: Cannot convert incompatible measures of volume and mass",
+      "id": "ref-016",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: Unsupported unit mol, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "ref-017",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: Unsupported unit psig, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "ref-018",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: Unsupported unit barg, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "ref-019",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: Unsupported unit mH2O, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "ref-020",
+      "outcome": "refused"
+     },
+     {
+      "category": "kind",
+      "id": "ref-021",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "id": "ref-022",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "id": "ref-023",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "detail": "Error: Unsupported unit delta_K, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "ref-024",
+      "outcome": "refused"
+     },
+     {
+      "category": "kind",
+      "detail": "Error: Unsupported unit delta_degC, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "ref-025",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "Error: Cannot convert incompatible measures of time and length",
+      "id": "ref-026",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "Error: Unsupported unit N, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3, ",
+      "id": "ref-027",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "Error: Unsupported unit N, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3, ",
+      "id": "ref-028",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "Error: Cannot convert incompatible measures of energy and power",
+      "id": "ref-029",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "Error: Cannot convert incompatible measures of power and pressure",
+      "id": "ref-030",
+      "outcome": "refused"
+     }
+    ]
+   },
+   "coverage": {
+    "compound": {
+     "known": 2,
+     "total": 11,
+     "unknown": [
+      "kg/m3",
+      "g/cm3",
+      "lb/ft3",
+      "N/m2",
+      "J/(mol.K)",
+      "kg.m2/s2",
+      "W/(m2.K)",
+      "mol/L",
+      "kg/(m2.s)"
+     ]
+    },
+    "dimvexa_seed_table": {
+     "known": 32,
+     "total": 63,
+     "unknown": [
+      "mol",
+      "cd",
+      "N",
+      "ohm",
+      "S",
+      "Wb",
+      "T",
+      "H",
+      "delta_K",
+      "delta_degC",
+      "atm",
+      "g_n",
+      "lbf",
+      "mmHg",
+      "cal_th",
+      "cal_IT",
+      "Btu_IT",
+      "Btu_th",
+      "hp_mech",
+      "hp_metric",
+      "nmi",
+      "ft_us_survey",
+      "mi_us_survey",
+      "oz_troy",
+      "ton_short",
+      "ton_long",
+      "gal_imp",
+      "pt_imp",
+      "lbmol",
+      "delta_degF",
+      "delta_degR"
+     ]
+    },
+    "imperial_us": {
+     "known": 8,
+     "total": 24,
+     "unknown": [
+      "nmi",
+      "oz_troy",
+      "ton_short",
+      "ton_long",
+      "gal_imp",
+      "pt_imp",
+      "lbf",
+      "Btu_IT",
+      "Btu_th",
+      "cal_th",
+      "cal_IT",
+      "hp_mech",
+      "hp_metric",
+      "ft_us_survey",
+      "mi_us_survey",
+      "bbl"
+     ]
+    },
+    "pressure": {
+     "known": 3,
+     "total": 10,
+     "unknown": [
+      "atm",
+      "mmHg",
+      "barg",
+      "psig",
+      "kgf/cm2",
+      "inHg",
+      "mH2O"
+     ]
+    },
+    "process": {
+     "known": 1,
+     "total": 19,
+     "unknown": [
+      "kmol/h",
+      "lbmol/h",
+      "cP",
+      "cSt",
+      "W/(m.K)",
+      "kJ/(kg.K)",
+      "Btu_IT/(lb.delta_degF)",
+      "Nm3",
+      "Nm3/h",
+      "scf",
+      "scf/min",
+      "bbl/d",
+      "mol/s",
+      "m3/h",
+      "kg/h",
+      "lb/h",
+      "kg/(m.s)",
+      "mPa.s"
+     ]
+    },
+    "si": {
+     "known": 17,
+     "total": 25,
+     "unknown": [
+      "mol",
+      "cd",
+      "N",
+      "ohm",
+      "S",
+      "Wb",
+      "T",
+      "H"
+     ]
+    },
+    "si_prefixed": {
+     "known": 9,
+     "total": 17,
+     "unknown": [
+      "um",
+      "nm",
+      "GPa",
+      "MJ",
+      "GJ",
+      "mL",
+      "kmol",
+      "mmol"
+     ]
+    },
+    "temperature": {
+     "known": 4,
+     "total": 8,
+     "unknown": [
+      "delta_K",
+      "delta_degC",
+      "delta_degF",
+      "delta_degR"
+     ]
+    }
+   },
+   "must_convert": {
+    "by_category": {
+     "compound": {
+      "correct": 2,
+      "total": 16,
+      "unsupported": 13,
+      "wrong_value": 1
+     },
+     "dimvexa_vector": {
+      "correct": 15,
+      "total": 65,
+      "unsupported": 45,
+      "wrong_value": 5
+     },
+     "imperial_us": {
+      "correct": 0,
+      "total": 23,
+      "unsupported": 17,
+      "wrong_value": 6
+     },
+     "pressure": {
+      "correct": 0,
+      "total": 7,
+      "unsupported": 4,
+      "wrong_value": 3
+     },
+     "process": {
+      "correct": 0,
+      "total": 18,
+      "unsupported": 18,
+      "wrong_value": 0
+     },
+     "si": {
+      "correct": 6,
+      "total": 12,
+      "unsupported": 5,
+      "wrong_value": 1
+     },
+     "temperature": {
+      "correct": 12,
+      "total": 23,
+      "unsupported": 8,
+      "wrong_value": 3
+     }
+    },
+    "correct": 35,
+    "total": 164,
+    "unsupported": 110,
+    "wrong_value": 19
+   },
+   "must_refuse": {
+    "by_category": {
+     "ambiguous_name": {
+      "not_applicable": 0,
+      "refused": 8,
+      "silently_accepted": 2,
+      "total": 10
+     },
+     "dimension": {
+      "not_applicable": 0,
+      "refused": 5,
+      "silently_accepted": 0,
+      "total": 5
+     },
+     "kind": {
+      "not_applicable": 3,
+      "refused": 2,
+      "silently_accepted": 0,
+      "total": 5
+     },
+     "missing_context": {
+      "not_applicable": 0,
+      "refused": 10,
+      "silently_accepted": 0,
+      "total": 10
+     }
+    },
+    "not_applicable": 3,
+    "refused": 25,
+    "silently_accepted": 2,
+    "total": 30
+   }
+  }
+ },
+ "startup": {
+  "import_ms": {
+   "interpreter_baseline_ms": 28.308037,
+   "mad": 1.6965799999999973,
+   "max": 14.404125,
+   "median": 8.199829999999999,
+   "min": 0,
+   "raw": [
+    8.650652999999998,
+    0,
+    6.503250000000001,
+    14.404125,
+    8.199829999999999
+   ],
+   "samples": 5,
+   "unit": "ms"
+  },
+  "package_bytes": 108230,
+  "peak_rss_kb": 118044
+ }
+}

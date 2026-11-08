@@ -239,7 +239,7 @@ function classifyConvert(ad, mode, cases) {
       const u = ulpDistance(got, want);
       return { id: c.id, category: c.category, outcome: u <= TOLERANCE_ULP ? 'correct' : 'wrong_value',
                ulp: Number.isFinite(u) ? u : null, got: String(got), want: c.expect_f64,
-               used: ad.translated(c.from) + ' -> ' + ad.translated(c.to) };
+               used: (ad.pair ? ad.pair(c.from, c.to) : [ad.translated(c.from), ad.translated(c.to)]).join(' -> ') };
     } catch (e) {
       return { id: c.id, category: c.category, outcome: 'unsupported', detail: `${e.name}: ${e.message}`.slice(0, 160) };
     }
