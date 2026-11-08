@@ -533,3 +533,59 @@ prefixes = "si"
 namespace = "si"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
 note = "katal = mol/s"
+
+[[unit]]
+symbol = "rad"
+aliases = []
+dim = [0, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "radian = m/m, dimensionless (ADR-007)"
+
+[[unit]]
+symbol = "deg"
+aliases = ["°"]
+dim = [0, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "122925461/7043110110"
+offset = "0/1"
+exactness = "measured"
+prefixes = "none"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (degree = (pi/180) rad)"
+note = "degree = pi/180 rad. Factor uses pi ~ 245850922/78256779 (a continued-fraction convergent, relative error 2.5e-17, below half an f64 ulp), so the unit is marked measured; all angle units share it, so deg/arcmin/arcsec/grad convert among themselves exactly (ADR-010)"
+
+[[unit]]
+symbol = "arcmin"
+aliases = []
+dim = [0, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "122925461/422586606600"
+offset = "0/1"
+exactness = "measured"
+prefixes = "none"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (arcminute = (1/60) degree)"
+note = "arcminute = deg/60. Factor uses pi ~ 245850922/78256779 (a continued-fraction convergent, relative error 2.5e-17, below half an f64 ulp), so the unit is marked measured; all angle units share it, so deg/arcmin/arcsec/grad convert among themselves exactly (ADR-010)"
+
+[[unit]]
+symbol = "arcsec"
+aliases = []
+dim = [0, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "122925461/25355196396000"
+offset = "0/1"
+exactness = "measured"
+prefixes = "none"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (arcsecond = (1/60) arcminute)"
+note = "arcsecond = arcmin/60. Factor uses pi ~ 245850922/78256779 (a continued-fraction convergent, relative error 2.5e-17, below half an f64 ulp), so the unit is marked measured; all angle units share it, so deg/arcmin/arcsec/grad convert among themselves exactly (ADR-010)"

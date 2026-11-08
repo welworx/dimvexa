@@ -582,6 +582,7 @@ fn group_name(dim: Dim) -> String {
         [0, 0, 0, 0, 1, 0, 0] => "temperature",
         [0, 0, 0, 0, 0, 1, 0] => "amount_of_substance",
         [0, 0, 0, 0, 0, 0, 1] => "luminous_intensity",
+        [0, 0, 0, 0, 0, 0, 0] => "angle",
         [0, -2, 0, 0, 0, 0, 1] => "illuminance",
         [0, 0, -1, 0, 0, 1, 0] => "catalytic_activity",
         [0, 2, -2, 0, 0, 0, 0] => "absorbed_dose",

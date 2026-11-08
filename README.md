@@ -68,6 +68,7 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | absorbed_dose | `Gy`, `Sv` |
 | illuminance | `lx` |
 | catalytic_activity | `kat` |
+| angle | `rad`, `deg`, `arcmin`, `arcsec`, `grad` |
 | acceleration | `g_n` |
 | speed | `kn` |
 
@@ -92,8 +93,14 @@ Not in the table on purpose:
 * **Ambiguous names** are refused with the explicit choices: `yr` and `year` (use `yr_julian` or
   `yr_common`), `acre` (`acre_int` or `acre_us_survey`), `qt`, `cup`, `tbsp`, `tsp`, `oz`, `gal`,
   `ton` and more. `dimvexa units` lists them all.
-* **Not yet:** angle (`rad`, `deg`, ...), `eV` and `Da` (their factors do not fit the exact
-  `i128` arithmetic, see ADR-010), information (`bit`, `B`), percent and ppm, logarithmic units
+* **Angle limitation (pi).** Pi is irrational, so `deg`, `arcmin`, `arcsec` and `grad` use the
+  fraction 245850922/78256779 (relative error 2.5e-17, below half an `f64` ulp) and are marked
+  `measured`. `f64` results are indistinguishable from the true value except possibly in the last
+  bit; `--exact` results are exact for that fraction, not for pi. Angles among themselves
+  (`60 arcmin` to `deg`) are exact. Angle is dimensionless (ADR-007), so `rad/s` and `Hz` are the
+  same dimension. See ADR-010 and KL-19.
+* **Not yet:** `eV` and `Da` (their factors do not fit the exact `i128` arithmetic, see
+  ADR-010), `rev` and `rpm`, information (`bit`, `B`), percent and ppm, logarithmic units
   (`dB`, `Np`), the parsec, months and oil barrels (see the `--config` example). Open a *Unit
   request* issue.
 
