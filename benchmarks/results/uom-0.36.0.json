@@ -1,6 +1,6 @@
 {
- "corpus_id": "cf193cbf0159731e",
- "date_utc": "2026-11-07T19:46:25Z",
+ "corpus_id": "60d7ca04ff45cf8d",
+ "date_utc": "2026-11-08T22:33:02Z",
  "fixture": false,
  "kind": "library",
  "library": {
@@ -10,7 +10,7 @@
  "lockfile": "requirements.lock.txt+package-lock.json+Cargo.lock",
  "machine": {
   "arch": "x86_64",
-  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.30GHz",
   "governor": null,
   "logical_cores": 4,
   "os": "Linux 6.18.44-fc-v310"
@@ -37,48 +37,48 @@
     "batch": {
      "1000": {
       "mad": 0.0010000000000000009,
-      "max": 0.301,
-      "median": 0.149,
-      "min": 0.146,
-      "raw": [0.187, 0.15, 0.149, 0.148, 0.15, 0.235, 0.149, 0.149, 0.147, 0.147, 0.149, 0.147, 0.146, 0.301, 0.148],
+      "max": 0.427,
+      "median": 0.161,
+      "min": 0.158,
+      "raw": [0.194, 0.162, 0.161, 0.238, 0.161, 0.159, 0.161, 0.161, 0.158, 0.16, 0.158, 0.427, 0.16, 0.16, 0.16],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 0.0011700000000000044,
-      "max": 0.19914,
-      "median": 0.19631,
-      "min": 0.19307,
-      "raw": [0.19813, 0.19661, 0.19414, 0.19431, 0.19715, 0.19914, 0.19631, 0.19514, 0.19742, 0.19497, 0.19586, 0.19641, 0.19307, 0.19729, 0.19445],
+      "mad": 0.0006199999999999817,
+      "max": 0.19817,
+      "median": 0.19551,
+      "min": 0.19335,
+      "raw": [0.19817, 0.19601, 0.19335, 0.19482, 0.19502, 0.19678, 0.19623, 0.19557, 0.19531, 0.19551, 0.19398, 0.19409, 0.19594, 0.19489, 0.19612],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 0.024202999999999975,
-      "max": 0.681102,
-      "median": 0.628224,
-      "min": 0.581121,
-      "raw": [0.604021, 0.681102, 0.634626, 0.581121, 0.628224],
+      "mad": 0.02772999999999992,
+      "max": 0.591946,
+      "median": 0.564216,
+      "min": 0.532303,
+      "raw": [0.591946, 0.532637, 0.564216, 0.532303, 0.56587],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.003405064344406128,
-     "max": 0.33670808374881744,
-     "median": 0.3111766055226326,
-     "min": 0.24623358622193336,
-     "raw": [0.3111766055226326, 0.3113952949643135, 0.3104124739766121, 0.33431922271847725, 0.31180592626333237, 0.31098463013768196, 0.3093792088329792, 0.24623358622193336, 0.31434592604637146, 0.3145816698670387, 0.31560564786195755, 0.3005388602614403, 0.2865810804069042, 0.33670808374881744, 0.24897580221295357],
+     "mad": 0.0006015412509441376,
+     "max": 0.2745361067354679,
+     "median": 0.26200326904654503,
+     "min": 0.25908412784338,
+     "raw": [0.25908412784338, 0.2646024078130722, 0.26211508736014366, 0.25927759334445, 0.26211217418313026, 0.2612839862704277, 0.26339607313275337, 0.26241734623908997, 0.26147518306970596, 0.2614913806319237, 0.26155711710453033, 0.2614017277956009, 0.26398221403360367, 0.26200326904654503, 0.2745361067354679],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "scalar": {
-     "mad": 0.018042437732219696,
-     "max": 0.6296979933977127,
-     "median": 0.48098238557577133,
-     "min": 0.3819059804081917,
-     "raw": [0.46906352788209915, 0.49902482330799103, 0.5466830506920815, 0.5233770534396172, 0.48098238557577133, 0.4754391089081764, 0.3819059804081917, 0.3942961245775223, 0.40030164271593094, 0.43658503144979477, 0.47215014696121216, 0.4817722514271736, 0.6296979933977127, 0.48679783195257187, 0.48218967765569687],
+     "mad": 0.01222178339958191,
+     "max": 0.4760957583785057,
+     "median": 0.39980146288871765,
+     "min": 0.3724571242928505,
+     "raw": [0.3724571242928505, 0.39639876037836075, 0.390871100127697, 0.39097175747156143, 0.39439163357019424, 0.3888894319534302, 0.40813080221414566, 0.3788038194179535, 0.430392749607563, 0.39980146288871765, 0.43404994159936905, 0.4760957583785057, 0.4129776880145073, 0.41202324628829956, 0.4269421324133873],
      "samples": 15,
      "unit": "ns"
     }
@@ -90,49 +90,49 @@
    "linear_pressure": {
     "batch": {
      "1000": {
-      "mad": 0.0030000000000000027,
-      "max": 0.672,
-      "median": 0.638,
-      "min": 0.634,
-      "raw": [0.672, 0.638, 0.637, 0.638, 0.639, 0.638, 0.638, 0.638, 0.634, 0.635, 0.634, 0.635, 0.635, 0.645, 0.635],
+      "mad": 0.0010000000000000009,
+      "max": 0.547,
+      "median": 0.525,
+      "min": 0.523,
+      "raw": [0.547, 0.527, 0.526, 0.525, 0.527, 0.527, 0.526, 0.526, 0.524, 0.524, 0.524, 0.525, 0.524, 0.524, 0.523],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 0.00039000000000000146,
-      "max": 0.625,
-      "median": 0.60706,
-      "min": 0.60661,
-      "raw": [0.625, 0.60817, 0.60791, 0.60714, 0.60706, 0.60692, 0.60772, 0.60664, 0.60676, 0.60681, 0.60754, 0.60661, 0.60691, 0.60745, 0.60677],
+      "mad": 0.000020000000000020002,
+      "max": 0.70771,
+      "median": 0.48794,
+      "min": 0.48789,
+      "raw": [0.48821, 0.48797, 0.48796, 0.4879, 0.48794, 0.48794, 0.48794, 0.48793, 0.48789, 0.48793, 0.4879, 0.48792, 0.70771, 0.48829, 0.48796],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 0.0072630000000000194,
-      "max": 0.701981,
-      "median": 0.679107,
-      "min": 0.640242,
-      "raw": [0.640242, 0.679107, 0.701981, 0.673071, 0.68637],
+      "mad": 0.03073400000000004,
+      "max": 0.609505,
+      "median": 0.573379,
+      "min": 0.536579,
+      "raw": [0.604113, 0.609505, 0.543288, 0.573379, 0.536579],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.007741682231426239,
-     "max": 0.3329734392464161,
-     "median": 0.31304847449064255,
-     "min": 0.24573900923132896,
-     "raw": [0.2616903521120548, 0.26230622828006744, 0.3053067922592163, 0.3064911998808384, 0.3329734392464161, 0.317482054233551, 0.3195756897330284, 0.317740336060524, 0.32273782417178154, 0.24573900923132896, 0.2920205481350422, 0.31304847449064255, 0.3319190852344036, 0.3157830014824867, 0.3110808804631233],
+     "mad": 0.003679271787405014,
+     "max": 0.2621602229773998,
+     "median": 0.25627218559384346,
+     "min": 0.25135035440325737,
+     "raw": [0.2611760310828686, 0.26195041462779045, 0.2621602229773998, 0.2614732123911381, 0.2621043734252453, 0.26178035140037537, 0.2572731673717499, 0.25432081520557404, 0.25135035440325737, 0.25289201736450195, 0.25259291380643845, 0.25627218559384346, 0.25522496923804283, 0.2553347125649452, 0.2544635757803917],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "scalar": {
-     "mad": 0.0453285276889801,
-     "max": 1.2667459100484848,
-     "median": 1.027392327785492,
-     "min": 0.9775835424661636,
-     "raw": [1.027392327785492, 1.0237423330545425, 1.2064176350831985, 1.2568534016609192, 1.0631211549043655, 0.9827572405338287, 0.9775835424661636, 0.9776282459497452, 0.9820638000965118, 1.2201942205429077, 1.2667459100484848, 1.0996280014514923, 1.0038498044013977, 1.0071683824062347, 1.027994692325592],
+     "mad": 0.004946649074554443,
+     "max": 1.0765243619680405,
+     "median": 1.0441369116306305,
+     "min": 1.0202917456626892,
+     "raw": [1.0222836285829544, 1.0202917456626892, 1.049083560705185, 1.047188937664032, 1.0431076437234879, 1.0376799702644348, 1.0487885028123856, 1.0566752552986145, 1.0765243619680405, 1.0388354659080505, 1.0409261137247086, 1.044179618358612, 1.0352803617715836, 1.0441369116306305, 1.0479844808578491],
      "samples": 15,
      "unit": "ns"
     }
@@ -141,48 +141,48 @@
     "batch": {
      "1000": {
       "mad": 0.0010000000000000009,
-      "max": 0.15,
-      "median": 0.107,
-      "min": 0.104,
-      "raw": [0.15, 0.107, 0.107, 0.104, 0.106, 0.107, 0.108, 0.107, 0.109, 0.107, 0.106, 0.106, 0.109, 0.108, 0.108],
+      "max": 0.24,
+      "median": 0.116,
+      "min": 0.115,
+      "raw": [0.162, 0.117, 0.116, 0.24, 0.115, 0.115, 0.118, 0.115, 0.115, 0.117, 0.117, 0.116, 0.115, 0.117, 0.115],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 0.0017699999999999938,
-      "max": 0.27228,
-      "median": 0.22177,
-      "min": 0.21738,
-      "raw": [0.27228, 0.23071, 0.22354, 0.22231, 0.22059, 0.22203, 0.22408, 0.22276, 0.22003, 0.22177, 0.22024, 0.21988, 0.21986, 0.21778, 0.21738],
+      "mad": 0.0006300000000000194,
+      "max": 0.19205,
+      "median": 0.1889,
+      "min": 0.18762,
+      "raw": [0.19205, 0.19106, 0.18973, 0.18846, 0.18831, 0.18985, 0.18827, 0.18876, 0.19007, 0.18791, 0.18762, 0.18899, 0.1889, 0.18867, 0.18941],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 0.01163599999999998,
-      "max": 0.681781,
-      "median": 0.647423,
-      "min": 0.627282,
-      "raw": [0.643391, 0.681781, 0.647423, 0.659059, 0.627282],
+      "mad": 0.009394000000000013,
+      "max": 0.574663,
+      "median": 0.565269,
+      "min": 0.527473,
+      "raw": [0.565705, 0.574663, 0.527473, 0.565269, 0.533464],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.005806390196084976,
-     "max": 0.30039092898368835,
-     "median": 0.2514256201684475,
-     "min": 0.2428966388106346,
-     "raw": [0.24700088426470757, 0.2531655430793762, 0.26404475420713425, 0.256812434643507, 0.2603742778301239, 0.26019087433815, 0.25109101086854935, 0.24291035532951355, 0.2428966388106346, 0.24592296034097672, 0.25870944932103157, 0.24690581113100052, 0.30039092898368835, 0.2514256201684475, 0.24561922997236252],
+     "mad": 0.0005946941673755646,
+     "max": 0.28279541060328484,
+     "median": 0.26221829652786255,
+     "min": 0.2611747942864895,
+     "raw": [0.28279541060328484, 0.28239813446998596, 0.2634424902498722, 0.26200051978230476, 0.2617923468351364, 0.2618100009858608, 0.2642054483294487, 0.26378680020570755, 0.2621644325554371, 0.26221829652786255, 0.26243750751018524, 0.2611747942864895, 0.2614782974123955, 0.2628129906952381, 0.2617165632545948],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "scalar": {
-     "mad": 0.03790092468261719,
-     "max": 0.6540695279836655,
-     "median": 0.41281644999980927,
-     "min": 0.37358465790748596,
-     "raw": [0.6243521571159363, 0.3798789754509926, 0.41281644999980927, 0.4568161219358444, 0.4441225305199623, 0.4815318137407303, 0.6540695279836655, 0.4962209612131119, 0.37876705825328827, 0.48824629187583923, 0.3951975032687187, 0.38220854103565216, 0.3749155253171921, 0.37946122884750366, 0.37358465790748596],
+     "mad": 0.002890370786190033,
+     "max": 0.5190748311579227,
+     "median": 0.3212740048766136,
+     "min": 0.3161652497947216,
+     "raw": [0.3173529878258705, 0.3161652497947216, 0.3161827251315117, 0.3164955899119377, 0.3240002766251564, 0.42255499213933945, 0.5190748311579227, 0.32381946220993996, 0.3208257593214512, 0.33121466264128685, 0.32416437566280365, 0.31999991089105606, 0.3200213834643364, 0.3212740048766136, 0.32405509427189827],
      "samples": 15,
      "unit": "ns"
     }
@@ -200,12 +200,12 @@
    "accuracy": {
     "answered": 20,
     "bit_identical": 8,
-    "cases": 164,
+    "cases": 194,
     "max_ulp": 4409024035195715600,
     "median_ulp": 5,
     "over_1_ulp": 11,
     "tolerance_ulp": 4,
-    "unsupported": 144,
+    "unsupported": 174,
     "worst": [],
     "wrong": 10
    },
@@ -451,6 +451,78 @@
       "category": "compound",
       "detail": "no typed unit pair compiled for this request",
       "id": "dv-base-039",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-040",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-041",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-042",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-043",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-044",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-045",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-046",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-047",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-048",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-049",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-051",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-052",
       "outcome": "unsupported"
      },
      {
@@ -709,6 +781,114 @@
       "category": "compound",
       "detail": "no typed unit pair compiled for this request",
       "id": "dv-common-042",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-043",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-044",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-045",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-047",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-049",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-050",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-051",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-052",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-053",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-054",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-055",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-056",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-057",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-058",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-059",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-060",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-061",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-062",
       "outcome": "unsupported"
      },
      {
@@ -1427,8 +1607,8 @@
     },
     "dimvexa_seed_table": {
      "known": 10,
-     "total": 63,
-     "unknown": ["g", "s", "A", "mol", "cd", "Hz", "N", "J", "W", "C", "V", "ohm", "F", "S", "Wb", "T", "H", "min", "h", "d", "L", "tonne", "Wh", "delta_K", "delta_degC", "bar", "atm", "g_n", "lbf", "mmHg", "torr", "cal_th", "cal_IT", "Btu_IT", "Btu_th", "hp_mech", "hp_metric", "yd", "nmi", "ft_us_survey", "mi_us_survey", "oz_av", "oz_troy", "ton_short", "ton_long", "gal_us", "gal_imp", "pt_us", "pt_imp", "lbmol", "degR", "delta_degF", "delta_degR"]
+     "total": 96,
+     "unknown": ["g", "s", "A", "mol", "cd", "Hz", "N", "J", "W", "C", "V", "ohm", "F", "S", "Wb", "T", "H", "min", "h", "d", "L", "tonne", "Wh", "delta_K", "delta_degC", "ha", "au", "angstrom", "Bq", "Gy", "Sv", "lm", "lx", "kat", "rad", "deg", "arcmin", "arcsec", "bar", "atm", "g_n", "lbf", "mmHg", "torr", "cal_th", "cal_IT", "Btu_IT", "Btu_th", "hp_mech", "hp_metric", "yd", "nmi", "ft_us_survey", "mi_us_survey", "oz_av", "oz_troy", "ton_short", "ton_long", "gal_us", "gal_imp", "pt_us", "pt_imp", "lbmol", "degR", "delta_degF", "delta_degR", "week", "yr_common", "yr_julian", "ly", "acre_int", "acre_us_survey", "kn", "fl_oz_us", "cup_us", "qt_us", "tbsp_us", "tsp_us", "fl_oz_imp", "qt_imp", "grain", "carat", "erg", "dyn", "kgf", "grad"]
     },
     "imperial_us": {
      "known": 4,
@@ -1465,8 +1645,8 @@
     "by_category": {
     },
     "correct": 10,
-    "total": 164,
-    "unsupported": 144,
+    "total": 194,
+    "unsupported": 174,
     "wrong_value": 10
    },
    "must_refuse": {
@@ -1482,6 +1662,6 @@
  "startup": {
   "import_ms": null,
   "package_bytes": 3875288,
-  "peak_rss_kb": 19288
+  "peak_rss_kb": 19340
  }
 }

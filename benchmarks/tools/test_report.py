@@ -38,6 +38,13 @@ class ReportOnFixtures(unittest.TestCase):
                 self.assertTrue(t.startswith("<svg") and t.rstrip().endswith("</svg>"))
                 self.assertIn("FIXTURE DATA", t)
 
+    def test_dimvexa_bars_have_their_own_color(self):
+        with tempfile.TemporaryDirectory() as d:
+            report.bar_chart(Path(d) / "c.svg", "t", [("dimvexa-py 0.1 / conv", 1.0), ("pint 0.26 / plain", 5.0)], "ns")
+            t = (Path(d) / "c.svg").read_text()
+            self.assertEqual(t.count(f'fill="{report.DIMVEXA_COLOR}"'), 1)
+            self.assertEqual(t.count(f'fill="{report.OTHER_COLOR}"'), 1)
+
     def test_fixture_cannot_overwrite_official_page(self):
         with self.assertRaises(SystemExit):
             self.run_report(BENCH / "fixtures" / "results", report.OFFICIAL)

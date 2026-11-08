@@ -13,6 +13,8 @@ Commits by `release-plz` once releases start (planned for M1).
 
 ### Added
 
+- Benchmarks: runner for the Python binding (`benchmarks/python/run_dimvexa_py.py`), included in `benchmarks/run_all.sh` together with the WASM runner; comparison run 2 (`docs/benchmarks/comparison-run-2.md`); Dimvexa bars are orange in the charts.
+
 - Python binding in `bindings/python` (PyO3 + maturin, `abi3`, NumPy arrays): `convert`, `conversion`,
   `quantity`, `units`, `unit_info`, and `DimvexaError` with the stable `code`, `suggestions` and
   `candidates`. Separate workspace, not part of `cargo xtask ci`. ADR-012; status and CI plan in

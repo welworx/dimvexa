@@ -58,12 +58,15 @@ cargo build --release --locked -p dimvexa-cli
 cargo build --release --locked --manifest-path benchmarks/runners/dimvexa-rs/Cargo.toml
 cargo build --release --locked --manifest-path benchmarks/runners/rust-uom/Cargo.toml
 bindings/wasm/build.sh   # needs wasm-bindgen-cli, see bindings/wasm/README.md
+# Python binding, built in release mode into the benchmark venv (needs maturin, see bindings/python/README.md)
+"$venv/bin/pip" install --quiet maturin
+(cd bindings/python && VIRTUAL_ENV="$PWD/../../$venv" PATH="$PWD/../../$venv/bin:$PATH" maturin develop --release --quiet)
 
 R=benchmarks/runners
 $R/dimvexa-rs/target/release/dimvexa-bench $quick --out "$out" --cli target/release/dimvexa
 $R/dimvexa-rs/target/release/dimvexa-bench $quick --out "$out" --ceiling
 $R/rust-uom/target/release/dimvexa-bench-uom $quick --out "$out"
-for r in ceiling pint unyt astropy; do "$venv/bin/python" benchmarks/python/run_$r.py $quick --out "$out"; done
+for r in ceiling dimvexa_py pint unyt astropy; do "$venv/bin/python" benchmarks/python/run_$r.py $quick --out "$out"; done
 for r in ceiling mathjs jsquantities convertunits dimvexa_wasm; do node benchmarks/node/run_$r.js $quick --out "$out"; done
 
 if [ -n "$quick" ]; then
