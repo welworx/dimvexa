@@ -35,6 +35,11 @@ documented in the README and as KL-19. The census passes.
 Also open: with dimensionless angle (ADR-007), `rev` and `rpm` would make `1 rev/s` equal `6.28 Hz`;
 they are not added.
 
+## Parked
+
+Multiples of pi as a built-in (`2 pi`, an exact `turn`) are parked by the owner for later; option 2
+above is the way to do it. Until then `examples/configs/angle.toml` defines `pi` and `turn`.
+
 ## Consequences
 
 Users get `rad` and `deg` now. `--exact` results for angle against `rad` are exact for the fraction,
