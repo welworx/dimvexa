@@ -1,0 +1,28 @@
+# Your own angle names. `pi` is the number pi as a unit, so "2 pi" is an angle of 2*pi radians,
+# and `turn` is a full revolution (2 pi). Both use the same fraction as the shipped angle units,
+# 245850922/78256779 (README, "Angle limitation (pi)"), so `2 pi` is exactly 360 deg.
+#
+#   dimvexa convert 2 pi deg --config examples/configs/angle.toml
+#   dimvexa convert 1 turn rad --config examples/configs/angle.toml
+#   dimvexa convert 90 deg pi --config examples/configs/angle.toml
+#
+# Angle is dimensionless (ADR-007): `turn/s` is the same dimension as `Hz`, and 1 turn/s converts
+# to 6.28 Hz, not to 1 Hz. That is why dimvexa ships neither `turn` nor `rev` nor `rpm`.
+
+[[unit]]
+symbol = "pi"
+base = "rad"
+factor = "245850922/78256779"
+exactness = "measured"
+prefixes = "none"
+source = "ISO 80000-3:2019 (pi as a plane angle in radian); the fraction is a convergent of pi, relative error 2.5e-17"
+note = "pi radian, with pi approximated by 245850922/78256779"
+
+[[unit]]
+symbol = "turn"
+base = "rad"
+factor = "491701844/78256779"
+exactness = "measured"
+prefixes = "none"
+source = "ISO 80000-3:2019 (revolution = 2 pi rad); the fraction is 2 x a convergent of pi"
+note = "turn = 2 pi radian"

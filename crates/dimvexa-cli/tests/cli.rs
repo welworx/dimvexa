@@ -1666,3 +1666,43 @@ fn known_limitation_kl_19_pi_is_a_fraction() {
         "1/1 deg\n"
     );
 }
+
+/// The README's angle examples (`2 pi`, `turn`) run against the shipped example config.
+#[test]
+fn readme_angle_examples_are_real() {
+    const CFG: &str = "examples/configs/angle.toml";
+    let section = readme_section(&readme(), "## Angles and pi: limitations");
+    for (args, out) in [
+        (
+            &["convert", "2", "pi", "deg", "--config", CFG][..],
+            "360 deg",
+        ),
+        (
+            &["convert", "1", "turn", "rad", "--config", CFG][..],
+            "6.283185307179586 rad",
+        ),
+    ] {
+        let r = dimvexa_at_root(args);
+        assert_eq!((r.code, r.stdout.trim_end()), (0, out), "{}", r.stderr);
+        assert!(section.contains(&format!("$ dimvexa {}\n   {out}", args.join(" "))));
+    }
+    let r = dimvexa_at_root(&["convert", "2", "pi", "deg", "--config", CFG, "--exact"]);
+    assert_eq!(r.stdout.trim_end(), "360/1 deg");
+    assert_eq!(
+        dimvexa(&["convert", "1", "deg", "1"]).stdout,
+        "0.017453292519943295 1\n"
+    );
+    assert_eq!(
+        dimvexa(&["convert", "6.283185307179586", "rad", "deg"]).stdout,
+        "360 deg\n"
+    );
+}
+
+/// KL-20 and KL-21: no `2pi` in a value, and angle is dimensionless.
+#[test]
+fn known_limitation_kl_20_21_pi_input_and_dimensionless_angle() {
+    let r = dimvexa(&["convert", "2*pi", "rad", "deg"]);
+    assert_eq!(r.code, 1, "KL-20 fixed? then pi is a constant");
+    assert!(r.stderr.starts_with("error[invalid_number]"));
+    assert_eq!(dimvexa(&["convert", "1", "rad/s", "Hz"]).stdout, "1 Hz\n");
+}

@@ -18,6 +18,8 @@ Commits by `release-plz` once releases start (planned for M1).
   absorbed_dose.
 - ADR-010: pi as 245850922/78256779 for the angle units; `eV` and `Da` are not added yet because
   their factors do not fit the exact `i128` arithmetic (options written down).
+- README: an "Angles and pi: limitations" section, `examples/configs/angle.toml` (your own `pi`
+  and `turn`), and KL-20 and KL-21.
 - README: a "Combining units" section (`m3/s` to `L/d` and friends) and what is left out on purpose.
 - M0 bootstrap: workspace, lints, CI, community files, licences.
 - `dimvexa-core`: `Dim`, `Ratio`, `Error`, `Kind`, `Shape`, parser, `Registry`, `Conversion`, `Quantity`.
