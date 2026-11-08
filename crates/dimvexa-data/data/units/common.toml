@@ -478,3 +478,269 @@ prefixes = "none"
 namespace = "std"
 source = "NIST SP 811 (2008), Appendix B (degree Rankine, temperature interval)"
 note = "temperature difference of 1 degR = 5/9 K"
+
+[[unit]]
+symbol = "week"
+aliases = []
+dim = [0, 0, 1, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "604800/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "ISO 8601-1:2019 (week of 7 days); BIPM SI Brochure, 9th ed. (2019), ch. 4 (day = 86 400 s)"
+note = "week = 7 d"
+
+[[unit]]
+symbol = "yr_common"
+aliases = []
+dim = [0, 0, 1, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "31536000/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (year, 365 days)"
+note = "common year = 365 d; the bare words yr and year are ambiguous and rejected"
+
+[[unit]]
+symbol = "yr_julian"
+aliases = []
+dim = [0, 0, 1, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "31557600/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "IAU Style Manual (1989), Julian year a = 365.25 d; BIPM SI Brochure, 9th ed. (2019), ch. 4 (day = 86 400 s)"
+note = "Julian year = 365.25 d, the astronomical year; the bare words yr and year are ambiguous and rejected"
+
+[[unit]]
+symbol = "ly"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "9460730472580800/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "IAU Style Manual (1989) (light year = c x Julian year); BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (c = 299 792 458 m/s)"
+note = "light year = 299 792 458 m/s * 31 557 600 s = 9 460 730 472 580 800 m"
+
+[[unit]]
+symbol = "acre_int"
+aliases = []
+dim = [0, 2, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "316160658/78125"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2023), Appendix C (acre = 43 560 square feet); International yard and pound agreement (1959)"
+note = "acre = 43 560 ft^2 with the international foot (4046.8564224 m^2); acre_us_survey differs by about 2 ppm; the bare word acre is ambiguous and rejected"
+
+[[unit]]
+symbol = "acre_us_survey"
+aliases = []
+dim = [0, 2, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "62726400000/15499969"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (acre, based on U.S. survey foot); NIST Handbook 44 (2023), Appendix C"
+note = "acre = 43 560 ft_us_survey^2 (about 4046.8726 m^2)"
+
+[[unit]]
+symbol = "kn"
+aliases = []
+dim = [0, 1, -1, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "463/900"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (knot = nautical mile per hour); International Hydrographic Conference (1929)"
+note = "knot = 1 nmi/h = 1852/3600 m/s"
+
+[[unit]]
+symbol = "fl_oz_us"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "473176473/16000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (U.S. liquid measure: 1 gal = 128 fl oz); NIST Handbook 44 (2023), Appendix C"
+note = "US fluid ounce = gal_us/128 = 29.5735295625 mL"
+
+[[unit]]
+symbol = "cup_us"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "473176473/2000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (cup, U.S. liquid measure)"
+note = "US cup = gal_us/16 = 8 fl_oz_us = 236.5882365 mL"
+
+[[unit]]
+symbol = "qt_us"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "473176473/500000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (quart, U.S. liquid)"
+note = "US liquid quart = gal_us/4"
+
+[[unit]]
+symbol = "tbsp_us"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "473176473/32000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (tablespoon, U.S.)"
+note = "US tablespoon = fl_oz_us/2 = gal_us/256; the bare word tbsp is ambiguous and rejected"
+
+[[unit]]
+symbol = "tsp_us"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "157725491/32000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (teaspoon, U.S.)"
+note = "US teaspoon = tbsp_us/3 = gal_us/768; the bare word tsp is ambiguous and rejected"
+
+[[unit]]
+symbol = "fl_oz_imp"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "454609/16000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "UK Weights and Measures Act 1985, Schedule 1 (fluid ounce = 1/160 gallon)"
+note = "imperial fluid ounce = gal_imp/160 = 28.4130625 mL"
+
+[[unit]]
+symbol = "qt_imp"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "454609/400000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "UK Weights and Measures Act 1985, Schedule 1 (quart = 1/4 gallon)"
+note = "imperial quart = gal_imp/4 = 1.1365225 L"
+
+[[unit]]
+symbol = "grain"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "6479891/100000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (grain, 1/7000 pound avoirdupois)"
+note = "grain = lb/7000 = 64.79891 mg"
+
+[[unit]]
+symbol = "carat"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/5000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "4th CGPM (1907) (metric carat = 200 mg); NIST Handbook 44 (2023), Appendix C"
+note = "metric carat = 200 mg"
+
+[[unit]]
+symbol = "erg"
+aliases = []
+dim = [1, 2, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/10000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (erg)"
+note = "erg = 1e-7 J (CGS)"
+
+[[unit]]
+symbol = "dyn"
+aliases = []
+dim = [1, 1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/100000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (dyne)"
+note = "dyne = 1e-5 N (CGS)"
+
+[[unit]]
+symbol = "kgf"
+aliases = []
+dim = [1, 1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "196133/20000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (kilogram-force)"
+note = "kilogram-force = 1 kg * g_n = 9.80665 N"

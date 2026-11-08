@@ -159,6 +159,57 @@ pub fn check(rows: &BTreeMap<String, Row>, errors: &mut Vec<String>) -> usize {
         ("delta_degC = 1 K", f("delta_degC"), n(1)),
         ("delta_K = 1 K", f("delta_K"), n(1)),
         ("g = 1e-3 kg", f("g"), ok("0.001")),
+        // Added units: each reproduces from its primary definition.
+        ("ha = 1e4 m2", f("ha"), ok("10000")),
+        ("au = 149597870700 m", f("au"), ok("149597870700")),
+        ("angstrom = 1e-10 m", f("angstrom"), ok("0.0000000001")),
+        ("week = 7 d", f("week"), mul(n(7), f("d"))),
+        ("yr_common = 365 d", f("yr_common"), mul(n(365), f("d"))),
+        (
+            "yr_julian = 365.25 d",
+            f("yr_julian"),
+            mul(ok("365.25"), f("d")),
+        ),
+        (
+            "ly = c * yr_julian",
+            f("ly"),
+            mul(n(299_792_458), f("yr_julian")),
+        ),
+        (
+            "acre_int = 43560 ft^2",
+            f("acre_int"),
+            mul(n(43_560), pow(f("ft"), 2)),
+        ),
+        (
+            "acre_us_survey = 43560 ft_us_survey^2",
+            f("acre_us_survey"),
+            mul(n(43_560), pow(f("ft_us_survey"), 2)),
+        ),
+        ("kn = nmi / h", f("kn"), div(f("nmi"), f("h"))),
+        (
+            "fl_oz_us = gal_us / 128",
+            f("fl_oz_us"),
+            div(f("gal_us"), n(128)),
+        ),
+        ("cup_us = gal_us / 16", f("cup_us"), div(f("gal_us"), n(16))),
+        ("qt_us = gal_us / 4", f("qt_us"), div(f("gal_us"), n(4))),
+        (
+            "tbsp_us = fl_oz_us / 2",
+            f("tbsp_us"),
+            div(f("fl_oz_us"), n(2)),
+        ),
+        ("tsp_us = tbsp_us / 3", f("tsp_us"), div(f("tbsp_us"), n(3))),
+        (
+            "fl_oz_imp = gal_imp / 160",
+            f("fl_oz_imp"),
+            div(f("gal_imp"), n(160)),
+        ),
+        ("qt_imp = gal_imp / 4", f("qt_imp"), div(f("gal_imp"), n(4))),
+        ("grain = lb / 7000", f("grain"), div(f("lb"), n(7000))),
+        ("carat = 200 mg", f("carat"), ok("0.0002")),
+        ("erg = 1e-7 J", f("erg"), ok("0.0000001")),
+        ("dyn = 1e-5 N", f("dyn"), ok("0.00001")),
+        ("kgf = g_n * 1 kg", f("kgf"), f("g_n")),
     ];
     let count = checks.len();
     for (name, got, want) in checks {

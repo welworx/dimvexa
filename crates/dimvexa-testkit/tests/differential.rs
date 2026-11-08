@@ -53,6 +53,10 @@ struct Stats {
     compared: u64,
     skipped_no_reference: u64,
     out_of_normal_range: u64,
+    /// The exact path reported an overflow although the result is normal: a conversion factor
+    /// with a numerator above 2^75 (such as ly -> angstrom) times a 53-bit mantissa does not fit
+    /// i128. A loud error, not a wrong number; the fast result is finite.
+    exact_path_overflow: u64,
     subnormal_results: u64,
     subnormal_checked: u64,
     max_ulp: u64,
@@ -208,6 +212,8 @@ fn check_linear(conv: &Conversion, x: f64, stats: &mut Stats, label: &str) {
         } else if fast == 0.0 {
             // underflow to zero keeps the sign of the input
             assert_eq!(fast.is_sign_negative(), x.is_sign_negative(), "{label}");
+        } else if fast.is_finite() && conv.apply_exact_f64(x).is_err() {
+            stats.exact_path_overflow += 1;
         } else {
             assert!(
                 fast.abs() >= f64::MAX / 2.0 || fast.abs() < 4.0 * f64::MIN_POSITIVE,

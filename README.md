@@ -29,7 +29,7 @@ $ dimvexa units volume      # which volume units exist? (see "Finding a unit" be
 - **Loud.** Ambiguous names (`ton`, `gal`, `oz`), overflow and unsupported requests are errors with stable codes.
 - **Right about temperature.** Points and differences differ: `20 degC + 5 delta_K` works, `20 degC + 5 K` fails and says why.
 - **Fast and honest.** About 0.5 ns per prepared conversion; within 1 ulp (linear) or 2 ulp (temperature scales) of the exact answer, and `apply_exact_f64` gives the correctly rounded value ([`docs/precision.md`](docs/precision.md), [`docs/benchmarks/M0.md`](docs/benchmarks/M0.md)).
-- **Covers the everyday units.** SI and prefixes, US customary and imperial, pressure, energy, power and temperature (about 60 units, more by request).
+- **Covers the everyday units.** SI and prefixes, US customary and imperial, pressure, energy, power and temperature (about 100 units, more by request).
 - **Extensible by data.** Units live in cited TOML tables; missing one? Open a *Unit request* issue.
 
 A worked example (pool pump electricity: 1.1 kW for 8 h a day for 30 days is 264 kWh,
@@ -43,17 +43,17 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 
 | Group | Unit symbols |
 |---|---|
-| length | `m`, `in`, `ft`, `yd`, `mi`, `nmi`, `ft_us_survey`, `mi_us_survey` |
-| mass | `g`, `tonne`, `lb`, `oz_av`, `oz_troy`, `ton_short`, `ton_long` |
-| time | `s`, `min`, `h`, `d` |
+| length | `m`, `au`, `angstrom`, `in`, `ft`, `yd`, `mi`, `nmi`, `ft_us_survey`, `mi_us_survey`, `ly` |
+| mass | `g`, `tonne`, `lb`, `oz_av`, `oz_troy`, `ton_short`, `ton_long`, `grain`, `carat` |
+| time | `s`, `min`, `h`, `d`, `week`, `yr_common`, `yr_julian` |
 | electric_current | `A` |
 | temperature | `K`, `degC`, `delta_K`, `delta_degC`, `degF`, `degR`, `delta_degF`, `delta_degR` |
 | amount_of_substance | `mol`, `lbmol` |
-| luminous_intensity | `cd` |
-| frequency | `Hz` |
-| force | `N`, `lbf` |
+| luminous_intensity | `cd`, `lm` |
+| frequency | `Hz`, `Bq` |
+| force | `N`, `lbf`, `dyn`, `kgf` |
 | pressure | `Pa`, `bar`, `atm`, `psi`, `mmHg`, `torr` |
-| energy | `J`, `Wh`, `cal_th`, `cal_IT`, `Btu_IT`, `Btu_th` |
+| energy | `J`, `Wh`, `cal_th`, `cal_IT`, `Btu_IT`, `Btu_th`, `erg` |
 | power | `W`, `hp_mech`, `hp_metric` |
 | electric_charge | `C` |
 | voltage | `V` |
@@ -63,8 +63,39 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | magnetic_flux | `Wb` |
 | magnetic_flux_density | `T` |
 | inductance | `H` |
-| volume | `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp` |
+| volume | `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp` |
+| area | `ha`, `acre_int`, `acre_us_survey` |
+| absorbed_dose | `Gy`, `Sv` |
+| illuminance | `lx` |
+| catalytic_activity | `kat` |
 | acceleration | `g_n` |
+| speed | `kn` |
+
+## Combining units
+
+Units combine with `*`, `/`, `.` and powers (`m3`, `m^3`), so you never need a separate symbol for a
+derived unit. Prefixes and compounds work together, and the dimensions are checked:
+
+```console
+$ dimvexa convert 1 m3/s L/d            # flow rate: cubic metre per second to litre per day
+86400000 L/d
+$ dimvexa convert 1 kg/m3 g/L           # density
+1 g/L
+$ dimvexa convert 90 km/h m/s           # speed
+25 m/s
+$ dimvexa convert 1 L/min m3/h          # volume flow
+0.06 m^3/h
+```
+
+Not in the table on purpose:
+
+* **Ambiguous names** are refused with the explicit choices: `yr` and `year` (use `yr_julian` or
+  `yr_common`), `acre` (`acre_int` or `acre_us_survey`), `qt`, `cup`, `tbsp`, `tsp`, `oz`, `gal`,
+  `ton` and more. `dimvexa units` lists them all.
+* **Not yet:** angle (`rad`, `deg`, ...), `eV` and `Da` (their factors do not fit the exact
+  `i128` arithmetic, see ADR-010), information (`bit`, `B`), percent and ppm, logarithmic units
+  (`dB`, `Np`), the parsec, months and oil barrels (see the `--config` example). Open a *Unit
+  request* issue.
 
 ## Finding a unit
 
