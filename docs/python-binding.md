@@ -92,8 +92,11 @@ Jobs:
    `cibuildwheel`. One `abi3` wheel per platform covers all Python versions from 3.9.
 2. **build-sdist:** `maturin sdist`. The sdist must contain the core crates it depends on
    (`crates/dimvexa*`, the data tables) so it builds outside the repository. This needs a
-   `path` dependency workaround (vendoring or a published `dimvexa` version). Decide this before
-   the first release; it is the hardest open point.
+   published crates. Decided: the binding depends on `dimvexa = "0.1.0"` from crates.io, with no
+   `path`. `bindings/python/.cargo/config.toml` patches it to the workspace sources for local
+   development and is excluded from the sdist, so the sdist and wheels built from it use the
+   published crates. Verified: the sdist builds and runs in a clean directory. The crates must be
+   published before the sdist is built.
 3. **smoke-test:** install each built wheel in a clean venv on its own platform and run the
    tests against the installed package, not the source tree.
 4. **publish:** needs all of the above, runs only on `release`, in a GitHub environment named

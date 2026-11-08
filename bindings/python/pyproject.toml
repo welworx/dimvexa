@@ -24,6 +24,8 @@ test = ["pytest", "numpy>=1.23"]
 module-name = "dimvexa._dimvexa"
 python-source = "python"
 features = ["pyo3/extension-module"]
+# The local-development patch file must not ship: the sdist builds against crates.io.
+exclude = [{ path = ".cargo/**", format = "sdist" }]
 
 [tool.ruff]
 line-length = 100
