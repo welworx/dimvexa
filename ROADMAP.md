@@ -30,7 +30,7 @@ All are thin shells over the Rust core, after the API is stable.
 | Interface | Status |
 |---|---|
 | Python (PyO3, maturin, NumPy arrays, wheels) | Planned |
-| WASM and npm package | Planned |
+| WASM binding (`bindings/wasm`, Node.js target, ADR-011 proposed) | In progress: builds and runs in the Node benchmark; npm package not published |
 | MCP server (`convert`, `batch_convert`, `unit_info`, `search_units`, `explain_refusal`, `list_packs`, `list_contexts`) | Planned |
 | Web tool on Cloudflare using the WASM build (domain dimvexa.com, to be confirmed) | Planned |
 | Excel add-in, optional: Office.js custom functions on the WASM build | Planned |
