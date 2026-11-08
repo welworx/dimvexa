@@ -9,7 +9,7 @@ bindings/wasm/build.sh                                      # writes bindings/wa
 ```
 
 ```js
-const d = require('./pkg/dimvexa.js');
+const d = require('dimvexa');   // after `npm install dimvexa`; locally: require('./pkg/dimvexa.js')
 d.convert(212, 'degF', 'degC');            // 100  (fast path, f64)
 d.convertExact('98.6', 'degF', 'degC');    // 37   (exact rational, rounded once)
 d.convertQuantity('5 ft', 'm');            // "1.524 m"
@@ -35,3 +35,9 @@ Also: `unitCount()`, `dataVersion()`, `errorCodes()`, `DimvexaConversion#applyEx
 js-quantities and convert-units runners (modes `plain`, `conv`, `batch`); `benchmarks/run_all.sh`
 builds the package and runs it with the others. Numbers from `--quick` runs are smoke tests and
 must not be quoted (`docs/benchmarking.md`).
+
+## npm
+
+`build.sh` also writes `pkg/package.json` (name `dimvexa`, version taken from `Cargo.toml`). Publishing is
+manual and owner-only: `cd bindings/wasm/pkg && npm publish --access public` from the npm user `welworx`.
+Check first with `npm pack --dry-run`.

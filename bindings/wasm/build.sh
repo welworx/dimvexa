@@ -13,4 +13,22 @@ cargo build --release --locked --target wasm32-unknown-unknown
 rm -rf pkg
 wasm-bindgen --target nodejs --out-dir pkg --out-name dimvexa \
   target/wasm32-unknown-unknown/release/dimvexa_wasm.wasm
+# package.json for npm: name "dimvexa" (published by the npm user welworx), version from Cargo.toml.
+ver=$(sed -n '0,/^version = "\(.*\)"/s//\1/p' Cargo.toml)
+cat > pkg/package.json <<JSON
+{
+  "name": "dimvexa",
+  "version": "$ver",
+  "description": "Unit conversion with exact factors and loud failures (WebAssembly build of the Rust library)",
+  "license": "MIT OR Apache-2.0",
+  "repository": { "type": "git", "url": "git+https://github.com/welworx/dimvexa.git", "directory": "bindings/wasm" },
+  "homepage": "https://github.com/welworx/dimvexa",
+  "keywords": ["units", "unit-conversion", "dimensional-analysis", "wasm"],
+  "main": "dimvexa.js",
+  "types": "dimvexa.d.ts",
+  "files": ["dimvexa.js", "dimvexa.d.ts", "dimvexa_bg.wasm", "dimvexa_bg.wasm.d.ts", "README.md", "LICENSE-MIT", "LICENSE-APACHE"],
+  "engines": { "node": ">=18" }
+}
+JSON
+cp README.md ../../LICENSE-MIT ../../LICENSE-APACHE pkg/
 echo "built pkg/: $(wc -c < pkg/dimvexa_bg.wasm) bytes of wasm"

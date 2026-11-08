@@ -103,7 +103,7 @@ Each pack is a data file plus a feature flag. A user can also supply their own p
 | Package | Technology | Notes |
 |---|---|---|
 | Python `dimvexa` | PyO3 + maturin | extras: `dimvexa[process]`, `dimvexa[imperial]`, `dimvexa[all]`. Array entry points; optional Pint/unyt adapters |
-| JS/WASM `@dimvexa/wasm` | wasm-bindgen | pack selection at build time (smaller bundles) or load-time pack files. Batch entry points |
+| JS/WASM `dimvexa` | wasm-bindgen | pack selection at build time (smaller bundles) or load-time pack files. Batch entry points |
 | C ABI `dimvexa-ffi` | cdylib | for other languages |
 | Excel add-in (optional) | Office.js + WASM, XLL later | nice to have, separate crate, never shapes the core |
 
