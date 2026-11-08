@@ -1,6 +1,6 @@
 # ADR-011: The WASM binding is a separate workspace that depends on wasm-bindgen
 
-Status: Proposed (the owner has not confirmed it)
+Status: Accepted (confirmed by the owner, 2026-11-08; the npm package @dimvexa/wasm 0.1.0 was already published)
 
 ## Context
 
