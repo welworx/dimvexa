@@ -1,0 +1,9 @@
+# Local development only: build the binding against the workspace sources instead of the
+# crates.io release. This file is not part of the sdist, so wheels built from the sdist (the
+# release path) use the published crates. CI and releases must build without it where they
+# test the published crates (see docs/python-binding.md).
+[patch.crates-io]
+dimvexa = { path = "../../crates/dimvexa" }
+dimvexa-core = { path = "../../crates/dimvexa-core" }
+dimvexa-data = { path = "../../crates/dimvexa-data" }
+dimvexa-config = { path = "../../crates/dimvexa-config" }
