@@ -7,12 +7,15 @@ description: Use when preparing a Dimvexa release. Preparing is not publishing: 
 
 **Preparing a release is not a request to publish.** Never run `cargo publish`, push a tag or
 create a GitHub release. Stop at a reviewed release commit and hand over to the owner, who
-publishes (release automation with release-plz and crates.io trusted publishing is an M1 item
-in `docs/PLAN.md`).
+publishes: merging the release commit to `main` starts `.github/workflows/release.yml`, which
+waits for the owner's approval of the `release` environment before it publishes to crates.io,
+PyPI and npm (`docs/releasing.md`).
 
 1. `cargo xtask ci` is green on main; the nightly workflow has no open failure issue.
 2. Bump the version in `Cargo.toml` (`[workspace.package]` and the `[workspace.dependencies]`
-   entries). Keep `rust-version` at 1.85.
+   entries), `bindings/python/Cargo.toml` (version and its `dimvexa` dependency) and
+   `bindings/wasm/Cargo.toml`, then refresh both bindings' `Cargo.lock`. All must be equal:
+   `scripts/check-versions.sh`. Keep `rust-version` at 1.85.
 3. `CHANGELOG.md`: move Unreleased to the version with the date. `CITATION.cff`: add `version`
    and `date-released` (YYYY-MM-DD) and keep `README.md` "How to cite" consistent. No DOI is
    invented.
