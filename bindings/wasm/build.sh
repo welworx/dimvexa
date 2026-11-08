@@ -13,12 +13,12 @@ cargo build --release --locked --target wasm32-unknown-unknown
 rm -rf pkg
 wasm-bindgen --target nodejs --out-dir pkg --out-name dimvexa \
   target/wasm32-unknown-unknown/release/dimvexa_wasm.wasm
-# package.json for npm: name "dimvexa" (published by the npm user welworx), version from Cargo.toml.
+# package.json for npm: name "@dimvexa/wasm" (owned by the npm org dimvexa), version from Cargo.toml.
 ver=$(awk -F'"' '/^version = /{print $2; exit}' Cargo.toml)   # portable: BSD sed (macOS) lacks 0,/re/
 [ -n "$ver" ] || { echo "cannot read the version from Cargo.toml" >&2; exit 1; }
 cat > pkg/package.json <<JSON
 {
-  "name": "dimvexa",
+  "name": "@dimvexa/wasm",
   "version": "$ver",
   "description": "Unit conversion with exact factors and loud failures (WebAssembly build of the Rust library)",
   "license": "MIT OR Apache-2.0",
