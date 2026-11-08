@@ -106,6 +106,9 @@ jobs:
           v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
           rustup toolchain install "$v" --profile minimal --target "${{ matrix.target }}" --no-self-update
           rustup default "$v"
+          # Without this, cargo run by maturin lets rustup re-read rust-toolchain.toml and try
+          # to install rustfmt/clippy again, which fails with a component conflict.
+          echo "RUSTUP_TOOLCHAIN=$v" >> "$GITHUB_ENV"
           python -m pip install "maturin[zig]>=1.7,<2"
       # abi3 wheel (one per platform for every Python >= 3.9). The wheels are built against the
       # workspace sources through bindings/python/.cargo/config.toml, because the crates are not
