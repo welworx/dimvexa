@@ -1,0 +1,1487 @@
+{
+ "corpus_id": "cf193cbf0159731e",
+ "date_utc": "2026-11-07T19:46:25Z",
+ "fixture": false,
+ "kind": "library",
+ "library": {
+  "name": "uom",
+  "version": "0.36.0"
+ },
+ "lockfile": "requirements.lock.txt+package-lock.json+Cargo.lock",
+ "machine": {
+  "arch": "x86_64",
+  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "governor": null,
+  "logical_cores": 4,
+  "os": "Linux 6.18.44-fc-v310"
+ },
+ "modes": {
+  "typed": {
+   "description": "compile-time typed conversion: Quantity::new::<from>(x).get::<to>(); no strings, no runtime unit parsing",
+   "idiomatic": "fast"
+  }
+ },
+ "parameters": {
+  "batch_sizes": [1000, 100000, 1000000],
+  "cold_samples": 5,
+  "min_sample_s": 0.05,
+  "quick": false,
+  "samples": 15,
+  "timer": "std::time::Instant",
+  "tolerance_ulp": 4,
+  "warmup_s": 0.2
+ },
+ "performance": {
+  "typed": {
+   "affine_temperature": {
+    "batch": {
+     "1000": {
+      "mad": 0.0010000000000000009,
+      "max": 0.301,
+      "median": 0.149,
+      "min": 0.146,
+      "raw": [0.187, 0.15, 0.149, 0.148, 0.15, 0.235, 0.149, 0.149, 0.147, 0.147, 0.149, 0.147, 0.146, 0.301, 0.148],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 0.0011700000000000044,
+      "max": 0.19914,
+      "median": 0.19631,
+      "min": 0.19307,
+      "raw": [0.19813, 0.19661, 0.19414, 0.19431, 0.19715, 0.19914, 0.19631, 0.19514, 0.19742, 0.19497, 0.19586, 0.19641, 0.19307, 0.19729, 0.19445],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 0.024202999999999975,
+      "max": 0.681102,
+      "median": 0.628224,
+      "min": 0.581121,
+      "raw": [0.604021, 0.681102, 0.634626, 0.581121, 0.628224],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.003405064344406128,
+     "max": 0.33670808374881744,
+     "median": 0.3111766055226326,
+     "min": 0.24623358622193336,
+     "raw": [0.3111766055226326, 0.3113952949643135, 0.3104124739766121, 0.33431922271847725, 0.31180592626333237, 0.31098463013768196, 0.3093792088329792, 0.24623358622193336, 0.31434592604637146, 0.3145816698670387, 0.31560564786195755, 0.3005388602614403, 0.2865810804069042, 0.33670808374881744, 0.24897580221295357],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": null,
+    "scalar": {
+     "mad": 0.018042437732219696,
+     "max": 0.6296979933977127,
+     "median": 0.48098238557577133,
+     "min": 0.3819059804081917,
+     "raw": [0.46906352788209915, 0.49902482330799103, 0.5466830506920815, 0.5233770534396172, 0.48098238557577133, 0.4754391089081764, 0.3819059804081917, 0.3942961245775223, 0.40030164271593094, 0.43658503144979477, 0.47215014696121216, 0.4817722514271736, 0.6296979933977127, 0.48679783195257187, 0.48218967765569687],
+     "samples": 15,
+     "unit": "ns"
+    }
+   },
+   "compound_cp": {
+    "error": "no typed unit pair compiled for this conversion in the runner",
+    "unsupported": true
+   },
+   "linear_pressure": {
+    "batch": {
+     "1000": {
+      "mad": 0.0030000000000000027,
+      "max": 0.672,
+      "median": 0.638,
+      "min": 0.634,
+      "raw": [0.672, 0.638, 0.637, 0.638, 0.639, 0.638, 0.638, 0.638, 0.634, 0.635, 0.634, 0.635, 0.635, 0.645, 0.635],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 0.00039000000000000146,
+      "max": 0.625,
+      "median": 0.60706,
+      "min": 0.60661,
+      "raw": [0.625, 0.60817, 0.60791, 0.60714, 0.60706, 0.60692, 0.60772, 0.60664, 0.60676, 0.60681, 0.60754, 0.60661, 0.60691, 0.60745, 0.60677],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 0.0072630000000000194,
+      "max": 0.701981,
+      "median": 0.679107,
+      "min": 0.640242,
+      "raw": [0.640242, 0.679107, 0.701981, 0.673071, 0.68637],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.007741682231426239,
+     "max": 0.3329734392464161,
+     "median": 0.31304847449064255,
+     "min": 0.24573900923132896,
+     "raw": [0.2616903521120548, 0.26230622828006744, 0.3053067922592163, 0.3064911998808384, 0.3329734392464161, 0.317482054233551, 0.3195756897330284, 0.317740336060524, 0.32273782417178154, 0.24573900923132896, 0.2920205481350422, 0.31304847449064255, 0.3319190852344036, 0.3157830014824867, 0.3110808804631233],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": null,
+    "scalar": {
+     "mad": 0.0453285276889801,
+     "max": 1.2667459100484848,
+     "median": 1.027392327785492,
+     "min": 0.9775835424661636,
+     "raw": [1.027392327785492, 1.0237423330545425, 1.2064176350831985, 1.2568534016609192, 1.0631211549043655, 0.9827572405338287, 0.9775835424661636, 0.9776282459497452, 0.9820638000965118, 1.2201942205429077, 1.2667459100484848, 1.0996280014514923, 1.0038498044013977, 1.0071683824062347, 1.027994692325592],
+     "samples": 15,
+     "unit": "ns"
+    }
+   },
+   "linear_speed": {
+    "batch": {
+     "1000": {
+      "mad": 0.0010000000000000009,
+      "max": 0.15,
+      "median": 0.107,
+      "min": 0.104,
+      "raw": [0.15, 0.107, 0.107, 0.104, 0.106, 0.107, 0.108, 0.107, 0.109, 0.107, 0.106, 0.106, 0.109, 0.108, 0.108],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 0.0017699999999999938,
+      "max": 0.27228,
+      "median": 0.22177,
+      "min": 0.21738,
+      "raw": [0.27228, 0.23071, 0.22354, 0.22231, 0.22059, 0.22203, 0.22408, 0.22276, 0.22003, 0.22177, 0.22024, 0.21988, 0.21986, 0.21778, 0.21738],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 0.01163599999999998,
+      "max": 0.681781,
+      "median": 0.647423,
+      "min": 0.627282,
+      "raw": [0.643391, 0.681781, 0.647423, 0.659059, 0.627282],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.005806390196084976,
+     "max": 0.30039092898368835,
+     "median": 0.2514256201684475,
+     "min": 0.2428966388106346,
+     "raw": [0.24700088426470757, 0.2531655430793762, 0.26404475420713425, 0.256812434643507, 0.2603742778301239, 0.26019087433815, 0.25109101086854935, 0.24291035532951355, 0.2428966388106346, 0.24592296034097672, 0.25870944932103157, 0.24690581113100052, 0.30039092898368835, 0.2514256201684475, 0.24561922997236252],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": null,
+    "scalar": {
+     "mad": 0.03790092468261719,
+     "max": 0.6540695279836655,
+     "median": 0.41281644999980927,
+     "min": 0.37358465790748596,
+     "raw": [0.6243521571159363, 0.3798789754509926, 0.41281644999980927, 0.4568161219358444, 0.4441225305199623, 0.4815318137407303, 0.6540695279836655, 0.4962209612131119, 0.37876705825328827, 0.48824629187583923, 0.3951975032687187, 0.38220854103565216, 0.3749155253171921, 0.37946122884750366, 0.37358465790748596],
+     "samples": 15,
+     "unit": "ns"
+    }
+   }
+  }
+ },
+ "runtime": {
+  "language": "rust",
+  "name": "rustc",
+  "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+ },
+ "schema": "dimvexa.bench.result/1",
+ "semantics": {
+  "typed": {
+   "accuracy": {
+    "answered": 20,
+    "bit_identical": 8,
+    "cases": 164,
+    "max_ulp": 4409024035195715600,
+    "median_ulp": 5,
+    "over_1_ulp": 11,
+    "tolerance_ulp": 4,
+    "unsupported": 144,
+    "worst": [],
+    "wrong": 10
+   },
+   "cases": {
+    "must_convert": [
+     {
+      "category": "dimvexa_vector",
+      "got": "1000.0",
+      "id": "dv-base-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-002",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-003",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-004",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-005",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-006",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-007",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-008",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-009",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-010",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-011",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-013",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-014",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-015",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-016",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-017",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-018",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-019",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-020",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-021",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-022",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-023",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-024",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-025",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-026",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-027",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-028",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-029",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "dv-base-030",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "211.99999999999983",
+      "id": "dv-base-031",
+      "outcome": "wrong_value",
+      "ulp": 6,
+      "want": "212.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-032",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-033",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-034",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "got": "10.0",
+      "id": "dv-base-035",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "10.0"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-036",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-037",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-038",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-base-039",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-001",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-002",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-003",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-004",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-005",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-006",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-007",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "6894.757889515779",
+      "id": "dv-common-008",
+      "outcome": "wrong_value",
+      "ulp": 655690920,
+      "want": "6894.757293168362"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-009",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-010",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-011",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-013",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-014",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-015",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-016",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-017",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-018",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-019",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-020",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-021",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-022",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-023",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-024",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-025",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-026",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-027",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-028",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-029",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-030",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-031",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-032",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-033",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "got": "5.684341886080802e-14",
+      "id": "dv-common-034",
+      "outcome": "wrong_value",
+      "ulp": 4409024035195715600,
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "-39.99999999999997",
+      "id": "dv-common-035",
+      "outcome": "correct",
+      "ulp": 4,
+      "want": "-40.0"
+     },
+     {
+      "category": "temperature",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-036",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-037",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-038",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-039",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-040",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-041",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-042",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "got": "1000.0",
+      "id": "hw-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "1000.0"
+     },
+     {
+      "category": "si",
+      "got": "10.0",
+      "id": "hw-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "10.0"
+     },
+     {
+      "category": "si",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-003",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-004",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-005",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-006",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-007",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-008",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-009",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-010",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-011",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-013",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "0.3048",
+      "id": "hw-014",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "0.3048"
+     },
+     {
+      "category": "imperial_us",
+      "got": "1.609344",
+      "id": "hw-015",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "1.609344"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-016",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "45.35924",
+      "id": "hw-017",
+      "outcome": "wrong_value",
+      "ulp": 422212465,
+      "want": "45.359237"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-018",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-019",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-020",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-021",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-022",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-023",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-024",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-025",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-026",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-027",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-028",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-029",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-030",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-031",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-032",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-033",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-034",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-035",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "pressure",
+      "got": "6894.757889515779",
+      "id": "hw-036",
+      "outcome": "wrong_value",
+      "ulp": 655690920,
+      "want": "6894.757293168362"
+     },
+     {
+      "category": "pressure",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-037",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "pressure",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-038",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "pressure",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-039",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "pressure",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-040",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "pressure",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-041",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "pressure",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-042",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-043",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-044",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-045",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-046",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-047",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-048",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-049",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-050",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-051",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-052",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-053",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-054",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-055",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-056",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-057",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-058",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-059",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-060",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "hw-061",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "211.99999999999983",
+      "id": "hw-062",
+      "outcome": "wrong_value",
+      "ulp": 6,
+      "want": "212.0"
+     },
+     {
+      "category": "temperature",
+      "got": "-40.000000000000114",
+      "id": "hw-063",
+      "outcome": "wrong_value",
+      "ulp": 16,
+      "want": "-40.0"
+     },
+     {
+      "category": "temperature",
+      "got": "5.684341886080802e-14",
+      "id": "hw-064",
+      "outcome": "wrong_value",
+      "ulp": 4409024035195715600,
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "98.59999999999985",
+      "id": "hw-065",
+      "outcome": "wrong_value",
+      "ulp": 10,
+      "want": "98.6"
+     },
+     {
+      "category": "temperature",
+      "got": "26.850000000000023",
+      "id": "hw-066",
+      "outcome": "wrong_value",
+      "ulp": 6,
+      "want": "26.85"
+     },
+     {
+      "category": "temperature",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-067",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-068",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-069",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-070",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-071",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-072",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "got": "3.5999999999999996",
+      "id": "hw-073",
+      "outcome": "correct",
+      "ulp": 1,
+      "want": "3.6"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-074",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-075",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-076",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-077",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-078",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-079",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-080",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-081",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-082",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "hw-083",
+      "outcome": "unsupported"
+     }
+    ],
+    "must_refuse": [
+     {
+      "category": "ambiguous_name",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-001",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-002",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-003",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-004",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-005",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-006",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-007",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-008",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-009",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-010",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "missing_context",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-011",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "missing_context",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-012",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "missing_context",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-013",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "missing_context",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-014",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "missing_context",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-015",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "missing_context",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-016",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "missing_context",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-017",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "missing_context",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-018",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "missing_context",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-019",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "missing_context",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-020",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-021",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-022",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-023",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-024",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-025",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "dimension",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-026",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "dimension",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-027",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "dimension",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-028",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "dimension",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-029",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "dimension",
+      "detail": "uom has no string interface: the programmer picks types at compile time",
+      "id": "ref-030",
+      "outcome": "not_applicable"
+     }
+    ]
+   },
+   "coverage": {
+    "compound": {
+     "known": 2,
+     "total": 11,
+     "unknown": ["kg/m3", "g/cm3", "lb/ft3", "N/m2", "J/(mol.K)", "kg.m2/s2", "W/(m2.K)", "mol/L", "kg/(m2.s)"]
+    },
+    "dimvexa_seed_table": {
+     "known": 10,
+     "total": 63,
+     "unknown": ["g", "s", "A", "mol", "cd", "Hz", "N", "J", "W", "C", "V", "ohm", "F", "S", "Wb", "T", "H", "min", "h", "d", "L", "tonne", "Wh", "delta_K", "delta_degC", "bar", "atm", "g_n", "lbf", "mmHg", "torr", "cal_th", "cal_IT", "Btu_IT", "Btu_th", "hp_mech", "hp_metric", "yd", "nmi", "ft_us_survey", "mi_us_survey", "oz_av", "oz_troy", "ton_short", "ton_long", "gal_us", "gal_imp", "pt_us", "pt_imp", "lbmol", "degR", "delta_degF", "delta_degR"]
+    },
+    "imperial_us": {
+     "known": 4,
+     "total": 24,
+     "unknown": ["yd", "nmi", "oz_av", "oz_troy", "ton_short", "ton_long", "gal_us", "gal_imp", "pt_us", "pt_imp", "lbf", "Btu_IT", "Btu_th", "cal_th", "cal_IT", "hp_mech", "hp_metric", "ft_us_survey", "mi_us_survey", "bbl"]
+    },
+    "pressure": {
+     "known": 1,
+     "total": 10,
+     "unknown": ["bar", "atm", "mmHg", "torr", "barg", "psig", "kgf/cm2", "inHg", "mH2O"]
+    },
+    "process": {
+     "known": 0,
+     "total": 19,
+     "unknown": ["kmol/h", "lbmol/h", "cP", "cSt", "W/(m.K)", "kJ/(kg.K)", "Btu_IT/(lb.delta_degF)", "Nm3", "Nm3/h", "scf", "scf/min", "bbl/d", "mol/s", "m3/h", "kg/h", "lb/h", "gal_us/min", "kg/(m.s)", "mPa.s"]
+    },
+    "si": {
+     "known": 4,
+     "total": 25,
+     "unknown": ["s", "A", "mol", "cd", "Hz", "N", "J", "W", "C", "V", "ohm", "F", "S", "Wb", "T", "H", "L", "tonne", "min", "h", "d"]
+    },
+    "si_prefixed": {
+     "known": 2,
+     "total": 17,
+     "unknown": ["mm", "um", "nm", "MPa", "GPa", "kJ", "MJ", "GJ", "kW", "MW", "mL", "kmol", "mmol", "kWh", "MWh"]
+    },
+    "temperature": {
+     "known": 3,
+     "total": 8,
+     "unknown": ["degR", "delta_K", "delta_degC", "delta_degF", "delta_degR"]
+    }
+   },
+   "must_convert": {
+    "by_category": {
+    },
+    "correct": 10,
+    "total": 164,
+    "unsupported": 144,
+    "wrong_value": 10
+   },
+   "must_refuse": {
+    "by_category": {
+    },
+    "not_applicable": 30,
+    "refused": 0,
+    "silently_accepted": 0,
+    "total": 30
+   }
+  }
+ },
+ "startup": {
+  "import_ms": null,
+  "package_bytes": 3875288,
+  "peak_rss_kb": 19288
+ }
+}

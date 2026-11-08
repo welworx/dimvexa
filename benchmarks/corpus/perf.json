@@ -49,7 +49,7 @@
   ],
   "generator": "lcg32",
   "hi": 1000.0,
-  "lo": -1000.0,
+  "lo": 0.0,
   "seed": 12345
  },
  "schema": "dimvexa.bench.corpus.perf/1"

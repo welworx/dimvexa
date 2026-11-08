@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 'use strict';
-// Runner for convert-units (pinned to the 2.x API: convert(x).from(a).to(b)). NOT yet run:
-// convert-units could not be installed where this was written. The library has a fixed list of
+// Runner for convert-units (pinned to the 2.x API: convert(x).from(a).to(b)). Run in the first
+// comparison (docs/benchmarks/comparison-run-1.md). The library has a fixed list of
 // units and no arithmetic on quantities, so compound units and adding temperatures are reported
 // as unsupported / not applicable. There is no separate "fast" API; "plain" is its only mode.
 const c = require('./common');
