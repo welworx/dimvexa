@@ -20,6 +20,11 @@ dependencies, while the main workspace is std-only and must build offline (ADR-0
 * Array entry points accept floats, sequences and `float64` NumPy arrays; `exact=True` uses the
   exact path. Fast-path accuracy is the core's contract (`docs/precision.md`).
 
+* The binding depends on the published crates (`dimvexa = "0.1.0"`, no `path`) so the sdist builds
+  anywhere. A `[patch.crates-io]` in `bindings/python/.cargo/config.toml` points it at the workspace
+  for local development; it is excluded from the sdist. The binding version equals the crate
+  version, and the crates must be on crates.io before a release.
+
 ## Consequences
 
 CI for the binding (`python` job, `wheels.yml`) and a PyPI release are separate follow-ups, planned in `docs/python-binding.md`. No
