@@ -23,11 +23,12 @@ action or a major bump, read the release diff (checklist below).
 
 | Action | Used in |
 |---|---|
-| `actions/checkout` | ci, nightly, dco, fuzz, mutants, bench-compare |
+| `actions/checkout` | ci, nightly, dco, fuzz, mutants, bench-compare, release |
 | `Swatinem/rust-cache` | ci, nightly |
 | `taiki-e/install-action` | ci (`deny`, `text`), nightly, fuzz, mutants |
-| `actions/upload-artifact` | mutants, bench-compare |
-| `actions/setup-python`, `actions/setup-node` | bench-compare (v7.1.0, which run on node24) |
+| `actions/upload-artifact`, `actions/download-artifact` | mutants, bench-compare, release |
+| `rust-lang/crates-io-auth-action`, `pypa/gh-action-pypi-publish` | release (trusted publishing) |
+| `actions/setup-python`, `actions/setup-node` | bench-compare, release (v7.1.0, which run on node24) |
 
 `bench-compare.yml` is not part of `ci-success`, installs third-party packages (PyPI, npm,
 crates.io) with `--ignore-scripts` where possible, and has `contents: read` only.
