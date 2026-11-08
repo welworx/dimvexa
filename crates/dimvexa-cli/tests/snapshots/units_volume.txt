@@ -6,8 +6,20 @@ gal_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gallon, U.S. liquid 
 gal_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1 (4.54609 L); NIST SP 811 (2008), Appendix B
 pt_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pint, U.S. liquid)
 pt_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1
+fl_oz_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (U.S. liquid measure: 1 gal = 128 fl oz); NIST Handbook 44 (2023), Appendix C
+cup_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (cup, U.S. liquid measure)
+qt_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (quart, U.S. liquid)
+tbsp_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (tablespoon, U.S.)
+tsp_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (teaspoon, U.S.)
+fl_oz_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1 (fluid ounce = 1/160 gallon)
+qt_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1 (quart = 1/4 gallon)
 
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note
 gal	gal_us, gal_imp	-	US liquid gallon (3.785411784 L) and imperial gallon (4.54609 L) differ by about 20 percent
+oz	oz_av, oz_troy, fl_oz_us, fl_oz_imp	-	avoirdupois ounce, troy ounce and the fluid ounces (US and imperial) share the symbol
 pt	pt_us, pt_imp	-	US liquid pint (473.176473 mL), imperial pint (568.26125 mL), dry pint, and pt is also the point and the pico-tonne
+qt	qt_us, qt_imp	-	US liquid quart (946.352946 mL), imperial quart (1.1365225 L) and the dry quart differ
+cup	cup_us	-	US cup (236.5882365 mL), metric cup (250 mL), imperial cup and the US customary legal cup (240 mL) differ
+tbsp	tbsp_us	-	US (14.78676478125 mL), metric (15 mL), UK and Australian (20 mL) tablespoons differ
+tsp	tsp_us	-	US (4.92892159375 mL) and metric (5 mL) teaspoons differ

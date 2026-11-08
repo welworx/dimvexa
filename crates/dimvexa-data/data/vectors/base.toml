@@ -314,3 +314,75 @@ from = "kJ/(kg.K)"
 to = "kJ/(kg.delta_K)"
 expect = "1"
 source = "BIPM SI Brochure, 9th ed. (2019): specific heat capacity is J/(kg K), where K is a temperature interval"
+
+[[vector]]
+unit = "ha"
+value = "1"
+from = "ha"
+to = "m^2"
+expect = "10000"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (hectare = 10^4 m^2)"
+
+[[vector]]
+unit = "au"
+value = "1"
+from = "au"
+to = "km"
+expect = "1495978707/10"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (au = 149 597 870 700 m)"
+
+[[vector]]
+unit = "angstrom"
+value = "1"
+from = "angstrom"
+to = "nm"
+expect = "1/10"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (angstrom = 0.1 nm)"
+
+[[vector]]
+unit = "Bq"
+value = "1"
+from = "Bq"
+to = "1/s"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (becquerel = s^-1)"
+
+[[vector]]
+unit = "Gy"
+value = "1"
+from = "Gy"
+to = "J/kg"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (gray = J/kg)"
+
+[[vector]]
+unit = "Sv"
+value = "1"
+from = "Sv"
+to = "J/kg"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (sievert = J/kg)"
+
+[[vector]]
+unit = "lm"
+value = "1"
+from = "lm"
+to = "cd"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (lumen = cd sr)"
+
+[[vector]]
+unit = "lx"
+value = "1"
+from = "lx"
+to = "lm/m^2"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (lux = lm m^-2)"
+
+[[vector]]
+unit = "kat"
+value = "1"
+from = "kat"
+to = "mol/s"
+expect = "1"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (katal = mol s^-1)"

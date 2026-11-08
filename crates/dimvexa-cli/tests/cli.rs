@@ -314,15 +314,7 @@ fn ambiguous_candidates_are_listed_in_json() {
         .iter()
         .map(|c| c.as_str().to_string())
         .collect();
-    assert_eq!(
-        cands,
-        [
-            "oz_av",
-            "oz_troy",
-            "fl_oz_us (planned)",
-            "fl_oz_imp (planned)"
-        ]
-    );
+    assert_eq!(cands, ["oz_av", "oz_troy", "fl_oz_us", "fl_oz_imp"]);
 }
 
 #[test]
@@ -370,7 +362,7 @@ fn units_groups_lists_only_the_groups() {
     let r = dimvexa(&["units", "--groups"]);
     assert_eq!(r.code, 0);
     snapshot("units_groups.txt", &r.stdout);
-    assert!(r.stdout.lines().any(|l| l == "volume\t5"));
+    assert!(r.stdout.lines().any(|l| l == "volume\t12"));
     assert!(!r.stdout.contains("psi\t"));
     let v = json::parse(&dimvexa(&["units", "--groups", "--json"]).stdout).unwrap();
     json::check_units_schema(&v);
@@ -1150,8 +1142,8 @@ fn units_shows_which_units_are_yours() {
     // The group table counts it too.
     let g = dimvexa_at_root(&["units", "--groups", "--config", OIL_CFG]);
     let base = dimvexa(&["units", "--groups"]);
-    assert!(g.stdout.lines().any(|l| l == "volume\t6"));
-    assert!(base.stdout.lines().any(|l| l == "volume\t5"));
+    assert!(g.stdout.lines().any(|l| l == "volume\t13"));
+    assert!(base.stdout.lines().any(|l| l == "volume\t12"));
 
     let v =
         json::parse(&dimvexa_at_root(&["units", "--json", "--config", OIL_CFG]).stdout).unwrap();

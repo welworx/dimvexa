@@ -407,3 +407,129 @@ prefixes = "none"
 namespace = "si"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (degree Celsius, temperature intervals)"
 note = "temperature difference of 1 degC = 1 K"
+
+[[unit]]
+symbol = "ha"
+aliases = []
+dim = [0, 2, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "10000/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (hectare = 1 hm^2 = 10^4 m^2)"
+note = "hectare = 10 000 m^2"
+
+[[unit]]
+symbol = "au"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "149597870700/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (astronomical unit = 149 597 870 700 m); IAU 2012 Resolution B2"
+note = "astronomical unit fixed by the IAU in 2012"
+
+[[unit]]
+symbol = "angstrom"
+aliases = ["Å", "Å"]
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/10000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (other non-SI units: angstrom = 0.1 nm = 10^-10 m)"
+note = "angstrom = 1e-10 m; the capital A with ring (U+00C5) and the angstrom sign (U+212B) are aliases"
+
+[[unit]]
+symbol = "Bq"
+aliases = []
+dim = [0, 0, -1, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "becquerel = 1/s (same dimension as the hertz)"
+
+[[unit]]
+symbol = "Gy"
+aliases = []
+dim = [0, 2, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "gray = J/kg (same dimension as the sievert)"
+
+[[unit]]
+symbol = "Sv"
+aliases = []
+dim = [0, 2, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "sievert = J/kg (same dimension as the gray)"
+
+[[unit]]
+symbol = "lm"
+aliases = []
+dim = [0, 0, 0, 0, 0, 0, 1]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "lumen = cd sr, and the steradian is dimensionless (ADR-007)"
+
+[[unit]]
+symbol = "lx"
+aliases = []
+dim = [0, -2, 0, 0, 0, 0, 1]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "lux = lm/m^2"
+
+[[unit]]
+symbol = "kat"
+aliases = []
+dim = [0, 0, -1, 0, 0, 1, 0]
+kind = "plain"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+note = "katal = mol/s"

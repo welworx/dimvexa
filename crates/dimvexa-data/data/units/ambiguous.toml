@@ -22,8 +22,8 @@ note = "US liquid gallon (3.785411784 L) and imperial gallon (4.54609 L) differ 
 
 [[ambiguous]]
 symbol = "oz"
-candidates = ["oz_av", "oz_troy"]
-planned = ["fl_oz_us", "fl_oz_imp"]
+candidates = ["oz_av", "oz_troy", "fl_oz_us", "fl_oz_imp"]
+planned = []
 note = "avoirdupois ounce, troy ounce and the fluid ounces (US and imperial) share the symbol"
 
 [[ambiguous]]
@@ -73,3 +73,45 @@ symbol = "ppm"
 candidates = []
 planned = ["ppmw", "ppmv", "ppmmol"]
 note = "parts per million by mass, by volume or by amount of substance are different quantities (composition kinds arrive in M2)"
+
+[[ambiguous]]
+symbol = "yr"
+candidates = ["yr_julian", "yr_common"]
+planned = []
+note = "Julian year (365.25 d), common year (365 d), tropical and sidereal years differ; a calendar year has 365 or 366 days"
+
+[[ambiguous]]
+symbol = "year"
+candidates = ["yr_julian", "yr_common"]
+planned = []
+note = "same as yr"
+
+[[ambiguous]]
+symbol = "acre"
+candidates = ["acre_int", "acre_us_survey"]
+planned = []
+note = "international acre (4046.8564224 m^2) and US survey acre (about 4046.8726 m^2) differ by about 2 ppm"
+
+[[ambiguous]]
+symbol = "qt"
+candidates = ["qt_us", "qt_imp"]
+planned = []
+note = "US liquid quart (946.352946 mL), imperial quart (1.1365225 L) and the dry quart differ"
+
+[[ambiguous]]
+symbol = "cup"
+candidates = ["cup_us"]
+planned = []
+note = "US cup (236.5882365 mL), metric cup (250 mL), imperial cup and the US customary legal cup (240 mL) differ"
+
+[[ambiguous]]
+symbol = "tbsp"
+candidates = ["tbsp_us"]
+planned = []
+note = "US (14.78676478125 mL), metric (15 mL), UK and Australian (20 mL) tablespoons differ"
+
+[[ambiguous]]
+symbol = "tsp"
+candidates = ["tsp_us"]
+planned = []
+note = "US (4.92892159375 mL) and metric (5 mL) teaspoons differ"

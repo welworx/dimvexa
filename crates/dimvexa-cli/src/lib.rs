@@ -582,6 +582,9 @@ fn group_name(dim: Dim) -> String {
         [0, 0, 0, 0, 1, 0, 0] => "temperature",
         [0, 0, 0, 0, 0, 1, 0] => "amount_of_substance",
         [0, 0, 0, 0, 0, 0, 1] => "luminous_intensity",
+        [0, -2, 0, 0, 0, 0, 1] => "illuminance",
+        [0, 0, -1, 0, 0, 1, 0] => "catalytic_activity",
+        [0, 2, -2, 0, 0, 0, 0] => "absorbed_dose",
         [0, 2, 0, 0, 0, 0, 0] => "area",
         [0, 3, 0, 0, 0, 0, 0] => "volume",
         [0, 1, -1, 0, 0, 0, 0] => "speed",
@@ -1307,7 +1310,7 @@ mod tests {
         assert!(out.lines().any(|l| l.starts_with("ton\t")));
         let (code, out, _) = run_str(&["units", "--groups"]);
         assert_eq!(code, 0);
-        assert!(out.lines().any(|l| l == "volume\t5"));
+        assert!(out.lines().any(|l| l == "volume\t12"));
         let (code, out, _) = run_str(&["units", "psi"]);
         assert_eq!(code, 0);
         assert!(out.contains("group         pressure"));
