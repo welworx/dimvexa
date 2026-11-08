@@ -14,4 +14,5 @@ tonne = "tonne"
 nmi = "nmi"
 
 [files]
-extend-exclude = ["LICENSE-APACHE", "LICENSE-MIT", "Cargo.lock"]
+# benchmarks/results holds raw output of other libraries (their messages contain typos).
+extend-exclude = ["LICENSE-APACHE", "LICENSE-MIT", "Cargo.lock", "benchmarks/results/**"]

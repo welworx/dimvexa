@@ -10,11 +10,7 @@ requires-python = ">=3.9"
 license = { text = "MIT OR Apache-2.0" }
 dependencies = []
 dynamic = ["version"]
-classifiers = [
-    "Programming Language :: Rust",
-    "Topic :: Scientific/Engineering",
-    "Typing :: Typed",
-]
+classifiers = ["Programming Language :: Rust", "Topic :: Scientific/Engineering", "Typing :: Typed"]
 
 [project.optional-dependencies]
 numpy = ["numpy>=1.23"]
