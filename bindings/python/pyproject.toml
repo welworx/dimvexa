@@ -24,3 +24,26 @@ test = ["pytest", "numpy>=1.23"]
 module-name = "dimvexa._dimvexa"
 python-source = "python"
 features = ["pyo3/extension-module"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+src = ["python", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "SIM", "PT", "RUF", "D"]
+ignore = ["D203", "D213"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+strict = true
+files = ["python", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
