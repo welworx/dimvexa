@@ -24,5 +24,6 @@ area	3
 absorbed_dose	2
 illuminance	1
 catalytic_activity	1
+angle	5
 acceleration	1
 speed	1

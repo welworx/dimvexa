@@ -494,3 +494,11 @@ from = "kgf"
 to = "N"
 expect = "196133/20000"
 source = "NIST SP 811 (2008), Appendix B (kilogram-force = 9.806 65 E+00 N)"
+
+[[vector]]
+unit = "grad"
+value = "100"
+from = "grad"
+to = "deg"
+expect = "90"
+source = "NIST SP 811 (2008), Appendix B (grade = (pi/200) rad, so 100 grad = 90 degrees)"

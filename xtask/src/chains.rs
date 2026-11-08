@@ -210,6 +210,20 @@ pub fn check(rows: &BTreeMap<String, Row>, errors: &mut Vec<String>) -> usize {
         ("erg = 1e-7 J", f("erg"), ok("0.0000001")),
         ("dyn = 1e-5 N", f("dyn"), ok("0.00001")),
         ("kgf = g_n * 1 kg", f("kgf"), f("g_n")),
+        // Angle: pi as the convergent 245850922/78256779 (ADR-010); every unit shares it.
+        ("rad = 1", f("rad"), n(1)),
+        (
+            "deg = pi / 180",
+            f("deg"),
+            div(div(n(245_850_922), n(78_256_779)), n(180)),
+        ),
+        ("arcmin = deg / 60", f("arcmin"), div(f("deg"), n(60))),
+        ("arcsec = arcmin / 60", f("arcsec"), div(f("arcmin"), n(60))),
+        (
+            "grad = pi / 200",
+            f("grad"),
+            div(div(n(245_850_922), n(78_256_779)), n(200)),
+        ),
     ];
     let count = checks.len();
     for (name, got, want) in checks {

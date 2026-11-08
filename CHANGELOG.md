@@ -9,15 +9,15 @@ Commits by `release-plz` once releases start (planned for M1).
 
 ### Added
 
-- About 35 more units: time (`week`, `yr_julian`, `yr_common`), area (`ha`, `acre_int`,
+- About 40 more units: angle (`rad`, `deg`, `arcmin`, `arcsec`, `grad`; pi as a fraction, KL-19), time (`week`, `yr_julian`, `yr_common`), area (`ha`, `acre_int`,
   `acre_us_survey`), speed (`kn`), length (`au`, `ly`, `angstrom`), mass (`grain`, `carat`), force
   and energy (`kgf`, `dyn`, `erg`), radiation and light (`Bq`, `Gy`, `Sv`, `lm`, `lx`, `kat`) and
   volume (`fl_oz_us`, `fl_oz_imp`, `cup_us`, `qt_us`, `qt_imp`, `tbsp_us`, `tsp_us`). The bare
   names `yr`, `year`, `acre`, `qt`, `cup`, `tbsp` and `tsp` are refused as ambiguous; `fl_oz_us`
   and `fl_oz_imp` are now candidates of `oz`. New groups: illuminance, catalytic_activity,
   absorbed_dose.
-- ADR-010 (proposed): angle, `eV` and `Da` are not added because their factors do not fit the
-  exact `i128` arithmetic; the options are written down.
+- ADR-010: pi as 245850922/78256779 for the angle units; `eV` and `Da` are not added yet because
+  their factors do not fit the exact `i128` arithmetic (options written down).
 - README: a "Combining units" section (`m3/s` to `L/d` and friends) and what is left out on purpose.
 - M0 bootstrap: workspace, lints, CI, community files, licences.
 - `dimvexa-core`: `Dim`, `Ratio`, `Error`, `Kind`, `Shape`, parser, `Registry`, `Conversion`, `Quantity`.

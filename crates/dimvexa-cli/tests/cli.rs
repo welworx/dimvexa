@@ -1649,3 +1649,20 @@ fn units_json_marks_the_ambiguous_names_a_config_resolves() {
     let text = dimvexa(&["units", "mass", "--config", &cfg]).stdout;
     assert!(text.contains("refused unless your config resolves them"));
 }
+
+/// KL-19: the angle units use pi as 245850922/78256779.
+#[test]
+fn known_limitation_kl_19_pi_is_a_fraction() {
+    let r = dimvexa(&["convert", "180", "deg", "rad", "--exact"]);
+    assert_eq!(r.code, 0);
+    assert!(
+        r.stdout.starts_with("245850922/78256779 rad"),
+        "KL-19 fixed? then pi is no longer a fraction: {}",
+        r.stdout
+    );
+    // Among themselves the angle units are exact.
+    assert_eq!(
+        dimvexa(&["convert", "60", "arcmin", "deg", "--exact"]).stdout,
+        "1/1 deg\n"
+    );
+}

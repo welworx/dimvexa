@@ -102,6 +102,12 @@ lx	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent
 ## catalytic_activity
 kat	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
 
+## angle
+rad	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+deg	plain	measured	none	°	BIPM SI Brochure, 9th ed. (2019), ch. 4 (degree = (pi/180) rad)
+arcmin	plain	measured	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (arcminute = (1/60) degree)
+arcsec	plain	measured	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (arcsecond = (1/60) arcminute)
+
 ## pressure
 bar	plain	defined	si	-	NIST SP 811 (2008), Appendix B (bar = 100 kPa)
 atm	plain	defined	none	-	NIST SP 811 (2008), Appendix B (standard atmosphere); 10th CGPM (1954), Resolution 4
@@ -192,6 +198,9 @@ erg	plain	defined	none	-	NIST SP 811 (2008), Appendix B (erg)
 ## force
 dyn	plain	defined	none	-	NIST SP 811 (2008), Appendix B (dyne)
 kgf	plain	defined	none	-	NIST SP 811 (2008), Appendix B (kilogram-force)
+
+## angle
+grad	plain	measured	none	gon	NIST SP 811 (2008), Appendix B (grade); ISO 80000-3:2019 (gon)
 
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note
