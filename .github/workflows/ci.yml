@@ -2,8 +2,8 @@
 # so "green on my machine" and "green in CI" mean the same thing.
 #
 # Not yet executed on GitHub: this file was written without access to Actions. Expect small
-# fixes on the first run. Third-party actions are pinned by commit SHA; read docs/ci-pinning.md
-# before enabling, because the SHAs below were copied, not looked up.
+# fixes on the first run. Third-party actions are pinned by commit SHA with the version in a
+# comment; `scripts/verify-action-pins.sh` checks each SHA against its tag (docs/ci-pinning.md).
 #
 # Branch protection: require ONLY the `ci-success` job. It aggregates every job below, so
 # adding or renaming a job never needs a settings change.
@@ -36,7 +36,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -46,7 +45,6 @@ jobs:
           v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
           rustup toolchain install "$v" --profile minimal --component rustfmt --component clippy --no-self-update
           rustup default "$v"
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: cargo xtask ci (includes check-docs)
         run: cargo xtask ci
@@ -60,7 +58,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -70,7 +67,6 @@ jobs:
           v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
           rustup toolchain install "$v" --profile minimal --component rustfmt --component clippy --no-self-update
           rustup default "$v"
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: cargo xtask ci test doctest example
         run: cargo xtask ci test doctest example
@@ -84,14 +80,12 @@ jobs:
       # `rust-version` in Cargo.toml and `msrv` in clippy.toml.
       RUSTUP_TOOLCHAIN: "1.85"
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Install the MSRV toolchain
         # RUSTUP_TOOLCHAIN (job env) overrides rust-toolchain.toml for every step.
         run: rustup toolchain install 1.85 --profile minimal --no-self-update
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Show the compiler (must say 1.85)
         run: rustc -V && cargo -V
@@ -103,7 +97,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -112,7 +105,6 @@ jobs:
           v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
           rustup toolchain install "$v" --profile minimal --target wasm32-unknown-unknown --no-self-update
           rustup default "$v"
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - run: cargo build -p dimvexa-core --target wasm32-unknown-unknown --locked
 
@@ -121,11 +113,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
         with:
           # Pinned. Keep in step with .github/workflows/nightly.yml.
@@ -137,11 +127,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
         with:
           # Not version-pinned (see docs/ci-pinning.md): pin them once you have chosen versions.
@@ -154,7 +142,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -164,7 +151,6 @@ jobs:
           v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
           rustup toolchain install "$v" --profile minimal --component rustfmt --component clippy --no-self-update
           rustup default "$v"
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: List the files of every publishable crate
         run: |
@@ -185,7 +171,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -205,7 +190,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # The whole history: a secret that was committed and removed later is still leaked.
