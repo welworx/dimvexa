@@ -20,6 +20,8 @@ Commits by `release-plz` once releases start (planned for M1).
   factor and offset. All with `--json` (schema `dimvexa.units/1` in `docs/schemas/`, errors
   included).
 - `xtask validate-data`.
+- `xtask bench-check`: regression guard for the hot-path benchmark rows (scalar apply,
+  `apply_slice`, `apply_in_place`, `apply_exact_f64`) against `docs/benchmarks/baseline-m0.tsv`.
 - ADR-001 to ADR-008, benchmark report for M0.
 - The config layer (`--config`, `dimvexa-config`) is marked beta in the README, the crate docs,
   the CLI help and ADR-009. A property test (`config_invariant`) checks that applying a config
