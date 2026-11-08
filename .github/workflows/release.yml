@@ -1,0 +1,314 @@
+# Release pipeline: after a merge to main, publish ONE version to crates.io, PyPI and npm.
+#
+# Not yet executed on GitHub (like ci.yml): expect small fixes on the first run.
+#
+# How a release happens: bump the version everywhere (Cargo.toml [workspace.package] and
+# [workspace.dependencies], bindings/python/Cargo.toml, bindings/wasm/Cargo.toml and both
+# bindings' Cargo.lock), merge to main. Every other merge to main is a no-op here: the `plan`
+# job sees that the version is already released and the rest is skipped.
+#
+# Safety:
+#   * `cargo xtask ci` and scripts/check-versions.sh must pass first.
+#   * Nothing is published before every artifact (crates package check, wheels, sdist, npm
+#     package) has been built and the wheels have passed the Python tests.
+#   * Publishing jobs run in the GitHub environment `release`; give it required reviewers and
+#     the owner approves each release (AGENTS.md: publishing is an owner decision).
+#   * No long-lived tokens: crates.io, PyPI and npm trusted publishing (OIDC). One-time setup
+#     is listed in docs/releasing.md.
+#   * Re-running is safe: a version that is already on a registry is skipped, not an error.
+name: release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  plan:
+    name: plan (version, already released?)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      release: ${{ steps.v.outputs.release }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Read the version and check that every package agrees
+        id: v
+        run: |
+          version=$(scripts/check-versions.sh)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          # Released = the git tag exists. The tag is the last step of this workflow, so a
+          # half-finished release (some registries done) is retried by re-running it.
+          if git ls-remote --exit-code --tags "https://github.com/${{ github.repository }}.git" "refs/tags/v$version" >/dev/null 2>&1; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "v$version is already released: nothing to do."
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "Releasing $version."
+          fi
+
+  verify:
+    name: verify (cargo xtask ci)
+    needs: plan
+    if: needs.plan.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned toolchain
+        run: |
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --component rustfmt --component clippy --no-self-update
+          rustup default "$v"
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - run: cargo xtask ci
+
+  wheels:
+    name: wheel (${{ matrix.name }})
+    needs: [plan, verify]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { name: linux-x86_64, os: ubuntu-latest, target: x86_64-unknown-linux-gnu, args: "--zig --compatibility manylinux2014" }
+          - { name: linux-aarch64, os: ubuntu-latest, target: aarch64-unknown-linux-gnu, args: "--zig --compatibility manylinux2014" }
+          - { name: macos-arm64, os: macos-latest, target: aarch64-apple-darwin, args: "" }
+          - { name: macos-x86_64, os: macos-latest, target: x86_64-apple-darwin, args: "" }
+          - { name: windows-x86_64, os: windows-latest, target: x86_64-pc-windows-msvc, args: "" }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Install Rust and maturin
+        shell: bash
+        run: |
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --target "${{ matrix.target }}" --no-self-update
+          rustup default "$v"
+          # Without this, cargo run by maturin lets rustup re-read rust-toolchain.toml and try
+          # to install rustfmt/clippy again, which fails with a component conflict.
+          echo "RUSTUP_TOOLCHAIN=$v" >> "$GITHUB_ENV"
+          python -m pip install "maturin[zig]>=1.7,<2"
+      # abi3 wheel (one per platform for every Python >= 3.9). The wheels are built against the
+      # workspace sources through bindings/python/.cargo/config.toml, because the crates are not
+      # on crates.io yet at this point. They are the same code that is published next.
+      - name: Build the wheel
+        shell: bash
+        working-directory: bindings/python
+        run: maturin build --release --locked --out dist --target "${{ matrix.target }}" ${{ matrix.args }}
+      - name: Test the wheel (native targets only)
+        if: matrix.name != 'linux-aarch64' && matrix.name != 'macos-x86_64'
+        shell: bash
+        working-directory: bindings/python
+        run: |
+          python -m venv "$RUNNER_TEMP/venv"
+          # shellcheck disable=SC1091
+          source "$RUNNER_TEMP/venv/bin/activate" 2>/dev/null || source "$RUNNER_TEMP/venv/Scripts/activate"
+          pip install numpy pytest
+          pip install --no-index --find-links dist dimvexa
+          pytest -q tests
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: wheel-${{ matrix.name }}
+          path: bindings/python/dist/*.whl
+          if-no-files-found: error
+
+  sdist:
+    name: sdist
+    needs: [plan, verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - run: python -m pip install "maturin>=1.7,<2"
+      - run: maturin sdist --out dist
+        working-directory: bindings/python
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sdist
+          path: bindings/python/dist/*.tar.gz
+          if-no-files-found: error
+
+  npm-package:
+    name: npm package (wasm)
+    needs: [plan, verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      - name: Install the pinned toolchain
+        run: |
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --no-self-update
+          rustup default "$v"
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: bindings/wasm
+      - name: Install wasm-bindgen-cli (the version pinned in bindings/wasm/Cargo.toml)
+        run: |
+          want=$(sed -n 's/^wasm-bindgen = "=\(.*\)"/\1/p' bindings/wasm/Cargo.toml)
+          cargo install wasm-bindgen-cli --version "$want" --locked
+      - run: bindings/wasm/build.sh
+      - name: Smoke test the package
+        run: node -e "const d=require('./bindings/wasm/pkg/dimvexa.js'); if (d.convert(212,'degF','degC')!==100) process.exit(1)"
+      - name: Pack (dry run shows the file list)
+        working-directory: bindings/wasm/pkg
+        run: npm pack --dry-run
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: npm-package
+          path: bindings/wasm/pkg
+          if-no-files-found: error
+
+  crates-check:
+    name: crates package check
+    needs: [plan, verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned toolchain
+        run: |
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --no-self-update
+          rustup default "$v"
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      # Only the leaf can be dry-run before anything is on crates.io (the others resolve their
+      # workspace dependencies from the registry).
+      - run: cargo publish --dry-run --package dimvexa-core --locked
+
+  publish-crates:
+    name: publish to crates.io
+    needs: [plan, wheels, sdist, npm-package, crates-check]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: release
+    permissions:
+      contents: read
+      id-token: write # crates.io trusted publishing (OIDC)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned toolchain
+        run: |
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --no-self-update
+          rustup default "$v"
+      - uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
+        id: auth
+      - name: Publish in dependency order
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          for c in dimvexa-core dimvexa-data dimvexa-config dimvexa dimvexa-cli; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -A "dimvexa-release (github.com/${{ github.repository }})" \
+              "https://crates.io/api/v1/crates/$c/$VERSION")
+            if [ "$code" = 200 ]; then echo "$c $VERSION is already on crates.io: skipped"; continue; fi
+            # cargo waits until the new version is visible in the index before it returns, so
+            # the next crate in the list can resolve it.
+            cargo publish --package "$c" --locked
+          done
+
+  publish-pypi:
+    name: publish to PyPI
+    needs: [plan, publish-crates]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: release
+    permissions:
+      contents: read
+      id-token: write # PyPI trusted publishing (OIDC)
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: "{wheel-*,sdist}"
+          path: dist
+          merge-multiple: true
+      - run: ls -l dist
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          packages-dir: dist
+          skip-existing: true
+
+  publish-npm:
+    name: publish to npm
+    needs: [plan, publish-crates]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: release
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing (OIDC) and provenance
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24" # ships npm >= 11.5.1, which is needed for trusted publishing
+          registry-url: https://registry.npmjs.org
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: npm-package
+          path: pkg
+      - name: Publish
+        working-directory: pkg
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          if npm view "@dimvexa/wasm@$VERSION" version >/dev/null 2>&1; then
+            echo "@dimvexa/wasm@$VERSION is already on npm: skipped"
+          else
+            npm publish --access public --provenance
+          fi
+
+  tag:
+    name: tag and GitHub release
+    needs: [plan, publish-crates, publish-pypi, publish-npm]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Create the tag and the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          gh release create "v$VERSION" --repo "${{ github.repository }}" --target "${{ github.sha }}" \
+            --title "v$VERSION" --generate-notes
