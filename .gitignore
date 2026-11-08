@@ -10,3 +10,6 @@ callgrind.out.*
 /benchmarks/node/node_modules
 /benchmarks/python/.venv
 __pycache__/
+/bindings/python/target
+/bindings/python/.venv
+*.so

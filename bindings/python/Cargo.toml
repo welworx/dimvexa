@@ -1,0 +1,22 @@
+# Python binding (PyO3 + maturin). Its own workspace: the main workspace is std-only and builds
+# offline, and this crate needs PyO3 and NumPy from the registry. See README.md and ADR-011.
+[package]
+name = "dimvexa-python"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/welworx/dimvexa"
+description = "Python binding for Dimvexa"
+publish = false
+
+[workspace]
+
+[lib]
+name = "_dimvexa"
+crate-type = ["cdylib"]
+
+[dependencies]
+dimvexa = { path = "../../crates/dimvexa" }
+pyo3 = { version = "0.30", features = ["abi3-py39", "extension-module"] }
+numpy = "0.30"
