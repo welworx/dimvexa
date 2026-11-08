@@ -198,7 +198,12 @@ impl Ratio {
         let d1 = self.den.checked_div(g2).ok_or_else(err)?;
         let n = n1.checked_mul(n2).ok_or_else(err)?;
         let d = d1.checked_mul(d2).ok_or_else(err)?;
-        Self::new(n, d)
+        // Already canonical, so no second gcd: both operands are reduced, g1 and g2 removed
+        // the only possible common factors (n1/d2 and n2/d1 are coprime by construction,
+        // n1/d1 and n2/d2 by the operands' own invariant), both denominators are positive,
+        // and a zero operand gives 0/1 (its gcd with the other denominator is that
+        // denominator).
+        Ok(Self { num: n, den: d })
     }
 
     /// Quotient.
@@ -267,25 +272,45 @@ impl Ratio {
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     pub fn to_f64(self) -> Result<f64> {
+        Self::frac_to_f64(self.num, self.den)
+    }
+
+    /// Correctly rounded (nearest, ties to even) `f64` of `num / den`, which need not be
+    /// reduced: only the value matters, so a caller may skip a gcd. `den` must be positive.
+    ///
+    /// Quotient bits are produced in chunks (one division per chunk instead of one shift and
+    /// compare per bit); the result is the same 64 significant bits plus a sticky remainder
+    /// that bit-by-bit long division gives.
+    pub(crate) fn frac_to_f64(num: i128, den: i128) -> Result<f64> {
         let err = || overflow("ratio to f64");
-        if self.num == 0 {
+        if den <= 0 {
+            return Err(err());
+        }
+        if num == 0 {
             return Ok(0.0);
         }
-        let negative = self.num < 0;
-        let a = self.num.unsigned_abs();
-        let b = self.den.unsigned_abs();
-        let mut q = a.checked_div(b).ok_or_else(err)?;
-        let mut r = a.checked_rem(b).ok_or_else(err)?;
+        let negative = num < 0;
+        let top = num.unsigned_abs();
+        let bottom = den.unsigned_abs();
+        let mut q = top.checked_div(bottom).ok_or_else(err)?;
+        let mut r = top.checked_rem(bottom).ok_or_else(err)?;
         // value = (q + r/b) * 2^exp2; produce quotient bits until q has 64 significant bits.
+        // r < b before each step, so after shifting r left by s the next s quotient bits are
+        // (r << s) / b, which is below 2^s (q never exceeds 64 bits).
         let mut exp2: i32 = 0;
         while q.leading_zeros() > 64 && r != 0 {
-            r = r.checked_shl(1).ok_or_else(err)?;
-            q = q.checked_shl(1).ok_or_else(err)?;
-            if r >= b {
-                r = r.checked_sub(b).ok_or_else(err)?;
-                q |= 1;
-            }
-            exp2 = exp2.checked_sub(1).ok_or_else(err)?;
+            let s = q
+                .leading_zeros()
+                .checked_sub(64)
+                .ok_or_else(err)?
+                .min(r.leading_zeros());
+            r = r.checked_shl(s).ok_or_else(err)?;
+            let dq = r.checked_div(bottom).ok_or_else(err)?;
+            r = r.checked_rem(bottom).ok_or_else(err)?;
+            q = q.checked_shl(s).ok_or_else(err)? | dq;
+            exp2 = exp2
+                .checked_sub(i32::try_from(s).map_err(|_| err())?)
+                .ok_or_else(err)?;
         }
         let sticky = r != 0;
         let bitlen = 128_u32.checked_sub(q.leading_zeros()).ok_or_else(err)?;
@@ -732,6 +757,36 @@ mod tests {
         }
         assert_eq!(Ratio::ZERO.to_f64().unwrap().to_bits(), 0.0_f64.to_bits());
         assert_eq!(r(-1, 1).to_f64().unwrap().to_bits(), (-1.0_f64).to_bits());
+    }
+
+    #[test]
+    #[allow(clippy::cast_precision_loss)] // operands are below 2^53, so the casts are exact
+    fn frac_to_f64_matches_hardware_and_ignores_reduction() {
+        // Operands below 2^53 are exact in f64, so IEEE division is the correctly rounded
+        // answer; scaling numerator and denominator by k must not change the result.
+        let mut state = 0x9e37_79b9_7f4a_7c15_u64;
+        let mut next = move || {
+            state = state
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            state >> 11
+        };
+        for i in 0..20_000_u32 {
+            // vary the magnitudes so both short and long quotients occur
+            let n = next() >> (i % 40);
+            let d = (next() >> ((i / 40) % 40)).max(1);
+            let want = n as f64 / d as f64;
+            if want == 0.0 || !want.is_normal() {
+                continue;
+            }
+            let got = Ratio::frac_to_f64(i128::from(n), i128::from(d)).unwrap();
+            assert_eq!(got.to_bits(), want.to_bits(), "{n}/{d}");
+            let k = i128::from(next() >> 20).max(1);
+            let scaled = Ratio::frac_to_f64(i128::from(n) * k, i128::from(d) * k).unwrap();
+            assert_eq!(scaled.to_bits(), want.to_bits(), "{n}/{d} * {k}");
+            let neg = Ratio::frac_to_f64(-i128::from(n), i128::from(d)).unwrap();
+            assert_eq!(neg.to_bits(), (-want).to_bits(), "-{n}/{d}");
+        }
     }
 
     #[test]
