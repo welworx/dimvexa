@@ -6,6 +6,7 @@
     "ambiguous_symbol"
    ],
    "from": "ton",
+   "group": "ambiguous_name",
    "id": "ref-001",
    "op": "convert",
    "origin": "handwritten",
@@ -20,6 +21,7 @@
     "ambiguous_symbol"
    ],
    "from": "gal",
+   "group": "ambiguous_name",
    "id": "ref-002",
    "op": "convert",
    "origin": "handwritten",
@@ -34,6 +36,7 @@
     "ambiguous_symbol"
    ],
    "from": "oz",
+   "group": "ambiguous_name",
    "id": "ref-003",
    "op": "convert",
    "origin": "handwritten",
@@ -48,6 +51,7 @@
     "ambiguous_symbol"
    ],
    "from": "pt",
+   "group": "ambiguous_name",
    "id": "ref-004",
    "op": "convert",
    "origin": "handwritten",
@@ -62,6 +66,7 @@
     "ambiguous_symbol"
    ],
    "from": "cal",
+   "group": "ambiguous_name",
    "id": "ref-005",
    "op": "convert",
    "origin": "handwritten",
@@ -76,6 +81,7 @@
     "ambiguous_symbol"
    ],
    "from": "Btu",
+   "group": "ambiguous_name",
    "id": "ref-006",
    "op": "convert",
    "origin": "handwritten",
@@ -90,6 +96,7 @@
     "ambiguous_symbol"
    ],
    "from": "hp",
+   "group": "ambiguous_name",
    "id": "ref-007",
    "op": "convert",
    "origin": "handwritten",
@@ -104,6 +111,7 @@
     "ambiguous_symbol"
    ],
    "from": "mile",
+   "group": "ambiguous_name",
    "id": "ref-008",
    "op": "convert",
    "origin": "handwritten",
@@ -119,6 +127,7 @@
     "unknown_unit"
    ],
    "from": "foot",
+   "group": "ambiguous_name",
    "id": "ref-009",
    "op": "convert",
    "origin": "handwritten",
@@ -133,6 +142,7 @@
     "ambiguous_symbol"
    ],
    "from": "ppm",
+   "group": "ambiguous_name",
    "id": "ref-010",
    "op": "convert",
    "origin": "handwritten",
@@ -148,6 +158,7 @@
     "refused"
    ],
    "from": "Nm3",
+   "group": "other",
    "id": "ref-011",
    "op": "convert",
    "origin": "handwritten",
@@ -163,6 +174,7 @@
     "refused"
    ],
    "from": "m3",
+   "group": "other",
    "id": "ref-012",
    "op": "convert",
    "origin": "handwritten",
@@ -178,6 +190,7 @@
     "refused"
    ],
    "from": "scf",
+   "group": "other",
    "id": "ref-013",
    "op": "convert",
    "origin": "handwritten",
@@ -193,6 +206,7 @@
     "refused"
    ],
    "from": "Nm3",
+   "group": "other",
    "id": "ref-014",
    "op": "convert",
    "origin": "handwritten",
@@ -209,6 +223,7 @@
     "unknown_unit"
    ],
    "from": "wt%",
+   "group": "other",
    "id": "ref-015",
    "op": "convert",
    "origin": "handwritten",
@@ -223,6 +238,7 @@
     "dimension_mismatch"
    ],
    "from": "kg",
+   "group": "other",
    "id": "ref-016",
    "op": "convert",
    "origin": "handwritten",
@@ -237,6 +253,7 @@
     "dimension_mismatch"
    ],
    "from": "mol",
+   "group": "other",
    "id": "ref-017",
    "op": "convert",
    "origin": "handwritten",
@@ -253,6 +270,7 @@
     "unknown_unit"
    ],
    "from": "psig",
+   "group": "other",
    "id": "ref-018",
    "op": "convert",
    "origin": "handwritten",
@@ -269,6 +287,7 @@
     "unknown_unit"
    ],
    "from": "barg",
+   "group": "other",
    "id": "ref-019",
    "op": "convert",
    "origin": "handwritten",
@@ -284,6 +303,7 @@
     "refused"
    ],
    "from": "mH2O",
+   "group": "other",
    "id": "ref-020",
    "op": "convert",
    "origin": "handwritten",
@@ -299,6 +319,7 @@
    "dimvexa_codes": [
     "kind_mismatch"
    ],
+   "group": "other",
    "id": "ref-021",
    "op": "add",
    "origin": "handwritten",
@@ -312,6 +333,7 @@
    "dimvexa_codes": [
     "kind_mismatch"
    ],
+   "group": "other",
    "id": "ref-022",
    "op": "add",
    "origin": "handwritten",
@@ -325,6 +347,7 @@
    "dimvexa_codes": [
     "kind_mismatch"
    ],
+   "group": "other",
    "id": "ref-023",
    "op": "add",
    "origin": "handwritten",
@@ -338,6 +361,7 @@
     "dimension_mismatch"
    ],
    "from": "degC",
+   "group": "other",
    "id": "ref-024",
    "op": "convert",
    "origin": "handwritten",
@@ -353,6 +377,7 @@
     "dimension_mismatch"
    ],
    "from": "delta_degC",
+   "group": "other",
    "id": "ref-025",
    "op": "convert",
    "origin": "handwritten",
@@ -367,6 +392,7 @@
     "dimension_mismatch"
    ],
    "from": "m",
+   "group": "other",
    "id": "ref-026",
    "op": "convert",
    "origin": "handwritten",
@@ -381,6 +407,7 @@
     "dimension_mismatch"
    ],
    "from": "kg",
+   "group": "other",
    "id": "ref-027",
    "op": "convert",
    "origin": "handwritten",
@@ -395,6 +422,7 @@
     "dimension_mismatch"
    ],
    "from": "psi",
+   "group": "other",
    "id": "ref-028",
    "op": "convert",
    "origin": "handwritten",
@@ -409,6 +437,7 @@
     "dimension_mismatch"
    ],
    "from": "W",
+   "group": "other",
    "id": "ref-029",
    "op": "convert",
    "origin": "handwritten",
@@ -423,6 +452,7 @@
     "dimension_mismatch"
    ],
    "from": "bar",
+   "group": "other",
    "id": "ref-030",
    "op": "convert",
    "origin": "handwritten",

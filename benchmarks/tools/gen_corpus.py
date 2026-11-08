@@ -19,7 +19,7 @@ import tomllib
 from fractions import Fraction
 from pathlib import Path
 
-GENERATOR_VERSION = 1
+GENERATOR_VERSION = 2
 ROOT = Path(__file__).resolve().parent.parent          # benchmarks/
 REPO = ROOT.parent
 SRC = ROOT / "corpus-src"
@@ -262,11 +262,31 @@ def build():
         cases.append(make_case(c["id"], c["category"], c["value"], c["from"], c["to"], exact, c["source"],
                                "handwritten", oracle_checked=True))
 
+    # 2b. Independent cases: the expected value is the number published in the cited source.
+    # The oracle must agree exactly (or fail the build); it is a cross-check, not the source.
+    n_independent = 0
+    for c in load_toml(SRC / "independent_convert.toml")["case"]:
+        expect = Fraction(c["expect"])
+        try:
+            truth = oracle.convert(Fraction(c["value"]), c["from"], c["to"])
+        except OracleError as e:
+            raise SystemExit(f"{c['id']}: oracle cannot evaluate {c['value']} {c['from']} -> {c['to']}: {e}")
+        if truth != expect:
+            raise SystemExit(f"{c['id']}: published value {frac_str(expect)} != oracle {frac_str(truth)} "
+                             f"({c['value']} {c['from']} -> {c['to']}). One of the two is wrong; check the source.")
+        n_independent += 1
+        cases.append(make_case(c["id"], c["category"], c["value"], c["from"], c["to"], expect, c["source"],
+                               "independent", oracle_checked=True))
+
     ids = [c["id"] for c in cases]
     assert len(ids) == len(set(ids)), "duplicate case ids"
     refuse = load_toml(SRC / "handwritten_refuse.toml")["case"]
     for c in refuse:
         c["origin"] = "handwritten"
+        # "ambiguous_name": the name has several accepted meanings, so a library that applies a
+        # documented default is making a policy choice. "other": missing context, kind errors,
+        # dimension mismatches; accepting these is a defect or a missing check.
+        c["group"] = "ambiguous_name" if c["category"] == "ambiguous_name" else "other"
     # Every request that must be refused must NOT be evaluable by the oracle as a plain conversion
     # (a sanity check that the refuse list is really about missing information).
     for c in refuse:
@@ -305,7 +325,7 @@ def build():
         "generator_version": GENERATOR_VERSION,
         "dimvexa_data_version": dv["version"],
         "dimvexa_data_hash": dv["hash"],
-        "counts": {"must_convert": len(cases), "must_convert_approximate": len(approx),
+        "counts": {"must_convert": len(cases), "must_convert_independent": n_independent, "must_convert_approximate": len(approx),
                    "must_refuse": len(refuse), "coverage_lists": len(lists),
                    "coverage_units": sum(len(l["units"]) for l in lists),
                    "dimvexa_vectors_cross_checked_by_oracle": n_checked},

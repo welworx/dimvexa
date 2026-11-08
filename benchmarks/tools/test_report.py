@@ -81,6 +81,30 @@ class Corpus(unittest.TestCase):
             self.assertIn(needle, text)
         self.assertTrue(any(c["op"] == "add" for c in cases))
 
+    def test_independent_cases_cite_a_source_and_are_oracle_checked(self):
+        cases = json.loads((BENCH / "corpus" / "must_convert.json").read_text())["cases"]
+        ind = [c for c in cases if c["origin"] == "independent"]
+        self.assertGreaterEqual(len(ind), 25)
+        for c in ind:
+            self.assertRegex(c["source"], r"NIST|BIPM|Textbook")
+            self.assertTrue(c["oracle_checked"])
+
+    def test_every_refuse_case_has_a_group(self):
+        cases = json.loads((BENCH / "corpus" / "must_refuse.json").read_text())["cases"]
+        for c in cases:
+            self.assertEqual(c["group"], "ambiguous_name" if c["category"] == "ambiguous_name" else "other")
+        self.assertTrue({c["group"] for c in cases} == {"ambiguous_name", "other"})
+
+    def test_group_split_counts_accepted_ambiguous_names_apart(self):
+        s = {"cases": {"must_refuse": [
+            {"id": "a", "category": "ambiguous_name", "outcome": "silently_accepted"},
+            {"id": "b", "category": "kind", "outcome": "silently_accepted"},
+            {"id": "c", "category": "missing_context", "group": "other", "outcome": "refused"}]}}
+        g = report.group_counts(s)
+        self.assertEqual(g["ambiguous_name"]["silently_accepted"], 1)
+        self.assertEqual(g["other"]["silently_accepted"], 1)
+        self.assertEqual(g["other"]["refused"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
