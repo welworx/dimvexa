@@ -6,6 +6,8 @@
 //   plain: convert(x, from, to) per value (parses both unit strings on every call)
 //   conv:  one DimvexaConversion, conv.apply(x) per value (one JS->WASM call per value)
 //   batch: one DimvexaConversion, conv.applyBatch(Float64Array) (one JS->WASM call per array)
+//   inplace: one DimvexaConversion; per array, copy the input into one reused Float64Array and
+//            call conv.applyInPlace on it (no result array allocated per call, like the JS ceiling)
 const fs = require('fs');
 const path = require('path');
 const c = require('./common');
@@ -20,6 +22,7 @@ class DimvexaWasm extends c.Adapter {
       plain: { idiomatic: 'plain', description: 'convert(x, from, to) per value' },
       conv: { idiomatic: 'fast', description: 'DimvexaConversion once, apply(x) per value' },
       batch: { idiomatic: 'fast', description: 'DimvexaConversion once, applyBatch(Float64Array) per array' },
+      inplace: { idiomatic: 'fast', description: 'DimvexaConversion once, work.set(data) then applyInPlace(work) per array' },
     };
     this.d = require(path.join(PKG, 'dimvexa.js'));
   }
@@ -41,6 +44,7 @@ class DimvexaWasm extends c.Adapter {
     const n = data.length;
     if (mode === 'plain') { const [f, t] = h, d = this.d, out = new Float64Array(n); return () => { for (let i = 0; i < n; i++) out[i] = d.convert(data[i], f, t); return out; }; }
     if (mode === 'conv') { const out = new Float64Array(n); return () => { for (let i = 0; i < n; i++) out[i] = h.apply(data[i]); return out; }; }
+    if (mode === 'inplace') { const work = new Float64Array(n); return () => { work.set(data); h.applyInPlace(work); return work; }; }
     return () => h.applyBatch(data);
   }
   oneshotFn(mode, conv) {

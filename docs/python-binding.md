@@ -37,8 +37,8 @@ binding would not fail a pull request.
 * No `out=` argument for in-place array conversion, and the GIL is held during array loops.
   Both matter for large arrays. Both are performance work: no claim until a dated benchmark run
   exists (`docs/benchmarking.md`).
-* The array path loops element by element instead of using the core slice API
-  (`apply_slice`/`apply_in_place`), so it is not yet vectorisation-friendly.
+* Contiguous `float64` arrays (C or Fortran order) go through the core slice API
+  (`apply_slice`); non-contiguous arrays and `exact=True` still loop element by element.
 * No `stubtest` check that the `.pyi` matches the compiled module.
 * `Quantity` defines `__eq__` but no `__hash__`; decide whether it should be hashable.
 * No user config (ADR-009) or pack selection from Python. `dimvexa[process]`-style extras from

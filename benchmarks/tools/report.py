@@ -73,6 +73,10 @@ def md_table(head, rows):
 
 # ------------------------------------------------------------------ SVG
 
+DIMVEXA_COLOR = "#e8590c"   # orange: every Dimvexa row (Rust, CLI, WASM, Python)
+OTHER_COLOR = "#7a8b99"     # muted grey-blue: everything else
+
+
 def bar_chart(path, title, rows, unit, log=False, banner=None):
     """rows = [(label, value)]; horizontal bars; log scale optional. Written as a standalone SVG."""
     rows = [(l, v) for l, v in rows if v is not None and (v > 0 or not log)]
@@ -97,7 +101,8 @@ def bar_chart(path, title, rows, unit, log=False, banner=None):
         y = top + i * (bar_h + gap)
         bw = max(2, scale(v) * span)
         s.append(f'<text x="{left - 8}" y="{y + 14}" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">{html.escape(l)}</text>')
-        s.append(f'<rect x="{left}" y="{y}" width="{bw:.1f}" height="{bar_h}" fill="#2a6fb0"/>')
+        fill = DIMVEXA_COLOR if l.startswith("dimvexa") else OTHER_COLOR   # Dimvexa rows stand out
+        s.append(f'<rect x="{left}" y="{y}" width="{bw:.1f}" height="{bar_h}" fill="{fill}"/>')
         s.append(f'<text x="{left + bw + 6:.1f}" y="{y + 14}" font-family="sans-serif" font-size="12" fill="#1a1a1a">{html.escape(fmt_ns(v) if unit == "ns" else f"{v:g} {unit}")}</text>')
     s.append("</svg>")
     Path(path).parent.mkdir(parents=True, exist_ok=True)

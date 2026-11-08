@@ -28,6 +28,16 @@ def test_numpy_array_keeps_shape() -> None:
     assert np.allclose(out, a / 1000)
 
 
+@pytest.mark.parametrize("order", ["C", "F", "strided"])
+def test_numpy_array_layouts_match_the_scalar_path(order: str) -> None:
+    c = dimvexa.conversion("degC", "degF")
+    base = np.linspace(-40.0, 100.0, 24).reshape(4, 6)
+    a = base[:, ::2] if order == "strided" else np.asarray(base, order=order)
+    out = c(a)
+    assert out.shape == a.shape
+    assert [float(v) for v in out.ravel()] == [c(float(v)) for v in a.ravel()]
+
+
 def test_list_and_inverse() -> None:
     c = dimvexa.conversion("m/s", "km/h")
     assert c([1.0, 2.0]) == [3.6, 7.2]

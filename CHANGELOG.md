@@ -9,9 +9,17 @@ Commits by `release-plz` once releases start (planned for M1).
 
 ### Changed
 
-- Workspace version bumped to 0.1.0 (the 0.0.0 placeholder was published to crates.io first).
+- Workspace version bumped to 0.1.1.
+- Python binding: a contiguous `float64` array is converted through the core slice loop instead
+  of an element-by-element `ndarray` iterator (the output keeps the input's C or Fortran order),
+  and the release profile uses LTO. Results are bit-identical to the scalar path.
+- WASM binding: `applyBatch` converts the copy it already receives in WASM memory instead of
+  making a second one. Same results.
+- Benchmarks: the WASM runner has an `inplace` mode (`applyInPlace` on one reused array).
 
 ### Added
+
+- Benchmarks: runner for the Python binding (`benchmarks/python/run_dimvexa_py.py`), included in `benchmarks/run_all.sh` together with the WASM runner; comparison run 2 (`docs/benchmarks/comparison-run-2.md`); Dimvexa bars are orange in the charts.
 
 - Python binding in `bindings/python` (PyO3 + maturin, `abi3`, NumPy arrays): `convert`, `conversion`,
   `quantity`, `units`, `unit_info`, and `DimvexaError` with the stable `code`, `suggestions` and

@@ -185,9 +185,19 @@ fn apply(
         return Ok(out.into_pyobject(py)?.into_any().unbind());
     }
     if let Ok(arr) = x.extract::<PyReadonlyArrayDyn<'_, f64>>() {
-        let out = PyArrayDyn::<f64>::zeros(py, arr.shape(), false);
+        // The output takes the input's memory order, so a contiguous input and the output are
+        // two slices in the same element order.
+        let fortran = !arr.is_c_contiguous() && arr.is_fortran_contiguous();
+        let out = PyArrayDyn::<f64>::zeros(py, arr.shape(), fortran);
         {
             let mut dst = out.readwrite();
+            if !exact {
+                // Contiguous input: the core slice loop, which the compiler vectorises.
+                if let (Ok(src), Ok(dst)) = (arr.as_slice(), dst.as_slice_mut()) {
+                    conv.apply_slice(src, dst).map_err(|e| to_py(&e))?;
+                    return Ok(out.into_any().unbind());
+                }
+            }
             let src = arr.as_array();
             for (o, i) in dst.as_array_mut().iter_mut().zip(src.iter()) {
                 *o = if exact {
@@ -199,7 +209,7 @@ fn apply(
         }
         return Ok(out.into_any().unbind());
     }
-    let seq: Vec<f64> = x.extract().map_err(|_| {
+    let mut seq: Vec<f64> = x.extract().map_err(|_| {
         PyValueError::new_err("expected a float, a sequence of floats or a float64 NumPy array")
     })?;
     let out: Vec<f64> = if exact {
@@ -207,7 +217,8 @@ fn apply(
             .map(|v| conv.apply_exact_f64(*v).map_err(|e| to_py(&e)))
             .collect::<PyResult<_>>()?
     } else {
-        conv.apply_vec(&seq)
+        conv.apply_in_place(&mut seq);
+        seq
     };
     Ok(out.into_pyobject(py)?.into_any().unbind())
 }
