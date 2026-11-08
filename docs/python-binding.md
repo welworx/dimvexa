@@ -24,7 +24,7 @@ binding would not fail a pull request.
 | `python` job in `ci.yml`, part of `ci-success` | Without it nothing guards the binding on pull requests |
 | `wheels.yml` | No wheels or sdist are ever built |
 | PyPI publishing | Needs a PyPI project and trusted publishing set up by the owner |
-| Version source of truth | The crate is `0.0.0` and pyproject takes its version from Cargo (`dynamic`). The release process (`docs`, `release` skill) must bump it together with the core crates |
+| Version source of truth | The crate is `0.1.0` and pyproject takes its version from Cargo (`dynamic`). The release process (`docs`, `release` skill) must bump it together with the core crates |
 | Dependabot entries for `pip` and `cargo` in `bindings/python` | Dependencies would never get update PRs |
 | `cargo deny` / advisory check for `bindings/python/Cargo.lock` | PyO3, NumPy and their transitive crates are new licences and advisory surface |
 | Pinned test requirements (`requirements-test.txt`) | Reproducible CI; today the versions float |
