@@ -7,8 +7,16 @@ Commits by `release-plz` once releases start (planned for M1).
 
 ## [Unreleased]
 
+### Changed
+
+- Workspace version bumped to 0.1.0 (the 0.0.0 placeholder was published to crates.io first).
+
 ### Added
 
+- Python binding in `bindings/python` (PyO3 + maturin, `abi3`, NumPy arrays): `convert`, `conversion`,
+  `quantity`, `units`, `unit_info`, and `DimvexaError` with the stable `code`, `suggestions` and
+  `candidates`. Separate workspace, not part of `cargo xtask ci`. ADR-012; status and CI plan in
+  `docs/python-binding.md`.
 - WASM binding `bindings/wasm` (own workspace, wasm-bindgen; ADR-011): `convert`, `convertExact`, `convertQuantity`, `addQuantities`, `DimvexaConversion` with batch methods, `DimvexaError` with stable codes. `benchmarks/node/run_dimvexa_wasm.js` runs it through the Node comparison corpus.
 - About 40 more units: angle (`rad`, `deg`, `arcmin`, `arcsec`, `grad`; pi as a fraction, KL-19), time (`week`, `yr_julian`, `yr_common`), area (`ha`, `acre_int`,
   `acre_us_survey`), speed (`kn`), length (`au`, `ly`, `angstrom`), mass (`grain`, `carat`), force

@@ -296,7 +296,9 @@ fn help_and_version() {
     let r = dimvexa(&["--version"]);
     assert_eq!(r.code, 0);
     assert!(
-        r.stdout.starts_with("dimvexa 0.0.0 (data v") && r.stdout.contains("+fnv1a64:"),
+        r.stdout
+            .starts_with(&format!("dimvexa {} (data v", env!("CARGO_PKG_VERSION")))
+            && r.stdout.contains("+fnv1a64:"),
         "{}",
         r.stdout
     );

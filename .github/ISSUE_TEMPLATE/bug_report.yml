@@ -29,7 +29,7 @@ body:
     attributes:
       label: Version and data hash
       description: The output of `dimvexa --version`, or the crate version and git commit.
-      placeholder: "dimvexa 0.0.0 (data v2+fnv1a64:...)"
+      placeholder: "dimvexa 0.1.0 (data v2+fnv1a64:...)"
     validations: { required: true }
   - type: dropdown
     id: path

@@ -1,0 +1,51 @@
+[build-system]
+requires = ["maturin>=1.7,<2"]
+build-backend = "maturin"
+
+[project]
+name = "dimvexa"
+description = "Exact factors. Loud failures. Zero guessing. Unit conversion with exact rational factors."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT OR Apache-2.0" }
+dependencies = []
+dynamic = ["version"]
+classifiers = [
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
+
+[project.optional-dependencies]
+numpy = ["numpy>=1.23"]
+test = ["pytest", "numpy>=1.23"]
+
+[tool.maturin]
+module-name = "dimvexa._dimvexa"
+python-source = "python"
+features = ["pyo3/extension-module"]
+# The local-development patch file must not ship: the sdist builds against crates.io.
+exclude = [{ path = ".cargo/**", format = "sdist" }]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+src = ["python", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "SIM", "PT", "RUF", "D"]
+ignore = ["D203", "D213"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+strict = true
+files = ["python", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
