@@ -85,6 +85,21 @@ change yourself instead:
 - Run `cargo xtask validate-data`, then `cargo xtask update-data-hash` (it bumps the data
   version) and commit `crates/dimvexa-data/data/data_version.toml`.
 
+## Keeping secrets out
+
+CI scans the full git history for passwords, tokens and keys with gitleaks (the `gitleaks` job
+in `.github/workflows/ci.yml`) and fails on any finding. A secret that was committed and later
+deleted still counts, because it stays in the history: rotate it, then ask the owner how to
+handle the history. To catch a leak before it leaves your machine, enable the pre-commit hook
+once per clone and install the scanner:
+
+```console
+git config core.hooksPath .githooks
+go install github.com/zricethezav/gitleaks/v8@v8.30.1
+```
+
+Without gitleaks installed the hook warns and lets the commit through; CI is the gate.
+
 ## Commit messages and pull requests
 
 Use [Conventional Commits](https://www.conventionalcommits.org/): `feat(core): ...`,
