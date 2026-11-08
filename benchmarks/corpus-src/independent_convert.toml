@@ -5,8 +5,8 @@
 # golden vectors or tables. gen_corpus.py additionally cross-checks each case against the
 # oracle in truth.toml and fails on any disagreement, so an error in either list is caught.
 # Only exact definitions are used; rounded table values would need a tolerance and are left out.
-# Sources are cited, not copied: one fact per case. Not yet used: pint, UCUM, astropy or
-# mathjs test suites (they were not reachable offline; see docs/benchmarking.md).
+# Sources are cited, not copied: one fact per case. ind-029..038 come from the UCUM essence file, ind-039..041 from the mathjs and pint test suites (facts only).
+# Not used: the astropy suite (see docs/benchmarks/honest-assessment.md).
 
 [[case]]
 id = "ind-001"
@@ -259,3 +259,111 @@ from = "delta_degF"
 to = "delta_K"
 expect = "5/9"
 source = "NIST SP 811 (2008) App. B.7: 1 degF interval = 5/9 K (inverse of 1 K = 1.8 degF)"
+
+[[case]]
+id = "ind-029"
+category = "independent"
+value = "1"
+from = "gal_us"
+to = "in3"
+expect = "231"
+source = "UCUM 2.2 ucum-essence.xml (ucum.org / ucum-org/ucum), unit [gal_us]: Queen Anne's wine gallon = 231 [in_i]3, exact"
+
+[[case]]
+id = "ind-030"
+category = "independent"
+value = "1"
+from = "gal_imp"
+to = "L"
+expect = "4.54609"
+source = "UCUM 2.2 ucum-essence.xml, unit [gal_br]: 4.54609 l, exact (UK Weights and Measures Act 1985)"
+
+[[case]]
+id = "ind-031"
+category = "independent"
+value = "1"
+from = "ft_us_survey"
+to = "m"
+expect = "1200/3937"
+source = "UCUM 2.2 ucum-essence.xml, unit [ft_us]: 1200/3937 m, exact"
+
+[[case]]
+id = "ind-032"
+category = "independent"
+value = "1"
+from = "mi"
+to = "ft"
+expect = "5280"
+source = "UCUM 2.2 ucum-essence.xml, unit [mi_i]: 5280 [ft_i], exact"
+
+[[case]]
+id = "ind-033"
+category = "independent"
+value = "1"
+from = "ft"
+to = "in"
+expect = "12"
+source = "UCUM 2.2 ucum-essence.xml, unit [ft_i]: 12 [in_i], exact"
+
+[[case]]
+id = "ind-034"
+category = "independent"
+value = "1"
+from = "lb"
+to = "oz_av"
+expect = "16"
+source = "UCUM 2.2 ucum-essence.xml, unit [oz_av]: [lb_av]/16, exact"
+
+[[case]]
+id = "ind-035"
+category = "independent"
+value = "1"
+from = "Btu_IT"
+to = "kJ"
+expect = "1.05505585262"
+source = "UCUM 2.2 ucum-essence.xml, unit [Btu_IT]: 1.05505585262 kJ, exact"
+
+[[case]]
+id = "ind-037"
+category = "independent"
+value = "1"
+from = "pt_imp"
+to = "L"
+expect = "56826125/100000000"
+source = "UCUM 2.2 ucum-essence.xml: [pt_br] = [qt_br]/2, [qt_br] = [gal_br]/4, [gal_br] = 4.54609 l; so 4.54609/8 l, exact"
+
+[[case]]
+id = "ind-038"
+category = "independent"
+value = "1"
+from = "mi_us_survey"
+to = "ft_us_survey"
+expect = "5280"
+source = "UCUM 2.2 ucum-essence.xml: [mi_us] = 8 [fur_us], [fur_us] = 40 [rd_us], [rd_us] = 16.5 [ft_us]; so 5280 [ft_us], exact"
+
+[[case]]
+id = "ind-039"
+category = "independent"
+value = "212"
+from = "degF"
+to = "degC"
+expect = "100"
+source = "mathjs test/unit-tests/type/unit/Unit.test.js (Apache-2.0) lists 212 degF = 100 degC; the value is the boiling point on the Celsius scale as defined by 9/5 and 32 offset, fact only, no code copied"
+
+[[case]]
+id = "ind-040"
+category = "independent"
+value = "68"
+from = "degF"
+to = "degC"
+expect = "20"
+source = "mathjs test/unit-tests/type/unit/Unit.test.js (Apache-2.0) lists 68 degF = 20 degC; defined by C = (F - 32) * 5/9, fact only, no code copied"
+
+[[case]]
+id = "ind-041"
+category = "independent"
+value = "10"
+from = "degC"
+to = "K"
+expect = "283.15"
+source = "pint testsuite test_issues.py (BSD-3-Clause) asserts 10 degC = 283.15 K; defined by BIPM SI Brochure 9th ed.: 0 degC = 273.15 K, fact only, no code copied"

@@ -51,9 +51,9 @@ library only, offline, deterministic; `--check` verifies the committed files).
   the expected value is the number published in a cited source (NIST SP 811 Appendix B, NIST
   HB 44, BIPM SI Brochure; exact definitions only), not derived from Dimvexa's vectors or tables.
   The oracle is only a cross-check and generation fails on any disagreement. The report shows
-  correct/total per origin so that corpus bias is visible. Not yet used: the pint, UCUM, astropy and
-  mathjs test suites (not reachable offline when this was written); add them with their
-  licences checked, citing instead of copying.
+  correct/total per origin so that corpus bias is visible. ind-029 to ind-035 and ind-037, ind-038 are exact definitions read from the UCUM essence file (cited, facts only);
+  ind-039 to ind-041 are single facts that also appear in the mathjs and pint test suites. The astropy suite is not
+  used, and the UCUM licence text has not been checked (see `docs/benchmarks/honest-assessment.md`).
 * `must_refuse.json`: requests that must be refused or flagged: ambiguous names (`ton`, `gal`,
   `oz`, `pt`, `cal`, `Btu`, `hp`, `mile`, `foot`, bare `ppm`), missing context (`Nm3` to `m3`,
   gauge to absolute pressure, mass fraction to mole fraction, water head), temperature kind

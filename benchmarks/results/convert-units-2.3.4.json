@@ -1,6 +1,6 @@
 {
- "corpus_id": "cf193cbf0159731e",
- "date_utc": "2026-11-07T19:57:05Z",
+ "corpus_id": "a77ab8ac9570acca",
+ "date_utc": "2026-11-08T06:26:40Z",
  "fixture": false,
  "kind": "library",
  "library": {
@@ -40,158 +40,158 @@
    "affine_temperature": {
     "batch": {
      "1000": {
-      "mad": 91.88300000000027,
-      "max": 2458.972,
-      "median": 2244.112,
-      "min": 2152.229,
+      "mad": 127.63000000000011,
+      "max": 3491.03,
+      "median": 3271.847,
+      "min": 3071.46,
       "raw": [
-       2244.112,
-       2449.912,
-       2226.362,
-       2384.359,
-       2187.917,
-       2364.877,
-       2203.578,
-       2377.346,
-       2213.922,
-       2355.35,
-       2152.229,
-       2458.972,
-       2166.351,
-       2341.005,
-       2210.878
+       3443.804,
+       3340.521,
+       3131.581,
+       3443.96,
+       3318.038,
+       3491.03,
+       3093.349,
+       3271.847,
+       3144.217,
+       3289.575,
+       3223.632,
+       3316.189,
+       3071.46,
+       3133.266,
+       3227.556
       ],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 66.96888000000035,
-      "max": 3629.3325,
-      "median": 2993.18717,
-      "min": 2675.15611,
+      "mad": 349.65497000000005,
+      "max": 4069.52814,
+      "median": 3447.94681,
+      "min": 2929.25169,
       "raw": [
-       3119.54996,
-       2675.15611,
-       3071.97232,
-       3123.1525,
-       3173.75014,
-       3629.3325,
-       3010.82835,
-       2940.54383,
-       2960.93456,
-       2968.49279,
-       2932.20808,
-       2988.21092,
-       3140.33623,
-       2926.21829,
-       2993.18717
+       2971.50859,
+       3674.35125,
+       2949.7035,
+       2929.25169,
+       3098.29184,
+       3320.6184,
+       3966.85203,
+       3122.98825,
+       3504.76004,
+       3479.48274,
+       4069.52814,
+       3958.70505,
+       3447.94681,
+       3028.8351,
+       3450.35369
       ],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 187.1992150000001,
-      "max": 3145.524005,
-      "median": 2873.553218,
-      "min": 2351.475666,
+      "mad": 34.02431799999977,
+      "max": 3081.241222,
+      "median": 2924.763468,
+      "min": 2778.040332,
       "raw": [
-       2351.475666,
-       2839.834909,
-       2873.553218,
-       3145.524005,
-       3060.752433
+       3081.241222,
+       2894.280501,
+       2958.787786,
+       2778.040332,
+       2924.763468
       ],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.041228652000427246,
-     "max": 4.412431120872498,
-     "median": 2.105449080467224,
-     "min": 2.0629671216011047,
+     "mad": 0.023951232433319092,
+     "max": 3.489605128765106,
+     "median": 3.1671262383461,
+     "min": 3.107813835144043,
      "raw": [
-      2.0629671216011047,
-      2.064220428466797,
-      3.114802896976471,
-      4.374750733375549,
-      4.3759660720825195,
-      4.412431120872498,
-      3.0003609657287598,
-      2.168816030025482,
-      2.1256223917007446,
-      2.0799888968467712,
-      2.1040090918540955,
-      2.105449080467224,
-      2.0686054825782776,
-      2.069783568382263,
-      2.0697032809257507
+      3.107813835144043,
+      3.151151120662689,
+      3.1884798407554626,
+      3.151896834373474,
+      3.205130398273468,
+      3.1671262383461,
+      3.191077470779419,
+      3.159164607524872,
+      3.1694464087486267,
+      3.138695538043976,
+      3.489605128765106,
+      3.1375734210014343,
+      3.163594961166382,
+      3.250018358230591,
+      3.243989646434784
      ],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "prepare_cold": {
-     "mad": 450,
-     "max": 16542,
-     "median": 3859,
-     "min": 3409,
+     "mad": 595,
+     "max": 17398,
+     "median": 3931,
+     "min": 3336,
      "raw": [
-      16542,
-      8262,
-      3859,
-      3450,
-      3409
+      17398,
+      7896,
+      3931,
+      3402,
+      3336
      ],
      "samples": 5,
      "unit": "ns"
     },
     "prepare_warm": {
-     "mad": 452.139892578125,
-     "max": 4268.8231201171875,
-     "median": 3016.966552734375,
-     "min": 2307.3158569335938,
+     "mad": 82.63015747070312,
+     "max": 3465.5579223632812,
+     "median": 3062.3486328125,
+     "min": 2849.617950439453,
      "raw": [
-      3069.8670654296875,
-      3011.8466796875,
-      3469.1064453125,
-      3066.2603759765625,
-      3041.9066772460938,
-      4268.8231201171875,
-      3053.4415283203125,
-      3016.966552734375,
-      3061.148681640625,
-      2463.5576782226562,
-      2456.3392333984375,
-      2392.0151977539062,
-      2307.3158569335938,
-      2331.6989135742188,
-      2343.46923828125
+      2963.717803955078,
+      2849.617950439453,
+      3180.3397521972656,
+      3062.3486328125,
+      2919.2877502441406,
+      3257.7703552246094,
+      3204.2808837890625,
+      3069.6161193847656,
+      3039.999786376953,
+      3465.5579223632812,
+      2998.9698181152344,
+      3079.9959106445312,
+      3043.3724975585938,
+      3063.4078063964844,
+      2979.718475341797
      ],
      "samples": 15,
      "unit": "ns"
     },
     "scalar": {
-     "mad": 41.7001953125,
-     "max": 3158.0572509765625,
-     "median": 3073.702392578125,
-     "min": 2401.2379150390625,
+     "mad": 78.35302734375,
+     "max": 3096.5179748535156,
+     "median": 2887.7567443847656,
+     "min": 2778.1551513671875,
      "raw": [
-      3117.7749633789062,
-      3077.685791015625,
-      3073.702392578125,
-      3028.7642822265625,
-      3030.2280883789062,
-      3057.70751953125,
-      3041.3720703125,
-      3032.002197265625,
-      3158.0572509765625,
-      3076.2190551757812,
-      3076.9454345703125,
-      3108.9268798828125,
-      3117.462890625,
-      2966.5765380859375,
-      2401.2379150390625
+      3096.5179748535156,
+      2923.9216918945312,
+      2966.1097717285156,
+      2924.24658203125,
+      2885.2843017578125,
+      2854.5464782714844,
+      2887.7567443847656,
+      2801.6702575683594,
+      2950.6162719726562,
+      3012.3605041503906,
+      2856.4923400878906,
+      2778.1551513671875,
+      2783.556610107422,
+      2966.372833251953,
+      2794.424102783203
      ],
      "samples": 15,
      "unit": "ns"
@@ -204,158 +204,158 @@
    "linear_pressure": {
     "batch": {
      "1000": {
-      "mad": 109.67799999999988,
-      "max": 6030.198,
-      "median": 5621.023,
-      "min": 5402.775,
+      "mad": 165.5699999999997,
+      "max": 5849.363,
+      "median": 5249.044,
+      "min": 4999.49,
       "raw": [
-       5868.179,
-       5868.736,
-       5813.021,
-       5759.514,
-       5648.71,
-       5520.039,
-       6030.198,
-       5402.775,
-       5511.345,
-       5551.802,
-       5621.023,
-       5431.71,
-       5572.25,
-       5693.972,
-       5604.345
+       5367.034,
+       5217.495,
+       5301.445,
+       5703.979,
+       5620.864,
+       5451.512,
+       5050.786,
+       5307.447,
+       5849.363,
+       5249.044,
+       5013.563,
+       5103.329,
+       5194.242,
+       4999.49,
+       5083.474
       ],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 107.16228000000046,
-      "max": 6774.99933,
-      "median": 5620.6207,
-      "min": 5027.38879,
+      "mad": 129.9671899999994,
+      "max": 6827.96694,
+      "median": 5620.6168,
+      "min": 5476.0264,
       "raw": [
-       5027.38879,
-       5531.59472,
-       6774.99933,
-       6076.12485,
-       5620.6207,
-       5719.63975,
-       5513.45842,
-       5825.36075,
-       5432.0708,
-       5637.91855,
-       5555.04044,
-       5611.76876,
-       5556.74114,
-       5753.57983,
-       6180.81281
+       5630.95555,
+       5511.13879,
+       5552.42517,
+       5562.95079,
+       5476.0264,
+       5605.19517,
+       5860.36578,
+       5758.94331,
+       5490.64961,
+       5768.26832,
+       5507.90177,
+       6827.96694,
+       6267.26309,
+       5620.6168,
+       6470.17793
       ],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 122.97935499999949,
-      "max": 5785.672306,
-      "median": 5661.829023,
-      "min": 4740.266739,
+      "mad": 192.65033099999982,
+      "max": 6124.37356,
+      "median": 5606.449658,
+      "min": 5338.134789,
       "raw": [
-       5785.672306,
-       4740.266739,
-       5620.785193,
-       5784.808378,
-       5661.829023
+       5338.134789,
+       5447.473391,
+       5799.099989,
+       5606.449658,
+       6124.37356
       ],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.13548457622528076,
-     "max": 3.621732175350189,
-     "median": 2.795106887817383,
-     "min": 2.6467365622520447,
+     "mad": 0.14551126956939697,
+     "max": 3.9109503030776978,
+     "median": 3.403885066509247,
+     "min": 3.196317672729492,
      "raw": [
-      3.273007571697235,
-      2.825283169746399,
-      2.70334529876709,
-      3.4222360253334045,
-      3.621732175350189,
-      3.004863917827606,
-      2.8611600399017334,
-      3.329345703125,
-      2.692113161087036,
-      2.795106887817383,
-      2.659622311592102,
-      2.659384071826935,
-      2.6467365622520447,
-      2.6816871762275696,
-      2.6902941465377808
+      3.3970910906791687,
+      3.425130784511566,
+      3.9109503030776978,
+      3.5600040555000305,
+      3.196317672729492,
+      3.398572087287903,
+      3.3614420294761658,
+      3.7764562368392944,
+      3.549396336078644,
+      3.780891239643097,
+      3.2752594351768494,
+      3.403885066509247,
+      3.3601971864700317,
+      3.216488838195801,
+      3.791818916797638
      ],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "prepare_cold": {
-     "mad": 346,
-     "max": 15419,
-     "median": 6322,
-     "min": 5976,
+     "mad": 316,
+     "max": 13917,
+     "median": 6152,
+     "min": 5836,
      "raw": [
-      15419,
-      8087,
-      6322,
-      6194,
-      5976
+      13917,
+      7241,
+      6152,
+      6040,
+      5836
      ],
      "samples": 5,
      "unit": "ns"
     },
     "prepare_warm": {
-     "mad": 14.79644775390625,
-     "max": 8391.994445800781,
-     "median": 5463.767822265625,
-     "min": 5444.456787109375,
+     "mad": 202.3367919921875,
+     "max": 6953.129089355469,
+     "median": 5506.411315917969,
+     "min": 5202.285827636719,
      "raw": [
-      5463.767822265625,
-      8391.994445800781,
-      5456.8729248046875,
-      5444.456787109375,
-      5448.971374511719,
-      5463.164123535156,
-      5450.727111816406,
-      5451.2203369140625,
-      5459.710266113281,
-      5487.448913574219,
-      5475.189147949219,
-      5708.593200683594,
-      5670.563232421875,
-      5578.9473876953125,
-      6100.477783203125
+      6159.651794433594,
+      5732.755676269531,
+      5506.411315917969,
+      5659.971435546875,
+      5579.031066894531,
+      5496.2144775390625,
+      5361.4990234375,
+      5202.285827636719,
+      5367.585266113281,
+      5489.818115234375,
+      5243.3360595703125,
+      6425.540344238281,
+      6813.80712890625,
+      6953.129089355469,
+      5304.074523925781
      ],
      "samples": 15,
      "unit": "ns"
     },
     "scalar": {
-     "mad": 43.4359130859375,
-     "max": 4490.3382568359375,
-     "median": 4377.92041015625,
-     "min": 4301.6435546875,
+     "mad": 233.286865234375,
+     "max": 6650.826232910156,
+     "median": 5455.408142089844,
+     "min": 5096.519470214844,
      "raw": [
-      4450.0604248046875,
-      4387.88671875,
-      4394.514404296875,
-      4334.052734375,
-      4425.5872802734375,
-      4355.33154296875,
-      4303.790283203125,
-      4379.791015625,
-      4377.92041015625,
-      4353.0394287109375,
-      4490.3382568359375,
-      4449.867431640625,
-      4301.6435546875,
-      4334.4844970703125,
-      4340.36083984375
+      5340.4598388671875,
+      5527.648620605469,
+      5399.127624511719,
+      5218.5997314453125,
+      5700.8157958984375,
+      6013.496032714844,
+      5545.174377441406,
+      5455.408142089844,
+      5222.121276855469,
+      6650.826232910156,
+      6359.53759765625,
+      5424.556701660156,
+      6554.6715087890625,
+      5416.8145751953125,
+      5096.519470214844
      ],
      "samples": 15,
      "unit": "ns"
@@ -364,158 +364,158 @@
    "linear_speed": {
     "batch": {
      "1000": {
-      "mad": 66.35600000000068,
-      "max": 4809.639,
-      "median": 4097.364,
-      "min": 3928.291,
+      "mad": 100.42000000000007,
+      "max": 5135.768,
+      "median": 4758.951,
+      "min": 4555.364,
       "raw": [
-       4028.053,
-       3998.436,
-       4809.639,
-       4223.74,
-       4240.377,
-       4163.72,
-       4051.965,
-       4103.065,
-       4111.561,
-       4104.651,
-       4087.955,
-       4067.142,
-       4097.364,
-       4021.603,
-       3928.291
+       5069.885,
+       5103.222,
+       5135.768,
+       4741.905,
+       4789.278,
+       4555.364,
+       4656.362,
+       4834.062,
+       4763.522,
+       4673.819,
+       5093.777,
+       4758.951,
+       4658.531,
+       4563.869,
+       4709.54
       ],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 184.16235999999935,
-      "max": 5453.11246,
-      "median": 4707.89276,
-      "min": 3770.63849,
+      "mad": 369.2854699999998,
+      "max": 5765.76339,
+      "median": 4843.1203,
+      "min": 4461.5564,
       "raw": [
-       4057.97796,
-       5363.64719,
-       4725.84117,
-       4776.73895,
-       4769.98096,
-       4753.83308,
-       4680.50081,
-       4707.89276,
-       4696.88193,
-       5453.11246,
-       4523.7304,
-       3770.63849,
-       4206.88305,
-       5313.24396,
-       3828.9528
+       5694.84443,
+       5765.76339,
+       5480.81505,
+       5660.56978,
+       5681.20039,
+       5313.03186,
+       4843.1203,
+       4461.5564,
+       4621.00002,
+       4508.89873,
+       4516.39912,
+       4473.83483,
+       5087.572,
+       4494.31751,
+       4549.93624
       ],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 21.205762999999934,
-      "max": 4642.654758,
-      "median": 4621.448995,
-      "min": 4451.114213,
+      "mad": 61.63898599999993,
+      "max": 4844.076861,
+      "median": 4782.437875,
+      "min": 4618.851151,
       "raw": [
-       4642.654758,
-       4621.448995,
-       4626.580224,
-       4451.114213,
-       4544.018515
+       4844.076861,
+       4618.851151,
+       4782.437875,
+       4837.199499,
+       4692.170337
       ],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.007328629493713379,
-     "max": 3.1879249811172485,
-     "median": 2.796125590801239,
-     "min": 2.276908040046692,
+     "mad": 0.03586757183074951,
+     "max": 3.416609227657318,
+     "median": 3.051879107952118,
+     "min": 2.955922245979309,
      "raw": [
-      3.0175236463546753,
-      2.785155713558197,
-      2.8004764318466187,
-      2.796378254890442,
-      3.1879249811172485,
-      2.7887969613075256,
-      2.800472915172577,
-      2.790714383125305,
-      2.7865413427352905,
-      2.8014824986457825,
-      2.7891802191734314,
-      2.796125590801239,
-      3.028132438659668,
-      2.6474406123161316,
-      2.276908040046692
+      3.416609227657318,
+      3.0314217805862427,
+      3.0620135068893433,
+      3.056385815143585,
+      3.0911847352981567,
+      3.0877466797828674,
+      3.051879107952118,
+      2.97171550989151,
+      3.0198139548301697,
+      2.972351610660553,
+      2.955922245979309,
+      3.070583760738373,
+      2.9673582911491394,
+      3.0529444813728333,
+      2.977059543132782
      ],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "prepare_cold": {
-     "mad": 2511,
-     "max": 135989,
-     "median": 30368,
-     "min": 27857,
+     "mad": 861,
+     "max": 176821,
+     "median": 36947,
+     "min": 36086,
      "raw": [
-      135989,
-      44432,
-      27857,
-      28069,
-      30368
+      176821,
+      52399,
+      36947,
+      36257,
+      36086
      ],
      "samples": 5,
      "unit": "ns"
     },
     "prepare_warm": {
-     "mad": 89.4267578125,
-     "max": 7076.9166259765625,
-     "median": 4834.795654296875,
-     "min": 4726.240234375,
+     "mad": 180.9246826171875,
+     "max": 10485.909545898438,
+     "median": 6060.0758056640625,
+     "min": 5852.256103515625,
      "raw": [
-      7076.9166259765625,
-      6751.8253173828125,
-      6907.6011962890625,
-      4753.330322265625,
-      4745.368896484375,
-      4726.240234375,
-      4731.939208984375,
-      4777.8076171875,
-      4748.8294677734375,
-      4880.31787109375,
-      4941.1278076171875,
-      4855.7269287109375,
-      4787.496826171875,
-      4834.795654296875,
-      5271.286865234375
+      10485.909545898438,
+      7202.281982421875,
+      5970.8031005859375,
+      6067.47607421875,
+      5929.73486328125,
+      5854.432373046875,
+      5879.151123046875,
+      6060.0758056640625,
+      7252.274658203125,
+      5990.1470947265625,
+      5852.256103515625,
+      6084.886962890625,
+      6548.47705078125,
+      6480.5565185546875,
+      5950.0743408203125
      ],
      "samples": 15,
      "unit": "ns"
     },
     "scalar": {
-     "mad": 124.7967529296875,
-     "max": 4566.899719238281,
-     "median": 4159.0404052734375,
-     "min": 3916.0572509765625,
+     "mad": 366.11590576171875,
+     "max": 8683.917114257812,
+     "median": 5276.248291015625,
+     "min": 4786.66796875,
      "raw": [
-      4566.899719238281,
-      4159.0404052734375,
-      4309.9801025390625,
-      4200.24169921875,
-      4205.4949951171875,
-      4407.802490234375,
-      4315.590026855469,
-      4132.231201171875,
-      4034.24365234375,
-      4268.427551269531,
-      4069.1865844726562,
-      4067.0748291015625,
-      3946.7754516601562,
-      3916.0572509765625,
-      3955.8148193359375
+      5080.146911621094,
+      5046.832763671875,
+      5348.82421875,
+      5578.8704833984375,
+      4833.839050292969,
+      7980.883605957031,
+      8683.917114257812,
+      6948.5341796875,
+      6976.5086669921875,
+      5359.3199462890625,
+      5276.248291015625,
+      4910.132385253906,
+      4813.743896484375,
+      5037.0780029296875,
+      4786.66796875
      ],
      "samples": 15,
      "unit": "ns"
@@ -532,20 +532,26 @@
  "semantics": {
   "plain": {
    "accuracy": {
-    "answered": 54,
-    "bit_identical": 35,
-    "cases": 164,
+    "answered": 79,
+    "bit_identical": 52,
+    "cases": 204,
     "max_ulp": 4409024035195715600,
     "median_ulp": 0,
-    "over_1_ulp": 19,
+    "over_1_ulp": 27,
     "tolerance_ulp": 4,
-    "unsupported": 110,
+    "unsupported": 125,
     "worst": [
      {
       "got": "5.684341886080802e-14",
       "id": "hw-068",
       "ulp": 4409024035195715600,
       "want": "0.0"
+     },
+     {
+      "got": "0.453592",
+      "id": "ind-006",
+      "ulp": 6665327449,
+      "want": "0.45359237"
      },
      {
       "got": "453.592",
@@ -560,19 +566,13 @@
       "want": "28.349523125"
      },
      {
-      "got": "45.359199999999994",
-      "id": "hw-017",
-      "ulp": 5207287070,
-      "want": "45.359237"
-     },
-     {
-      "got": "0.9997402000652704",
-      "id": "hw-037",
-      "ulp": 3535828832,
-      "want": "0.9997398075094124"
+      "got": "28.3495",
+      "id": "ind-007",
+      "ulp": 6509108837,
+      "want": "28.349523125"
      }
     ],
-    "wrong": 19
+    "wrong": 27
    },
    "cases": {
     "must_convert": [
@@ -1721,18 +1721,335 @@
       "detail": "Error: Unsupported unit psi.in^2, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
       "id": "hw-083",
       "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "25.399999187200024",
+      "id": "ind-001",
+      "outcome": "wrong_value",
+      "ulp": 228782854,
+      "used": "in -> mm",
+      "want": "25.4"
+     },
+     {
+      "category": "independent",
+      "got": "0.3047999902464003",
+      "id": "ind-002",
+      "outcome": "wrong_value",
+      "ulp": 175705232,
+      "used": "ft -> m",
+      "want": "0.3048"
+     },
+     {
+      "category": "independent",
+      "got": "0.914399970739201",
+      "id": "ind-003",
+      "outcome": "wrong_value",
+      "ulp": 263557847,
+      "used": "yd -> m",
+      "want": "0.9144"
+     },
+     {
+      "category": "independent",
+      "got": "1.6093439485009937",
+      "id": "ind-004",
+      "outcome": "wrong_value",
+      "ulp": 231930906,
+      "used": "mi -> km",
+      "want": "1.609344"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit nmi, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "ind-005",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "0.453592",
+      "id": "ind-006",
+      "outcome": "wrong_value",
+      "ulp": 6665327449,
+      "used": "lb -> kg",
+      "want": "0.45359237"
+     },
+     {
+      "category": "independent",
+      "got": "28.3495",
+      "id": "ind-007",
+      "outcome": "wrong_value",
+      "ulp": 6509108837,
+      "used": "oz -> g",
+      "want": "28.349523125"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit lbf, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "ind-008",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit atm, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "ind-009",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "100000",
+      "id": "ind-010",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "bar -> Pa",
+      "want": "100000.0"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit cal_th, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "ind-011",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit cal_IT, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "ind-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "3.7854117954011186",
+      "id": "ind-013",
+      "outcome": "wrong_value",
+      "ulp": 25673037,
+      "used": "gal -> l",
+      "want": "3.785411784"
+     },
+     {
+      "category": "independent",
+      "got": "0.4731764744251398",
+      "id": "ind-014",
+      "outcome": "wrong_value",
+      "ulp": 25673037,
+      "used": "pnt -> l",
+      "want": "0.473176473"
+     },
+     {
+      "category": "independent",
+      "got": "3600000",
+      "id": "ind-015",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kWh -> J",
+      "want": "3600000.0"
+     },
+     {
+      "category": "independent",
+      "got": "86400",
+      "id": "ind-016",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "d -> s",
+      "want": "86400.0"
+     },
+     {
+      "category": "independent",
+      "got": "1000",
+      "id": "ind-017",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mt -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit mi/h, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "ind-018",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit ft^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "ind-019",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "212",
+      "id": "ind-020",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "C -> F",
+      "want": "212.0"
+     },
+     {
+      "category": "independent",
+      "got": "0",
+      "id": "ind-021",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "F -> C",
+      "want": "0.0"
+     },
+     {
+      "category": "independent",
+      "got": "37",
+      "id": "ind-022",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "F -> C",
+      "want": "37.0"
+     },
+     {
+      "category": "independent",
+      "got": "-40",
+      "id": "ind-023",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "C -> F",
+      "want": "-40.0"
+     },
+     {
+      "category": "independent",
+      "got": "-273.15",
+      "id": "ind-024",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "K -> C",
+      "want": "-273.15"
+     },
+     {
+      "category": "independent",
+      "got": "273.15",
+      "id": "ind-025",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "C -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "independent",
+      "got": "68",
+      "id": "ind-026",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "C -> F",
+      "want": "68.0"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit delta_degC, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "ind-027",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit delta_degF, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "ind-028",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit in^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "ind-029",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit gal_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "ind-030",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit ft_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, l",
+      "id": "ind-031",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "5280",
+      "id": "ind-032",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mi -> ft",
+      "want": "5280.0"
+     },
+     {
+      "category": "independent",
+      "got": "12",
+      "id": "ind-033",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ft -> in",
+      "want": "12.0"
+     },
+     {
+      "category": "independent",
+      "got": "16",
+      "id": "ind-034",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "lb -> oz",
+      "want": "16.0"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit Btu, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "ind-035",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit pt_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "id": "ind-037",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "Error: Unsupported unit mi_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, l",
+      "id": "ind-038",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "100",
+      "id": "ind-039",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "F -> C",
+      "want": "100.0"
+     },
+     {
+      "category": "independent",
+      "got": "20",
+      "id": "ind-040",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "F -> C",
+      "want": "20.0"
+     },
+     {
+      "category": "independent",
+      "got": "283.15",
+      "id": "ind-041",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "C -> K",
+      "want": "283.15"
      }
     ],
     "must_refuse": [
      {
       "category": "ambiguous_name",
       "detail": "Error: Unsupported unit ton, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "group": "ambiguous_name",
       "id": "ref-001",
       "outcome": "refused"
      },
      {
       "category": "ambiguous_name",
       "got": "3.7854117954011186",
+      "group": "ambiguous_name",
       "id": "ref-002",
       "outcome": "silently_accepted",
       "why_it_should_refuse": "US gallon 3.785 L versus imperial gallon 4.546 L: 20 percent apart"
@@ -1740,6 +2057,7 @@
      {
       "category": "ambiguous_name",
       "got": "28.3495",
+      "group": "ambiguous_name",
       "id": "ref-003",
       "outcome": "silently_accepted",
       "why_it_should_refuse": "avoirdupois 28.35 g, troy 31.10 g (fluid ounces are volumes)"
@@ -1747,159 +2065,186 @@
      {
       "category": "ambiguous_name",
       "detail": "Error: Unsupported unit pt, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "group": "ambiguous_name",
       "id": "ref-004",
       "outcome": "refused"
      },
      {
       "category": "ambiguous_name",
       "detail": "Error: Unsupported unit cal, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "group": "ambiguous_name",
       "id": "ref-005",
       "outcome": "refused"
      },
      {
       "category": "ambiguous_name",
       "detail": "Error: Unsupported unit Btu, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "group": "ambiguous_name",
       "id": "ref-006",
       "outcome": "refused"
      },
      {
       "category": "ambiguous_name",
       "detail": "Error: Unsupported unit hp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3,",
+      "group": "ambiguous_name",
       "id": "ref-007",
       "outcome": "refused"
      },
      {
       "category": "ambiguous_name",
       "detail": "Error: Unsupported unit mile, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "group": "ambiguous_name",
       "id": "ref-008",
       "outcome": "refused"
      },
      {
       "category": "ambiguous_name",
       "detail": "Error: Unsupported unit foot, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "group": "ambiguous_name",
       "id": "ref-009",
       "outcome": "refused"
      },
      {
       "category": "ambiguous_name",
       "detail": "Error: Unsupported unit 1, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3, ",
+      "group": "ambiguous_name",
       "id": "ref-010",
       "outcome": "refused"
      },
      {
       "category": "missing_context",
       "detail": "Error: Unsupported unit Nm^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "group": "other",
       "id": "ref-011",
       "outcome": "refused"
      },
      {
       "category": "missing_context",
       "detail": "Error: Unsupported unit m^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "group": "other",
       "id": "ref-012",
       "outcome": "refused"
      },
      {
       "category": "missing_context",
       "detail": "Error: Unsupported unit scf, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "group": "other",
       "id": "ref-013",
       "outcome": "refused"
      },
      {
       "category": "missing_context",
       "detail": "Error: Unsupported unit Nm^3, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "group": "other",
       "id": "ref-014",
       "outcome": "refused"
      },
      {
       "category": "missing_context",
       "detail": "Error: Unsupported unit wt%, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "group": "other",
       "id": "ref-015",
       "outcome": "refused"
      },
      {
       "category": "missing_context",
       "detail": "Error: Cannot convert incompatible measures of volume and mass",
+      "group": "other",
       "id": "ref-016",
       "outcome": "refused"
      },
      {
       "category": "missing_context",
       "detail": "Error: Unsupported unit mol, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "group": "other",
       "id": "ref-017",
       "outcome": "refused"
      },
      {
       "category": "missing_context",
       "detail": "Error: Unsupported unit psig, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "group": "other",
       "id": "ref-018",
       "outcome": "refused"
      },
      {
       "category": "missing_context",
       "detail": "Error: Unsupported unit barg, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "group": "other",
       "id": "ref-019",
       "outcome": "refused"
      },
      {
       "category": "missing_context",
       "detail": "Error: Unsupported unit mH2O, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "group": "other",
       "id": "ref-020",
       "outcome": "refused"
      },
      {
       "category": "kind",
+      "group": "other",
       "id": "ref-021",
       "outcome": "not_applicable"
      },
      {
       "category": "kind",
+      "group": "other",
       "id": "ref-022",
       "outcome": "not_applicable"
      },
      {
       "category": "kind",
+      "group": "other",
       "id": "ref-023",
       "outcome": "not_applicable"
      },
      {
       "category": "kind",
       "detail": "Error: Unsupported unit delta_K, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "group": "other",
       "id": "ref-024",
       "outcome": "refused"
      },
      {
       "category": "kind",
       "detail": "Error: Unsupported unit delta_degC, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "group": "other",
       "id": "ref-025",
       "outcome": "refused"
      },
      {
       "category": "dimension",
       "detail": "Error: Cannot convert incompatible measures of time and length",
+      "group": "other",
       "id": "ref-026",
       "outcome": "refused"
      },
      {
       "category": "dimension",
       "detail": "Error: Unsupported unit N, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3, ",
+      "group": "other",
       "id": "ref-027",
       "outcome": "refused"
      },
      {
       "category": "dimension",
       "detail": "Error: Unsupported unit N, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3, ",
+      "group": "other",
       "id": "ref-028",
       "outcome": "refused"
      },
      {
       "category": "dimension",
       "detail": "Error: Cannot convert incompatible measures of energy and power",
+      "group": "other",
       "id": "ref-029",
       "outcome": "refused"
      },
      {
       "category": "dimension",
       "detail": "Error: Cannot convert incompatible measures of power and pressure",
+      "group": "other",
       "id": "ref-030",
       "outcome": "refused"
      }
@@ -2076,6 +2421,12 @@
       "unsupported": 17,
       "wrong_value": 6
      },
+     "independent": {
+      "correct": 17,
+      "total": 40,
+      "unsupported": 15,
+      "wrong_value": 8
+     },
      "pressure": {
       "correct": 0,
       "total": 7,
@@ -2101,10 +2452,10 @@
       "wrong_value": 3
      }
     },
-    "correct": 35,
-    "total": 164,
-    "unsupported": 110,
-    "wrong_value": 19
+    "correct": 52,
+    "total": 204,
+    "unsupported": 125,
+    "wrong_value": 27
    },
    "must_refuse": {
     "by_category": {
@@ -2133,6 +2484,20 @@
       "total": 10
      }
     },
+    "by_group": {
+     "ambiguous_name": {
+      "not_applicable": 0,
+      "refused": 8,
+      "silently_accepted": 2,
+      "total": 10
+     },
+     "other": {
+      "not_applicable": 3,
+      "refused": 17,
+      "silently_accepted": 0,
+      "total": 20
+     }
+    },
     "not_applicable": 3,
     "refused": 25,
     "silently_accepted": 2,
@@ -2142,22 +2507,22 @@
  },
  "startup": {
   "import_ms": {
-   "interpreter_baseline_ms": 28.308037,
-   "mad": 1.6965799999999973,
-   "max": 14.404125,
-   "median": 8.199829999999999,
-   "min": 0,
+   "interpreter_baseline_ms": 26.987439,
+   "mad": 2.4322699999999955,
+   "max": 15.141310999999998,
+   "median": 12.709041000000003,
+   "min": 4.477139000000001,
    "raw": [
-    8.650652999999998,
-    0,
-    6.503250000000001,
-    14.404125,
-    8.199829999999999
+    14.862784000000001,
+    15.141310999999998,
+    12.709041000000003,
+    6.770319000000004,
+    4.477139000000001
    ],
    "samples": 5,
    "unit": "ms"
   },
   "package_bytes": 108230,
-  "peak_rss_kb": 118044
+  "peak_rss_kb": 123888
  }
 }
