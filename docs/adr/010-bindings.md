@@ -188,7 +188,8 @@ Recommendation:
 * abi3 consequence to decide: if the PyBuffer-only first milestone raises the floor to Python 3.11,
   users on 3.9 and 3.10 get no wheel (3.9 is end of life; 3.10 reached end of life in October 2026 by
   CPython's published schedule (PEP 619, from memory, re-check at release time)). OPEN: accept 3.11 as
-  floor (recommended default) or use numpy-only for older versions.
+  floor (recommended default) or use numpy-only for older versions. DECIDED by the owner
+  (2026-11-08): Python 3.11 is the floor (`abi3-py311`).
 
 ### 6. Like-for-like benchmarks
 
@@ -260,8 +261,8 @@ WASM part; it proves the shape and the facts in the table above, nothing about s
 1. Accept PyO3 and wasm-bindgen, in separate excluded `bindings/` workspaces (Decisions 1, 2).
 2. numpy crate: staged (PyBuffer first, rust-numpy after a measured copy cost; recommended) or
    rust-numpy from the start (the owner's lean). Decision 5.
-3. Python floor 3.11 (recommended) or 3.9 with rust-numpy only.
+3. ~~Python floor 3.11 (recommended) or 3.9 with rust-numpy only.~~ DECIDED (2026-11-08): 3.11.
 4. Exact API names, whether `apply_exact` and the unit listing are in the first release.
-5. Package names on PyPI and npm (availability unchecked) and when publishing starts.
+5. Package names on PyPI and npm (checked 2026-11-08: `dimvexa`, `dimvexa-py`, `dimvexa-wasm` and `pydimvexa` were unregistered on both, and `dimvexa` on crates.io; nothing is reserved, and the project name itself is still a placeholder; the `@dimvexa` npm scope was not verified) and when publishing starts.
 6. Whether the `extras/bindings-spike` directory stays after the real crates exist (recommended:
    delete it then).

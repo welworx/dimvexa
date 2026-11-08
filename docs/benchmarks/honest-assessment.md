@@ -5,6 +5,18 @@ in this session; anything not verified is marked **unverified**. This page is an
 benchmark publication: it does not replace `comparison.md` and does not license any "fastest" or
 "most accurate" claim (`AGENTS.md` rule 7).
 
+> **Update 2026-11-08 (after the exact-path speed-up).** Sections 3 to 7 were measured on
+> `c512372`, before commits `a69bc21` and `93c47e6` (see `docs/benchmarks/M0.md`). Those commits
+> are bit-identical to the old path (checked: all 287 convertible registry unit pairs with about
+> 640 inputs each, same hash of result bits and error codes before and after) and make
+> `apply_exact_f64` about 8 times faster (linear 317.5 to 39.4 ns, affine 363.3 to 48.7 ns, median
+> of 20 interleaved runs). A full `run_all.sh` on the new code gave 36 to 54 ns per exact batch
+> value (was 520 to 990) and 20 to 47 ns per exact scalar (was 80 to 505); accuracy and safety
+> tables unchanged. The exact path is therefore **roughly 40 to 90 times** slower than the
+> NumPy-backed batch rows (0.6 to 0.9 ns/value), no longer 600 to 900 times. The competitor
+> tables below were not rerun on the new code. The text below keeps the original numbers for the
+> record.
+
 ## 0. What was run, and the limits of it
 
 * Code under test: branch `claude/bench-corpus-bias` at commit `c512372` plus the corpus additions
@@ -255,8 +267,9 @@ Not defensible today:
 
 ## 7. Prioritized fixes
 
-1. Profile and speed up `apply_exact_f64` and the exact batch path (550 ns/value is the headline
-   weakness of the exact-path story), or state in the README that exact is for single values.
+1. ~~Profile and speed up `apply_exact_f64`~~ Done in part (see the update at the top): about 8
+   times faster, now 36 to 54 ns per value in batch. Still 40 to 90 times slower than NumPy-backed
+   batch; say so, or state in the README that exact is for single values.
 2. Close the coverage gaps that all real users hit: `psig`/`barg` (or a documented
    gauge-with-context mechanism), `cP`, `cSt`, `bbl`, `kgf`, `inHg`, `mH2O`/`mmH2O`, area, angle,
    speed names; and decide what to do with plain rescalings of `Nm3/h` and `scf/min`.
