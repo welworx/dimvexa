@@ -1,6 +1,7 @@
 /target
 **/*.rs.bk
 /extras/target
+/extras/bindings-spike/target
 /fuzz/target
 /fuzz/corpus
 /fuzz/artifacts

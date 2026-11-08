@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# EXPERIMENTAL spike for ADR-010 (Python bindings). Own workspace (the empty [workspace] table),
+# NOT a member of the main workspace and NOT in its default members, so `cargo xtask ci` never
+# builds it and the core crates gain no dependency. Needs network (PyO3) and maturin.
+# Build and test: see README.md in this directory.
+[package]
+name = "dimvexa-py-spike"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "_dimvexa_spike"
+crate-type = ["cdylib", "rlib"]
+
+[workspace]
+
+[features]
+# The buffer protocol (PyBuffer) is part of the stable ABI only from Python 3.11.
+default = ["abi3-py311"]
+abi3-py311 = ["pyo3/abi3-py311"]
+
+[dependencies]
+dimvexa = { path = "../../crates/dimvexa" }
+pyo3 = "0.30"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
