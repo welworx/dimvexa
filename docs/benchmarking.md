@@ -118,7 +118,7 @@ indicative, not a basis for a "fastest" claim.
 | mathjs 13.2.0, js-quantities 1.8.0, convert-units 2.3.4, JavaScript ceiling | yes; spellings checked |
 | ucum-units | not written |
 | Dimvexa Python and WASM bindings | stub (bindings do not exist) |
-| `bench-compare.yml` | not run; two action SHAs are still placeholders |
+| `bench-compare.yml` | not run on GitHub yet (its action pins are verified; use `benchmarks/run_all.sh` locally) |
 
 Python packages in this run were installed without hashes (`lockfile: unknown`). Expect residual
 mapping errors in the translation files and fix the runner, never the numbers.

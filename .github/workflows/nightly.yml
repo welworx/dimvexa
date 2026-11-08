@@ -25,11 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
         with:
           # Pinned. Keep in step with .github/workflows/ci.yml.
@@ -44,7 +42,6 @@ jobs:
     env:
       DIMVEXA_PROP_SCALE: "20"
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -53,7 +50,6 @@ jobs:
           v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
           rustup toolchain install "$v" --profile minimal --no-self-update
           rustup default "$v"
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Run the property and differential suites
         run: |
@@ -72,7 +68,6 @@ jobs:
       # Overrides rust-toolchain.toml: this job deliberately does not use the pinned compiler.
       RUSTUP_TOOLCHAIN: stable
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -93,7 +88,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -102,7 +96,6 @@ jobs:
           v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
           rustup toolchain install "$v" --profile minimal --component llvm-tools-preview --no-self-update
           rustup default "$v"
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
         with:
           # Not version-pinned (see docs/ci-pinning.md).
@@ -122,7 +115,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -131,7 +123,6 @@ jobs:
           v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
           rustup toolchain install "$v" --profile minimal --no-self-update
           rustup default "$v"
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: extras

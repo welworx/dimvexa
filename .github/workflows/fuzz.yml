@@ -28,13 +28,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Install a nightly toolchain (cargo-fuzz needs sanitizer flags)
         run: rustup toolchain install nightly --profile minimal --no-self-update
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
         with:
           tool: cargo-fuzz
