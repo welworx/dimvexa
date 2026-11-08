@@ -107,6 +107,43 @@ def bar_chart(path, title, rows, unit, log=False, banner=None):
 
 # ------------------------------------------------------------------ report
 
+def refuse_group(rec):
+    """"ambiguous_name" or "other". Older result files have no `group`; derive it from the category."""
+    return rec.get("group") or ("ambiguous_name" if rec.get("category") == "ambiguous_name" else "other")
+
+
+def group_counts(s):
+    """Refusal outcomes split by group, computed from the per-case records."""
+    out = {g: {"total": 0, "refused": 0, "silently_accepted": 0, "not_applicable": 0} for g in ("ambiguous_name", "other")}
+    for c in s["cases"]["must_refuse"]:
+        g = out[refuse_group(c)]
+        g["total"] += 1
+        g[c["outcome"]] += 1
+    return out
+
+
+def case_origins():
+    """id -> origin ("dimvexa-vector", "handwritten", "independent") from the committed corpus."""
+    try:
+        cases = json.loads((ROOT / "corpus" / "must_convert.json").read_text())["cases"]
+    except (OSError, ValueError, KeyError):
+        return {}
+    return {c["id"]: c.get("origin", "unknown") for c in cases}
+
+
+def origin_counts(s, origins):
+    """Per origin: [correct, total] over the must-convert records that the corpus knows."""
+    out = {}
+    for c in s["cases"]["must_convert"]:
+        o = origins.get(c["id"])
+        if o is None:
+            continue
+        t = out.setdefault(o, [0, 0])
+        t[1] += 1
+        t[0] += c["outcome"] == "correct"
+    return out
+
+
 def semantic_mode(r):
     """The semantic mode to headline: 'plain' if present, else the first one."""
     sem = r.get("semantics") or {}
@@ -137,6 +174,13 @@ def build(results, img_dir, img_rel, fixture):
         add("")
     if len({r["corpus_id"] for r in results}) > 1:
         add("> **Warning: the runs used different corpus versions.** Accuracy and safety counts are not comparable.")
+        add("")
+    try:
+        current = json.loads((ROOT / "corpus" / "manifest.json").read_text())["corpus_id"]
+    except (OSError, ValueError, KeyError):
+        current = None
+    if current and not fixture and any(r.get("corpus_id") != current for r in results):
+        add(f"> **These results are older than the committed corpus (`{current}`).** Cases added since then (for example the independent ones) have no result yet; rerun `benchmarks/run_all.sh` to refresh every table.")
         add("")
     if any(r.get("lockfile") not in ("pinned",) for r in results if r.get("kind") == "library"):
         add("> Some library versions were not installed from a lockfile (`lockfile` column). Treat those rows as indicative only.")
@@ -245,28 +289,54 @@ def build(results, img_dir, img_rel, fixture):
     # --- coverage + safety
     add("## Coverage and safety matrix")
     add("")
-    add("**Must convert** (correct / wrong value / error because unsupported) and **must refuse** (refused / silently accepted / not applicable). **Silently accepted** means the library returned a number for a request that is ambiguous or invalid. Any error counts as a refusal: the reason is not compared, except for Dimvexa (see below). A documented default (for example pint treating `ton` as the short ton) still counts as silently accepted because the request did not say which ton.")
+    add("**Must convert** (correct / wrong value / error because unsupported) and **must refuse** (refused / accepted / not applicable). A request is *accepted* when the library returned a number for it. Any error counts as a refusal: the reason is not compared, except for Dimvexa (see below).")
+    add("")
+    add("The refuse cases are scored in two groups, because they are not the same kind of failure. **Ambiguous name**: the name has several accepted meanings (`ton`, `gal`, `oz`, `pt`, `cal`, `Btu`, `hp`, `mile`, `foot`, bare `ppm`). A library that applies a documented default (for example pint reading `ton` as the short ton) made a policy choice; it is reported as *accepted with a default* and is not a bug, but Dimvexa's design goal is to refuse, so it is still counted and shown. **Other**: missing context, temperature-kind errors, dimension mismatches. Accepting one of these is a defect or a missing check. The corpus does not record whether a library documents its default, so the ambiguous column is not a judgement of the library.")
     add("")
     rows = []
     for r in libs:
         for mode, s in r["semantics"].items():
-            mc, mr = s["must_convert"], s["must_refuse"]
+            mc = s["must_convert"]
+            g = group_counts(s)
+            amb, oth = g["ambiguous_name"], g["other"]
             rows.append([label(r, mode), mc["total"], mc["correct"], mc["wrong_value"], mc["unsupported"],
-                         mr["total"], mr["refused"], f"**{mr['silently_accepted']}**" if mr["silently_accepted"] else "0", mr["not_applicable"]])
-    add(md_table(["Library / mode", "Convert cases", "Correct", "Wrong value", "Unsupported", "Refuse cases", "Refused", "Silently accepted", "Not applicable"], rows) if rows else "No library results.")
+                         amb["total"], amb["refused"], amb["silently_accepted"], amb["not_applicable"],
+                         oth["total"], oth["refused"], f"**{oth['silently_accepted']}**" if oth["silently_accepted"] else "0", oth["not_applicable"]])
+    add(md_table(["Library / mode", "Convert cases", "Correct", "Wrong value", "Unsupported",
+                  "Ambiguous: cases", "refused", "accepted with default", "n/a",
+                  "Other: cases", "refused", "silently accepted", "n/a"], rows) if rows else "No library results.")
     add("")
     for key, title, pick in (("correct", "Must-convert cases answered correctly (higher is better)", lambda s: s["must_convert"]["correct"]),
-                             ("silent", "Silently accepted ambiguous or invalid requests (lower is better)", lambda s: s["must_refuse"]["silently_accepted"])):
+                             ("ambiguous", "Ambiguous names accepted with a default (lower is safer; a default is a policy choice)", lambda s: group_counts(s)["ambiguous_name"]["silently_accepted"]),
+                             ("silent", "Other invalid requests silently accepted (lower is better)", lambda s: group_counts(s)["other"]["silently_accepted"])):
         data = [(label(r, m), pick(s)) for r in libs for m, s in r["semantics"].items()]
         fn = f"safety-{key}.svg"
         note = "higher is better" if key == "correct" else "lower is better"
         if bar_chart(img_dir / fn, title, data, "", banner=FIXTURE_BANNER.strip("*") if fixture else note):
             add(f"![{title}]({img_rel}/{fn})")
             add("")
+    # accuracy split by where the case came from (corpus bias check)
+    origins = case_origins()
+    names = {"dimvexa-vector": "Dimvexa golden vectors", "handwritten": "Hand-written (oracle truth)", "independent": "Independent (published values)"}
+    add("### Must-convert results by origin of the case")
+    add("")
+    add("The corpus mixes cases taken from Dimvexa's own golden vectors, hand-written cases whose truth comes from the oracle in `corpus-src/truth.toml`, and *independent* cases whose expected value is the number published in a cited source (NIST, BIPM) and only cross-checked by the oracle. A library that does much better on the first group than on the independent one would show corpus bias. Cells are correct/total; a dash means the result file predates that group (its corpus is older).")
+    add("")
+    cols = [(r, m) for r in libs for m in r["semantics"]]
+    if cols and origins:
+        rows = []
+        for o in ("dimvexa-vector", "handwritten", "independent"):
+            row = [names[o]]
+            for r, m in cols:
+                c = origin_counts(r["semantics"][m], origins).get(o)
+                row.append("-" if c is None else f"{c[0]}/{c[1]}")
+            rows.append(row)
+        add(md_table(["Origin", *[label(r, m) for r, m in cols]], rows))
+        add("")
     # per-case refusal matrix
     add("### Per-request outcome for the must-refuse cases")
     add("")
-    add("`ok` refused, `ACCEPTED` silently accepted (the number is shown), `-` not applicable.")
+    add("`ok` refused, `ACCEPTED` accepted (the number is shown), `-` not applicable. The group column is `ambiguous name` (an accepted number may be a documented default) or `other` (accepting it is a defect).")
     add("")
     if libs:
         ids = []
@@ -276,7 +346,7 @@ def build(results, img_dir, img_rel, fixture):
                 for c in s["cases"]["must_refuse"]:
                     if c["id"] not in meta:
                         ids.append(c["id"])
-                        meta[c["id"]] = c["category"]
+                        meta[c["id"]] = (c["category"], refuse_group(c).replace("_", " "))
         cols = [(r, m) for r in libs for m in r["semantics"]]
         by = {}
         for r, m in cols:
@@ -284,12 +354,12 @@ def build(results, img_dir, img_rel, fixture):
                 by[(label(r, m), c["id"])] = c
         rows = []
         for i in sorted(ids):
-            row = [i, meta[i]]
+            row = [i, *meta[i]]
             for r, m in cols:
                 c = by.get((label(r, m), i))
                 row.append("" if c is None else {"refused": "ok", "not_applicable": "-"}.get(c["outcome"], f"ACCEPTED ({c.get('got', '')[:14]})"))
             rows.append(row)
-        add(md_table(["Case", "Category", *[label(r, m) for r, m in cols]], rows))
+        add(md_table(["Case", "Category", "Group", *[label(r, m) for r, m in cols]], rows))
         add("")
     # coverage
     add("### Unit coverage")
