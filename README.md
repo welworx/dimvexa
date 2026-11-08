@@ -93,16 +93,54 @@ Not in the table on purpose:
 * **Ambiguous names** are refused with the explicit choices: `yr` and `year` (use `yr_julian` or
   `yr_common`), `acre` (`acre_int` or `acre_us_survey`), `qt`, `cup`, `tbsp`, `tsp`, `oz`, `gal`,
   `ton` and more. `dimvexa units` lists them all.
-* **Angle limitation (pi).** Pi is irrational, so `deg`, `arcmin`, `arcsec` and `grad` use the
-  fraction 245850922/78256779 (relative error 2.5e-17, below half an `f64` ulp) and are marked
-  `measured`. `f64` results are indistinguishable from the true value except possibly in the last
-  bit; `--exact` results are exact for that fraction, not for pi. Angles among themselves
-  (`60 arcmin` to `deg`) are exact. Angle is dimensionless (ADR-007), so `rad/s` and `Hz` are the
-  same dimension. See ADR-010 and KL-19.
+* **Angles** have limitations of their own, listed in the next section.
 * **Not yet:** `eV` and `Da` (their factors do not fit the exact `i128` arithmetic, see
   ADR-010), `rev` and `rpm`, information (`bit`, `B`), percent and ppm, logarithmic units
   (`dB`, `Np`), the parsec, months and oil barrels (see the `--config` example). Open a *Unit
   request* issue.
+
+## Angles and pi: limitations
+
+`rad`, `deg`, `arcmin`, `arcsec` and `grad` (alias `gon`) work, with these limits. Read them before
+you rely on an angle result.
+
+1. **Pi is a fraction, not pi.** Pi is irrational and every factor here is an exact fraction.
+   `deg`, `arcmin`, `arcsec` and `grad` use pi = 245850922/78256779, a continued-fraction
+   approximation (3.14159265358979324 against the true 3.14159265358979323846..., relative error
+   2.5e-17). That is below half an `f64` ulp (1.1e-16), so ordinary `f64` results equal the true
+   value except possibly in the last bit. Longer approximations overflow the exact `i128`
+   arithmetic (ADR-010).
+2. **`--exact` is exact for the fraction, not for pi.** `convert 180 deg rad --exact` prints
+   `245850922/78256779 rad`. Do not read that as a proof about pi. These units are marked
+   `measured` in `dimvexa units deg` for that reason.
+3. **Only `rad` links are affected.** `deg`, `arcmin`, `arcsec` and `grad` share the one fraction,
+   so `60 arcmin` to `deg` or `100 grad` to `deg` are exact. Only a conversion to or from `rad`
+   (or a compound that contains it) carries the tiny error.
+4. **You cannot type `2*pi` or `2pi`.** A value is a plain number (`6.283185307179586`) or a
+   fraction (`1/3`). Typing the decimal works for `f64` (`6.283185307179586 rad` to `deg` gives
+   `360 deg`), but the decimal is not exactly 2 pi, so `--exact` shows a tiny difference
+   (about 1.8e-14 deg). Use degrees (`360 deg`) when you can. To write multiples of pi, define
+   `pi` and `turn` yourself with the shipped example config, which uses the same fraction, so
+   `2 pi` is exactly 360 deg:
+
+   ```console
+   $ dimvexa convert 2 pi deg --config examples/configs/angle.toml
+   360 deg
+   $ dimvexa convert 1 turn rad --config examples/configs/angle.toml
+   6.283185307179586 rad
+   ```
+
+5. **Angle is dimensionless** (ADR-007), so `rad/s` and `Hz` are the same dimension and
+   `1 rad/s` converts to `1 Hz`, and `1 deg` converts to a plain number (`dimvexa convert 1 deg 1`
+   gives 0.017453292519943295). Dimvexa does not know that a hertz counts cycles and a radian
+   per second counts radians. Because of this there is no `rev`, `turn` or `rpm`: `1 turn/s`
+   would convert to `6.28 Hz`, which is wrong for a frequency. The example config defines `turn`
+   with that caveat, on your own responsibility.
+6. **Missing:** `sr` (steradian), the parsec and angular `mil`. `eV` and `Da` are also missing
+   because of the same arithmetic limit (ADR-010).
+
+The decision and the options for an exact pi are in [`docs/adr/010-units-that-do-not-fit-i128.md`](docs/adr/010-units-that-do-not-fit-i128.md);
+the pinned limitation is KL-19 in [`docs/known-limitations.md`](docs/known-limitations.md).
 
 ## Finding a unit
 
