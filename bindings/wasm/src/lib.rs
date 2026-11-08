@@ -80,12 +80,15 @@ impl DimvexaConversion {
         self.inner.apply_exact_f64(x).map_err(|e| fail(&e))
     }
 
-    /// Fast path over a whole array in one call; returns a new `Float64Array`.
+    /// Fast path over a whole array in one call; returns a new `Float64Array`. The caller's
+    /// array is not changed. To avoid allocating a result array on every call, reuse one array
+    /// with `applyInPlace`.
     #[wasm_bindgen(js_name = applyBatch)]
     #[must_use]
-    pub fn apply_batch(&self, input: &[f64]) -> Float64Array {
-        let out = self.inner.apply_vec(input);
-        Float64Array::from(out.as_slice())
+    pub fn apply_batch(&self, mut input: Vec<f64>) -> Float64Array {
+        // `input` is already a copy in WASM memory: convert it there, no second buffer.
+        self.inner.apply_in_place(&mut input);
+        Float64Array::from(input.as_slice())
     }
 
     /// Fast path in place: overwrites the array's contents, allocates nothing on the JS side.

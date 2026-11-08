@@ -20,3 +20,10 @@ crate-type = ["cdylib"]
 dimvexa = "0.1.0"
 pyo3 = { version = "0.30", features = ["abi3-py39", "extension-module"] }
 numpy = "0.30"
+
+# LTO lets the PyO3 call trampolines inline across crates: about 57 ns to 48 ns per scalar call,
+# measured 2026-11-08 (no effect on results). panic stays "unwind": PyO3 turns a panic into a
+# Python exception, abort would kill the interpreter.
+[profile.release]
+lto = true
+codegen-units = 1
