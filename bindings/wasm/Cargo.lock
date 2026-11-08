@@ -35,7 +35,7 @@ dependencies = [
 
 [[package]]
 name = "dimvexa-wasm"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "dimvexa",
  "js-sys",
