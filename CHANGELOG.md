@@ -9,7 +9,7 @@ Commits by `release-plz` once releases start (planned for M1).
 
 ### Changed
 
-- Workspace version bumped to 0.1.0 (the 0.0.0 placeholder was published to crates.io first).
+- Workspace version bumped to 0.1.1.
 - Python binding: a contiguous `float64` array is converted through the core slice loop instead
   of an element-by-element `ndarray` iterator (the output keeps the input's C or Fortran order),
   and the release profile uses LTO. Results are bit-identical to the scalar path.
