@@ -21,7 +21,7 @@ error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne,
 $ dimvexa units volume      # which volume units exist? (see "Finding a unit" below)
 ```
 
-**Status:** pre-release 0.0.0, not on crates.io yet; use it from git (`dimvexa = { git = "https://github.com/welworx/dimvexa" }`).
+**Status:** pre-release 0.1.0; the crates are on crates.io (`dimvexa`); to track the latest changes use git (`dimvexa = { git = "https://github.com/welworx/dimvexa" }`).
 
 ## Why
 

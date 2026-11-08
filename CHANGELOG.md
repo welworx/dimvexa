@@ -7,6 +7,10 @@ Commits by `release-plz` once releases start (planned for M1).
 
 ## [Unreleased]
 
+### Changed
+
+- Workspace version bumped to 0.1.0 (the 0.0.0 placeholder was published to crates.io first).
+
 ### Added
 
 - Python binding in `bindings/python` (PyO3 + maturin, `abi3`, NumPy arrays): `convert`, `conversion`,
