@@ -117,7 +117,7 @@ indicative, not a basis for a "fastest" claim.
 | pint 0.26.2, unyt 3.2.0, astropy 8.0.2, NumPy ceiling | yes; spellings checked against the installed libraries |
 | mathjs 13.2.0, js-quantities 1.8.0, convert-units 2.3.4, JavaScript ceiling | yes; spellings checked |
 | ucum-units | not written |
-| Dimvexa Python and WASM bindings | stub (bindings do not exist) |
+| Dimvexa Python and WASM bindings | stub (bindings do not exist; design in [ADR-010](adr/010-bindings.md)) |
 | `bench-compare.yml` | not run on GitHub yet (its action pins are verified; use `benchmarks/run_all.sh` locally) |
 
 Python packages in this run were installed without hashes (`lockfile: unknown`). Expect residual
