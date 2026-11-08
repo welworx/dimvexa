@@ -22,5 +22,5 @@ dependencies, while the main workspace is std-only and must build offline (ADR-0
 
 ## Consequences
 
-CI for the binding (`python.yml`, `wheels.yml`) and a PyPI release are separate follow-ups. No
+CI for the binding (`python` job, `wheels.yml`) and a PyPI release are separate follow-ups, planned in `docs/python-binding.md`. No
 performance claim is made until a dated benchmark run exists.
