@@ -1,6 +1,7 @@
 /target
 **/*.rs.bk
 /extras/target
+/extras/bindings-spike/target
 /fuzz/target
 /fuzz/corpus
 /fuzz/artifacts
@@ -10,3 +11,5 @@ callgrind.out.*
 /benchmarks/node/node_modules
 /benchmarks/python/.venv
 __pycache__/
+/extras/bindings-spike/python/dimvexa_spike/*.so
+/extras/bindings-spike/.venv

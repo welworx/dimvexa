@@ -1,0 +1,13 @@
+[build-system]
+requires = ["maturin>=1.7,<2"]
+build-backend = "maturin"
+
+[project]
+name = "dimvexa-spike"
+version = "0.0.0"
+requires-python = ">=3.11"
+license = { text = "MIT OR Apache-2.0" }
+
+[tool.maturin]
+module-name = "dimvexa_spike._dimvexa_spike"
+python-source = "python"
