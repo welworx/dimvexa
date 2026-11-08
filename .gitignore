@@ -13,3 +13,5 @@ __pycache__/
 /bindings/python/target
 /bindings/python/.venv
 *.so
+/bindings/wasm/target
+/bindings/wasm/pkg

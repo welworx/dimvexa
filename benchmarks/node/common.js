@@ -331,5 +331,5 @@ function sortKeys(o) {
   return o;
 }
 
-module.exports = { Adapter, Unsupported, NotApplicable, main, translateExpr, loadTranslation, moduleVersion,
+module.exports = { dirSize, Adapter, Unsupported, NotApplicable, main, translateExpr, loadTranslation, moduleVersion,
                    moduleBytes, splitQuantity, ulpDistance, median, stat, lcg32Inputs, loadCorpus };
