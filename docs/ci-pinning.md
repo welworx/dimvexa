@@ -6,37 +6,31 @@ and keep the human-readable version in a comment next to it. Dependabot
 (`.github/dependabot.yml`, ecosystem `github-actions`) proposes updates to the SHA and the
 comment together.
 
-## Status: copied, not verified
+## Status: SHAs checked against their tags
 
-The authoring session had no access to GitHub, so **no SHA below was looked up or checked
-by us.** They were copied from the workflow of a large, widely used Rust repository
-(`tangency-labs/solidcraft`) and are labelled in the workflow files with the comment
-"copied from a widely used repo, verify against the action's release page before enabling".
+The SHAs live **only in the workflow files** (that is where Dependabot updates them, together
+with the version comment); this page deliberately does not repeat them, because a copy drifts.
+`scripts/verify-action-pins.sh` checks every pinned action: it must be a full 40-character SHA
+with a `# vX.Y.Z` comment, and the SHA must be the commit that tag points to (`git ls-remote`,
+no token needed). It was last run on 2026-11-08 and all pins matched. Run it after any bump:
 
-**Before enabling the workflows**, for each row: open the action's releases page, find the
-release named in the "Version comment" column, and check that the commit it points to is the
-SHA in the table. If a SHA does not match, replace it with the one on the release page, or the
-step will fail with "unable to find version" (the safe failure). Do the same for the
-`cargo-deny` version.
+```console
+scripts/verify-action-pins.sh
+```
 
-| Action | SHA (full) | Version comment | Used in |
-|---|---|---|---|
-| `actions/checkout` | `3d3c42e5aac5ba805825da76410c181273ba90b1` | v7.0.1 | ci, nightly, dco, fuzz, mutants, bench-compare |
-| `Swatinem/rust-cache` | `6323deb102c322ba6fcbdcafc7e3dddab59af2b6` | v2.9.2 | ci, nightly |
-| `taiki-e/install-action` | `1168f6810a3cb30a3514bf5756a3b7f0422c6df8` | v2.87.28 | ci (`deny`, `text`, `workflows`), nightly, fuzz, mutants |
-| `actions/upload-artifact` | `cf430e030ddbb5b0abf93d22962f4752f3646cd9` | v7.0.2 | mutants, bench-compare |
+That proves the tag-to-commit mapping. It does not prove the action's code is safe; for a new
+action or a major bump, read the release diff (checklist below).
 
-### Placeholders in `bench-compare.yml` (unverified, workflow cannot run until replaced)
+| Action | Used in |
+|---|---|
+| `actions/checkout` | ci, nightly, dco, fuzz, mutants, bench-compare |
+| `Swatinem/rust-cache` | ci, nightly |
+| `taiki-e/install-action` | ci (`deny`, `text`), nightly, fuzz, mutants |
+| `actions/upload-artifact` | mutants, bench-compare |
+| `actions/setup-python`, `actions/setup-node` | bench-compare (v7.1.0, which run on node24) |
 
-| Action | Value in the file | What to do |
-|---|---|---|
-| `actions/setup-python` | `UNVERIFIED-pin-before-use` (v5 intended) | look up the full commit SHA of the release and replace the placeholder |
-| `actions/setup-node` | `UNVERIFIED-pin-before-use` (v4 intended) | same |
-
-No SHA was invented for these; the workflow fails at "unable to resolve action" until they are
-pinned, which is the safe failure. `bench-compare.yml` is not part of `ci-success`, installs
-third-party packages (PyPI, npm, crates.io) with `--ignore-scripts` where possible, and has
-`contents: read` only.
+`bench-compare.yml` is not part of `ci-success`, installs third-party packages (PyPI, npm,
+crates.io) with `--ignore-scripts` where possible, and has `contents: read` only.
 
 ## What is not an action
 
@@ -56,6 +50,7 @@ third-party packages (PyPI, npm, crates.io) with `--ignore-scripts` where possib
 |---|---|---|
 | `cargo-deny` | `0.20.2` | yes, in `ci.yml` and `nightly.yml` (`cargo deny --locked check` passes locally with this version; 0.18.3 cannot read advisories that use CVSS 4.0) |
 | `actionlint` | `1.7.7` | yes, in `ci.yml`: the release tarball, verified against the SHA-256 in the release's checksums file (taiki-e/install-action does not know actionlint). `actionlint` passes on all workflows locally |
+| `gitleaks` | `8.30.1` | yes, in `ci.yml` (`gitleaks` job): `go install github.com/zricethezav/gitleaks/v8@v8.30.1`, verified by Go's checksum database. The module still declares the author's original import path. Scans the full history and fails on any finding. Checked locally: no findings in this repository, and a planted token-shaped secret is found (also after its file is deleted in a later commit) |
 | `cargo-fuzz`, `cargo-mutants`, `cargo-llvm-cov` | latest | no (weekly and nightly workflows only) |
 | `typos-cli`, `taplo-cli` | latest | no. Choose versions and pin them (`typos-cli@X.Y.Z`) once the first run is green |
 
@@ -69,4 +64,4 @@ third-party packages (PyPI, npm, crates.io) with `--ignore-scripts` where possib
    `contents: read`).
 4. Never use `pull_request_target`, and never interpolate `${{ github.event.* }}` text
    (titles, branch names, bodies) into a script; pass it through `env:`.
-5. Add the row to the table above.
+5. Add the row to the table above, then run `scripts/verify-action-pins.sh`.

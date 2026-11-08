@@ -22,7 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -31,7 +30,6 @@ jobs:
           v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
           rustup toolchain install "$v" --profile minimal --no-self-update
           rustup default "$v"
-      # copied from a widely used repo, verify against the action's release page before enabling
       - uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
         with:
           tool: cargo-mutants
@@ -39,7 +37,6 @@ jobs:
         run: cargo mutants -p dimvexa-core --timeout 60 --no-shuffle
       - name: Keep the results
         if: always()
-        # copied from a widely used repo, verify against the action's release page before enabling
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mutants-out
