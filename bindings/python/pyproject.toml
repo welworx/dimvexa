@@ -1,0 +1,26 @@
+[build-system]
+requires = ["maturin>=1.7,<2"]
+build-backend = "maturin"
+
+[project]
+name = "dimvexa"
+description = "Exact factors. Loud failures. Zero guessing. Unit conversion with exact rational factors."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT OR Apache-2.0" }
+dependencies = []
+dynamic = ["version"]
+classifiers = [
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
+
+[project.optional-dependencies]
+numpy = ["numpy>=1.23"]
+test = ["pytest", "numpy>=1.23"]
+
+[tool.maturin]
+module-name = "dimvexa._dimvexa"
+python-source = "python"
+features = ["pyo3/extension-module"]
