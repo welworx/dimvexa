@@ -34,7 +34,7 @@ The bindings give the same classification as the Rust API; they do not report th
 code, so only the Rust rows carry "refused for the intended reason" (24 of 30). The 9 unsupported
 cases are still listed in `comparison.md`; they are not hidden.
 
-## Speed of the bindings (m/s to km/h, medians; other conversions in `comparison.md`)
+## Speed of the bindings (degC to degF, the affine case, medians; other conversions in `comparison.md`)
 
 | Row | Scalar | One-shot | Batch 100k |
 |---|---|---|---|
