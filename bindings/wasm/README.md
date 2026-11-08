@@ -9,7 +9,7 @@ bindings/wasm/build.sh                                      # writes bindings/wa
 ```
 
 ```js
-const d = require('dimvexa');   // after `npm install dimvexa`; locally: require('./pkg/dimvexa.js')
+const d = require('@dimvexa/wasm');   // after `npm install @dimvexa/wasm`; locally: require('./pkg/dimvexa.js')
 d.convert(212, 'degF', 'degC');            // 100  (fast path, f64)
 d.convertExact('98.6', 'degF', 'degC');    // 37   (exact rational, rounded once)
 d.convertQuantity('5 ft', 'm');            // "1.524 m"
@@ -38,6 +38,6 @@ must not be quoted (`docs/benchmarking.md`).
 
 ## npm
 
-`build.sh` also writes `pkg/package.json` (name `dimvexa`, version taken from `Cargo.toml`). Publishing is
-manual and owner-only: `cd bindings/wasm/pkg && npm publish --access public` from the npm user `welworx`.
+`build.sh` also writes `pkg/package.json` (name `@dimvexa/wasm`, version taken from `Cargo.toml`). Publishing is
+manual and owner-only: `cd bindings/wasm/pkg && npm publish --access public` as a member of the npm org `dimvexa` (scoped packages need `--access public`).
 Check first with `npm pack --dry-run`.

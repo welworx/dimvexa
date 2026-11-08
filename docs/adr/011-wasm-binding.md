@@ -28,9 +28,8 @@ needs either `wasm-bindgen` (whose macros expand to `unsafe` glue) or hand-writt
 * Batch entry points (`applyBatch`, `applyInPlace`) exist because a JS to WASM call has a fixed
   cost; whether they pay off is a measurement (`benchmarks/node/run_dimvexa_wasm.js`), not an
   assumption.
-* The npm package is the unscoped name `dimvexa`, published by the npm user `welworx` (the name
-  returned 404 on 2026-11-08, i.e. free). The earlier plan `@dimvexa/wasm` needs an npm
-  organisation and is not used.
+* The npm package is `@dimvexa/wasm`, owned by the npm org `dimvexa`. An unscoped `dimvexa` 0.1.0
+  was published by mistake on 2026-11-08 and is to be deprecated in favour of it.
 * OPEN: pack selection at build time (smaller bundles). Not implemented until the owner confirms.
 
 ## Consequences
