@@ -14,7 +14,8 @@ rm -rf pkg
 wasm-bindgen --target nodejs --out-dir pkg --out-name dimvexa \
   target/wasm32-unknown-unknown/release/dimvexa_wasm.wasm
 # package.json for npm: name "dimvexa" (published by the npm user welworx), version from Cargo.toml.
-ver=$(sed -n '0,/^version = "\(.*\)"/s//\1/p' Cargo.toml)
+ver=$(awk -F'"' '/^version = /{print $2; exit}' Cargo.toml)   # portable: BSD sed (macOS) lacks 0,/re/
+[ -n "$ver" ] || { echo "cannot read the version from Cargo.toml" >&2; exit 1; }
 cat > pkg/package.json <<JSON
 {
   "name": "dimvexa",
