@@ -1,6 +1,6 @@
 # Python binding: status, gaps and CI plan
 
-Decision record: [ADR-011](adr/011-python-binding.md). Code: `bindings/python`.
+Decision record: [ADR-012](adr/012-python-binding.md). Code: `bindings/python`.
 
 ## 1. What exists
 

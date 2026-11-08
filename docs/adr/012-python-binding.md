@@ -1,4 +1,4 @@
-# ADR-011: Python binding as a separate PyO3 workspace
+# ADR-012: Python binding as a separate PyO3 workspace
 
 Status: Accepted
 

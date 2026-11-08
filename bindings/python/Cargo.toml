@@ -1,5 +1,5 @@
 # Python binding (PyO3 + maturin). Its own workspace: the main workspace is std-only and builds
-# offline, and this crate needs PyO3 and NumPy from the registry. See README.md and ADR-011.
+# offline, and this crate needs PyO3 and NumPy from the registry. See README.md and ADR-012.
 [package]
 name = "dimvexa-python"
 version = "0.1.0"
