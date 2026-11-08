@@ -17,7 +17,8 @@ Own-performance numbers (the M0 spike) are in [`docs/benchmarks/M0.md`](benchmar
 4. **No cherry-picking.** Every corpus case, every conversion and every batch size is reported,
    including those where Dimvexa loses or fails.
 5. **Maintainers may review their runner.** Open a *Benchmark runner review* issue; corrections
-   are applied before publication.
+   are applied before publication. Draft requests for each runner:
+   [`benchmarks/runner-review-requests.md`](benchmarks/runner-review-requests.md) (not yet posted).
 
 ## What is measured
 
@@ -46,14 +47,23 @@ library only, offline, deterministic; `--check` verifies the committed files).
   units). The truth is computed by an **independent oracle** (`corpus-src/truth.toml` with
   `Fraction` arithmetic), not by Dimvexa. Where the oracle can evaluate a Dimvexa vector the two
   must agree or generation fails (63 vectors checked).
+* **Independent cases** (`origin: independent`, ids `ind-*`, `corpus-src/independent_convert.toml`):
+  the expected value is the number published in a cited source (NIST SP 811 Appendix B, NIST
+  HB 44, BIPM SI Brochure; exact definitions only), not derived from Dimvexa's vectors or tables.
+  The oracle is only a cross-check and generation fails on any disagreement. The report shows
+  correct/total per origin so that corpus bias is visible. Not yet used: the pint, UCUM, astropy and
+  mathjs test suites (not reachable offline when this was written); add them with their
+  licences checked, citing instead of copying.
 * `must_refuse.json`: requests that must be refused or flagged: ambiguous names (`ton`, `gal`,
   `oz`, `pt`, `cal`, `Btu`, `hp`, `mile`, `foot`, bare `ppm`), missing context (`Nm3` to `m3`,
   gauge to absolute pressure, mass fraction to mole fraction, water head), temperature kind
   errors (adding two absolute temperatures) and plain dimension mismatches. Any error counts as
   a refusal; the reason is compared only for Dimvexa.
 * `coverage.json`: unit lists by category plus Dimvexa's own table.
-* A documented default (pint reading `ton` as the short ton) still counts as silently accepted,
-  because the request did not say which ton.
+* A documented default (pint reading `ton` as the short ton) is reported as **accepted with a
+  default** in the `ambiguous_name` group. It is shown next to, not mixed into, the count of other
+  invalid requests that were silently accepted (a defect), because a policy choice and a missing
+  check are different findings. It is still not "refused": the request did not say which ton.
 
 Unit spellings differ per library; `benchmarks/translations/<lib>.json` maps Dimvexa's explicit
 names to each library's. Only explicit names are mapped, never ambiguous bare names. Every
@@ -111,6 +121,7 @@ indicative, not a basis for a "fastest" claim.
 | Runner | Run on a networked machine |
 |---|---|
 | Corpus generator, report generator | yes |
+| Corpus with 28 independent cases and the refusal groups | Dimvexa semantics run on the new corpus; the competitor result files are **from the older corpus** and have not been rerun (no network in the authoring environment). `benchmarks/run_all.sh` refreshes everything |
 | Dimvexa, Rust API, and Rust ceilings | yes, full run |
 | Dimvexa CLI (spawn per conversion) | yes, full run |
 | uom (needed a one-line fix to compile) | yes, 20 typed pairs only |
