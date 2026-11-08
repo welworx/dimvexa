@@ -5,13 +5,13 @@
 <text x="322" y="74" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">convert-units 2.3.4 / plain</text>
 <rect x="330" y="60" width="2.0" height="20" fill="#2a6fb0"/>
 <text x="338.0" y="74" font-family="sans-serif" font-size="12" fill="#1a1a1a">0 </text>
-<text x="322" y="102" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+a31bbb8 / exact_f64</text>
+<text x="322" y="102" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+c512372-dirty / exact_f64</text>
 <rect x="330" y="88" width="2.0" height="20" fill="#2a6fb0"/>
 <text x="338.0" y="102" font-family="sans-serif" font-size="12" fill="#1a1a1a">0 </text>
-<text x="322" y="130" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+a31bbb8 / fast_f64</text>
+<text x="322" y="130" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+c512372-dirty / fast_f64</text>
 <rect x="330" y="116" width="2.0" height="20" fill="#2a6fb0"/>
 <text x="338.0" y="130" font-family="sans-serif" font-size="12" fill="#1a1a1a">0 </text>
-<text x="322" y="158" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+a31bbb8 / text</text>
+<text x="322" y="158" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.0.0+c512372-dirty / text</text>
 <rect x="330" y="144" width="2.0" height="20" fill="#2a6fb0"/>
 <text x="338.0" y="158" font-family="sans-serif" font-size="12" fill="#1a1a1a">0 </text>
 <text x="322" y="186" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">uom 0.36.0 / typed</text>
