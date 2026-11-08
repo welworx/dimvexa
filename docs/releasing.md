@@ -34,6 +34,14 @@ Merges to `main` that do not change the version publish nothing.
   works through OIDC the package must exist.
 * Branch protection stays on `ci-success`; this workflow is not part of it.
 
+## Status
+
+`0.1.0` is out on all three registries (run for PR 11). The crates were published by hand
+beforehand, so the workflow's crates.io step skipped them: crates.io publishing from the
+workflow is untested. If trusted publishing cannot be set up there, store a
+`CARGO_REGISTRY_TOKEN` secret on the `release` environment and pass it as
+`CARGO_REGISTRY_TOKEN` in `publish-crates` instead of the auth action's token.
+
 ## Notes
 
 * Wheels are `abi3` (one per platform for Python >= 3.9). They are built against the workspace

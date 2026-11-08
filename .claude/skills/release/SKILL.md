@@ -14,14 +14,23 @@ PyPI and npm (`docs/releasing.md`).
 1. `cargo xtask ci` is green on main; the nightly workflow has no open failure issue.
 2. Bump the version in `Cargo.toml` (`[workspace.package]` and the `[workspace.dependencies]`
    entries), `bindings/python/Cargo.toml` (version and its `dimvexa` dependency) and
-   `bindings/wasm/Cargo.toml`, then refresh both bindings' `Cargo.lock`. All must be equal:
-   `scripts/check-versions.sh`. Keep `rust-version` at 1.85.
+   `bindings/wasm/Cargo.toml`, then refresh both bindings' `Cargo.lock` (`cargo update
+   --workspace` in `bindings/wasm` and `bindings/python`; a stale lock fails the release build,
+   which uses `--locked`). All versions must be equal: `scripts/check-versions.sh`. Check the
+   locks with `cargo metadata --locked --format-version 1 --manifest-path bindings/<x>/Cargo.toml`.
+   Keep `rust-version` at 1.85.
 3. `CHANGELOG.md`: move Unreleased to the version with the date. `CITATION.cff`: add `version`
    and `date-released` (YYYY-MM-DD) and keep `README.md` "How to cite" consistent. No DOI is
    invented.
 4. Data: if tables changed, `cargo xtask update-data-hash` has been run.
 5. Packaging: `cargo package --list -p <crate> --locked` for dimvexa-core, dimvexa-data,
-   dimvexa-config, dimvexa, dimvexa-cli; `cargo publish --dry-run -p dimvexa-core --locked`. Publish order for
-   the owner: core, data, config, dimvexa, cli.
+   dimvexa-config, dimvexa, dimvexa-cli; `cargo publish --dry-run -p dimvexa-core --locked`. The
+   workflow publishes in the order core, data, config, dimvexa, cli, and skips versions that
+   are already on a registry.
 6. Public API diff: `cargo semver-checks` once a baseline release exists (`api-change` skill).
 7. Benchmarks and `docs/precision.md` still match the code (`benchmarks`, `precision` skills).
+8. After the merge, the owner approves the run. Verify, do not assume: the five crates on
+   crates.io, `dimvexa` on PyPI (5 wheels + sdist), `@dimvexa/wasm` on npm and the tag `vX.Y.Z`.
+   Known gap: crates.io trusted publishing is not confirmed to work yet (the first release
+   skipped every crate because they already existed). If `publish to crates.io` fails at the
+   token step, see `docs/releasing.md`.
