@@ -1,21 +1,22 @@
 {
- "corpus_id": "cf193cbf0159731e",
+ "corpus_id": "f9bda6ddd1b21df7",
  "counts": {
   "coverage_lists": 8,
   "coverage_units": 177,
   "dimvexa_vectors_cross_checked_by_oracle": 63,
-  "must_convert": 164,
+  "must_convert": 192,
   "must_convert_approximate": 0,
+  "must_convert_independent": 28,
   "must_refuse": 30
  },
  "dimvexa_data_hash": "fnv1a64:b81226faf50bb254",
  "dimvexa_data_version": 3,
  "files": {
   "coverage.json": "100d408cb1517703bc5ad570eb694368451952fc177a0cf974b0527e80646176",
-  "must_convert.json": "e391db07fb495ba5e5362f273bdea82078dd8b1152ca076732dfe0ad62ae7cba",
-  "must_refuse.json": "7e691cf72855940bbd4348894c6fc595c07fbb0ab68e87fe6f3d5f7f0ce609bc",
+  "must_convert.json": "555291b0fb0dad29973af58d45653d143a3dc0b1353cb3e3491b02e2ec1c9323",
+  "must_refuse.json": "c18a7a82fc969245a65bea752f9c12510ccc3930f6d98d93fe0aa7c899c23eac",
   "perf.json": "704e7b31b05011a7fa086f664933800d184dfb07df9ee511451017781e1e777c"
  },
- "generator_version": 1,
+ "generator_version": 2,
  "schema": "dimvexa.bench.corpus.manifest/1"
 }

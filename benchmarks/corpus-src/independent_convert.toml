@@ -1,0 +1,261 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Independent must-convert cases (origin = "independent"). The expected value `expect` is the
+# number as PUBLISHED in the cited source (an exact definition: NIST SP 811 App. B, BIPM SI
+# Brochure, NIST HB 44), typed here as a decimal or fraction. It is NOT taken from Dimvexa's
+# golden vectors or tables. gen_corpus.py additionally cross-checks each case against the
+# oracle in truth.toml and fails on any disagreement, so an error in either list is caught.
+# Only exact definitions are used; rounded table values would need a tolerance and are left out.
+# Sources are cited, not copied: one fact per case. Not yet used: pint, UCUM, astropy or
+# mathjs test suites (they were not reachable offline; see docs/benchmarking.md).
+
+[[case]]
+id = "ind-001"
+category = "independent"
+value = "1"
+from = "in"
+to = "mm"
+expect = "25.4"
+source = "NIST SP 811 (2008) App. B.8: inch = 0.0254 m, exact (1959 international yard and pound agreement)"
+
+[[case]]
+id = "ind-002"
+category = "independent"
+value = "1"
+from = "ft"
+to = "m"
+expect = "0.3048"
+source = "NIST SP 811 (2008) App. B.8: foot = 0.3048 m, exact"
+
+[[case]]
+id = "ind-003"
+category = "independent"
+value = "1"
+from = "yd"
+to = "m"
+expect = "0.9144"
+source = "NIST SP 811 (2008) App. B.8: yard = 0.9144 m, exact"
+
+[[case]]
+id = "ind-004"
+category = "independent"
+value = "1"
+from = "mi"
+to = "km"
+expect = "1.609344"
+source = "NIST SP 811 (2008) App. B.8: mile (statute, international) = 1609.344 m, exact"
+
+[[case]]
+id = "ind-005"
+category = "independent"
+value = "1"
+from = "nmi"
+to = "m"
+expect = "1852"
+source = "NIST SP 811 (2008) App. B.8: nautical mile = 1852 m, exact (1929 International Hydrographic Conference)"
+
+[[case]]
+id = "ind-006"
+category = "independent"
+value = "1"
+from = "lb"
+to = "kg"
+expect = "0.45359237"
+source = "NIST SP 811 (2008) App. B.8: pound (avoirdupois) = 0.45359237 kg, exact"
+
+[[case]]
+id = "ind-007"
+category = "independent"
+value = "1"
+from = "oz_av"
+to = "g"
+expect = "28.349523125"
+source = "NIST SP 811 App. B.8 / HB 44: ounce = 1/16 lb = 28.349 523 125 g, exact"
+
+[[case]]
+id = "ind-008"
+category = "independent"
+value = "1"
+from = "lbf"
+to = "N"
+expect = "4.4482216152605"
+source = "NIST SP 811 (2008) App. B.8 and HB 44: pound-force = 4.448 221 615 260 5 N, exact (lb x standard gravity)"
+
+[[case]]
+id = "ind-009"
+category = "independent"
+value = "1"
+from = "atm"
+to = "Pa"
+expect = "101325"
+source = "NIST SP 811 (2008) App. B.8: standard atmosphere = 101 325 Pa, exact; BIPM SI Brochure Table 8 (historical)"
+
+[[case]]
+id = "ind-010"
+category = "independent"
+value = "1"
+from = "bar"
+to = "Pa"
+expect = "100000"
+source = "NIST SP 811 (2008) App. B.8: bar = 1e5 Pa, exact"
+
+[[case]]
+id = "ind-011"
+category = "independent"
+value = "1"
+from = "cal_th"
+to = "J"
+expect = "4.184"
+source = "NIST SP 811 (2008) App. B.8: thermochemical calorie = 4.184 J, exact"
+
+[[case]]
+id = "ind-012"
+category = "independent"
+value = "1"
+from = "cal_IT"
+to = "J"
+expect = "4.1868"
+source = "NIST SP 811 (2008) App. B.8: International Table calorie = 4.1868 J, exact (5th Int. Conf. on Properties of Steam, 1956)"
+
+[[case]]
+id = "ind-013"
+category = "independent"
+value = "1"
+from = "gal_us"
+to = "L"
+expect = "3.785411784"
+source = "NIST SP 811 (2008) App. B.8: gallon (US liquid) = 3.785 411 784 e-3 m3, exact (231 in3)"
+
+[[case]]
+id = "ind-014"
+category = "independent"
+value = "1"
+from = "pt_us"
+to = "L"
+expect = "0.473176473"
+source = "NIST HB 44 (2023) App. C: liquid pint = 1/8 US gallon = 0.473 176 473 L, exact"
+
+[[case]]
+id = "ind-015"
+category = "independent"
+value = "1"
+from = "kWh"
+to = "J"
+expect = "3600000"
+source = "NIST SP 811 (2008) App. B.8: kilowatt hour = 3.6e6 J, exact"
+
+[[case]]
+id = "ind-016"
+category = "independent"
+value = "1"
+from = "d"
+to = "s"
+expect = "86400"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 8: day = 86 400 s"
+
+[[case]]
+id = "ind-017"
+category = "independent"
+value = "1"
+from = "tonne"
+to = "kg"
+expect = "1000"
+source = "BIPM SI Brochure, 9th ed. (2019), Table 8: tonne = 1000 kg"
+
+[[case]]
+id = "ind-018"
+category = "independent"
+value = "60"
+from = "mi/h"
+to = "m/s"
+expect = "26.8224"
+source = "NIST SP 811 (2008) App. B.8: mile per hour = 0.447 04 m/s, exact; 60 x 0.44704"
+
+[[case]]
+id = "ind-019"
+category = "independent"
+value = "1"
+from = "ft3"
+to = "m3"
+expect = "0.028316846592"
+source = "NIST SP 811 (2008) App. B.8: cubic foot = 2.831 684 659 2 e-2 m3, exact (0.3048^3)"
+
+[[case]]
+id = "ind-020"
+category = "independent"
+value = "100"
+from = "degC"
+to = "degF"
+expect = "212"
+source = "Textbook (and ITS-90 / NIST SP 811 App. B.7): water boils at 100 degC = 212 degF at 1 atm"
+
+[[case]]
+id = "ind-021"
+category = "independent"
+value = "32"
+from = "degF"
+to = "degC"
+expect = "0"
+source = "NIST SP 811 (2008) App. B.7: t(degC) = (t(degF) - 32)/1.8; ice point"
+
+[[case]]
+id = "ind-022"
+category = "independent"
+value = "98.6"
+from = "degF"
+to = "degC"
+expect = "37"
+source = "NIST SP 811 (2008) App. B.7 formula: (98.6 - 32)/1.8 = 37 exactly"
+
+[[case]]
+id = "ind-023"
+category = "independent"
+value = "-40"
+from = "degC"
+to = "degF"
+expect = "-40"
+source = "Textbook: the Celsius and Fahrenheit scales meet at -40; NIST SP 811 App. B.7 formula"
+
+[[case]]
+id = "ind-024"
+category = "independent"
+value = "0"
+from = "K"
+to = "degC"
+expect = "-273.15"
+source = "BIPM SI Brochure, 9th ed. (2019), section 2.3.1: t/degC = T/K - 273.15"
+
+[[case]]
+id = "ind-025"
+category = "independent"
+value = "0"
+from = "degC"
+to = "K"
+expect = "273.15"
+source = "BIPM SI Brochure, 9th ed. (2019), section 2.3.1: T/K = t/degC + 273.15"
+
+[[case]]
+id = "ind-026"
+category = "independent"
+value = "20"
+from = "degC"
+to = "degF"
+expect = "68"
+source = "NIST SP 811 (2008) App. B.7 formula: 20 x 1.8 + 32 = 68"
+
+[[case]]
+id = "ind-027"
+category = "independent"
+value = "5"
+from = "delta_degC"
+to = "delta_degF"
+expect = "9"
+source = "NIST SP 811 (2008) App. B.7: a temperature interval of 1 degC equals 1.8 degF"
+
+[[case]]
+id = "ind-028"
+category = "independent"
+value = "1"
+from = "delta_degF"
+to = "delta_K"
+expect = "5/9"
+source = "NIST SP 811 (2008) App. B.7: 1 degF interval = 5/9 K (inverse of 1 K = 1.8 degF)"
