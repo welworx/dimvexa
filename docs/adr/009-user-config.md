@@ -1,5 +1,10 @@
 # ADR-009: User config files: name mappings, extra units and caller-supplied bridge constants
 
+Amended by [ADR-014](014-one-config-mechanism.md): one `--config NAME_OR_PATH` replaces
+`--config` plus `--profile`, `[[bridge]]` and `--bridge` became `[[density]]` and `--density`,
+shipped configs may carry densities, and the JSON schemas are `/2`. The text below is the
+original decision.
+
 Maturity: beta. The config layer is less proven than the core: expect format and option
 changes before a release (see `docs/known-limitations.md`).
 

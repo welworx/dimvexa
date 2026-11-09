@@ -1,7 +1,8 @@
 # ADR-014: One `--config` mechanism with bundled configs, shipped densities, and conversion only
 
-Status: Proposed (direction discussed with the owner; not confirmed as Accepted. Nothing is
-implemented, and the OPEN items below are undecided)
+Status: Proposed (direction confirmed by the owner in conversation on 2026-11-09 and implemented
+on the branch; the status moves to Accepted only when the owner says so, and the OPEN items
+below record what was decided or defaulted)
 
 Amends ADR-009 (user config files). Where they differ, this ADR wins once Accepted.
 
@@ -96,19 +97,25 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
     (`fl_oz_us`, `fl_oz_imp`) in both countries. Mapping it would guess, so it stays refused.
   * `stone` is not in the unit table, so `gb` cannot map it; adding it is an `add-unit` change.
   * `mile` is also declared ambiguous against `mi_us_survey`; `us` picks the international `mi`.
-* **OPEN 2: which densities ship and under which conditions.** Suggested start: water at 4 degC
-  and 20 degC, from the original source (the existing example cites Tanaka et al., Metrologia 38
-  (2001) 301, which the repo still marks as unchecked against its Table 1). Others (seawater,
-  ethanol, diesel) only with a primary source that states the conditions; each is verified before
-  it is written down, and none ships on a name alone.
-* **OPEN 3: does a bundled config include a density by default?** Suggested: yes in `us`, `gb`
-  and `metric-trade` (water at a stated temperature), and a separate `water` config for just the
-  density. The alternative is density only in a dedicated config.
-* **OPEN 4: scope of the removal in point 7.** The public items that go, and whether anything
-  else (the `Kind` add/sub rules in the docs, ADR-005 notes) needs a note. Checked against the
-  code before the removal is written.
-* **OPEN 5: the literal `--density 998.2067kg/m3`.** Whether it ships with the first change or
-  later, and its accepted unit forms (suggested: kg/m3, g/cm3, g/mL, kg/L, lb/ft3).
+* **OPEN 2: which densities ship.** Implemented default: water at 25 degC (997.04702 kg/m3) and
+  at its temperature of maximum density, 3.983035 degC (999.97495 kg/m3). Both values are quoted
+  by en.wikipedia.org/wiki/Properties_of_water from Tanaka et al., Metrologia 38 (2001) 301, and
+  agree with the paper's formula recomputed from its coefficients, but the paper's Table 1 is
+  paywalled and was not read, so each `source` says "confirm against Table 1". A 20 degC water
+  density is not shipped for the same reason (the formula gives 998.2067; the repo's example file
+  still carries it as the caller's own number). Seawater, ethanol and diesel need a primary
+  source that states the conditions and are not shipped.
+* **OPEN 3: densities in the regional configs.** Implemented default: the two water densities
+  are in `water` and also in `us`, `gb` and `metric-trade` (an identical copy, kept equal by a
+  test), so `--config us --density water_25C` works. The year configs carry none.
+* **OPEN 4: scope of the removal in point 7.** Implemented: `Quantity::checked_add` and
+  `checked_sub`, `Kind::add` and `sub`, `UnitExpr::difference_counterpart`, the Python
+  `__add__`/`__sub__` and the WASM `addQuantities`. `Quantity::checked_mul` and `checked_div`
+  stay: they compose units (the pool pump cookbook) and still refuse to scale a temperature point.
+* **OPEN 5: the literal `--density`.** Implemented in the first change. Any unit of mass per
+  volume the registry knows is accepted (`kg/m3`, `g/cm3`, `kg/L`, `lb/ft3`, ...), with or
+  without a space. A value that starts with a digit, `+`, `-` or `.` is a number; anything else
+  is a name, which is why a density name must start with a letter.
 * **OPEN 6: molar mass.** Table and option names (`[[molar_mass]]`, `--molar-mass`) are only
   reserved here; no values ship until a primary source is checked.
 

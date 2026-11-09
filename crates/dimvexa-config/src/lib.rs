@@ -545,9 +545,8 @@ impl Constant {
         let direction = density_direction(from.dim(), to.dim()).ok_or_else(mismatch)?;
         if !from.offset().is_zero() || !to.offset().is_zero() {
             return Err(Error::Refused {
-                reason:
-                    "a density applies to linear units only, not to a unit with an offset"
-                        .to_string(),
+                reason: "a density applies to linear units only, not to a unit with an offset"
+                    .to_string(),
                 suggestions: Vec::new(),
             });
         }
@@ -729,7 +728,11 @@ pub fn bundled(name: &str) -> Option<&'static Bundled> {
 /// Any other value is the name of a shipped config; a local file called `us` is written `./us`.
 #[must_use]
 pub fn is_path(spec: &str) -> bool {
-    spec.contains('/') || spec.contains('\\') || spec.ends_with(".toml")
+    spec.contains('/')
+        || spec.contains('\\')
+        || std::path::Path::new(spec)
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("toml"))
 }
 
 /// Replaces the entry that `same` selects, keeping its position, or appends. An override must
@@ -1097,7 +1100,10 @@ mod tests {
                 WATER.replace("source =", "kind = \"density\"\nsource ="),
                 "unknown density key 'kind'",
             ),
-            (WATER.replace("water_20C", "20C"), "must start with a letter"),
+            (
+                WATER.replace("water_20C", "20C"),
+                "must start with a letter",
+            ),
             (
                 WATER.replace("[[density]]", "[[bridge]]"),
                 "renamed [[density]]",

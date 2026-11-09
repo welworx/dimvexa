@@ -188,7 +188,10 @@ fn a_density_does_nothing_for_anything_but_a_density() {
         reg.parse("L").unwrap().dim(),
         kg.dim()
     ));
-    assert!(!dimvexa_config::Constant::density_needed(kg.dim(), kg.dim()));
+    assert!(!dimvexa_config::Constant::density_needed(
+        kg.dim(),
+        kg.dim()
+    ));
 }
 
 const BARREL: &str = "[[unit]]\nsymbol = \"bbl_oil\"\nbase = \"gal_us\"\nfactor = \"42\"\n\
@@ -608,7 +611,14 @@ fn bundled_densities_are_identical_in_every_config_that_carries_them() {
         assert_eq!(theirs, ours, "{name} carries the water densities");
     }
     // 25 degC: 997.04702 kg/m3; maximum density: 999.97495 kg/m3
-    let get = |n: &str| water.constants().iter().find(|c| c.name == n).unwrap().value;
+    let get = |n: &str| {
+        water
+            .constants()
+            .iter()
+            .find(|c| c.name == n)
+            .unwrap()
+            .value
+    };
     assert_eq!(get("water_25C"), Ratio::new(99_704_702, 100_000).unwrap());
     assert_eq!(
         get("water_max_density"),
@@ -626,7 +636,9 @@ fn a_density_literal_is_converted_to_kg_per_m3_exactly() {
     assert_eq!(g.value, Ratio::from_int(700));
     let l = Constant::density_from_text(&reg, "1 kg/L").unwrap();
     assert_eq!(l.value, Ratio::from_int(1000));
-    for bad in ["998", "kg/m3", "0 kg/m3", "-1 kg/m3", "5 m", "5 degC", "x kg/m3"] {
+    for bad in [
+        "998", "kg/m3", "0 kg/m3", "-1 kg/m3", "5 m", "5 degC", "x kg/m3",
+    ] {
         assert!(Constant::density_from_text(&reg, bad).is_err(), "{bad}");
     }
 }
