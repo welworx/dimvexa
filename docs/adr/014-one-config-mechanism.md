@@ -34,7 +34,7 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
      variable and no home-directory file (unchanged from ADR-009).
 2. **"Profile" disappears as a separate concept.** `--profile` is not added. A bundled config is
    "a config that ships with dimvexa", with the same format and the same validation as a user
-   file. The JSON field `profile` stays and stays `null` (removing a field is breaking).
+   file. The JSON field `profile` is removed (point 3).
 3. **"Bridge" leaves the user-facing vocabulary; density replaces it.** Only densities exist
    (KL-5), so the config table is `[[density]]` (no `kind` field) and the option is
    `--density NAME_OR_VALUE`, replacing `[[bridge]]` and `--bridge NAME`:
@@ -47,15 +47,23 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
    **Rust names stay**: `Bridge` and `BridgeKind` remain the types in `dimvexa-config`
    ("a caller-supplied constant for a conversion the core refuses"). `BridgeKind` is already
    `#[non_exhaustive]`, each table maps to one variant, and a new kind is a new variant, not a
-   new type. The JSON output object stays `bridge` within `dimvexa.convert/1` (removing a field
-   is breaking); it gains no new name.
+   new type.
+   **JSON changes now (breaking, accepted).** Within `dimvexa.convert/1` a field cannot be
+   removed or renamed, so the schemas move to `dimvexa.convert/2` and `dimvexa.units/2`:
+   * the `bridge` object becomes `density` (null when none was used), with the same members;
+     a later molar mass adds `molar_mass` beside it, and a conversion uses at most one;
+   * in `units`, the `bridges` list becomes `densities`;
+   * the `profile` field (always null, see point 2) is removed;
+   * `config` stays, with the `bundled:NAME` form from point 6.
+   The `/1` schema files stay in `docs/schemas/` as history. The CLI emits `/2` only; it does
+   not offer both. `docs/python-binding.md`, the WASM binding and the CLI snapshots follow.
 4. **Bundled configs may carry densities.** ADR-009 rule 8 ("shipped profiles carry no bridge")
    is replaced by: a bundled density needs `conditions` and a `source` verified against the
    original, like a shipped unit, and its name states the conditions (`water_20C`, never
    `water`). A bundled config can include a density so that `--config us` makes `1 L kg` work
    with a stated water density. A density is never computed (ADR-001): the library multiplies by
    the number written in the config or on the command line. Every result that uses one is
-   `measured`, carries the assumption on stderr in text mode and in the JSON `bridge` object, and
+   `measured`, carries the assumption on stderr in text mode and in the JSON `density` object, and
    adds the source to `sources` (unchanged from ADR-009 rule 4).
 5. **A command to see what is included.** `dimvexa configs` lists the bundled configs;
    `dimvexa configs NAME` shows what one contains: the names it maps, the units it defines and
@@ -103,5 +111,5 @@ command with a stated, sourced density.
 
 It costs: bundled data with source verification for every density, a `configs` command and its
 JSON schema, a bundled-name check in the loader, a breaking change for anyone who used the
-temperature arithmetic, and updates to ADR-009 (rule 8, the `--profile` text), the README, the
+temperature arithmetic, new JSON schemas (`dimvexa.convert/2`, `dimvexa.units/2`) for the renames, and updates to ADR-009 (rule 8, the `--profile` text), the README, the
 CLI help and the `docs/known-limitations.md` entries that mention profiles.
