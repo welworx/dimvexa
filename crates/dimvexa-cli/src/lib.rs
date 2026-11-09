@@ -26,12 +26,15 @@ use std::io::Write;
 use dimvexa::{Conversion, Dim, Error, Ratio, Registry, Unit, UnitExpr, registry};
 use dimvexa_config::{Config, ConfigUnit, Constant, Mapping};
 
+mod update;
+
 const USAGE: &str = "\
 Usage:
   dimvexa convert VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
   dimvexa VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
   dimvexa units [--groups | GROUP | UNIT] [--json] [--config NAME_OR_PATH]...
   dimvexa configs [NAME_OR_PATH] [--json]
+  dimvexa update [--check] [-y]
 
 Converts VALUE from unit FROM to unit TO.
 
@@ -44,6 +47,11 @@ Commands:
   configs          list the configs that ship with dimvexa (us, gb, ...)
   configs NAME     show what one config contains: names, units and densities with their
                    conditions and sources; a path shows your own file
+  update           replace this binary with the latest GitHub release (needs curl and tar;
+                   checks the published SHA-256 first; see docs/adr/015-update-command.md)
+  update --check   only report whether a newer release exists; exit 0 up to date, 3 newer
+                   release available, 1 error
+  update -y        do not ask \"Update to vX.Y.Z? [y/N]\" first (also --yes)
 
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
@@ -73,7 +81,8 @@ Precision: the CLI always uses the exact path, so the number printed is the exac
 rounded once to the nearest f64 (0 ulp). The library's fast f64 path is within 1 ulp (linear
 units) or 2 ulp (temperature scales such as degC and degF) of it; see docs/precision.md.
 
-Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
+Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error; `update --check`
+also exits 3 when a newer release exists.
 ";
 
 /// Parsed command line.
@@ -107,6 +116,11 @@ enum Parsed {
     Configs {
         target: Option<String>,
         json: bool,
+    },
+    /// `dimvexa update [--check] [--yes]`.
+    Update {
+        check: bool,
+        yes: bool,
     },
     Help,
     Version,
@@ -257,6 +271,29 @@ fn parse_configs(
     }
 }
 
+/// Checks what the command line says next to `update`: `extra` is a positional argument,
+/// `--exact`, `--json` or `--groups`; `value_options` is `--config` or `--density`. A refusal is
+/// never a `--json` error: the update has no JSON output and no schema.
+fn check_update_args(
+    extra: bool,
+    value_options: bool,
+    schema: &'static str,
+) -> Result<(), UsageError> {
+    let plain = |message: &str| UsageError {
+        message: message.to_string(),
+        json: false,
+        schema,
+        suggestions: Vec::new(),
+    };
+    if extra {
+        return Err(plain("'update' takes only --check and -y"));
+    }
+    if value_options {
+        return Err(plain("'update' does not take --config or --density"));
+    }
+    Ok(())
+}
+
 fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     let (opts, args) = split_options(all)?;
     let configs = opts.configs;
@@ -271,8 +308,11 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     };
     let mut positional: Vec<&str> = Vec::new();
     let (mut exact, mut want_json, mut want_groups) = (false, false, false);
+    let (mut want_check, mut want_yes) = (false, false);
     for a in args {
         match a.as_str() {
+            "--check" => want_check = true,
+            "-y" | "--yes" => want_yes = true,
             "--exact" => exact = true,
             "--json" => want_json = true,
             "--groups" => want_groups = true,
@@ -281,6 +321,25 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
             s if s.starts_with("--") => return Err(usage(format!("unknown option '{s}'"))),
             s => positional.push(s),
         }
+    }
+    if let Some((&"update", rest)) = positional.split_first() {
+        check_update_args(
+            !rest.is_empty() || exact || want_json || want_groups,
+            !configs.is_empty() || opts.density.is_some(),
+            schema,
+        )?;
+        return Ok((
+            Parsed::Update {
+                check: want_check,
+                yes: want_yes,
+            },
+            configs,
+        ));
+    }
+    if want_check || want_yes {
+        return Err(usage(
+            "'--check' and '-y' only apply to 'update'".to_string(),
+        ));
     }
     if let Some((&"units", rest)) = positional.split_first() {
         if exact {
@@ -1493,6 +1552,7 @@ where
         Parsed::Configs { target, json } => {
             return run_configs(target.as_deref(), json, out, err);
         }
+        Parsed::Update { check, yes } => return update::run(check, yes, out, err),
         Parsed::Convert(a) => a,
     };
     let loaded = match load(&config_files) {

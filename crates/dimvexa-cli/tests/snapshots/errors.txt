@@ -69,6 +69,7 @@ Usage:
   dimvexa VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
   dimvexa units [--groups | GROUP | UNIT] [--json] [--config NAME_OR_PATH]...
   dimvexa configs [NAME_OR_PATH] [--json]
+  dimvexa update [--check] [-y]
 
 Converts VALUE from unit FROM to unit TO.
 
@@ -81,6 +82,11 @@ Commands:
   configs          list the configs that ship with dimvexa (us, gb, ...)
   configs NAME     show what one config contains: names, units and densities with their
                    conditions and sources; a path shows your own file
+  update           replace this binary with the latest GitHub release (needs curl and tar;
+                   checks the published SHA-256 first; see docs/adr/015-update-command.md)
+  update --check   only report whether a newer release exists; exit 0 up to date, 3 newer
+                   release available, 1 error
+  update -y        do not ask "Update to vX.Y.Z? [y/N]" first (also --yes)
 
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
@@ -110,6 +116,7 @@ Precision: the CLI always uses the exact path, so the number printed is the exac
 rounded once to the nearest f64 (0 ulp). The library's fast f64 path is within 1 ulp (linear
 units) or 2 ulp (temperature scales such as degC and degF) of it; see docs/precision.md.
 
-Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
+Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error; `update --check`
+also exits 3 when a newer release exists.
 
 
