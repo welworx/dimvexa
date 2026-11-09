@@ -12,8 +12,10 @@ Decision record: [ADR-012](adr/012-python-binding.md). Code: `bindings/python`.
 * Lint and type configuration is in `bindings/python/pyproject.toml` (ruff: E, F, W, I, B, UP, N,
   SIM, PT, RUF, D with Google docstrings; mypy strict).
 
-**Nothing of the binding runs in GitHub Actions yet.** No workflow file mentions it, so a broken
-binding would not fail a pull request.
+The release workflow (`.github/workflows/release.yml`) builds the wheels and the sdist, runs the
+Python tests on the wheels and publishes to PyPI after the owner's approval; the package is on
+PyPI (0.1.1). **No pull-request check covers the binding yet**: `ci.yml` has no `python` job, so
+a broken binding would only be caught at release time.
 
 ## 2. What is missing
 
@@ -22,9 +24,7 @@ binding would not fail a pull request.
 | Gap | Why it matters |
 |---|---|
 | `python` job in `ci.yml`, part of `ci-success` | Without it nothing guards the binding on pull requests |
-| `wheels.yml` | No wheels or sdist are ever built |
-| PyPI publishing | Needs a PyPI project and trusted publishing set up by the owner |
-| Version source of truth | The crate is `0.1.0` and pyproject takes its version from Cargo (`dynamic`). The release process (`docs`, `release` skill) must bump it together with the core crates |
+| Version source of truth | Done: `scripts/check-versions.sh` fails if the crate, the Python package and the npm package disagree |
 | Dependabot entries for `pip` and `cargo` in `bindings/python` | Dependencies would never get update PRs |
 | `cargo deny` / advisory check for `bindings/python/Cargo.lock` | PyO3, NumPy and their transitive crates are new licences and advisory surface |
 | Pinned test requirements (`requirements-test.txt`) | Reproducible CI; today the versions float |

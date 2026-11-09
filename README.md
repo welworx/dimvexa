@@ -1,9 +1,20 @@
 # Dimvexa: exact unit conversion
 
+<p align="center">
+  <a href="https://github.com/welworx/dimvexa/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/welworx/dimvexa/ci.yml?branch=main&label=CI&logo=github"></a>
+  <a href="https://crates.io/crates/dimvexa"><img alt="crates.io" src="https://img.shields.io/crates/v/dimvexa?logo=rust&color=orange"></a>
+  <a href="https://docs.rs/dimvexa"><img alt="docs.rs" src="https://img.shields.io/docsrs/dimvexa?logo=docs.rs"></a>
+  <a href="https://pypi.org/project/dimvexa/"><img alt="PyPI" src="https://img.shields.io/pypi/v/dimvexa?logo=pypi&logoColor=white"></a>
+  <a href="https://www.npmjs.com/package/@dimvexa/wasm"><img alt="npm" src="https://img.shields.io/npm/v/%40dimvexa%2Fwasm?logo=npm"></a>
+  <a href="#licence-independence-and-benchmarked-projects"><img alt="Licence: MIT OR Apache-2.0" src="https://img.shields.io/badge/licence-MIT%20OR%20Apache--2.0-blue"></a>
+  <a href="Cargo.toml"><img alt="MSRV 1.85" src="https://img.shields.io/badge/MSRV-1.85-informational?logo=rust"></a>
+  <a href="https://github.com/welworx/dimvexa/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/welworx/dimvexa"></a>
+</p>
+
 **Exact factors. Loud failures. Zero guessing.**
 
-Dimvexa is a unit conversion library with a Rust core and a command-line tool (Python, WASM,
-MCP and Excel interfaces are planned, not available yet). Every factor is an exact fraction
+Dimvexa is a unit conversion library with a Rust core, a command-line tool and Python and
+WASM bindings (MCP and Excel interfaces are planned, not available yet). Every factor is an exact fraction
 with a cited source, and anything ambiguous is an error instead of a guess.
 
 ```rust
@@ -50,7 +61,19 @@ $ dimvexa units volume      # which volume units exist? (see "Finding a unit" be
 
 ## Install and status
 
-Status: pre-release 0.1.0; the crates are on crates.io (`dimvexa`); to track the latest changes use git (`dimvexa = { git = "https://github.com/welworx/dimvexa" }`).
+Status: pre-1.0 (0.1.x). Every release is published to all registries from one version number
+(see [`docs/releasing.md`](docs/releasing.md)):
+
+```console
+$ cargo add dimvexa                 # Rust library (crates.io; API docs on docs.rs)
+$ cargo install dimvexa-cli         # the `dimvexa` command-line tool
+$ pip install dimvexa               # Python (PyPI, NumPy arrays, abi3 wheels)
+$ npm install @dimvexa/wasm         # JavaScript / WASM (npm)
+```
+
+To track unreleased changes use git (`dimvexa = { git = "https://github.com/welworx/dimvexa" }`).
+Before 1.0 the API and the data table may change between minor versions; see
+[`CHANGELOG.md`](CHANGELOG.md).
 
 A worked example (pool pump electricity: 1.1 kW for 8 h a day for 30 days is 264 kWh,
 950.4 MJ, 79.20 EUR at 0.30 EUR/kWh) is in [`examples/pool_pump.rs`](examples/pool_pump.rs)
@@ -398,8 +421,7 @@ request a missing unit, and [`SECURITY.md`](SECURITY.md) to report a vulnerabili
 See [`ROADMAP.md`](ROADMAP.md).
 
 - Process-engineering and common packs, water head conventions, more CLI commands
-- First crates.io release
-- Python binding, WASM and npm package, MCP server
+- MCP server
 - Excel add-in (optional)
 - Published benchmarks against other unit libraries ([`docs/benchmarking.md`](docs/benchmarking.md))
 

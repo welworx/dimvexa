@@ -162,8 +162,9 @@ jobs:
         run: cargo xtask ci package
       - name: Dry-run publish of the leaf crate
         # Only dimvexa-core can be checked this way: the others depend on workspace crates
-        # that are not on crates.io yet. Once core is published, extend this to the others
-        # in dependency order (core, data, config, dimvexa, cli).
+        # at the version under test (they are published by release.yml after this version is
+        # merged). Extend this to the others in dependency order (core, data, config, dimvexa, cli)
+        # only if that becomes possible.
         run: cargo publish --dry-run --package dimvexa-core --locked
 
   workflows:
