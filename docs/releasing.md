@@ -20,6 +20,15 @@ publishes all of them from `main`.
 
 Merges to `main` that do not change the version publish nothing.
 
+## Homebrew (no Rust needed)
+
+The workflow builds the `dimvexa` binary for macOS (arm64, x86_64) and Linux (musl, x86_64,
+aarch64), attaches the tarballs, their `.sha256` files and a generated `dimvexa.rb` formula to the
+GitHub release. After each release, copy `dimvexa.rb` to `Formula/dimvexa.rb` in the tap repo
+`welworx/homebrew-tap` (create it once, public) and push. Users then run
+`brew install welworx/tap/dimvexa`. Not yet run on GitHub: the first release that includes these
+jobs is the test.
+
 ## One-time setup (owner)
 
 * GitHub: create the environment `release` (Settings, Environments) with the owner as required

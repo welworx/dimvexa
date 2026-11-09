@@ -67,6 +67,7 @@ Status: pre-1.0 (0.1.x). Every release is published to all registries from one v
 ```console
 $ cargo add dimvexa                 # Rust library (crates.io; API docs on docs.rs)
 $ cargo install dimvexa-cli         # the `dimvexa` command-line tool
+$ brew install welworx/tap/dimvexa  # the same tool, prebuilt (Homebrew; no Rust needed)
 $ pip install dimvexa               # Python (PyPI, NumPy arrays, abi3 wheels)
 $ npm install @dimvexa/wasm         # JavaScript / WASM (npm)
 ```
