@@ -422,14 +422,13 @@ pub fn run(check: bool, yes: bool, out: &mut dyn Write, err: &mut dyn Write) -> 
             return 1;
         }
     };
-    if !check
-        && let Some(advice) = managed_elsewhere(
-            &exe,
-            std::env::var_os("CARGO_HOME").map(PathBuf::from).as_deref(),
-        )
-    {
-        let _ = writeln!(err, "error: {advice}");
-        return 1;
+    // No let-chain here: the MSRV is 1.85.
+    if !check {
+        let cargo_home = std::env::var_os("CARGO_HOME").map(PathBuf::from);
+        if let Some(advice) = managed_elsewhere(&exe, cargo_home.as_deref()) {
+            let _ = writeln!(err, "error: {advice}");
+            return 1;
+        }
     }
     let env = Env {
         current: env!("CARGO_PKG_VERSION"),
