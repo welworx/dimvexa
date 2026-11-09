@@ -7,6 +7,8 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-09
+
 ### Added
 
 - `dimvexa update [--check] [-y]`: replaces the running binary with the latest GitHub release

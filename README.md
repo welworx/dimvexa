@@ -502,7 +502,7 @@ BibTeX:
 ```
 
 GitHub's "Cite this repository" button reads [`CITATION.cff`](CITATION.cff). The current
-release is 0.2.0 (2026-11-09). There is no DOI; for unreleased work please also give the commit you used.
+release is 0.2.1 (2026-11-09). There is no DOI; for unreleased work please also give the commit you used.
 
 ## Licence
 
