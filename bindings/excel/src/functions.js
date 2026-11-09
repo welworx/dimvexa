@@ -97,6 +97,12 @@ function convertRangeNow(values, from, to) {
   }
 }
 
+/** @customfunction PING */
+function ping(x) {
+  // Diagnostic: no WASM involved. Compare its latency with CONVERT to see what Excel itself adds.
+  return x + 1;
+}
+
 /** @customfunction VERSION */
 function version() {
   return whenReady(
@@ -106,4 +112,5 @@ function version() {
 
 CustomFunctions.associate("CONVERT", convert);
 CustomFunctions.associate("CONVERTRANGE", convertRange);
+CustomFunctions.associate("PING", ping);
 CustomFunctions.associate("VERSION", version);

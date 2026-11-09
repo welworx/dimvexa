@@ -56,5 +56,6 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
   assert.deepStrictEqual(associated.CONVERTRANGE([[1]], "km", "m"), [[1000]]);
   assert.strictEqual(typeof associated.VERSION(), "string");
   assert.throws(() => associated.CONVERT(1, "kg", "m"), /^Error: dimvexa dimension_mismatch:/);
+  assert.strictEqual(associated.PING(1), 2);
   console.log("excel functions: ok");
 })().catch((e) => { console.error(e); process.exit(1); });

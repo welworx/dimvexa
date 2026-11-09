@@ -24,6 +24,15 @@
       ]
     },
     {
+      "id": "PING",
+      "name": "PING",
+      "description": "Diagnostic: returns the number plus one without using WebAssembly, to measure what Excel itself adds to a custom function call.",
+      "result": { "type": "number", "dimensionality": "scalar" },
+      "parameters": [
+        { "name": "x", "description": "A number.", "type": "number", "dimensionality": "scalar" }
+      ]
+    },
+    {
       "id": "VERSION",
       "name": "VERSION",
       "description": "The unit table version and the number of units.",
