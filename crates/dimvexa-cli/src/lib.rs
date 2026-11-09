@@ -78,10 +78,17 @@ units) or 2 ulp (temperature scales such as degC and degF) of it; see docs/preci
 Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
 ";
 
+/// Shown after the project facts; the long form is `docs/licensing.md`.
+const DISCLAIMER: &str = "\
+Provided as is, without warranty. Unit factors and sources can contain errors: verify any
+result you depend on against the primary source, and do not use it as the only safeguard in
+safety-critical, medical, legal, financial or custody-transfer settings. Independent project,
+not affiliated with other unit libraries. Terms: LICENSE-MIT and LICENSE-APACHE.";
+
 /// Name, version, tagline and where the project lives, from the package metadata.
 fn about() -> String {
     format!(
-        "License:    {}\nAuthors:    {}\nRepository: {}\n",
+        "License:    {}\nAuthors:    {}\nRepository: {}\n\n{DISCLAIMER}\n",
         env!("CARGO_PKG_LICENSE"),
         env!("CARGO_PKG_AUTHORS"),
         env!("CARGO_PKG_REPOSITORY")
