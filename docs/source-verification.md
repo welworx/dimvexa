@@ -50,8 +50,8 @@ of being presented as verified:
 * IAU Style Manual (1989): Julian year = 365.25 d and the light year as c x Julian year.
   Consistent with the BIPM 2012 au text and NIST's 9.460 73E+15 m. The IAU page was not
   retrievable.
-* ISO 8601-1:2019 (week = 7 days), ISO 80000-3:2019 (gon), ISO 80000-4:2019 (mmHg): paywalled.
-  The gon and mmHg values are backed by NIST SP 811.
+* ISO 8601-1:2019 (week = 7 days) and ISO 80000-3:2019 (gon): paywalled. The gon value is
+  backed by NIST SP 811. (ISO 80000-4 is no longer cited; mmHg cites SP 811 only.)
 * NIST Handbook 44, Appendix C: no edition could be read in full here, so no year is cited;
   search excerpts of the 2008 and 2019 editions show acre = 160 rd^2 = 43 560 ft^2, gallon = 231 in^3 and carat = 200 mg.
 * The 1959 yard and pound agreement: the Federal Register notice was not retrieved; the yard
