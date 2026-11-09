@@ -9,7 +9,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Added
 
-- `bindings/excel`: spike of an Office.js custom functions add-in (`DIMVEXA.CONVERT`, `DIMVEXA.CONVERTRANGE`, `DIMVEXA.VERSION`) over the WASM build, ADR-015 (proposed). Tested with a mocked Excel runtime and by hand in Excel on the web and on Mac; Windows is untested.
+- `bindings/excel`: spike of an Office.js custom functions add-in (`DIMVEXA.CONVERT`, `DIMVEXA.CONVERTRANGE`, `DIMVEXA.VERSION`) over the WASM build, ADR-015 (proposed). `DIMVEXA.CONVERT` and `DIMVEXA.CONVERTRANGE` take an optional `density` and an optional shipped `config` (ADR-014); the WASM binding gains `convertWith` and `DimvexaConversion.withOptions`. Tested with a mocked Excel runtime and by hand in Excel on the web and on Mac; Windows is untested.
 
 ## [0.2.0] - 2026-11-09
 

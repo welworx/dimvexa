@@ -57,11 +57,21 @@ function toExcelError(e) {
   return new CustomFunctions.Error(kind, message);
 }
 
+// Excel passes undefined, null or an empty string for an omitted optional argument.
+function given(arg) {
+  return arg !== undefined && arg !== null && arg !== "";
+}
+function text(arg) {
+  return given(arg) ? String(arg) : "";
+}
+
 /** @customfunction CONVERT */
-function convert(value, from, to) {
+function convert(value, from, to, density, config) {
   return whenReady(() => {
     try {
-      return wasm_bindgen.convert(value, from, to);
+      return given(density) || given(config)
+        ? wasm_bindgen.convertWith(value, from, to, text(density), text(config))
+        : wasm_bindgen.convert(value, from, to);
     } catch (e) {
       throw toExcelError(e);
     }
@@ -69,15 +79,17 @@ function convert(value, from, to) {
 }
 
 /** @customfunction CONVERTRANGE */
-function convertRange(values, from, to) {
-  return whenReady(() => convertRangeNow(values, from, to));
+function convertRange(values, from, to, density, config) {
+  return whenReady(() => convertRangeNow(values, from, to, density, config));
 }
 
-function convertRangeNow(values, from, to) {
+function convertRangeNow(values, from, to, density, config) {
   let conversion;
   try {
     // One composed conversion and one WASM call for the whole range.
-    conversion = new wasm_bindgen.DimvexaConversion(from, to);
+    conversion = given(density) || given(config)
+      ? wasm_bindgen.DimvexaConversion.withOptions(from, to, text(density), text(config))
+      : new wasm_bindgen.DimvexaConversion(from, to);
     const rows = values.length;
     const cols = rows > 0 ? values[0].length : 0;
     const flat = new Float64Array(rows * cols);

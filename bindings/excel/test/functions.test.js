@@ -51,6 +51,40 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
     assert.match(e.message, /^dimvexa unknown_unit:/);
     return true;
   });
+  // Densities (ADR-014): mass to volume only with a stated density, never assumed.
+  const near = (a, b) => assert.ok(Math.abs(a - b) <= 1e-12 * Math.abs(b), `${a} is not ${b}`);
+  near(await associated.CONVERT(1, "L", "kg", "998.2067kg/m3"), 0.9982067);
+  near(await associated.CONVERT(1, "L", "kg", "water_25C", "water"), 0.99704702);
+  near(await associated.CONVERT(1, "kg", "L", "water_25C", "water"), 1 / 0.99704702);
+  assert.strictEqual(await associated.CONVERT(1, "km", "m", "water_25C"), 1000);
+  assert.strictEqual(await associated.CONVERT(1, "km", "m", null), 1000);
+  await assert.rejects(async () => associated.CONVERT(1, "L", "kg"), (e) => {
+    assert.match(e.message, /^dimvexa dimension_mismatch:/);
+    return true;
+  });
+  await assert.rejects(async () => associated.CONVERT(1, "L", "kg", ""), /dimension_mismatch/);
+  await assert.rejects(async () => associated.CONVERT(1, "L", "kg", "milk"), (e) => {
+    assert.match(e.message, /^dimvexa invalid_definition: .*no density named 'milk'/);
+    return true;
+  });
+  await assert.rejects(async () => associated.CONVERT(1, "L", "kg", "5 m"), /not a unit of density/);
+  // Named density without its config is refused with a hint, never assumed.
+  await assert.rejects(async () => associated.CONVERT(1, "L", "kg", "water_25C"), /add the config 'water'/);
+
+  // Configs (ADR-014): a shipped config resolves an otherwise ambiguous name.
+  await assert.rejects(async () => associated.CONVERT(1, "ton", "kg"), /ambiguous/);
+  assert.strictEqual(await associated.CONVERT(1, "ton", "kg", "", "us"), 907.18474);
+  assert.strictEqual(await associated.CONVERT(1, "ton", "kg", null, "gb"), 1016.0469088);
+  assert.strictEqual(await associated.CONVERT(1, "ton", "kg", undefined, "metric-trade"), 1000);
+  assert.strictEqual(await associated.CONVERT(1, "ton", "kg", "", "us, water"), 907.18474);
+  assert.deepStrictEqual(await associated.CONVERTRANGE([[1, 2]], "ton", "kg", "", "us"), [[907.18474, 1814.36948]]);
+  await assert.rejects(async () => associated.CONVERT(1, "ton", "kg", "", "nope"), /no shipped config named 'nope'.*us, gb/);
+  await assert.rejects(async () => associated.CONVERT(1, "ton", "kg", "", "./us.toml"), /a file path cannot be used/);
+  assert.deepStrictEqual(
+    (await associated.CONVERTRANGE([[1], [2]], "L", "kg", "1000kg/m3")).flat().map((x) => +x.toFixed(9)),
+    [1, 2].map((x) => x),
+  );
+
   // Once the module is loaded the functions are synchronous: plain values, not Promises.
   assert.strictEqual(associated.CONVERT(2, "km", "m"), 2000);
   assert.deepStrictEqual(associated.CONVERTRANGE([[1]], "km", "m"), [[1000]]);

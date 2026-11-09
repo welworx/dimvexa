@@ -9,9 +9,12 @@
 //! wraps: one call per array amortises that cost (`docs/DESIGN.md`).
 #![deny(unsafe_code)]
 
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::sync::OnceLock;
 
-use dimvexa::{Conversion, Error, Registry};
+use dimvexa::{Conversion, Error, Registry, UnitExpr};
+use dimvexa_config::Constant;
 use js_sys::{Array, Float64Array, Reflect};
 use wasm_bindgen::prelude::*;
 
@@ -44,6 +47,129 @@ fn fail(e: &Error) -> JsValue {
     js_error(e)
 }
 
+/// A registry with some shipped configs applied (ADR-014), and the densities they carry.
+struct Loaded {
+    reg: Registry,
+    constants: Vec<Constant>,
+}
+
+thread_local! {
+    /// The last few config combinations, so a worksheet that calls the same one thousands of
+    /// times builds its registry once. Oldest entry is dropped first.
+    static LOADED: RefCell<Vec<(String, Rc<Loaded>)>> = const { RefCell::new(Vec::new()) };
+}
+
+const LOADED_CAP: usize = 8;
+
+fn invalid(symbol: &str, message: String) -> JsValue {
+    fail(&Error::InvalidDefinition {
+        symbol: symbol.to_string(),
+        message,
+    })
+}
+
+/// Applies the named shipped configs (`"us"`, `"us,water"`; commas or spaces) to a copy of the
+/// registry. Only shipped names: a file path cannot be read from a worksheet. An empty spec is
+/// the plain strict table.
+fn load_config(spec: &str) -> Result<Rc<Loaded>, JsValue> {
+    let mut names: Vec<&str> = Vec::new();
+    for name in spec.split([',', ' ', ';']).filter(|n| !n.is_empty()) {
+        // Later entries win (ADR-009), so keep the last occurrence of a repeated name.
+        names.retain(|n| *n != name);
+        names.push(name);
+    }
+    let key = names.join(",");
+    let cached = LOADED.with(|c| {
+        c.borrow()
+            .iter()
+            .find(|(k, _)| *k == key)
+            .map(|(_, v)| Rc::clone(v))
+    });
+    if let Some(hit) = cached {
+        return Ok(hit);
+    }
+    let mut configs = Vec::new();
+    for name in &names {
+        let bundled = dimvexa_config::bundled(name).ok_or_else(|| {
+            let known: Vec<&str> = dimvexa_config::BUNDLED.iter().map(|b| b.name).collect();
+            invalid(
+                "config",
+                format!(
+                    "no shipped config named '{name}' (a file path cannot be used in Excel); shipped configs: {}",
+                    known.join(", ")
+                ),
+            )
+        })?;
+        configs.push(bundled.config().map_err(|e| fail(&e))?);
+    }
+    let mut reg = registry()?.clone();
+    dimvexa_config::apply(&mut reg, &configs).map_err(|e| fail(&e))?;
+    let loaded = Rc::new(Loaded {
+        reg,
+        constants: dimvexa_config::constants(&configs),
+    });
+    LOADED.with(|c| {
+        let mut list = c.borrow_mut();
+        if list.len() >= LOADED_CAP {
+            list.remove(0);
+        }
+        list.push((key, Rc::clone(&loaded)));
+    });
+    Ok(loaded)
+}
+
+/// Resolves a density argument (ADR-014): text that starts like a number is the caller's own
+/// density (`998.2067kg/m3`); anything else is the name of a density in a loaded config
+/// (`water_25C` needs the config `water`). Nothing is computed or guessed.
+fn resolve_density(loaded: &Loaded, spec: &str) -> Result<Constant, JsValue> {
+    let text = spec.trim();
+    let literal = text
+        .chars()
+        .next()
+        .is_some_and(|c| c.is_ascii_digit() || matches!(c, '+' | '-' | '.'));
+    if literal {
+        return Constant::density_from_text(&loaded.reg, text).map_err(|e| fail(&e));
+    }
+    loaded
+        .constants
+        .iter()
+        .find(|c| c.name == text)
+        .cloned()
+        .ok_or_else(|| {
+            let names: Vec<&str> = loaded.constants.iter().map(|c| c.name.as_str()).collect();
+            let hint = if names.is_empty() {
+                "no density is loaded: add the config 'water' for water_25C, or write your own, for example 998.2067kg/m3".to_string()
+            } else {
+                format!("loaded densities: {}", names.join(", "))
+            };
+            invalid("density", format!("no density named '{text}'; {hint}"))
+        })
+}
+
+/// The ordinary conversion if one exists. A density is used only when the plain conversion is
+/// refused for lack of one (mass to volume or back) and a density was given. `config` and
+/// `density` are empty for "none".
+fn conversion_with_options(
+    from: &str,
+    to: &str,
+    density: &str,
+    config: &str,
+) -> Result<Conversion, JsValue> {
+    let loaded = load_config(config)?;
+    let reg = &loaded.reg;
+    let f: UnitExpr = reg.parse(from).map_err(|e| fail(&e))?;
+    let t: UnitExpr = reg.parse(to).map_err(|e| fail(&e))?;
+    match Conversion::between(&f, &t) {
+        Ok(conv) => Ok(conv),
+        Err(Error::DimensionMismatch { .. }) if !density.trim().is_empty() => {
+            resolve_density(&loaded, density)?
+                .conversion(&f, &t)
+                .map_err(|e| fail(&e))
+        }
+        Err(e) => Err(fail(&e)),
+    }
+}
+
 /// A conversion between two unit expressions, composed once and applied many times.
 #[wasm_bindgen]
 #[derive(Debug)]
@@ -61,6 +187,25 @@ impl DimvexaConversion {
     #[wasm_bindgen(constructor)]
     pub fn new(from: &str, to: &str) -> Result<DimvexaConversion, JsValue> {
         let inner = registry()?.conversion(from, to).map_err(|e| fail(&e))?;
+        Ok(Self { inner })
+    }
+
+    /// Like the constructor, with the options of a worksheet: `density` is your own number such
+    /// as `"998.2067kg/m3"` or the name of a density in a loaded config (empty for none), and
+    /// `config` is a shipped config name or a list such as `"us"` or `"us,water"` (empty for
+    /// none). The density is used only when the plain conversion needs one.
+    ///
+    /// # Errors
+    ///
+    /// Throws a `DimvexaError` (unknown config or density, a density that is not a density, ...).
+    #[wasm_bindgen(js_name = withOptions)]
+    pub fn with_options(
+        from: &str,
+        to: &str,
+        density: &str,
+        config: &str,
+    ) -> Result<DimvexaConversion, JsValue> {
+        let inner = conversion_with_options(from, to, density, config)?;
         Ok(Self { inner })
     }
 
@@ -119,6 +264,24 @@ pub fn convert(value: f64, from: &str, to: &str) -> Result<f64, JsValue> {
         .conversion(from, to)
         .map_err(|e| fail(&e))?
         .apply(value))
+}
+
+/// One-shot fast-path conversion with the options of a worksheet: `convertWith(1, "L", "kg",
+/// "998.2067kg/m3", "")`, `convertWith(1, "ton", "kg", "", "us")` or `convertWith(1, "L", "kg",
+/// "water_25C", "water")`. See `DimvexaConversion.withOptions`.
+///
+/// # Errors
+///
+/// Throws a `DimvexaError` with a stable `code`.
+#[wasm_bindgen(js_name = convertWith)]
+pub fn convert_with(
+    value: f64,
+    from: &str,
+    to: &str,
+    density: &str,
+    config: &str,
+) -> Result<f64, JsValue> {
+    Ok(conversion_with_options(from, to, density, config)?.apply(value))
 }
 
 /// One-shot exact-path conversion of a decimal string, e.g. `convertExact("98.6", "degF", "degC")`.

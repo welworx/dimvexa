@@ -22,6 +22,10 @@ add-in never shapes the core).
   the one in `bindings/excel` follows Microsoft's task pane template and is accepted there.
   A functions-only add-in has no ribbon entry, so it does not appear in the add-ins list;
   its functions appear in cells.
+* `DIMVEXA.CONVERT` and `DIMVEXA.CONVERTRANGE` take an optional `density` and an optional
+  `config` (ADR-014 inside a worksheet): a shipped config name or list, never a file path; a
+  density is the caller's own number or a name from a loaded config (`water_25C` needs `water`),
+  used only when the plain conversion needs one. Nothing is loaded implicitly.
 * XML add-in-only manifest first; the unified manifest only once its custom functions support is
   confirmed ready for production.
 
@@ -46,7 +50,7 @@ add-in never shapes the core).
    WASM compile) is not measured.
 2. Does Excel on Mac support custom functions (Microsoft pages disagree)?
 3. Startup cost of compiling the 224 KB module on first call, and the cost of the call itself.
-4. Array functions (`applyBatch`) and exact decimal input.
+4. Exact decimal input (array functions exist: `DIMVEXA.CONVERTRANGE`).
 5. Distribution: sideload only, centralized deployment, or AppSource (needs test instructions
    for each function). Current policy numbers differ between sources; check Partner Center.
 
