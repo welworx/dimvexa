@@ -1479,6 +1479,32 @@
    "value": "100"
   },
   {
+   "category": "dimvexa_vector",
+   "expect_exact": "1/1000",
+   "expect_f64": "0.001",
+   "expect_f64_bits": "3f50624dd2f1a9fc",
+   "from": "cP",
+   "id": "dv-common-063",
+   "oracle_checked": true,
+   "origin": "dimvexa-vector",
+   "source": "NIST SP 811 (2008), Appendix B.8 (poise = 1.0 E-01 Pa s; centipoise = 1.0 E-03 Pa s)",
+   "to": "Pa.s",
+   "value": "1"
+  },
+  {
+   "category": "dimvexa_vector",
+   "expect_exact": "1/1000000",
+   "expect_f64": "1e-06",
+   "expect_f64_bits": "3eb0c6f7a0b5ed8d",
+   "from": "cSt",
+   "id": "dv-common-064",
+   "oracle_checked": true,
+   "origin": "dimvexa-vector",
+   "source": "NIST SP 811 (2008), Appendix B.8 (stokes = 1.0 E-04 m^2/s; centistokes = 1.0 E-06 m^2/s)",
+   "to": "m2/s",
+   "value": "1"
+  },
+  {
    "category": "si",
    "expect_exact": "1000/1",
    "expect_f64": "1000.0",

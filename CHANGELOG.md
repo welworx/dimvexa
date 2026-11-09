@@ -7,6 +7,10 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+### Added (data version 11)
+
+- Units: poise `P` and stokes `St` (CGS viscosity; NIST SP 811 Appendix B.8), with the SI prefixes (`cP`, `cSt`). New groups `dynamic_viscosity` and `kinematic_viscosity`. Converting between them is refused: it needs a density.
+
 ### Changed (data version 10)
 
 - Unit table: citation strings corrected against the primary texts (BIPM table and chapter numbers, UK Weights and Measures Act parts, NIST Handbook 44 for relations SP 811 does not state); unverifiable secondary citations (DIN 66036, Mendenhall Order, 4th CGPM) dropped. No factor changed. See `docs/source-verification.md`.

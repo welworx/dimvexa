@@ -502,3 +502,19 @@ from = "grad"
 to = "deg"
 expect = "90"
 source = "NIST SP 811 (2008), Appendix B (grade = (pi/200) rad, so 100 grad = 90 degrees)"
+
+[[vector]]
+unit = "P"
+value = "1"
+from = "cP"
+to = "Pa.s"
+expect = "0.001"
+source = "NIST SP 811 (2008), Appendix B.8 (poise = 1.0 E-01 Pa s; centipoise = 1.0 E-03 Pa s)"
+
+[[vector]]
+unit = "St"
+value = "1"
+from = "cSt"
+to = "m2/s"
+expect = "0.000001"
+source = "NIST SP 811 (2008), Appendix B.8 (stokes = 1.0 E-04 m^2/s; centistokes = 1.0 E-06 m^2/s)"

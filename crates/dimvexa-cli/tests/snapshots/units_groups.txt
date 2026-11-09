@@ -27,3 +27,5 @@ catalytic_activity	1
 angle	5
 acceleration	1
 speed	1
+dynamic_viscosity	1
+kinematic_viscosity	1

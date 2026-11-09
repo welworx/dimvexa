@@ -202,6 +202,12 @@ kgf	plain	defined	none	-	NIST SP 811 (2008), Appendix B (kilogram-force)
 ## angle
 grad	plain	measured	none	gon	NIST SP 811 (2008), Appendix B (grade); ISO 80000-3:2019 (gon)
 
+## dynamic_viscosity
+P	plain	defined	si	poise	NIST SP 811 (2008), Appendix B.8 (poise = 1.0 E-01 Pa s)
+
+## kinematic_viscosity
+St	plain	defined	si	stokes	NIST SP 811 (2008), Appendix B.8 (stokes = 1.0 E-04 m^2/s)
+
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note
 ton	ton_short, ton_long, tonne	-	short ton (2000 lb), long ton (2240 lb) and metric tonne (1000 kg) are all called ton

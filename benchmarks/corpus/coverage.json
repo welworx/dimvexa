@@ -247,7 +247,9 @@
     "erg",
     "dyn",
     "kgf",
-    "grad"
+    "grad",
+    "P",
+    "St"
    ]
   }
  ],

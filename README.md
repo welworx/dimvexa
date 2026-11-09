@@ -114,6 +114,8 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | angle | `rad`, `deg`, `arcmin`, `arcsec`, `grad` |
 | acceleration | `g_n` |
 | speed | `kn` |
+| dynamic_viscosity | `P` |
+| kinematic_viscosity | `St` |
 
 ## Combining units
 
