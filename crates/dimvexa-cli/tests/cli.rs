@@ -230,14 +230,7 @@ fn every_error_code_has_a_cli_test() {
             code,
             "{with_json:?}"
         );
-        assert!(
-            !v.get("error")
-                .unwrap()
-                .get("message")
-                .unwrap()
-                .as_str()
-                .is_empty()
-        );
+        assert_ne!(v.get("error").unwrap().get("message").unwrap().as_str(), "");
     }
     // every documented library code is covered by the table above
     for code in dimvexa::Error::ALL_CODES {
@@ -374,7 +367,7 @@ fn units_groups_lists_only_the_groups() {
     assert!(!r.stdout.contains("psi\t"));
     let v = json::parse(&dimvexa(&["units", "--groups", "--json"]).stdout).unwrap();
     json::check_units_schema(&v);
-    assert!(v.get("units").unwrap().as_array().is_empty());
+    assert_eq!(v.get("units").unwrap().as_array(), []);
     assert!(v.get("group").is_some());
 }
 
@@ -394,7 +387,7 @@ fn units_shows_the_details_of_one_unit() {
     );
     assert_eq!(u.get("offset").unwrap().as_str(), "0/1");
     assert_eq!(u.get("dimension").unwrap().as_array().len(), 7);
-    assert!(!u.get("sources").unwrap().as_array().is_empty());
+    assert_ne!(u.get("sources").unwrap().as_array(), []);
     // An alias finds the table unit; a prefixed unit and a compound expression resolve too.
     let c = json::parse(&dimvexa(&["units", "\u{b0}C", "--json"]).stdout).unwrap();
     assert_eq!(
@@ -681,7 +674,7 @@ fn json_records_the_config_used() {
     assert_eq!(used[0].get("hash").unwrap().as_str(), hash);
     // No config: the field is there and empty.
     let v = json::parse(&dimvexa(&["convert", "1", "t", "kg", "--json"]).stdout).unwrap();
-    assert!(v.get("config").unwrap().as_array().is_empty());
+    assert_eq!(v.get("config").unwrap().as_array(), []);
 }
 
 #[test]
@@ -2093,7 +2086,7 @@ fn configs_lists_and_shows_what_is_included() {
         .as_array();
     assert_eq!(d.len(), 2);
     for x in d {
-        assert!(!x.get("conditions").unwrap().as_str().is_empty());
+        assert_ne!(x.get("conditions").unwrap().as_str(), "");
         assert!(x.get("source").unwrap().as_str().contains("Tanaka"));
     }
 }

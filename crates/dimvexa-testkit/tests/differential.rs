@@ -444,8 +444,11 @@ fn affine_path_stays_accurate_next_to_the_scale_zero_point() {
         let conv = reg.conversion(from, to).unwrap();
         let mut worst = 0_u64;
         for _ in 0..20_000 {
-            let x = zero
-                + f64::from(i32::try_from(rng.range_i64(-1_000_000, 1_000_000)).unwrap()) * 1e-9;
+            let x = f64::mul_add(
+                f64::from(i32::try_from(rng.range_i64(-1_000_000, 1_000_000)).unwrap()),
+                1e-9,
+                zero,
+            );
             let want = conv
                 .apply_exact(Ratio::from_f64(x).unwrap())
                 .unwrap()

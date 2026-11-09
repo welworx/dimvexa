@@ -227,8 +227,8 @@ impl Config {
             }
             let (key, value) =
                 split_entry(content).ok_or_else(|| bad("expected name = \"value\"".to_string()))?;
-            let key = parse_key(key.trim()).map_err(&bad)?;
-            let value = parse_string(value.trim()).map_err(&bad)?;
+            let key = parse_key(key.trim()).map_err(bad)?;
+            let value = parse_string(value.trim()).map_err(bad)?;
             match section {
                 Section::None => {
                     return Err(bad(
@@ -249,7 +249,7 @@ impl Config {
                 }
                 Section::Table => {
                     if let Some(p) = pending.as_mut() {
-                        p.set(&key, value).map_err(&bad)?;
+                        p.set(&key, value).map_err(bad)?;
                     }
                 }
             }
@@ -1201,7 +1201,7 @@ mod tests {
         assert_eq!(u.exactness, Exactness::Defined);
         assert_eq!(u.prefixes, PrefixMode::None);
         assert_eq!((u.origin.as_str(), u.line), ("o.toml", 4));
-        assert!(u.note.is_empty());
+        assert_eq!(u.note, "");
         let full = BARREL.replace("source", "prefixes = \"si\"\nnote = \"n\"\nsource");
         let u = Config::parse(&full, "o").unwrap().units()[0].clone();
         assert_eq!((u.prefixes, u.note.as_str()), (PrefixMode::Si, "n"));
