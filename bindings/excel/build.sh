@@ -20,4 +20,5 @@ mv dist/tmp/dimvexa.js dist/dimvexa-glue.js
     || base64 < dist/tmp/dimvexa_bg.wasm | tr -d '\n'; printf '";\n'; } > dist/dimvexa-wasm-b64.js
 rm -rf dist/tmp
 cp src/functions.js src/functions.html functions.json dist/
+cp -r assets dist/
 echo "built dist/: $(wc -c < dist/dimvexa-wasm-b64.js) bytes of embedded wasm"
