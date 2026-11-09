@@ -1,7 +1,7 @@
 # ADR-015: `dimvexa update` replaces the binary from the GitHub release, using curl and tar
 
-Status: Proposed (implemented on the branch; the status moves to Accepted only when the owner says
-so, and the OPEN items below record what was defaulted)
+Status: Accepted (confirmed by the owner in conversation, 2026-11-09; the defaults chosen for the
+two OPEN items below stand)
 
 Amends ADR-003 only in that the CLI runs two system tools; the dependency policy is unchanged.
 
@@ -36,9 +36,8 @@ client, no TLS, no gzip and no SHA-256.
 5. **Replace:** copy next to the running binary, rename the running binary to `.old`, rename the
    copy into place, remove `.old`; on failure put the old binary back. On Windows the running
    `.exe` cannot be deleted, so `dimvexa.exe.old` stays until the next update removes it.
-6. **Package-managed installs are refused:** a path under Homebrew's Cellar, `/opt/homebrew`, `/home/linuxbrew`, `.cargo/bin` or
-   `$CARGO_HOME/bin` gets
-   the right command (`brew upgrade dimvexa`, `cargo install dimvexa-cli --force`) instead of an
+6. **Package-managed installs are refused:** a path under Homebrew's Cellar, `/opt/homebrew`,
+   `/home/linuxbrew`, `.cargo/bin` or `$CARGO_HOME/bin` gets the right command (`brew upgrade dimvexa`, `cargo install dimvexa-cli --force`) instead of an
    in-place overwrite that the package manager would undo or trip over. The detection is by path,
    so other installers (Scoop, winget, `cargo install --root`, distro packages) are not recognised;
    the user is expected to use their tool.
@@ -59,7 +58,7 @@ client, no TLS, no gzip and no SHA-256.
 * Linux binaries are musl builds, so they run on glibc systems too. Other platforms (for example
   FreeBSD) get an error that points to `cargo install`.
 
-## OPEN
+## OPEN (decided: the defaults stand)
 
 * Should `update` also be allowed for a cargo-installed binary (`-f`)? Default: no.
 * Should releases carry signatures (minisign or sigstore) so that `update` can verify authenticity
