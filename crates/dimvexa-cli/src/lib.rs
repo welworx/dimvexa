@@ -2,9 +2,10 @@
 //! The command-line front end of dimvexa.
 //!
 //! ```text
-//! dimvexa convert VALUE FROM TO [--exact] [--json] [--config FILE]...
+//! dimvexa convert VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
 //! dimvexa VALUE FROM TO [--exact] [--json]        shorthand
 //! dimvexa units [--groups | GROUP | UNIT] [--json]  list units by quantity, one group, or one unit
+//! dimvexa configs [NAME_OR_PATH] [--json]          what the shipped configs (or a file) contain
 //! ```
 //!
 //! This crate contains **no conversion logic**: it parses arguments, calls the public
@@ -14,8 +15,8 @@
 //! 1 ulp (linear) or 2 ulp (affine) of that value (`docs/precision.md`).
 //!
 //! Exit codes: `0` success, `1` conversion refused or invalid input, `2` usage error.
-//! With `--json`, errors are printed to stdout as JSON (schema `dimvexa.convert/1`, see
-//! `docs/schemas/`; `units --json` uses `dimvexa.units/1`) and the exit code stays non-zero. The error `code` is one of the
+//! With `--json`, errors are printed to stdout as JSON (schema `dimvexa.convert/2`, see
+//! `docs/schemas/`; `units --json` uses `dimvexa.units/2`, `configs --json` `dimvexa.configs/1`) and the exit code stays non-zero. The error `code` is one of the
 //! library's stable codes ([`dimvexa::Error::ALL_CODES`]) or `usage`.
 #![forbid(unsafe_code)]
 
@@ -568,13 +569,21 @@ fn compute<'a>(
     })
 }
 
+/// Why `--density` could not be resolved.
+enum DensityError {
+    /// A name that no loaded config defines, or a missing value: a usage problem, with the
+    /// known names.
+    Usage(String, Vec<String>),
+    /// The library refused the caller's own number (not a density, ambiguous unit, overflow).
+    Lib(Error),
+}
+
 /// Resolves `--density`: a number with a unit is the caller's own density, anything else is
-/// the name of a density in a loaded config. `Err` is a usage message with the known names.
-fn resolve_density(spec: &str, loaded: &Loaded) -> Result<Constant, (String, Vec<String>)> {
+/// the name of a density in a loaded config.
+fn resolve_density(spec: &str, loaded: &Loaded) -> Result<Constant, DensityError> {
     let starts_like_a_number = spec.starts_with(|c: char| c.is_ascii_digit() || "+-.".contains(c));
     if starts_like_a_number {
-        return Constant::density_from_text(&loaded.reg, spec)
-            .map_err(|e| (e.to_string(), Vec::new()));
+        return Constant::density_from_text(&loaded.reg, spec).map_err(DensityError::Lib);
     }
     let known: Vec<String> = loaded.densities.iter().map(|d| d.name.clone()).collect();
     loaded
@@ -590,7 +599,7 @@ fn resolve_density(spec: &str, loaded: &Loaded) -> Result<Constant, (String, Vec
             } else {
                 format!("no density named '{spec}'; loaded densities: {}", known.join(", "))
             };
-            (message, known)
+            DensityError::Usage(message, known)
         })
 }
 
@@ -1494,17 +1503,26 @@ where
         None => None,
         Some(spec) => match resolve_density(spec, &loaded) {
             Ok(d) => Some(d),
-            Err((message, known)) => {
+            Err(e) => {
+                let (code, message, candidates, suggestions, status) = match &e {
+                    DensityError::Usage(m, known) => {
+                        ("usage", m.clone(), Vec::new(), known.clone(), 2)
+                    }
+                    DensityError::Lib(e) => (
+                        e.code(),
+                        format!("--density: {e}"),
+                        e.candidates().to_vec(),
+                        e.suggestions().to_vec(),
+                        1,
+                    ),
+                };
                 if args.json {
-                    let _ = writeln!(
-                        out,
-                        "{}",
-                        json_error("convert", "usage", &message, &[], &known)
-                    );
+                    let line = json_error("convert", code, &message, &candidates, &suggestions);
+                    let _ = writeln!(out, "{line}");
                 } else {
-                    let _ = writeln!(err, "error[usage]: {message}");
+                    let _ = writeln!(err, "error[{code}]: {message}");
                 }
-                return 2;
+                return status;
             }
         },
     };

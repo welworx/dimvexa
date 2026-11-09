@@ -1,4 +1,4 @@
-bundled:us (hash fnv1a64:bfd49f74774151ca)
+bundled:us (hash fnv1a64:533f912882e451b0)
 
 ## names (what they mean once the config is loaded)
 # columns: name, unit
@@ -10,5 +10,5 @@ qt	qt_us
 
 ## densities (use with --density NAME)
 # columns: name, value, unit, conditions, source
-water_25C	49852351/50000	kg/m3	VSMOW water, 25 degC (ITS-90), 101.325 kPa	Tanaka et al., Metrologia 38 (2001) 301-309 (recommended density table); value 0.99704702(83) g/mL as quoted in en.wikipedia.org/wiki/Properties_of_water, which agrees with the paper's formula; confirm against Table 1 of the paper
-water_max_density	19999499/20000	kg/m3	VSMOW water at its temperature of maximum density, 3.983035 degC (ITS-90), 101.325 kPa	Tanaka et al., Metrologia 38 (2001) 301-309 (recommended density table); value 0.99997495(84) g/mL as quoted in en.wikipedia.org/wiki/Properties_of_water, which agrees with the paper's formula; confirm against Table 1 of the paper
+water_25C	49852351/50000	kg/m3	air-free VSMOW water, 25 degC (ITS-90), 101.325 kPa	Tanaka et al., Metrologia 38 (2001) 301-309 (recommended density table); value 0.99704702(83) g/mL as quoted in en.wikipedia.org/wiki/Properties_of_water, which agrees with the paper's formula; confirm against Table 1 of the paper
+water_max_density	19999499/20000	kg/m3	air-free VSMOW water at its temperature of maximum density, 3.983035 degC (ITS-90), 101.325 kPa	Tanaka et al., Metrologia 38 (2001) 301-309 (recommended density table); value 0.99997495(84) g/mL as quoted in en.wikipedia.org/wiki/Properties_of_water, which agrees with the paper's formula; confirm against Table 1 of the paper

@@ -1954,19 +1954,70 @@ fn a_density_is_a_name_or_the_callers_own_number() {
     assert_eq!((r.code, r.stdout.as_str()), (0, "0.99704702 kg\n"));
     assert!(r.stderr.contains("VSMOW water, 25 degC"), "{}", r.stderr);
     assert!(r.stderr.contains("Tanaka"), "{}", r.stderr);
-    // Bad values and names are usage errors that say what is wrong.
+    // Exponent form and a sign are part of the number; an `e` that starts a unit is not.
+    for (density, want) in [
+        ("1e3 kg/m3", "1000 kg\n"),
+        ("1E3kg/m3", "1000 kg\n"),
+        ("1e-3 kg/L", "1 kg\n"),
+        ("+5 kg/m3", "5 kg\n"),
+        ("1/2 kg/m3", "0.5 kg\n"),
+    ] {
+        let r = dimvexa(&["convert", "1", "m3", "kg", "--density", density]);
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, want),
+            "{density}: {}",
+            r.stderr
+        );
+    }
+    // A name that no config defines is a usage error (exit 2) with the known names.
     for (density, needle) in [
         ("kg/m3", "no density named"),
-        ("998", "not a density"),
-        ("0 kg/m3", "must be positive"),
-        ("5 m", "not a unit of density"),
-        ("5 degC", "not a unit of density"),
         ("nope", "no density named 'nope'"),
     ] {
         let r = dimvexa(&["convert", "1", "L", "kg", "--density", density]);
         assert_eq!(r.code, 2, "{density}: {}", r.stderr);
         assert!(r.stderr.contains(needle), "{density}: {}", r.stderr);
     }
+    // The caller's own number that the library refuses keeps the library's error code, exits 1
+    // and says it came from --density.
+    for (density, code, needle) in [
+        ("998", "invalid_definition", "not a density"),
+        ("0 kg/m3", "invalid_definition", "must be positive"),
+        ("-5 kg/m3", "invalid_definition", "must be positive"),
+        ("5 m", "invalid_definition", "not a unit of density"),
+        ("5 degC", "invalid_definition", "not a unit of density"),
+        ("8.34lb/gal", "ambiguous_symbol", "'gal' is ambiguous"),
+        ("2e kg/m3", "parse_error", "--density:"),
+    ] {
+        let r = dimvexa(&["convert", "1", "L", "kg", "--density", density]);
+        assert_eq!(r.code, 1, "{density}: {}", r.stderr);
+        assert!(
+            r.stderr.starts_with(&format!("error[{code}]: --density: ")),
+            "{density}: {}",
+            r.stderr
+        );
+        assert!(r.stderr.contains(needle), "{density}: {}", r.stderr);
+    }
+    let r = dimvexa(&[
+        "convert",
+        "1",
+        "L",
+        "kg",
+        "--density",
+        "8.34lb/gal",
+        "--json",
+    ]);
+    let v = json::parse(&r.stdout).unwrap();
+    let e = v.get("error").unwrap();
+    assert_eq!(e.get("code").unwrap().as_str(), "ambiguous_symbol");
+    assert!(
+        e.get("message")
+            .unwrap()
+            .as_str()
+            .starts_with("--density: ")
+    );
+    assert_eq!(e.get("candidates").unwrap().as_array().len(), 2);
     // The density only takes part when the plain conversion is refused.
     let r = dimvexa(&["convert", "1", "L", "mL", "--density", "998kg/m3"]);
     assert_eq!(r.stdout, "1000 mL\n");
@@ -2039,6 +2090,44 @@ const OIL_CFG_PATH_FROM_ROOT: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../examples/configs/oil.toml"
 );
+
+#[test]
+fn a_user_file_overrides_a_shipped_density_and_a_shipped_name() {
+    let cfg = config_file(
+        "override_water.toml",
+        "[map]\nton = \"tonne\"\n\n[[density]]\nname = \"water_25C\"\nvalue = \"1000\"\nconditions = \"mine\"\nsource = \"mine\"\n",
+    );
+    let r = dimvexa(&[
+        "convert",
+        "1",
+        "L",
+        "kg",
+        "--config",
+        "water",
+        "--config",
+        &cfg,
+        "--density",
+        "water_25C",
+    ]);
+    assert_eq!((r.code, r.stdout.as_str()), (0, "1 kg\n"), "{}", r.stderr);
+    assert!(r.stderr.contains("mine"), "{}", r.stderr);
+    let r = dimvexa(&[
+        "convert", "1", "ton", "kg", "--config", "us", "--config", &cfg,
+    ]);
+    assert_eq!(r.stdout, "1000 kg\n");
+    // the other way round the shipped one wins
+    let r = dimvexa(&[
+        "convert", "1", "ton", "kg", "--config", &cfg, "--config", "us",
+    ]);
+    assert_eq!(r.stdout, "907.18474 kg\n");
+    let r = dimvexa(&["configs", ".toml"]);
+    assert_eq!(r.code, 2, "a bare .toml is a path, not a name");
+    assert!(
+        r.stderr.contains("cannot read config '.toml'"),
+        "{}",
+        r.stderr
+    );
+}
 
 #[test]
 fn units_lists_the_names_and_densities_of_a_shipped_config() {

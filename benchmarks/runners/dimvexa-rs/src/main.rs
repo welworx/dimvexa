@@ -301,16 +301,15 @@ fn semantics(reg: &Registry, corpus: &BTreeMap<String, Json>) -> Json {
                 g => g,
             }
             .to_string();
-            let result: Result<String, (String, String)> = if c.get("op").str() == "convert" {
-                convert_case(mode, reg, c.get("value").str(), c.get("from").str(), c.get("to").str()).map(|v| format!("{v:?}"))
-            } else {
-                let a = reg.quantity(c.get("a").str());
-                let b = reg.quantity(c.get("b").str());
-                match (a, b) {
-                    (Ok(a), Ok(b)) => a.checked_add(&b).map(|q| q.to_string()).map_err(|e| (e.code().to_string(), e.to_string())),
-                    (Err(e), _) | (_, Err(e)) => Err((e.code().to_string(), e.to_string())),
-                }
-            };
+            // dimvexa converts only (ADR-014): the "add two quantities" cases do not apply to it.
+            if c.get("op").str() != "convert" {
+                let mut r = rec(id, cat, "not_applicable");
+                r.set("group", Json::Str(group));
+                mr.push(r);
+                continue;
+            }
+            let result: Result<String, (String, String)> =
+                convert_case(mode, reg, c.get("value").str(), c.get("from").str(), c.get("to").str()).map(|v| format!("{v:?}"));
             let mut rec_mr = match result {
                 Ok(v) => {
                     let mut r = rec(id, cat, "silently_accepted");
@@ -363,7 +362,7 @@ fn semantics(reg: &Registry, corpus: &BTreeMap<String, Json>) -> Json {
         mrj.set("total", Json::Num(mr.len() as f64));
         mrj.set("refused", Json::Num(count(&mr, "refused")));
         mrj.set("silently_accepted", Json::Num(count(&mr, "silently_accepted")));
-        mrj.set("not_applicable", Json::Num(0.0));
+        mrj.set("not_applicable", Json::Num(count(&mr, "not_applicable")));
         mrj.set("refused_for_intended_reason", Json::Num(mr.iter().filter(|r| matches!(r.get("intended_reason"), Json::Bool(true))).count() as f64));
         mrj.set("by_category", by_category(&mr, &["refused", "silently_accepted", "not_applicable"]));
         mrj.set("by_group", by_key(&mr, "group", &["refused", "silently_accepted", "not_applicable"]));

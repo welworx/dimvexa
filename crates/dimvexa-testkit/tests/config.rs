@@ -636,6 +636,19 @@ fn a_density_literal_is_converted_to_kg_per_m3_exactly() {
     assert_eq!(g.value, Ratio::from_int(700));
     let l = Constant::density_from_text(&reg, "1 kg/L").unwrap();
     assert_eq!(l.value, Ratio::from_int(1000));
+    for (text, want) in [
+        ("1e3 kg/m3", Ratio::from_int(1000)),
+        ("1E3kg/m3", Ratio::from_int(1000)),
+        ("1.5e-1 kg/m3", Ratio::new(3, 20).unwrap()),
+        ("+5 kg/m3", Ratio::from_int(5)),
+        ("1/2 kg/m3", Ratio::new(1, 2).unwrap()),
+    ] {
+        assert_eq!(
+            Constant::density_from_text(&reg, text).unwrap().value,
+            want,
+            "{text}"
+        );
+    }
     for bad in [
         "998", "kg/m3", "0 kg/m3", "-1 kg/m3", "5 m", "5 degC", "x kg/m3",
     ] {

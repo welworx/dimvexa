@@ -46,7 +46,7 @@ pub enum Error {
         /// Close matches, for example the same text with different capitalisation.
         suggestions: Vec<String>,
     },
-    /// The bare symbol has several meanings and no profile resolves it.
+    /// The bare symbol has several meanings and no config resolves it.
     /// Code `ambiguous_symbol`.
     AmbiguousSymbol {
         /// The ambiguous symbol as written.

@@ -46,6 +46,12 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Fixed
 
+- A `--density` number the library refuses (an ambiguous unit such as `lb/gal`, not a density,
+  not positive, overflow) now keeps the library's error code, exits 1 and says it came from
+  `--density`; it used to be a `usage` error. Exponent form (`1e3 kg/m3`) is accepted.
+- The shipped water densities say "air-free" in their conditions, as the source table does.
+- The benchmark runners no longer call the removed addition; those cases count as not applicable
+  for dimvexa instead of being scored as refused.
 - A usage error carries the schema of the command word, not of any argument that happens to equal
   `units` (known limitation KL-3).
 

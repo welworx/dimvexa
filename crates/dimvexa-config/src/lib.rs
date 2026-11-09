@@ -23,8 +23,7 @@
 //!
 //! ```text
 //! [[density]]
-//! name = "water_20C"
-//! kind = "density"                        # kg/m3
+//! name = "water_20C"                      # kg/m3
 //! value = "9982067/10000"
 //! conditions = "air-free water, 20 degC, 101.325 kPa"
 //! source = "Tanaka et al., Metrologia 38 (2001) 301"
@@ -110,7 +109,14 @@ impl ConstantKind {
         }
     }
 
-    /// The unit of a constant of this kind, for display.
+    /// The unit of a constant of this kind, for display (`kg/m3` for a density).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_config::ConstantKind;
+    /// assert_eq!((ConstantKind::Density.name(), ConstantKind::Density.unit()), ("density", "kg/m3"));
+    /// ```
     #[must_use]
     pub const fn unit(self) -> &'static str {
         match self {
@@ -591,10 +597,7 @@ impl Constant {
             message,
         };
         let t = text.trim();
-        let split = t
-            .find(|c: char| !(c.is_ascii_digit() || matches!(c, '.' | '+' | '-' | '/')))
-            .unwrap_or(t.len());
-        let (number, unit_text) = t.split_at(split);
+        let (number, unit_text) = t.split_at(number_end(t));
         let unit_text = unit_text.trim();
         if number.is_empty() || unit_text.is_empty() {
             return Err(bad(format!(
@@ -719,20 +722,64 @@ pub const BUNDLED: &[Bundled] = &[
 ];
 
 /// The shipped config called `name`, if there is one.
+///
+/// # Examples
+///
+/// ```
+/// use dimvexa_config::{BUNDLED, bundled};
+/// assert!(bundled("gb").is_some() && bundled("nope").is_none());
+/// assert!(BUNDLED.iter().all(|b| bundled(b.name) == Some(b)));
+/// ```
 #[must_use]
 pub fn bundled(name: &str) -> Option<&'static Bundled> {
     BUNDLED.iter().find(|b| b.name == name)
 }
 
-/// Whether a `--config` value is a file path (it contains `/` or `\`, or ends in `.toml`).
-/// Any other value is the name of a shipped config; a local file called `us` is written `./us`.
+/// Whether a `--config` value is a file path.
+///
+/// A path contains `/` or `\`, or ends in `.toml` in any letter case. Any other value is the
+/// name of a shipped config; a local file called `us` is written `./us`.
+///
+/// # Examples
+///
+/// ```
+/// use dimvexa_config::is_path;
+/// assert!(is_path("./us") && is_path("mine.toml") && is_path("dir/mine") && is_path(".toml"));
+/// assert!(!is_path("us") && !is_path("metric-trade"));
+/// ```
 #[must_use]
 pub fn is_path(spec: &str) -> bool {
+    let bytes = spec.as_bytes();
     spec.contains('/')
         || spec.contains('\\')
-        || std::path::Path::new(spec)
-            .extension()
-            .is_some_and(|e| e.eq_ignore_ascii_case("toml"))
+        || bytes
+            .len()
+            .checked_sub(5)
+            .and_then(|start| bytes.get(start..))
+            .is_some_and(|tail| tail.eq_ignore_ascii_case(b".toml"))
+}
+
+/// Where the number at the start of `t` ends: digits, `.`, `+`, `-` and `/`, and an exponent
+/// (`e` or `E`, then an optional sign, then a digit) only when it is followed by a digit, so the
+/// `e` of a unit such as `eV` stays in the unit.
+fn number_end(t: &str) -> usize {
+    let b = t.as_bytes();
+    let mut i = 0;
+    while let Some(&c) = b.get(i) {
+        let plain = c.is_ascii_digit() || matches!(c, b'.' | b'+' | b'-' | b'/');
+        let exponent = matches!(c, b'e' | b'E') && i > 0 && {
+            let after_sign = match b.get(i.saturating_add(1)) {
+                Some(b'+' | b'-') => i.saturating_add(2),
+                _ => i.saturating_add(1),
+            };
+            b.get(after_sign).is_some_and(u8::is_ascii_digit)
+        };
+        if !(plain || exponent) {
+            break;
+        }
+        i = i.saturating_add(1);
+    }
+    i
 }
 
 /// Replaces the entry that `same` selects, keeping its position, or appends. An override must

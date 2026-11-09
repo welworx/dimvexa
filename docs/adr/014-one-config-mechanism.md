@@ -61,9 +61,12 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
    The `/1` schema files stay in `docs/schemas/` as history. The CLI emits `/2` only; it does
    not offer both. `docs/python-binding.md`, the WASM binding and the CLI snapshots follow.
 4. **Bundled configs may carry densities.** ADR-009 rule 8 ("shipped profiles carry no bridge")
-   is replaced by: a bundled density needs `conditions` and a `source` verified against the
-   original, like a shipped unit, and its name states the conditions (`water_20C`, never
-   `water`). A bundled config can include a density so that `--config us` makes `1 L kg` work
+   is replaced by: a bundled density needs `conditions` and a `source` checked against the
+   original, like a shipped unit, and its name states the conditions (`water_25C`, never
+   `water`). Where only a secondary quote of the original could be read, the `source` string says
+   so ("confirm against Table 1") and `docs/known-limitations.md` lists it until someone checks
+   the original; that is the case for the two water densities that ship today. A bundled config
+   can include a density so that `--config us` makes `1 L kg` work
    with a stated water density. A density is never computed (ADR-001): the library multiplies by
    the number written in the config or on the command line. Every result that uses one is
    `measured`, carries the assumption on stderr in text mode and in the JSON `density` object, and

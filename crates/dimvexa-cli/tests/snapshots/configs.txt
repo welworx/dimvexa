@@ -1,7 +1,7 @@
 # columns: name, names, units, densities, hash
-us	5	0	2	fnv1a64:bfd49f74774151ca
-gb	5	0	2	fnv1a64:5890b2899af0ec6b
-metric-trade	2	0	2	fnv1a64:fdb956a964667d12
+us	5	0	2	fnv1a64:533f912882e451b0
+gb	5	0	2	fnv1a64:097878712fcdb6bd
+metric-trade	2	0	2	fnv1a64:d7e7733b14332438
 year-julian	2	0	0	fnv1a64:9f64b4487d6b1855
 year-civil	2	0	0	fnv1a64:4d93efa10d5942db
-water	0	0	2	fnv1a64:74d21adfc8c09754
+water	0	0	2	fnv1a64:5cdcaaff0ab4252a

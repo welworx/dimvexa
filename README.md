@@ -226,7 +226,7 @@ units and densities. One option, two kinds of value (ADR-014,
 
 - a **name** (`us`, `gb`, `metric-trade`, `year-julian`, `year-civil`, `water`) loads a config
   that ships with dimvexa;
-- a **path** (anything with a `/` or ending in `.toml`) loads your own file. A file called `us`
+- a **path** (anything with a `/` or `\`, or ending in `.toml`) loads your own file. A file called `us`
   in the current directory is written `./us`.
 
 ```console
@@ -294,7 +294,7 @@ $ dimvexa convert 1 L kg --density 998.2067kg/m3
 note: used density --density (998.2067 kg/m3; supplied by the caller on the command line; the conditions are not known; source: none: supplied by the caller; --density)
 $ dimvexa convert 1 L kg --config water --density water_25C
 0.99704702 kg
-note: used density water_25C (997.04702 kg/m3; VSMOW water, 25 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309 (recommended density table); value 0.99704702(83) g/mL as quoted in en.wikipedia.org/wiki/Properties_of_water, which agrees with the paper's formula; confirm against Table 1 of the paper; bundled:water:7)
+note: used density water_25C (997.04702 kg/m3; air-free VSMOW water, 25 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309 (recommended density table); value 0.99704702(83) g/mL as quoted in en.wikipedia.org/wiki/Properties_of_water, which agrees with the paper's formula; confirm against Table 1 of the paper; bundled:water:7)
 ```
 
 The configs `water`, `us`, `gb` and `metric-trade` carry two densities of water
