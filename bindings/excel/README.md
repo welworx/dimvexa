@@ -8,8 +8,8 @@ error whose message starts with `dimvexa <code>:`; nothing is guessed.
 
 ## Status
 
-What is verified: `./build.sh` builds the assets with no bundler, and `node test/functions.test.js`
-runs the real WASM build through the functions with a **mocked** Excel runtime.
+What is verified: `./build.sh` builds the assets with no bundler, and `node test/functions.test.js` and `node test/cells.test.js`
+run the real WASM build through the functions with a **mocked** Excel runtime.
 
 Verified by hand in **Excel on the web and in Mac desktop Excel** (2026-11-09): the manifest loads, WASM runs in the
 JavaScript-only runtime, `VERSION`, `CONVERT` and a refusal (`#VALUE!`) behave as designed.

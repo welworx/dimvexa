@@ -120,6 +120,11 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
     [1, 2].map((x) => x),
   );
 
+  // A unit that is a number or missing is a parse error, not a WASM trap.
+  await assert.rejects(async () => associated.CONVERT(1, 2, "m"), /dimvexa parse_error/);
+  await assert.rejects(async () => associated.CONVERT(1, "km", undefined), /dimvexa parse_error/);
+  await assert.rejects(async () => associated.CONVERTRANGE([[1]], 5, "m"), /dimvexa parse_error/);
+
   // Once the module is loaded the functions are synchronous: plain values, not Promises.
   assert.strictEqual(associated.CONVERT(2, "km", "m"), 2000);
   assert.deepStrictEqual(associated.CONVERTRANGE([[1]], "km", "m"), [[1000]]);

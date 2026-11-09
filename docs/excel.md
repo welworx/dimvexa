@@ -193,6 +193,21 @@ has the current steps for each platform.
 
 ### Check that it works
 
+**Quickest: paste the ready-made test cells.** In `bindings/excel/test/cells/` there are four
+tab-separated files. Open one in a text editor, select all, copy, and paste into cell `A1` of a
+blank sheet. The formulas become live and the expected results stand next to them.
+
+| File | Use it for |
+|---|---|
+| `single.de.tsv` | one-cell formulas, German Excel (`;` between arguments, decimal comma) |
+| `single.en.tsv` | the same for English Excel (`,` between arguments, decimal point) |
+| `ranges.de.tsv`, `ranges.en.tsv` | `DIMVEXA.CONVERTRANGE`: the data is in columns A and B, the formulas in column D, a note on what each should do in column G |
+
+Paste the range file into a **different, blank sheet** because the results spill below and beside
+each formula. The single-cell expectations are checked against the real build by
+`node test/cells.test.js` (after `./build.sh`), but only in a mocked Excel; what Excel itself shows
+is what you are testing. Or type the cells by hand:
+
 Enter these in a blank sheet:
 
 | Formula | Expect |
