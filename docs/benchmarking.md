@@ -90,6 +90,13 @@ python3 benchmarks/python/run_pint.py                # needs: pip install -r ben
 node benchmarks/node/run_mathjs.js                   # needs: npm install in benchmarks/node
 python3 benchmarks/tools/report.py                   # results/*.json -> docs/benchmarks/comparison.md
 ```
+The competitor libraries in `benchmarks/node` are declared as `devDependencies` and pinned to exact
+versions on purpose: a comparison run is only reproducible for the versions it names, so they are
+not bumped to silence advisories. Nothing from this directory is shipped or run by the Dimvexa
+packages, and the runners feed it only the repository's own corpus. Dependabot alerts for these
+packages are dismissed as "not used" (or by an auto-triage rule for development-scoped
+dependencies), and `.github/dependabot.yml` has no npm entry for it.
+
 
 `--quick` runs a few samples as a smoke test; never publish quick results. The workflow
 `.github/workflows/bench-compare.yml` (manual and weekly, never required, not part of
