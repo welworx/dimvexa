@@ -31,8 +31,13 @@ add-in never shapes the core).
    web, or does it need the shared runtime (and so a task pane page)? **Answered for Excel on the
    web (2026-11-09, owner's test, Mac browser): yes.** `DIMVEXA.VERSION()`,
    `DIMVEXA.CONVERT(1,"km","m")` = 1000 and `DIMVEXA.CONVERT(100,"degC","K")` = 373.15 worked,
-   and a dimension mismatch showed `#VALUE!` (in German `#WERT!`). Still open: Windows desktop
-   and Mac desktop. The first call after sideloading took a while; the cause (registration or
+   and a dimension mismatch showed `#VALUE!` (in German `#WERT!`). **Mac desktop Excel
+   (2026-11-09, owner's test, sideloaded through the `wef` folder): also works**, with a noticeable
+   time lag that is not yet measured or explained. Node (V8) on a dev machine spends about 25 to
+   50 ms on decode, compile and the first call, about 6 microseconds per later call and about
+   8 ms for a 10 000 cell range, so the lag is not the conversion; suspects are Excel's runtime
+   start, the dev server (`-c-1` disables caching) and JavaScriptCore compile time. Still open:
+   Windows desktop. The first call after sideloading took a while; the cause (registration or
    WASM compile) is not measured.
 2. Does Excel on Mac support custom functions (Microsoft pages disagree)?
 3. Startup cost of compiling the 224 KB module on first call, and the cost of the call itself.

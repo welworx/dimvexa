@@ -9,11 +9,11 @@ error whose message starts with `dimvexa <code>:`; nothing is guessed.
 What is verified: `./build.sh` builds the assets with no bundler, and `node test/functions.test.js`
 runs the real WASM build through the functions with a **mocked** Excel runtime.
 
-Verified by hand in **Excel on the web** (2026-11-09): the manifest loads, WASM runs in the
+Verified by hand in **Excel on the web and in Mac desktop Excel** (2026-11-09): the manifest loads, WASM runs in the
 JavaScript-only runtime, `VERSION`, `CONVERT` and a refusal (`#VALUE!`) behave as designed.
 
-What is **not** verified: Windows desktop and Mac desktop Excel, the first-call delay, and
-performance. The functions appear in cells, not in the add-ins list (no ribbon button).
+What is **not** verified: Windows desktop Excel, and performance. On Mac the first use has a
+noticeable lag whose cause is not measured. The functions appear in cells, not in the add-ins list (no ribbon button).
 
 ## Build and try
 
