@@ -82,10 +82,18 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
 
 ## Open sub-decisions (recommended default first; not implemented before the owner confirms)
 
-* **OPEN 1: names and contents of the bundled configs.** Suggested: `us` (`ton` = `ton_short`,
-  `mile` = `mi`, `gal` = US), `gb` (`ton` = `ton_long`, imperial gallon, stone), `metric-trade`
-  (`mt` = `tonne`), `year-julian` (`yr`, `year` = `yr_julian`) and `year-civil`
-  (`yr`, `year` = `yr_common`). The year choice is not regional, so it is its own config.
+* **OPEN 1: names and contents of the bundled configs.** The five names are confirmed by the
+  owner on 2026-11-09: `us`, `gb`, `metric-trade`, `year-julian`, `year-civil`. Their contents
+  are the proposal below, checked against the shipped table; it is not confirmed until the
+  owner says so.
+  * `us`: `ton` = `ton_short`, `mile` = `mi`, `gal` = `gal_us`, `pt` = `pt_us`, `qt` = `qt_us`.
+  * `gb`: `ton` = `ton_long`, `mile` = `mi`, `gal` = `gal_imp`, `pt` = `pt_imp`, `qt` = `qt_imp`.
+  * `metric-trade`: `mt` = `tonne`, `ton` = `tonne`.
+  * `year-julian`: `yr`, `year` = `yr_julian`. `year-civil`: `yr`, `year` = `yr_common`.
+  * `oz` is not mapped by `us` or `gb`: it is a mass (`oz_av`, `oz_troy`) or a volume
+    (`fl_oz_us`, `fl_oz_imp`) in both countries. Mapping it would guess, so it stays refused.
+  * `stone` is not in the unit table, so `gb` cannot map it; adding it is an `add-unit` change.
+  * `mile` is also declared ambiguous against `mi_us_survey`; `us` picks the international `mi`.
 * **OPEN 2: which densities ship and under which conditions.** Suggested start: water at 4 degC
   and 20 degC, from the original source (the existing example cites Tanaka et al., Metrologia 38
   (2001) 301, which the repo still marks as unchecked against its Table 1). Others (seawater,
