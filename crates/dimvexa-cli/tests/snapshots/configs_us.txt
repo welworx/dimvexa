@@ -1,0 +1,9 @@
+bundled:us (hash fnv1a64:<hash>)
+
+## names (what they mean once the config is loaded)
+# columns: name, unit
+ton	ton_short
+mile	mi
+gal	gal_us
+pt	pt_us
+qt	qt_us

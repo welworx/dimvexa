@@ -53,27 +53,33 @@ fn snapshot(name: &str, actual: &str) {
     );
 }
 
-/// Normalises the data version and hash so snapshots survive a table update (the version
-/// and hash have their own tests).
+/// Normalises the data version and every content hash so snapshots survive a table or config
+/// update (the version and the hashes have their own tests, and a hex digest can contain
+/// letters that the spell checker takes for typos).
 fn stable(s: &str) -> String {
-    let Some(i) = s.find("fnv1a64:") else {
-        return s.to_string();
-    };
-    let tail = &s[i..];
-    let len = tail.find(['"', ')', '\n']).unwrap_or(tail.len());
-    let mut head = s[..i].to_string();
-    // Mask "v<digits>+" in front of the hash as well.
-    if head.ends_with('+') {
-        head.pop();
-        while head.ends_with(|c: char| c.is_ascii_digit()) {
+    let mut out = String::new();
+    let mut rest = s;
+    while let Some(i) = rest.find("fnv1a64:") {
+        let tail = &rest[i..];
+        let len = tail.find(['"', ')', '\n', '\t']).unwrap_or(tail.len());
+        let mut head = rest[..i].to_string();
+        // Mask "v<digits>+" in front of the hash as well.
+        if head.ends_with('+') {
             head.pop();
+            while head.ends_with(|c: char| c.is_ascii_digit()) {
+                head.pop();
+            }
+            if head.ends_with('v') {
+                head.pop();
+            }
+            head.push_str("v<N>+");
         }
-        if head.ends_with('v') {
-            head.pop();
-        }
-        head.push_str("v<N>+");
+        out.push_str(&head);
+        out.push_str("fnv1a64:<hash>");
+        rest = &tail[len..];
     }
-    format!("{head}fnv1a64:<hash>{}", &tail[len..])
+    out.push_str(rest);
+    out
 }
 
 #[test]
@@ -144,7 +150,7 @@ fn snapshots_of_successful_json() {
 fn json_fields_have_the_documented_values() {
     let r = dimvexa(&["convert", "10", "m/s", "km/h", "--json"]);
     let v = json::parse(&r.stdout).unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/1");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/2");
     assert!(v.get("ok").unwrap().as_bool());
     assert_eq!(v.get("input").unwrap().get("value").unwrap().as_str(), "10");
     assert_eq!(v.get("input").unwrap().get("unit").unwrap().as_str(), "m/s");
@@ -379,7 +385,7 @@ fn units_shows_the_details_of_one_unit() {
     snapshot("units_psi.txt", &r.stdout);
     let v = json::parse(&dimvexa(&["units", "psi", "--json"]).stdout).unwrap();
     let u = v.get("unit").unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
     assert_eq!(u.get("symbol").unwrap().as_str(), "psi");
     assert_eq!(u.get("group").unwrap().as_str(), "pressure");
     assert_eq!(
@@ -413,7 +419,7 @@ fn units_unknown_and_ambiguous_names_are_loud_errors() {
         let r = dimvexa(&["units", name, "--json"]);
         assert_eq!(r.code, 1, "{name}");
         let v = json::parse(&r.stdout).unwrap();
-        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
         assert!(!v.get("ok").unwrap().as_bool());
         assert_eq!(v.get("error").unwrap().get("code").unwrap().as_str(), code);
         assert!(
@@ -444,7 +450,7 @@ fn units_misuse_is_a_usage_error_in_the_units_schema() {
         let r = dimvexa(&a);
         assert_eq!(r.code, 2, "{args:?}");
         let v = json::parse(&r.stdout).unwrap();
-        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
         assert!(!v.get("ok").unwrap().as_bool());
         assert_eq!(
             v.get("error").unwrap().get("code").unwrap().as_str(),
@@ -711,13 +717,13 @@ fn a_config_can_never_redefine_an_existing_symbol() {
     // In JSON the failure uses the schema of the command.
     let v = json::parse(&dimvexa(&["convert", "1", "t", "kg", "--json", "--config", &cfg]).stdout)
         .unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/1");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/2");
     assert_eq!(
         v.get("error").unwrap().get("code").unwrap().as_str(),
         "invalid_definition"
     );
     let v = json::parse(&dimvexa(&["units", "--json", "--config", &cfg]).stdout).unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
     // Unknown targets, unknown sections and bad syntax are errors too.
     for (name, text, needle) in [
         (
@@ -728,7 +734,7 @@ fn a_config_can_never_redefine_an_existing_symbol() {
         (
             "section.toml",
             "[unit]\n",
-            "reads [map], [[unit]] and [[bridge]]",
+            "reads [map], [[unit]] and [[density]]",
         ),
         ("syntax.toml", "[map]\nfoo = tonne\n", "quoted string"),
     ] {
@@ -761,7 +767,7 @@ fn config_usage_errors_exit_2() {
     let v =
         json::parse(&dimvexa(&["units", "--json", "--config", "/nonexistent/dimvexa.toml"]).stdout)
             .unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
     assert_eq!(
         v.get("error").unwrap().get("code").unwrap().as_str(),
         "usage"
@@ -808,7 +814,7 @@ fn units_shows_where_a_mapped_name_comes_from() {
 #[test]
 fn readme_config_example_is_real() {
     let readme = readme();
-    let section = readme_section(&readme, "## Your own names: `--config`");
+    let section = readme_section(&readme, "## Names and densities: `--config`");
     let toml = section
         .split("```toml\n")
         .nth(1)
@@ -875,25 +881,29 @@ fn dimvexa_at_root(args: &[&str]) -> Run {
 }
 
 #[test]
-fn a_bridge_gives_the_mass_of_a_litre_of_water() {
-    let w = ["--config", WATER_CFG, "--bridge", "water_20C"];
+fn a_density_gives_the_mass_of_a_litre_of_water() {
+    let w = ["--config", WATER_CFG, "--density", "water_20C"];
     let args = |base: &[&'static str]| -> Vec<&'static str> {
         let mut a = base.to_vec();
         a.extend(w);
         a
     };
-    // Without the bridge it is refused, and the error says how to proceed.
+    // Without the density it is refused, and the error says how to proceed.
     let r = dimvexa_at_root(&["convert", "1", "L", "kg"]);
     assert_eq!(r.code, 1);
     assert!(r.stderr.starts_with("error[dimension_mismatch]"));
     assert!(r.stderr.contains("hint: mass and volume need a density"));
-    // A config alone does not turn a bridge on.
+    // A config alone does not turn a density on.
     let r = dimvexa_at_root(&["convert", "1", "L", "kg", "--config", WATER_CFG]);
     assert_eq!(r.code, 1);
     // With it: exact, and the assumption is printed next to the result.
     let r = dimvexa_at_root(&args(&["convert", "1", "L", "kg"]));
     assert_eq!((r.code, r.stdout.as_str()), (0, "0.9982067 kg\n"));
-    assert!(r.stderr.contains("density 998.2067 kg/m3"), "{}", r.stderr);
+    assert!(
+        r.stderr.contains("used density water_20C (998.2067 kg/m3;"),
+        "{}",
+        r.stderr
+    );
     assert!(
         r.stderr
             .contains("air-free water of SMOW isotopic composition, 20 degC")
@@ -910,11 +920,11 @@ fn a_bridge_gives_the_mass_of_a_litre_of_water() {
         dimvexa_at_root(&args(&["convert", "2", "L/h", "kg/h", "--exact"])).stdout,
         "9982067/5000000 kg/h\n"
     );
-    // Same-dimension conversions ignore the bridge; other mismatches stay errors.
+    // Same-dimension conversions ignore the density; other mismatches stay errors.
     let r = dimvexa_at_root(&args(&["convert", "1", "m", "km"]));
     assert_eq!(r.stdout, "0.001 km\n");
     assert!(
-        r.stderr.contains("bridge water_20C was not needed"),
+        r.stderr.contains("density water_20C was not needed"),
         "{}",
         r.stderr
     );
@@ -926,7 +936,7 @@ fn a_bridge_gives_the_mass_of_a_litre_of_water() {
 }
 
 #[test]
-fn bridge_json_records_the_assumption_and_marks_the_result_measured() {
+fn density_json_records_the_assumption_and_marks_the_result_measured() {
     let r = dimvexa_at_root(&[
         "convert",
         "1",
@@ -935,14 +945,14 @@ fn bridge_json_records_the_assumption_and_marks_the_result_measured() {
         "--json",
         "--config",
         WATER_CFG,
-        "--bridge",
+        "--density",
         "water_20C",
     ]);
     assert_eq!(r.code, 0);
     assert_eq!(r.stderr, "", "JSON mode keeps stderr clean");
     let v = json::parse(&r.stdout).unwrap();
     json::check_convert_schema(&v);
-    let b = v.get("bridge").unwrap();
+    let b = v.get("density").unwrap();
     assert_eq!(b.get("name").unwrap().as_str(), "water_20C");
     assert_eq!(b.get("value").unwrap().as_str(), "9982067/10000");
     assert_eq!(b.get("unit").unwrap().as_str(), "kg/m3");
@@ -964,57 +974,72 @@ fn bridge_json_records_the_assumption_and_marks_the_result_measured() {
             .iter()
             .any(|s| s.as_str().contains("Tanaka") && s.as_str().contains("water_20C"))
     );
-    // Without a bridge the field is present and null, and exactness is not downgraded.
+    // Without a density the field is present and null, and exactness is not downgraded.
     let v = json::parse(&dimvexa(&["convert", "1", "m", "km", "--json"]).stdout).unwrap();
-    assert!(matches!(v.get("bridge").unwrap(), json::V::Null));
+    assert!(matches!(v.get("density").unwrap(), json::V::Null));
     assert_eq!(v.get("exactness").unwrap().as_str(), "defined");
 }
 
 #[test]
-fn bridge_misuse_is_loud() {
-    // Unknown name, with and without any bridge loaded; also when the conversion would not need it.
-    let r = dimvexa_at_root(&["convert", "1", "m", "km", "--bridge", "water_20C"]);
+fn density_misuse_is_loud() {
+    // Unknown name, with and without any density loaded; also when the conversion would not need it.
+    let r = dimvexa_at_root(&["convert", "1", "m", "km", "--density", "water_20C"]);
     assert_eq!(r.code, 2);
     assert!(
-        r.stderr.contains("no config with a [[bridge]] is loaded"),
+        r.stderr.contains("no loaded config has a [[density]]"),
         "{}",
         r.stderr
     );
     let r = dimvexa_at_root(&[
-        "convert", "1", "L", "kg", "--config", WATER_CFG, "--bridge", "nope",
+        "convert",
+        "1",
+        "L",
+        "kg",
+        "--config",
+        WATER_CFG,
+        "--density",
+        "nope",
     ]);
     assert_eq!(r.code, 2);
     assert!(
-        r.stderr.contains("loaded bridges: water_20C"),
+        r.stderr.contains("loaded densities: water_20C"),
         "{}",
         r.stderr
     );
     let r = dimvexa_at_root(&[
-        "convert", "1", "L", "kg", "--config", WATER_CFG, "--bridge", "nope", "--json",
+        "convert",
+        "1",
+        "L",
+        "kg",
+        "--config",
+        WATER_CFG,
+        "--density",
+        "nope",
+        "--json",
     ]);
     let v = json::parse(&r.stdout).unwrap();
     assert_eq!(
         v.get("error").unwrap().get("code").unwrap().as_str(),
         "usage"
     );
-    // --bridge needs a value and belongs to convert, not to units.
-    assert_eq!(dimvexa(&["convert", "1", "L", "kg", "--bridge"]).code, 2);
-    assert_eq!(dimvexa(&["units", "--bridge", "x"]).code, 2);
-    // A bridge missing its conditions or source is refused when the config is loaded.
+    // --density needs a value and belongs to convert, not to units.
+    assert_eq!(dimvexa(&["convert", "1", "L", "kg", "--density"]).code, 2);
+    assert_eq!(dimvexa(&["units", "--density", "x"]).code, 2);
+    // A density missing its conditions or source is refused when the config is loaded.
     for (name, text, needle) in [
         (
             "nocond.toml",
-            "[[bridge]]\nname = \"w\"\nkind = \"density\"\nvalue = \"1000\"\nsource = \"s\"\n",
+            "[[density]]\nname = \"w\"\nvalue = \"1000\"\nsource = \"s\"\n",
             "'conditions'",
         ),
         (
             "nosrc.toml",
-            "[[bridge]]\nname = \"w\"\nkind = \"density\"\nvalue = \"1000\"\nconditions = \"c\"\n",
+            "[[density]]\nname = \"w\"\nvalue = \"1000\"\nconditions = \"c\"\n",
             "'source'",
         ),
         (
             "zero.toml",
-            "[[bridge]]\nname = \"w\"\nkind = \"density\"\nvalue = \"0\"\nconditions = \"c\"\nsource = \"s\"\n",
+            "[[density]]\nname = \"w\"\nvalue = \"0\"\nconditions = \"c\"\nsource = \"s\"\n",
             "must be positive",
         ),
     ] {
@@ -1026,10 +1051,10 @@ fn bridge_misuse_is_loud() {
 }
 
 #[test]
-fn units_lists_the_bridges_of_a_config() {
+fn units_lists_the_densities_of_a_config() {
     let r = dimvexa_at_root(&["units", "mass", "--config", WATER_CFG]);
     assert_eq!(r.code, 0);
-    assert!(r.stdout.contains("## config bridges"));
+    assert!(r.stdout.contains("## config densities"));
     assert!(
         r.stdout
             .lines()
@@ -1038,12 +1063,34 @@ fn units_lists_the_bridges_of_a_config() {
     assert!(
         !dimvexa(&["units", "mass"])
             .stdout
-            .contains("config bridges")
+            .contains("config densities")
     );
     let v =
         json::parse(&dimvexa_at_root(&["units", "--json", "--config", WATER_CFG]).stdout).unwrap();
     json::check_units_schema(&v);
-    assert_eq!(v.get("bridges").unwrap().as_array().len(), 1);
+    assert_eq!(v.get("densities").unwrap().as_array().len(), 1);
+}
+
+/// The README's shipped-config examples: every command and its output is real.
+#[test]
+fn readme_shipped_configs_are_real() {
+    let readme = readme();
+    let section = readme_section(&readme, "## Names and densities: `--config`");
+    for args in [
+        &["convert", "1", "ton", "kg", "--config", "us"][..],
+        &["convert", "1", "ton", "kg", "--config", "gb"],
+        &["convert", "1", "mt", "kg", "--config", "metric-trade"],
+        &["convert", "1", "yr", "d", "--config", "year-julian"],
+        &["convert", "1", "oz", "g", "--config", "us"],
+    ] {
+        let r = dimvexa_at_root(args);
+        let output = if r.code == 0 { r.stdout } else { r.stderr };
+        let expected = format!("$ dimvexa {}\n{output}", args.join(" "));
+        assert!(
+            section.contains(&expected),
+            "README does not show:\n{expected}"
+        );
+    }
 }
 
 /// The README's water example: the TOML is the example file, and every command is real.
@@ -1067,6 +1114,17 @@ fn readme_water_example_is_real() {
         assert!(shown.contains(line), "README TOML lacks: {line}");
     }
     for args in [
+        &["convert", "1", "L", "kg", "--density", "998.2067kg/m3"][..],
+        &[
+            "convert",
+            "1",
+            "L",
+            "kg",
+            "--config",
+            "water",
+            "--density",
+            "water_25C",
+        ],
         &["convert", "1", "L", "kg"][..],
         &[
             "convert",
@@ -1075,7 +1133,7 @@ fn readme_water_example_is_real() {
             "kg",
             "--config",
             WATER_CFG,
-            "--bridge",
+            "--density",
             "water_20C",
         ],
         &[
@@ -1085,7 +1143,7 @@ fn readme_water_example_is_real() {
             "tonne",
             "--config",
             WATER_CFG,
-            "--bridge",
+            "--density",
             "water_20C",
             "--exact",
         ],
@@ -1117,7 +1175,7 @@ fn a_config_can_define_a_unit() {
         "convert", "1", "Mbbl_oil", "m3", "--exact", "--config", OIL_CFG,
     ]);
     assert_eq!(r.stdout, "9936705933/62500 m^3\n");
-    // It combines with a bridge from another config: barrels of water in kilograms.
+    // It combines with a density from another config: barrels of water in kilograms.
     let r = dimvexa_at_root(&[
         "convert",
         "1",
@@ -1127,7 +1185,7 @@ fn a_config_can_define_a_unit() {
         OIL_CFG,
         "--config",
         WATER_CFG,
-        "--bridge",
+        "--density",
         "water_20C",
     ]);
     assert_eq!(r.code, 0, "{}", r.stderr);
@@ -1290,18 +1348,18 @@ fn option_values_are_checked() {
         v.get("error").unwrap().get("code").unwrap().as_str(),
         "usage"
     );
-    // Two bridges are an error, not silently the last one.
-    let r = dimvexa(&["convert", "1", "L", "kg", "--bridge", "a", "--bridge=b"]);
+    // Two densities are an error, not silently the last one.
+    let r = dimvexa(&["convert", "1", "L", "kg", "--density", "a", "--density=b"]);
     assert_eq!(r.code, 2);
     assert!(
-        r.stderr.contains("'--bridge' is given twice"),
+        r.stderr.contains("'--density' is given twice"),
         "{}",
         r.stderr
     );
 }
 
 #[test]
-fn an_unneeded_bridge_is_mentioned_not_silent() {
+fn an_unneeded_density_is_mentioned_not_silent() {
     let r = dimvexa_at_root(&[
         "convert",
         "1",
@@ -1309,16 +1367,16 @@ fn an_unneeded_bridge_is_mentioned_not_silent() {
         "g",
         "--config",
         WATER_CFG,
-        "--bridge",
+        "--density",
         "water_20C",
     ]);
     assert_eq!((r.code, r.stdout.as_str()), (0, "1000 g\n"));
     assert!(
-        r.stderr.contains("bridge water_20C was not needed"),
+        r.stderr.contains("density water_20C was not needed"),
         "{}",
         r.stderr
     );
-    // JSON says it with a null bridge and stays quiet on stderr.
+    // JSON says it with a null density and stays quiet on stderr.
     let r = dimvexa_at_root(&[
         "convert",
         "1",
@@ -1327,16 +1385,16 @@ fn an_unneeded_bridge_is_mentioned_not_silent() {
         "--json",
         "--config",
         WATER_CFG,
-        "--bridge",
+        "--density",
         "water_20C",
     ]);
     assert_eq!(r.stderr, "");
     let v = json::parse(&r.stdout).unwrap();
-    assert!(matches!(v.get("bridge").unwrap(), json::V::Null));
+    assert!(matches!(v.get("density").unwrap(), json::V::Null));
 }
 
 #[test]
-fn a_bridge_does_not_apply_to_other_dimensions_that_differ_by_a_density() {
+fn a_density_does_not_apply_to_other_dimensions_that_differ_by_a_density() {
     for (from, to) in [("kg/L", "m"), ("kg/m2", "mm"), ("kg", "m3/s")] {
         let r = dimvexa_at_root(&[
             "convert",
@@ -1345,7 +1403,7 @@ fn a_bridge_does_not_apply_to_other_dimensions_that_differ_by_a_density() {
             to,
             "--config",
             WATER_CFG,
-            "--bridge",
+            "--density",
             "water_20C",
         ]);
         assert_eq!(r.code, 1, "{from} -> {to}");
@@ -1406,20 +1464,23 @@ fn known_limitation_kl_12_density_hint_is_text_only() {
     );
 }
 
-/// KL-3: a usage error belongs to `units` if any argument is the word `units`, even when the
-/// command is `convert` (here the word is the name of a bridge).
+/// A usage error carries the schema of the command word, whatever the options are called
+/// (this used to be KL-3: any argument equal to `units` flipped the schema).
 #[test]
-fn known_limitation_kl_3_units_is_detected_by_any_argument() {
+fn a_usage_error_follows_the_command_word_not_an_option_value() {
     let r = dimvexa(&[
-        "convert", "1", "m", "km", "--bridge", "units", "--config", "--json",
+        "convert",
+        "1",
+        "m",
+        "km",
+        "--density",
+        "units",
+        "--config",
+        "--json",
     ]);
     assert_eq!(r.code, 2);
     let v = json::parse(&r.stdout).unwrap();
-    assert_eq!(
-        v.get("schema").unwrap().as_str(),
-        "dimvexa.units/1",
-        "KL-3 fixed? then a convert error carries dimvexa.convert/1"
-    );
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/2");
 }
 
 /// `docs/known-limitations.md` lists every limitation these tests pin, and each pinned entry
@@ -1449,7 +1510,7 @@ fn known_limitations_document_lists_the_pinned_entries() {
 }
 
 /// The entries of `docs/known-limitations.md` that a test pins.
-const PINNED_LIMITATIONS: [u32; 14] = [1, 3, 4, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18];
+const PINNED_LIMITATIONS: [u32; 13] = [1, 4, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18];
 
 /// Real outputs validate against the schema files in `docs/schemas/`, not only against the
 /// hand-written checks in `support/json.rs`.
@@ -1459,12 +1520,13 @@ fn outputs_validate_against_the_schema_files() {
         json::parse(&std::fs::read_to_string(repo_root().join("docs/schemas").join(name)).unwrap())
             .unwrap()
     };
-    let (convert, units) = (
-        schema("dimvexa.convert-1.schema.json"),
-        schema("dimvexa.units-1.schema.json"),
+    let (convert, units, configs) = (
+        schema("dimvexa.convert-2.schema.json"),
+        schema("dimvexa.units-2.schema.json"),
+        schema("dimvexa.configs-1.schema.json"),
     );
     let cfg = config_file("schema_check.toml", TRADE);
-    let w = ["--config", WATER_CFG, "--bridge", "water_20C"];
+    let w = ["--config", WATER_CFG, "--density", "water_20C"];
     let o = ["--config", OIL_CFG];
     let cases: Vec<(&json::V, Vec<&str>)> = vec![
         (&convert, vec!["convert", "10", "m/s", "km/h", "--json"]),
@@ -1485,7 +1547,7 @@ fn outputs_validate_against_the_schema_files() {
                 OIL_CFG,
                 "--config",
                 WATER_CFG,
-                "--bridge",
+                "--density",
                 "water_20C",
             ][..]]
             .concat(),
@@ -1498,7 +1560,7 @@ fn outputs_validate_against_the_schema_files() {
         ),
         (
             &convert,
-            vec!["convert", "1", "L", "kg", "--json", "--bridge", "nope"],
+            vec!["convert", "1", "L", "kg", "--json", "--density", "nope"],
         ),
         (&units, vec!["units", "--json"]),
         (&units, vec!["units", "--groups", "--json"]),
@@ -1512,6 +1574,43 @@ fn outputs_validate_against_the_schema_files() {
         ),
         (&units, vec!["units", "zork", "--json"]),
         (&units, vec!["units", "a", "b", "--json"]),
+        (
+            &convert,
+            vec![
+                "convert",
+                "1",
+                "L",
+                "kg",
+                "--json",
+                "--density",
+                "998.2067kg/m3",
+            ],
+        ),
+        (
+            &convert,
+            vec![
+                "convert",
+                "1",
+                "L",
+                "kg",
+                "--json",
+                "--config",
+                "water",
+                "--density",
+                "water_25C",
+            ],
+        ),
+        (
+            &convert,
+            vec!["convert", "1", "ton", "kg", "--json", "--config", "us"],
+        ),
+        (&units, vec!["units", "--json", "--config", "gb"]),
+        (&configs, vec!["configs", "--json"]),
+        (&configs, vec!["configs", "us", "--json"]),
+        (&configs, vec!["configs", "water", "--json"]),
+        (&configs, vec!["configs", OIL_CFG, "--json"]),
+        (&configs, vec!["configs", "nope", "--json"]),
+        (&configs, vec!["configs", "a", "b", "--json"]),
     ];
     for (schema, args) in cases {
         let r = dimvexa_at_root(&args);
@@ -1598,13 +1697,20 @@ fn known_limitation_kl_18_end_of_options_and_short_options() {
 }
 
 #[test]
-fn a_bridge_note_never_misstates_the_density() {
+fn a_density_note_never_misstates_the_density() {
     let tiny = config_file(
         "tiny.toml",
-        "[[bridge]]\nname = \"tiny\"\nkind = \"density\"\nvalue = \"1/1000000000000000000000\"\nconditions = \"c\"\nsource = \"s\"\n",
+        "[[density]]\nname = \"tiny\"\nvalue = \"1/1000000000000000000000\"\nconditions = \"c\"\nsource = \"s\"\n",
     );
     let r = dimvexa(&[
-        "convert", "1", "kg", "m3", "--config", &tiny, "--bridge", "tiny",
+        "convert",
+        "1",
+        "kg",
+        "m3",
+        "--config",
+        &tiny,
+        "--density",
+        "tiny",
     ]);
     assert_eq!(r.code, 0, "{}", r.stderr);
     assert!(
@@ -1615,10 +1721,18 @@ fn a_bridge_note_never_misstates_the_density() {
     );
     let third = config_file(
         "third.toml",
-        "[[bridge]]\nname = \"t\"\nkind = \"density\"\nvalue = \"1000/3\"\nconditions = \"c\"\nsource = \"s\"\n",
+        "[[density]]\nname = \"t\"\nvalue = \"1000/3\"\nconditions = \"c\"\nsource = \"s\"\n",
     );
     let r = dimvexa(&[
-        "convert", "3", "L", "kg", "--config", &third, "--bridge", "t", "--exact",
+        "convert",
+        "3",
+        "L",
+        "kg",
+        "--config",
+        &third,
+        "--density",
+        "t",
+        "--exact",
     ]);
     assert!(
         r.stderr.contains("1000/3 (about 333.333333333333333)"),
@@ -1628,14 +1742,19 @@ fn a_bridge_note_never_misstates_the_density() {
     // A short exact decimal is shown plainly, and control characters in the config text are cleaned.
     let cfg = config_file(
         "ctl.toml",
-        "[[bridge]]\nname = \"w\"\nkind = \"density\"\nvalue = \"998.2067\"\nconditions = \"a\tb\"\nsource = \"s\"\n",
+        "[[density]]\nname = \"w\"\nvalue = \"998.2067\"\nconditions = \"a\tb\"\nsource = \"s\"\n",
     );
-    let r = dimvexa(&["convert", "1", "L", "kg", "--config", &cfg, "--bridge", "w"]);
-    assert!(
-        r.stderr.contains("density 998.2067 kg/m3; a b;"),
-        "{}",
-        r.stderr
-    );
+    let r = dimvexa(&[
+        "convert",
+        "1",
+        "L",
+        "kg",
+        "--config",
+        &cfg,
+        "--density",
+        "w",
+    ]);
+    assert!(r.stderr.contains("(998.2067 kg/m3; a b;"), "{}", r.stderr);
 }
 
 #[test]
@@ -1721,4 +1840,317 @@ fn known_limitation_kl_20_21_pi_input_and_dimensionless_angle() {
     assert_eq!(r.code, 1, "KL-20 fixed? then pi is a constant");
     assert!(r.stderr.starts_with("error[invalid_number]"));
     assert_eq!(dimvexa(&["convert", "1", "rad/s", "Hz"]).stdout, "1 Hz\n");
+}
+
+// ---- one --config for shipped names and paths, --density, `configs` (ADR-014) ----
+
+#[test]
+fn config_takes_a_shipped_name_or_a_path() {
+    // A bare name is a shipped config; the result records it as bundled:NAME with a hash.
+    let r = dimvexa(&["convert", "1", "ton", "kg", "--config", "us", "--json"]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    let v = json::parse(&r.stdout).unwrap();
+    let cfg = &v.get("config").unwrap().as_array()[0];
+    assert_eq!(cfg.get("file").unwrap().as_str(), "bundled:us");
+    assert!(cfg.get("hash").unwrap().as_str().starts_with("fnv1a64:"));
+    // Left to right, later wins: gb after us gives the long ton.
+    let r = dimvexa(&[
+        "convert", "1", "ton", "kg", "--config", "us", "--config", "gb",
+    ]);
+    assert_eq!(r.stdout, "1016.0469088 kg\n");
+    // A bare word is never a file, even when a file of that name exists: ./name is the file.
+    let dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("bare_name");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("us"), "[map]\nton = \"tonne\"\n").unwrap();
+    let run = |spec: &str| {
+        let out = Command::new(env!("CARGO_BIN_EXE_dimvexa"))
+            .args(["convert", "1", "ton", "kg", "--config", spec])
+            .current_dir(&dir)
+            .output()
+            .unwrap();
+        String::from_utf8(out.stdout).unwrap()
+    };
+    assert_eq!(run("us"), "907.18474 kg\n", "the shipped one, not the file");
+    assert_eq!(run("./us"), "1000 kg\n", "the file");
+    // An unknown name lists the shipped ones and exits 2 (a usage error).
+    let r = dimvexa(&["convert", "1", "ton", "kg", "--config", "uss"]);
+    assert_eq!(r.code, 2);
+    assert!(r.stderr.contains("no config named 'uss'"), "{}", r.stderr);
+    assert!(r.stderr.contains("us, gb, metric-trade"), "{}", r.stderr);
+    // Without any config the strict names stay refused.
+    assert_eq!(dimvexa(&["convert", "1", "ton", "kg"]).code, 1);
+}
+
+#[test]
+fn the_shipped_configs_resolve_their_names() {
+    for (cfg, args, want) in [
+        ("us", ["1", "gal", "L"], "3.785411784 L\n"),
+        ("gb", ["1", "gal", "L"], "4.54609 L\n"),
+        ("us", ["1", "mile", "km"], "1.609344 km\n"),
+        ("metric-trade", ["1", "mt", "kg"], "1000 kg\n"),
+        ("year-julian", ["1", "yr", "d"], "365.25 d\n"),
+        ("year-civil", ["1", "year", "d"], "365 d\n"),
+    ] {
+        let r = dimvexa(&[&["convert"][..], &args, &["--config", cfg]].concat());
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, want),
+            "{cfg}: {}",
+            r.stderr
+        );
+    }
+    // oz is refused in both: a mass or a volume in each country.
+    for cfg in ["us", "gb"] {
+        let r = dimvexa(&["convert", "1", "oz", "g", "--config", cfg]);
+        assert_eq!(r.code, 1);
+        assert!(
+            r.stderr.starts_with("error[ambiguous_symbol]"),
+            "{}",
+            r.stderr
+        );
+    }
+}
+
+#[test]
+fn a_density_is_a_name_or_the_callers_own_number() {
+    // The caller's own number: any unit of mass per volume, converted exactly.
+    for (density, want) in [
+        ("998.2067kg/m3", "0.9982067 kg\n"),
+        ("998.2067 kg/m3", "0.9982067 kg\n"),
+        ("0.9982067 g/cm3", "0.9982067 kg\n"),
+        ("0.9982067 kg/L", "0.9982067 kg\n"),
+    ] {
+        let r = dimvexa(&["convert", "1", "L", "kg", "--density", density]);
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, want),
+            "{density}: {}",
+            r.stderr
+        );
+        assert!(r.stderr.contains("supplied by the caller"), "{}", r.stderr);
+        assert!(r.stderr.contains("source: none"), "{}", r.stderr);
+    }
+    // JSON: a `density` object with the caller's number and no source.
+    let r = dimvexa(&[
+        "convert",
+        "1",
+        "L",
+        "kg",
+        "--density",
+        "998.2067kg/m3",
+        "--json",
+    ]);
+    let v = json::parse(&r.stdout).unwrap();
+    json::check_convert_schema(&v);
+    assert_eq!(v.get("exactness").unwrap().as_str(), "measured");
+    let d = v.get("density").unwrap();
+    assert_eq!(d.get("value").unwrap().as_str(), "9982067/10000");
+    assert_eq!(d.get("file").unwrap().as_str(), "--density");
+    // A named density from a shipped config carries its conditions and source.
+    let r = dimvexa(&[
+        "convert",
+        "1",
+        "L",
+        "kg",
+        "--config",
+        "water",
+        "--density",
+        "water_25C",
+    ]);
+    assert_eq!((r.code, r.stdout.as_str()), (0, "0.99704702 kg\n"));
+    assert!(r.stderr.contains("VSMOW water, 25 degC"), "{}", r.stderr);
+    assert!(r.stderr.contains("Tanaka"), "{}", r.stderr);
+    // Exponent form and a sign are part of the number; an `e` that starts a unit is not.
+    for (density, want) in [
+        ("1e3 kg/m3", "1000 kg\n"),
+        ("1E3kg/m3", "1000 kg\n"),
+        ("1e-3 kg/L", "1 kg\n"),
+        ("+5 kg/m3", "5 kg\n"),
+        ("1/2 kg/m3", "0.5 kg\n"),
+    ] {
+        let r = dimvexa(&["convert", "1", "m3", "kg", "--density", density]);
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, want),
+            "{density}: {}",
+            r.stderr
+        );
+    }
+    // A name that no config defines is a usage error (exit 2) with the known names.
+    for (density, needle) in [
+        ("kg/m3", "no density named"),
+        ("nope", "no density named 'nope'"),
+    ] {
+        let r = dimvexa(&["convert", "1", "L", "kg", "--density", density]);
+        assert_eq!(r.code, 2, "{density}: {}", r.stderr);
+        assert!(r.stderr.contains(needle), "{density}: {}", r.stderr);
+    }
+    // The caller's own number that the library refuses keeps the library's error code, exits 1
+    // and says it came from --density.
+    for (density, code, needle) in [
+        ("998", "invalid_definition", "not a density"),
+        ("0 kg/m3", "invalid_definition", "must be positive"),
+        ("-5 kg/m3", "invalid_definition", "must be positive"),
+        ("5 m", "invalid_definition", "not a unit of density"),
+        ("5 degC", "invalid_definition", "not a unit of density"),
+        ("8.34lb/gal", "ambiguous_symbol", "'gal' is ambiguous"),
+        ("2e kg/m3", "parse_error", "--density:"),
+    ] {
+        let r = dimvexa(&["convert", "1", "L", "kg", "--density", density]);
+        assert_eq!(r.code, 1, "{density}: {}", r.stderr);
+        assert!(
+            r.stderr.starts_with(&format!("error[{code}]: --density: ")),
+            "{density}: {}",
+            r.stderr
+        );
+        assert!(r.stderr.contains(needle), "{density}: {}", r.stderr);
+    }
+    let r = dimvexa(&[
+        "convert",
+        "1",
+        "L",
+        "kg",
+        "--density",
+        "8.34lb/gal",
+        "--json",
+    ]);
+    let v = json::parse(&r.stdout).unwrap();
+    let e = v.get("error").unwrap();
+    assert_eq!(e.get("code").unwrap().as_str(), "ambiguous_symbol");
+    assert!(
+        e.get("message")
+            .unwrap()
+            .as_str()
+            .starts_with("--density: ")
+    );
+    assert_eq!(e.get("candidates").unwrap().as_array().len(), 2);
+    // The density only takes part when the plain conversion is refused.
+    let r = dimvexa(&["convert", "1", "L", "mL", "--density", "998kg/m3"]);
+    assert_eq!(r.stdout, "1000 mL\n");
+    assert!(r.stderr.contains("was not needed"), "{}", r.stderr);
+}
+
+#[test]
+fn the_old_bridge_and_profile_options_are_refused_with_the_new_name() {
+    let r = dimvexa(&["convert", "1", "L", "kg", "--bridge", "x"]);
+    assert_eq!(r.code, 2);
+    assert!(r.stderr.contains("renamed '--density'"), "{}", r.stderr);
+    let r = dimvexa(&["convert", "1", "ton", "kg", "--profile", "us"]);
+    assert_eq!(r.code, 2);
+    assert!(
+        r.stderr.contains("unknown option '--profile'"),
+        "{}",
+        r.stderr
+    );
+    // The old table name is refused when the file is loaded.
+    let cfg = config_file(
+        "old_bridge.toml",
+        "[[bridge]]\nname = \"w\"\nkind = \"density\"\nvalue = \"1000\"\nconditions = \"c\"\nsource = \"s\"\n",
+    );
+    let r = dimvexa(&["convert", "1", "L", "kg", "--config", &cfg]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.contains("renamed [[density]]"), "{}", r.stderr);
+}
+
+#[test]
+fn configs_lists_and_shows_what_is_included() {
+    let r = dimvexa(&["configs"]);
+    assert_eq!(r.code, 0);
+    snapshot("configs.txt", &stable(&r.stdout));
+    let r = dimvexa(&["configs", "us"]);
+    assert_eq!(r.code, 0);
+    snapshot("configs_us.txt", &stable(&r.stdout));
+    assert!(r.stdout.contains("ton\tton_short"));
+    assert!(
+        !r.stdout.contains("## densities"),
+        "only water carries densities"
+    );
+    let r = dimvexa(&["configs", "water"]);
+    assert!(r.stdout.contains("water_25C\t49852351/50000\tkg/m3\t"));
+    snapshot("configs_water.txt", &stable(&r.stdout));
+    let r = dimvexa(&["configs", "year-julian"]);
+    assert!(!r.stdout.contains("## densities"));
+    // A path shows your own file, validated like any config.
+    let r = dimvexa(&["configs", OIL_CFG_PATH_FROM_ROOT]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(r.stdout.contains("## units") && r.stdout.contains("bbl_oil\tgal_us\t42"));
+    // Errors: unknown name (usage), several arguments, options that do not apply.
+    let r = dimvexa(&["configs", "nope"]);
+    assert_eq!(r.code, 2);
+    assert!(r.stderr.contains("no config named 'nope'"), "{}", r.stderr);
+    assert_eq!(dimvexa(&["configs", "a", "b"]).code, 2);
+    assert_eq!(dimvexa(&["configs", "--exact"]).code, 2);
+    assert_eq!(dimvexa(&["configs", "--config", "us"]).code, 2);
+    // JSON validates and carries the sources.
+    let r = dimvexa(&["configs", "water", "--json"]);
+    let v = json::parse(&r.stdout).unwrap();
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.configs/1");
+    let d = v
+        .get("config")
+        .unwrap()
+        .get("densities")
+        .unwrap()
+        .as_array();
+    assert_eq!(d.len(), 2);
+    for x in d {
+        assert!(!x.get("conditions").unwrap().as_str().is_empty());
+        assert!(x.get("source").unwrap().as_str().contains("Tanaka"));
+    }
+}
+
+const OIL_CFG_PATH_FROM_ROOT: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../examples/configs/oil.toml"
+);
+
+#[test]
+fn a_user_file_overrides_a_shipped_density_and_a_shipped_name() {
+    let cfg = config_file(
+        "override_water.toml",
+        "[map]\nton = \"tonne\"\n\n[[density]]\nname = \"water_25C\"\nvalue = \"1000\"\nconditions = \"mine\"\nsource = \"mine\"\n",
+    );
+    let r = dimvexa(&[
+        "convert",
+        "1",
+        "L",
+        "kg",
+        "--config",
+        "water",
+        "--config",
+        &cfg,
+        "--density",
+        "water_25C",
+    ]);
+    assert_eq!((r.code, r.stdout.as_str()), (0, "1 kg\n"), "{}", r.stderr);
+    assert!(r.stderr.contains("mine"), "{}", r.stderr);
+    let r = dimvexa(&[
+        "convert", "1", "ton", "kg", "--config", "us", "--config", &cfg,
+    ]);
+    assert_eq!(r.stdout, "1000 kg\n");
+    // the other way round the shipped one wins
+    let r = dimvexa(&[
+        "convert", "1", "ton", "kg", "--config", &cfg, "--config", "us",
+    ]);
+    assert_eq!(r.stdout, "907.18474 kg\n");
+    let r = dimvexa(&["configs", ".toml"]);
+    assert_eq!(r.code, 2, "a bare .toml is a path, not a name");
+    assert!(
+        r.stderr.contains("cannot read config '.toml'"),
+        "{}",
+        r.stderr
+    );
+}
+
+#[test]
+fn units_lists_the_names_and_densities_of_a_shipped_config() {
+    let r = dimvexa(&["units", "--config", "us", "--config", "water"]);
+    assert_eq!(r.code, 0);
+    assert!(r.stdout.contains("## config mappings"));
+    assert!(
+        r.stdout.contains("\nton\tton_short\tbundled:us:"),
+        "{}",
+        r.stdout
+    );
+    assert!(r.stdout.contains("## config densities"));
+    assert!(r.stdout.contains("water_25C\tdensity\t"));
 }

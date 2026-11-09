@@ -52,7 +52,6 @@ class DimvexaWasm extends c.Adapter {
     return () => d.convertQuantity(text, to);
   }
   convertCase(mode, value, src, dst) { return this.d.convert(parseFloat(value), src, dst); }
-  addCase(mode, a, b) { return this.d.addQuantities(a, b); }
   knowsUnit(expr) { this.d.convert(1, expr, expr); return true; }
 }
 process.exitCode = c.main(new DimvexaWasm());

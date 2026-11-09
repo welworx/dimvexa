@@ -28,7 +28,7 @@ use std::hint::black_box;
 use std::io::Write as _;
 use std::time::{Duration, Instant};
 
-use dimvexa::{Conversion, Dim, Kind, Quantity, Ratio, Registry, Unit, registry};
+use dimvexa::{Conversion, Dim, Quantity, Ratio, Registry, Unit, registry};
 
 struct Row {
     name: String,
@@ -363,32 +363,7 @@ fn main() {
         black_box(r1).to_f64().unwrap()
     });
 
-    // ---- 5. absolute vs difference temperature
-    let t_abs = reg.quantity("20 degC").unwrap();
-    let t_abs2 = reg.quantity("68 degF").unwrap();
-    let t_diff = reg.quantity("5 delta_K").unwrap();
-    b.run("Kind::sub / Kind::add (algebra only)", 2, "", || {
-        let k = black_box(Kind::AbsoluteTemperature);
-        (
-            k.sub(k).unwrap(),
-            k.add(Kind::TemperatureDifference).unwrap(),
-        )
-    });
-    b.run(
-        "Quantity abs - abs (degC - degF)",
-        1,
-        "exact rational, allocates the result unit",
-        || black_box(&t_abs).checked_sub(black_box(&t_abs2)).unwrap(),
-    );
-    b.run("Quantity abs + diff (degC + delta_K)", 1, "", || {
-        black_box(&t_abs).checked_add(black_box(&t_diff)).unwrap()
-    });
-    b.run(
-        "Quantity abs + abs (error path)",
-        1,
-        "returns Err(kind_mismatch)",
-        || black_box(&t_abs).checked_add(black_box(&t_abs2)).is_err(),
-    );
+    // ---- 5. quantity composition
     let q_pow = reg.quantity("1.1 kW").unwrap();
     let q_t = reg.quantity("8 h").unwrap();
     b.run(

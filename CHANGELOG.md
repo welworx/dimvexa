@@ -7,6 +7,60 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-09
+
+### Breaking
+
+- Temperature arithmetic is removed (ADR-014): `Quantity::checked_add`, `Quantity::checked_sub`,
+  `Kind::add`, `Kind::sub` and `UnitExpr::difference_counterpart` are gone, and so are the
+  Python `Quantity.__add__`/`__sub__` and the WASM `addQuantities`. dimvexa converts; it does not
+  calculate. `degC` to `K` and `delta_degF` to `delta_K` still convert, and a point to a difference
+  is still a `kind_mismatch` that suggests the `delta_` unit. `Quantity` keeps `to_unit`,
+  `checked_mul` and `checked_div`.
+- `dimvexa-config`: `Bridge` and `BridgeKind` are now `Constant` and `ConstantKind`;
+  `Config::bridges()` and `bridges()` are `constants()`. The config table `[[bridge]]` is
+  `[[density]]` and has no `kind` key (a density name must start with a letter). The CLI option
+  `--bridge NAME` is `--density NAME_OR_VALUE`; `--bridge` and `[[bridge]]` are refused with the new
+  name in the message.
+- JSON: `dimvexa.convert/2` and `dimvexa.units/2` replace `/1`. In convert, `bridge` is `density`
+  and the always-null `profile` is removed; in units, `bridges` is `densities`. The `/1` schema
+  files stay in `docs/schemas/` as history; the CLI emits `/2` only. The `config` array records a
+  shipped config as `bundled:NAME`.
+- The ambiguity message ends "or load a config that resolves it" (it used to say "choose a
+  profile", which did not exist).
+
+### Added
+
+- One option for configs: `--config NAME_OR_PATH`. A bare name loads a config that ships with
+  dimvexa: `us`, `gb`, `metric-trade`, `year-julian`, `year-civil` and `water`. A value with a `/`
+  or ending in `.toml` is a file. Loading is left to right and a later config wins; with no
+  `--config` the names stay strict SI.
+- `--density NAME_OR_VALUE`: a density from a loaded config, or your own number such as
+  `998.2067kg/m3` (any unit of mass per volume), echoed as supplied by the caller. Results stay
+  `measured`.
+- Shipped densities of water at 25 degC and at its maximum density (3.983035 degC), with
+  conditions and source, in the `water` config only. They still need a check against
+  Table 1 of Tanaka et al. (2001); see `docs/known-limitations.md`.
+- `dimvexa configs [NAME_OR_PATH]` (schema `dimvexa.configs/1`) shows the shipped configs and what
+  one contains: names, units and densities with their conditions and sources.
+- `dimvexa-config`: `BUNDLED`, `bundled`, `is_path`, `Bundled` and `Constant::density_from_text`.
+- ADR-014 (one `--config` mechanism, shipped densities, conversion only).
+
+### Changed
+
+- Workspace version bumped to 0.2.0 (the API and JSON changes above are breaking, so the minor version moves while the crate is 0.x).
+
+### Fixed
+
+- A `--density` number the library refuses (an ambiguous unit such as `lb/gal`, not a density,
+  not positive, overflow) now keeps the library's error code, exits 1 and says it came from
+  `--density`; it used to be a `usage` error. Exponent form (`1e3 kg/m3`) is accepted.
+- The shipped water densities say "air-free" in their conditions, as the source table does.
+- The benchmark runners no longer call the removed addition; those cases count as not applicable
+  for dimvexa instead of being scored as refused.
+- A usage error carries the schema of the command word, not of any argument that happens to equal
+  `units` (known limitation KL-3).
+
 ## [0.1.2] - 2026-11-09
 
 ### Added

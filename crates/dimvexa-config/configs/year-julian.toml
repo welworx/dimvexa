@@ -1,0 +1,7 @@
+# `yr` and `year` mean the Julian year of 365.25 days (the astronomical convention).
+#
+#   dimvexa convert 1 yr d --config year-julian
+
+[map]
+yr = "yr_julian"
+year = "yr_julian"

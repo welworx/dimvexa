@@ -23,7 +23,7 @@
 
 use std::collections::BTreeMap;
 
-use dimvexa::{Conversion, Dim, Error, Expr, Kind, Quantity, Ratio, Registry, registry};
+use dimvexa::{Conversion, Dim, Error, Expr, Quantity, Ratio, Registry, registry};
 use dimvexa_testkit::generators as gen_;
 use dimvexa_testkit::rng::Rng;
 
@@ -256,42 +256,6 @@ fn ratio_to_f64_is_correctly_rounded_and_monotonic() {
     }
 }
 
-#[test]
-fn kind_algebra_matches_the_table() {
-    use Kind::{AbsoluteTemperature as A, Plain as P, TemperatureDifference as D};
-    let add = [
-        (A, A, None),
-        (A, D, Some(A)),
-        (D, A, Some(A)),
-        (D, D, Some(D)),
-        (P, P, Some(P)),
-        (P, A, None),
-        (A, P, None),
-        (P, D, None),
-        (D, P, None),
-    ];
-    for (l, r, want) in add {
-        assert_eq!(l.add(r).ok(), want, "{l} + {r}");
-    }
-    let sub = [
-        (A, A, Some(D)),
-        (A, D, Some(A)),
-        (D, A, None),
-        (D, D, Some(D)),
-        (P, P, Some(P)),
-        (P, A, None),
-        (A, P, None),
-        (P, D, None),
-        (D, P, None),
-    ];
-    for (l, r, want) in sub {
-        assert_eq!(l.sub(r).ok(), want, "{l} - {r}");
-    }
-    // closure: any successful result is again one of the three kinds (trivially true) and
-    // (a - b) + b has the kind of a for a, b absolute.
-    assert_eq!(A.sub(A).unwrap().add(A).unwrap(), A);
-}
-
 fn temp_quantity(reg: &Registry, rng: &mut Rng, abs: bool) -> Quantity {
     let units_abs = ["K", "degC", "degF", "degR"];
     let units_diff = ["delta_K", "delta_degC", "delta_degF", "delta_degR"];
@@ -302,65 +266,21 @@ fn temp_quantity(reg: &Registry, rng: &mut Rng, abs: bool) -> Quantity {
     Quantity::new(v, reg.parse(unit).unwrap())
 }
 
-fn same_si(a: &Quantity, b: &Quantity) -> bool {
-    // Compare two quantities of equal kind through their SI values.
-    let si = |q: &Quantity| {
-        q.unit()
-            .factor()
-            .checked_mul(q.value())
-            .unwrap()
-            .checked_add(if q.unit().kind() == Kind::AbsoluteTemperature {
-                q.unit().offset()
-            } else {
-                Ratio::ZERO
-            })
-            .unwrap()
-    };
-    si(a) == si(b)
-}
-
 #[test]
-fn temperature_kind_algebra_on_quantities() {
+fn temperature_kinds_never_convert_silently() {
     let reg = registry().unwrap();
     let mut rng = Rng::new(seed() ^ 5);
     for _ in 0..cases(20_000) {
-        let (a, b) = (
-            temp_quantity(&reg, &mut rng, true),
-            temp_quantity(&reg, &mut rng, true),
-        );
+        let a = temp_quantity(&reg, &mut rng, true);
         let d = temp_quantity(&reg, &mut rng, false);
-        let e = temp_quantity(&reg, &mut rng, false);
-        // abs + abs is an error, always
-        assert_eq!(a.checked_add(&b).unwrap_err().code(), "kind_mismatch");
-        // abs - abs = diff; (a - b) + b == a
-        let diff = a.checked_sub(&b).unwrap();
-        assert_eq!(diff.unit().kind(), Kind::TemperatureDifference);
-        let back = diff.checked_add(&b).unwrap();
-        assert_eq!(back.unit().kind(), Kind::AbsoluteTemperature);
-        assert!(same_si(&back, &a), "(a-b)+b != a for {a} {b}");
-        // abs + diff = abs, and (a + d) - d == a
-        let shifted = a.checked_add(&d).unwrap();
-        assert_eq!(shifted.unit().kind(), Kind::AbsoluteTemperature);
-        assert!(same_si(&shifted.checked_sub(&d).unwrap(), &a));
-        // diff + abs commutes with abs + diff
-        assert!(same_si(&d.checked_add(&a).unwrap(), &shifted));
-        // diff +- diff stays diff; diff - abs is an error
-        assert_eq!(
-            d.checked_add(&e).unwrap().unit().kind(),
-            Kind::TemperatureDifference
-        );
-        assert_eq!(
-            d.checked_sub(&e).unwrap().unit().kind(),
-            Kind::TemperatureDifference
-        );
-        assert_eq!(d.checked_sub(&a).unwrap_err().code(), "kind_mismatch");
-        // abs - diff = abs
-        assert_eq!(
-            a.checked_sub(&d).unwrap().unit().kind(),
-            Kind::AbsoluteTemperature
-        );
-        // converting between abs and diff units is never silent
+        // converting between abs and diff units is never silent, in either direction
         assert_eq!(a.to_unit(d.unit()).unwrap_err().code(), "kind_mismatch");
+        assert_eq!(d.to_unit(a.unit()).unwrap_err().code(), "kind_mismatch");
+        // a point converts to a point and a difference to a difference
+        let k = reg.parse("K").unwrap();
+        assert!(a.to_unit(&k).is_ok());
+        let dk = reg.parse("delta_K").unwrap();
+        assert!(d.to_unit(&dk).is_ok());
         // scaling an absolute temperature is refused
         let two = reg.quantity("2").unwrap();
         assert_eq!(a.checked_mul(&two).unwrap_err().code(), "kind_mismatch");

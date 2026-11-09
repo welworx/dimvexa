@@ -1,0 +1,7 @@
+# `yr` and `year` mean the common year of 365 days.
+#
+#   dimvexa convert 1 yr d --config year-civil
+
+[map]
+yr = "yr_common"
+year = "yr_common"

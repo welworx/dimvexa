@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dimvexa.configs/1",
+  "title": "dimvexa.configs/1",
+  "description": "Output of `dimvexa configs --json`: the configs that ship with dimvexa, or what one config (a shipped name or a file path) contains, or a usage error. Adding fields is allowed within a schema version; removing or changing them requires a new version. Exact numbers are strings so no JSON parser rounds them (ADR-014).",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["schema", "ok", "configs"],
+      "properties": {
+        "schema": { "const": "dimvexa.configs/1" },
+        "ok": { "const": true },
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "hash", "mappings", "units", "densities"],
+            "properties": {
+              "name": { "type": "string" },
+              "hash": { "type": "string", "pattern": "^fnv1a64:[0-9a-f]{16}$" },
+              "mappings": { "type": "integer", "minimum": 0 },
+              "units": { "type": "integer", "minimum": 0 },
+              "densities": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["schema", "ok", "config"],
+      "properties": {
+        "schema": { "const": "dimvexa.configs/1" },
+        "ok": { "const": true },
+        "config": {
+          "type": "object",
+          "required": ["name", "hash", "mappings", "units", "densities"],
+          "properties": {
+            "name": { "type": "string", "description": "`bundled:NAME` for a shipped config, else the path as given." },
+            "hash": { "type": "string", "pattern": "^fnv1a64:[0-9a-f]{16}$" },
+            "mappings": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "unit", "line"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "unit": { "type": "string" },
+                  "line": { "type": "integer", "minimum": 1 }
+                }
+              }
+            },
+            "units": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["symbol", "base", "factor", "exactness", "source", "line"],
+                "properties": {
+                  "symbol": { "type": "string" },
+                  "base": { "type": "string" },
+                  "factor": { "type": "string", "pattern": "^-?[0-9]+(/[0-9]+)?$" },
+                  "exactness": { "enum": ["defined", "measured"] },
+                  "source": { "type": "string" },
+                  "line": { "type": "integer", "minimum": 1 }
+                }
+              }
+            },
+            "densities": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "kind", "value", "unit", "conditions", "source", "file", "line"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "kind": { "enum": ["density"] },
+                  "value": { "type": "string", "pattern": "^-?[0-9]+(/[0-9]+)?$" },
+                  "unit": { "type": "string" },
+                  "conditions": { "type": "string" },
+                  "source": { "type": "string" },
+                  "file": { "type": "string" },
+                  "line": { "type": "integer", "minimum": 1 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["schema", "ok", "error"],
+      "properties": {
+        "schema": { "const": "dimvexa.configs/1" },
+        "ok": { "const": false },
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" },
+            "suggestions": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    }
+  ]
+}

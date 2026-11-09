@@ -1,0 +1,7 @@
+# columns: name, names, units, densities, hash
+us	5	0	0	fnv1a64:<hash>
+gb	5	0	0	fnv1a64:<hash>
+metric-trade	2	0	0	fnv1a64:<hash>
+year-julian	2	0	0	fnv1a64:<hash>
+year-civil	2	0	0	fnv1a64:<hash>
+water	0	0	2	fnv1a64:<hash>

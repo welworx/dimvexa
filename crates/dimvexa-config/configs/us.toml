@@ -1,0 +1,14 @@
+# United States customary names. Nothing is guessed: each name points at one existing unit.
+#
+#   dimvexa convert 1 ton kg --config us
+#   dimvexa convert 1 gal L --config us
+#
+# `oz` is not mapped: it is a mass (oz_av, oz_troy) or a volume (fl_oz_us) in the US as well.
+# `mile` is the international mile; the US survey mile stays available as mi_us_survey.
+
+[map]
+ton = "ton_short"
+mile = "mi"
+gal = "gal_us"
+pt = "pt_us"
+qt = "qt_us"

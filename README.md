@@ -28,7 +28,7 @@ assert_eq!(conv.apply(10.0), 36.0);                // 10 m/s = 36 km/h
 $ dimvexa convert 10 m/s km/h
 36 km/h
 $ dimvexa convert 1 ton kg
-error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne, or choose a profile
+error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne, or load a config that resolves it
 $ dimvexa units volume      # which volume units exist? (see "Finding a unit" below)
 ```
 
@@ -39,7 +39,7 @@ $ dimvexa units volume      # which volume units exist? (see "Finding a unit" be
 - [Supported units](#supported-units)
 - [Combining units](#combining-units)
 - [Finding a unit](#finding-a-unit)
-- [Your own names: `--config`](#your-own-names---config)
+- [Names and densities: `--config`](#names-and-densities---config)
 - [Angles and pi: limitations](#angles-and-pi-limitations)
 - [Repository layout](#repository-layout) and [Development](#development)
 - [Roadmap](#roadmap)
@@ -50,7 +50,7 @@ $ dimvexa units volume      # which volume units exist? (see "Finding a unit" be
 
 - **Exact.** Factors are rational numbers with a source and an exact/measured flag.
 - **Loud.** Ambiguous names (`ton`, `gal`, `oz`), overflow and unsupported requests are errors with stable codes.
-- **Right about temperature.** Points and differences differ: `20 degC + 5 delta_K` works, `20 degC + 5 K` fails and says why.
+- **Right about temperature.** Points and differences differ: `degC` to `K` converts, `delta_degF` to `delta_K` converts, and a point to a difference fails and says which `delta_` unit to use. dimvexa converts; it does not add or subtract.
 - **Fast and honest.** About 0.5 ns per prepared conversion; within 1 ulp (linear) or 2 ulp (temperature scales) of the exact answer, and `apply_exact_f64` gives the correctly rounded value ([`docs/precision.md`](docs/precision.md), [`docs/benchmarks/M0.md`](docs/benchmarks/M0.md)).
 - **Covers the everyday units.** SI and prefixes, US customary and imperial, pressure, energy, power and temperature (about 100 units, more by request).
 - **Extensible by data.** Units live in cited TOML tables; missing one? Open a *Unit request* issue.
@@ -159,7 +159,7 @@ the explicit symbols, and `units` shows what each one is:
 
 ```console
 $ dimvexa convert 1 ton kg
-error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne, or choose a profile
+error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne, or load a config that resolves it
 $ dimvexa units ton_short
 ton_short
   group         mass
@@ -200,7 +200,7 @@ metric ton (1000 kg), and a silent factor of 1000 is worse than an error. `t` is
 
 ```console
 $ dimvexa convert 1 mt kg
-error[ambiguous_symbol]: 'mt' is ambiguous: use tonne, or choose a profile
+error[ambiguous_symbol]: 'mt' is ambiguous: use tonne, or load a config that resolves it
 $ dimvexa convert 1 t kg
 1000 kg
 $ dimvexa convert 1 mtonne kg
@@ -211,17 +211,44 @@ $ dimvexa convert 1 mtonne kg
 compound expressions such as `km` or `m/s`; an unknown or ambiguous name is an error that lists
 the close matches or the candidates.
 
-## Your own names: `--config`
+## Names and densities: `--config`
 
 > **Beta.** The config layer (`--config`, `dimvexa-config`) is younger and less proven than the
-> core. Two review rounds found and fixed name-resolution bugs in it, a property test now guards
-> that class, and the open limitations are listed in
+> core. The open limitations are listed in
 > [`docs/known-limitations.md`](docs/known-limitations.md). The file format, the JSON fields it
 > adds and the CLI options may still change before a release; the core conversions do not
 > depend on it and are unaffected.
 
-Dimvexa refuses ambiguous names such as `ton` and `mt`, and it never guesses. If your trade or
-your plant uses a name consistently, say so in a small config file and load it explicitly:
+Dimvexa refuses ambiguous names such as `ton` and `mt`, and it never guesses. With no
+`--config` you get strict SI names. `--config` loads a **config**: a small TOML file of names,
+units and densities. One option, two kinds of value (ADR-014,
+[`docs/adr/014-one-config-mechanism.md`](docs/adr/014-one-config-mechanism.md)):
+
+- a **name** (`us`, `gb`, `metric-trade`, `year-julian`, `year-civil`, `water`) loads a config
+  that ships with dimvexa;
+- a **path** (anything with a `/` or `\`, or ending in `.toml`) loads your own file. A file called `us`
+  in the current directory is written `./us`.
+
+```console
+$ dimvexa convert 1 ton kg --config us
+907.18474 kg
+$ dimvexa convert 1 ton kg --config gb
+1016.0469088 kg
+$ dimvexa convert 1 mt kg --config metric-trade
+1000 kg
+$ dimvexa convert 1 yr d --config year-julian
+365.25 d
+$ dimvexa convert 1 oz g --config us
+error[ambiguous_symbol]: 'oz' is ambiguous: use oz_av or oz_troy or fl_oz_us or fl_oz_imp, or load a config that resolves it
+```
+
+`dimvexa configs` lists the shipped configs and `dimvexa configs us` shows exactly what one
+contains: the names it maps, the units it defines and every density with its value, conditions
+and source. `oz` stays refused in `us` and `gb` because it means a mass or a volume in both.
+`--config` can be repeated and a later config overrides an earlier one, so
+`--config us --config ./mine.toml` starts from the US names and adds yours.
+
+Your own file is the same format:
 
 ```toml
 # trade.toml
@@ -236,36 +263,50 @@ $ dimvexa convert 1 mt kg --config trade.toml
 $ dimvexa convert 1 ton kg --config trade.toml
 907.18474 kg
 $ dimvexa convert 1 gal L --config trade.toml
-error[ambiguous_symbol]: 'gal' is ambiguous: use gal_us or gal_imp, or choose a profile
+error[ambiguous_symbol]: 'gal' is ambiguous: use gal_us or gal_imp, or load a config that resolves it
 $ dimvexa units mass --config trade.toml     # ... ends with the names your config resolves
 ```
 
-Rules (ADR-009, [`docs/adr/009-user-config.md`](docs/adr/009-user-config.md); what is not
-supported yet is in [`docs/known-limitations.md`](docs/known-limitations.md)):
-- Nothing is loaded unless you name the file; `--config` can be repeated and a later file
-  overrides an earlier one.
+Rules (ADR-009, [`docs/adr/009-user-config.md`](docs/adr/009-user-config.md), as amended by
+ADR-014; what is not supported yet is in
+[`docs/known-limitations.md`](docs/known-limitations.md)):
+- Nothing is loaded unless you name it; `--config` can be repeated and a later one overrides an
+  earlier one.
 - A mapping only points at an existing unit, so it cannot carry a factor, and it can never
   redefine an existing symbol (`t`, `m`, `psi`, `km`): that is an error naming the file and line.
 - A mapped name behaves like an alias, so prefixes work (`kmt` is `ktonne`). A prefix on an
   ambiguous name cannot be mapped (`kcal`): map the bare name (`cal`) and its prefixed forms
   follow. A target must exist when the entry is read: a table unit, one of your `[[unit]]`, or a
   name mapped earlier.
-- `--json` output lists the config files used with a content hash (`"config"`), and
-  `dimvexa units` shows which names come from your config.
+- `--json` output lists the configs used with a content hash (`"config"`; a shipped one is
+  `bundled:NAME`), and `dimvexa units` shows which names come from your config.
 
 ### Example: how much does a litre of water weigh?
 
 Mass and volume are different quantities, so `convert 1 L kg` is refused. A conversion needs a
 density, and the density depends on the liquid, the temperature and the pressure. Dimvexa never
-looks one up or computes one (ADR-001). You state it once, with its conditions and source, in
-your own config, and select it by name:
+looks one up or computes one (ADR-001). You state it with `--density`: either your own number,
+or a named density from a config, which carries its conditions and source.
+
+```console
+$ dimvexa convert 1 L kg --density 998.2067kg/m3
+0.9982067 kg
+note: used density --density (998.2067 kg/m3; supplied by the caller on the command line; the conditions are not known; source: none: supplied by the caller; --density)
+$ dimvexa convert 1 L kg --config water --density water_25C
+0.99704702 kg
+note: used density water_25C (997.04702 kg/m3; air-free VSMOW water, 25 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309 (recommended density table); value 0.99704702(83) g/mL as quoted in en.wikipedia.org/wiki/Properties_of_water, which agrees with the paper's formula; confirm against Table 1 of the paper; bundled:water:7)
+```
+
+The `water` config carries two densities of water
+(`water_25C` and `water_max_density`, at 3.983035 degC); `dimvexa configs water` shows them with
+their sources. For another liquid or temperature, write your own `[[density]]` with its
+conditions and source:
 
 ```toml
 # examples/configs/water.toml
-[[bridge]]
+[[density]]
 name = "water_20C"
 # kg/m3, mass <-> volume
-kind = "density"
 # 998.2067 kg/m3
 value = "9982067/10000"
 conditions = "air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa"
@@ -275,25 +316,26 @@ source = "Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of th
 ```console
 $ dimvexa convert 1 L kg
 error[dimension_mismatch]: dimension mismatch: [m^3] cannot be converted to [kg]
-hint: mass and volume need a density. Define a [[bridge]] in a config file and pass --config FILE --bridge NAME (docs/adr/009-user-config.md)
-$ dimvexa convert 1 L kg --config examples/configs/water.toml --bridge water_20C
+hint: mass and volume need a density. Pass your own number, for example --density 998.2067kg/m3, or a named one: --config water --density water_25C (docs/adr/014-one-config-mechanism.md)
+$ dimvexa convert 1 L kg --config examples/configs/water.toml --density water_20C
 0.9982067 kg
-note: used bridge water_20C (density 998.2067 kg/m3; air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1); examples/configs/water.toml:9)
-$ dimvexa convert 1 gal_us tonne --config examples/configs/water.toml --bridge water_20C --exact
+note: used density water_20C (998.2067 kg/m3; air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1); examples/configs/water.toml:9)
+$ dimvexa convert 1 gal_us tonne --config examples/configs/water.toml --density water_20C --exact
 4723279256309691/1250000000000000000 tonne
-note: used bridge water_20C (density 998.2067 kg/m3; air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1); examples/configs/water.toml:9)
+note: used density water_20C (998.2067 kg/m3; air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1); examples/configs/water.toml:9)
 ```
 
-What the bridge does and does not do:
+What a density does and does not do:
 - It multiplies by the number you wrote and nothing else: no temperature or pressure
-  correction, no lookup. For water at another temperature, write another bridge.
+  correction, no lookup.
 - It applies only to mass to volume and back (also per time, `kg/h` to `m3/h`), never to a
-  temperature or any other unit, and only when you ask with `--bridge`.
-- The assumption travels with the result: the note above on stderr, and in `--json` a `bridge`
+  temperature or any other unit, and only when you ask with `--density`. Any unit of mass per
+  volume works for a number you write yourself (`kg/m3`, `g/cm3`, `lb/ft3`).
+- The assumption travels with the result: the note above on stderr, and in `--json` a `density`
   object (name, value, conditions, source, file and line). The result's `exactness` is
-  `measured`, because the density is your number and not a definition, and the bridge source is
+  `measured`, because the density is a stated number and not a definition, and its source is
   added to `sources`.
-- `dimvexa units --config FILE` lists the bridges your config defines.
+- `dimvexa units --config NAME_OR_PATH` lists the densities your configs define.
 
 ### Example: a unit of your own
 
@@ -444,7 +486,7 @@ BibTeX:
 ```
 
 GitHub's "Cite this repository" button reads [`CITATION.cff`](CITATION.cff). The current
-release is 0.1.2 (2026-11-09). There is no DOI; for unreleased work please also give the commit you used.
+release is 0.2.0 (2026-11-09). There is no DOI; for unreleased work please also give the commit you used.
 
 ## Licence
 

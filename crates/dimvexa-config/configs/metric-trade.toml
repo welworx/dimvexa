@@ -1,0 +1,9 @@
+# Trade use of the metric ton: `mt` and `ton` both mean the tonne (1000 kg).
+#
+#   dimvexa convert 1 mt kg --config metric-trade
+#
+# Without this config `mt` is refused (milli-tonne in SI) and `ton` is ambiguous.
+
+[map]
+mt = "tonne"
+ton = "tonne"

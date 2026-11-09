@@ -207,7 +207,7 @@ fn value(c: &[char], i: &mut usize) -> Result<V, String> {
     }
 }
 
-/// Checks a successful `dimvexa.convert/1` document against the documented schema.
+/// Checks a successful `dimvexa.convert/2` document against the documented schema.
 pub fn check_convert_schema(v: &V) {
     for key in [
         "schema",
@@ -219,16 +219,15 @@ pub fn check_convert_schema(v: &V) {
         "dimension",
         "kind",
         "quantity_kind",
-        "profile",
         "packs",
         "data_version",
         "sources",
         "config",
-        "bridge",
+        "density",
     ] {
         assert!(v.get(key).is_some(), "missing key {key}");
     }
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/1");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/2");
     assert!(v.get("ok").unwrap().as_bool());
     for (obj, keys) in [
         ("input", &["value", "unit"][..]),
@@ -239,14 +238,17 @@ pub fn check_convert_schema(v: &V) {
             assert!(v.get(obj).unwrap().get(k).is_some(), "missing {obj}.{k}");
         }
     }
-    assert!(matches!(v.get("profile").unwrap(), V::Null));
+    assert!(
+        v.get("profile").is_none(),
+        "profile was removed in convert/2"
+    );
     assert_eq!(v.get("dimension").unwrap().as_array().len(), 7);
     assert!(["defined", "measured"].contains(&v.get("exactness").unwrap().as_str()));
     assert!(["linear", "affine"].contains(&v.get("kind").unwrap().as_str()));
     check_config_array(v);
-    match v.get("bridge").expect("missing bridge") {
+    match v.get("density").expect("missing density") {
         V::Null => {}
-        b => check_bridge(b),
+        b => check_density(b),
     }
     assert!(!v.get("sources").unwrap().as_array().is_empty());
     assert!(
@@ -259,18 +261,18 @@ pub fn check_convert_schema(v: &V) {
     );
 }
 
-/// Checks a `dimvexa.units/1` document against the documented schema.
+/// Checks a `dimvexa.units/2` document against the documented schema.
 pub fn check_units_schema(v: &V) {
     if v.get("unit").is_some() {
         return check_unit_detail_schema(v);
     }
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
     assert!(v.get("ok").unwrap().as_bool());
     assert!(v.get("data_version").unwrap().as_str().starts_with('v'));
     assert!(v.get("group").is_some(), "missing group");
     check_config_array(v);
-    for b in v.get("bridges").expect("missing bridges").as_array() {
-        check_bridge(b);
+    for b in v.get("densities").expect("missing densities").as_array() {
+        check_density(b);
     }
     for m in v.get("mappings").unwrap().as_array() {
         for k in ["name", "unit", "file", "line"] {
@@ -323,7 +325,7 @@ pub fn check_units_schema(v: &V) {
 }
 
 fn check_unit_detail_schema(v: &V) {
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/1");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
     assert!(v.get("ok").unwrap().as_bool());
     let u = v.get("unit").unwrap();
     for k in [
@@ -349,7 +351,7 @@ fn check_unit_detail_schema(v: &V) {
     assert!(u.get("offset").unwrap().as_str().contains('/'));
 }
 
-/// The `config` array of `dimvexa.convert/1` and `dimvexa.units/1`: `[{file, hash}]`.
+/// The `config` array of `dimvexa.convert/2` and `dimvexa.units/2`: `[{file, hash}]`.
 fn check_config_array(v: &V) {
     for c in v.get("config").expect("missing config").as_array() {
         assert!(!c.get("file").unwrap().as_str().is_empty());
@@ -361,8 +363,8 @@ fn check_config_array(v: &V) {
     }
 }
 
-/// A bridge object of `dimvexa.convert/1` and `dimvexa.units/1`.
-fn check_bridge(b: &V) {
+/// A density object of `dimvexa.convert/2` and `dimvexa.units/2`.
+fn check_density(b: &V) {
     for k in [
         "name",
         "kind",
@@ -373,7 +375,7 @@ fn check_bridge(b: &V) {
         "file",
         "line",
     ] {
-        assert!(b.get(k).is_some(), "missing bridge.{k}");
+        assert!(b.get(k).is_some(), "missing density.{k}");
     }
     assert_eq!(b.get("kind").unwrap().as_str(), "density");
     assert_eq!(b.get("unit").unwrap().as_str(), "kg/m3");

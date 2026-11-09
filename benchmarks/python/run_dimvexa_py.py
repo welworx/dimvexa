@@ -64,9 +64,6 @@ class DimvexaPy(common.Adapter):
     def convert_case(self, mode, value, src, dst):
         return self.d.convert(float(value), src, dst)
 
-    def add_case(self, mode, a, b):
-        return (self.d.quantity(a) + self.d.quantity(b)).to_float()
-
     def knows_unit(self, expr):
         self.d.convert(1.0, expr, expr)
         return True

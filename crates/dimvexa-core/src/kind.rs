@@ -3,34 +3,21 @@
 
 use core::fmt;
 
-use crate::error::{Error, Result};
-
 /// The kind of a quantity on top of its dimension.
 ///
 /// Two units with the same dimension but different kinds (for example `degC` and
-/// `delta_degC`) are not interchangeable. The kind algebra is:
-///
-/// | left | op | right | result |
-/// |---|---|---|---|
-/// | absolute | `-` | absolute | difference |
-/// | absolute | `+` | difference | absolute |
-/// | difference | `+` | absolute | absolute |
-/// | absolute | `-` | difference | absolute |
-/// | difference | `+`/`-` | difference | difference |
-/// | absolute | `+` | absolute | **error** |
-/// | difference | `-` | absolute | **error** |
+/// `delta_degC`) are not interchangeable: a conversion between them is refused with
+/// [`Error::KindMismatch`](crate::Error::KindMismatch). A temperature point (`degC`) converts to another point (`K`), and a
+/// temperature difference (`delta_degF`) converts to another difference (`delta_K`). dimvexa
+/// does not add or subtract quantities (ADR-014), so a kind has no arithmetic.
 ///
 /// # Examples
 ///
 /// ```
 /// use dimvexa_core::Kind;
 ///
-/// let abs = Kind::AbsoluteTemperature;
-/// let diff = Kind::TemperatureDifference;
-/// assert_eq!(abs.sub(abs)?, diff);
-/// assert_eq!(abs.add(diff)?, abs);
-/// assert!(abs.add(abs).is_err());
-/// # Ok::<(), dimvexa_core::Error>(())
+/// assert_eq!(Kind::from_name("absolute_temperature"), Some(Kind::AbsoluteTemperature));
+/// assert_eq!(Kind::TemperatureDifference.name(), "temperature_difference");
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 #[non_exhaustive]
@@ -63,56 +50,6 @@ impl Kind {
             "absolute_temperature" => Some(Self::AbsoluteTemperature),
             "temperature_difference" => Some(Self::TemperatureDifference),
             _ => None,
-        }
-    }
-
-    /// Kind of `self + rhs`.
-    ///
-    /// # Errors
-    ///
-    /// [`Error::KindMismatch`] for absolute + absolute and for mixing plain with
-    /// temperature kinds.
-    pub const fn add(self, rhs: Self) -> Result<Self> {
-        match (self, rhs) {
-            (Self::Plain, Self::Plain) => Ok(Self::Plain),
-            (Self::AbsoluteTemperature, Self::TemperatureDifference)
-            | (Self::TemperatureDifference, Self::AbsoluteTemperature) => {
-                Ok(Self::AbsoluteTemperature)
-            }
-            (Self::TemperatureDifference, Self::TemperatureDifference) => {
-                Ok(Self::TemperatureDifference)
-            }
-            _ => Err(Error::KindMismatch {
-                from: self,
-                to: rhs,
-                operation: "addition",
-                suggestions: Vec::new(),
-            }),
-        }
-    }
-
-    /// Kind of `self - rhs`.
-    ///
-    /// # Errors
-    ///
-    /// [`Error::KindMismatch`] for difference - absolute and for mixing plain with
-    /// temperature kinds.
-    pub const fn sub(self, rhs: Self) -> Result<Self> {
-        match (self, rhs) {
-            (Self::Plain, Self::Plain) => Ok(Self::Plain),
-            (Self::AbsoluteTemperature, Self::AbsoluteTemperature)
-            | (Self::TemperatureDifference, Self::TemperatureDifference) => {
-                Ok(Self::TemperatureDifference)
-            }
-            (Self::AbsoluteTemperature, Self::TemperatureDifference) => {
-                Ok(Self::AbsoluteTemperature)
-            }
-            _ => Err(Error::KindMismatch {
-                from: self,
-                to: rhs,
-                operation: "subtraction",
-                suggestions: Vec::new(),
-            }),
         }
     }
 }
@@ -227,30 +164,6 @@ mod tests {
         assert_eq!(Kind::from_name("nope"), None);
         assert_eq!(Shape::from_name("affine"), Some(Shape::Affine));
         assert_eq!(Exactness::from_name("measured"), Some(Exactness::Measured));
-    }
-
-    #[test]
-    fn abs_minus_abs_is_diff() {
-        let (a, d) = (Kind::AbsoluteTemperature, Kind::TemperatureDifference);
-        assert_eq!(a.sub(a), Ok(d));
-        assert_eq!(a.add(d), Ok(a));
-        assert_eq!(d.add(a), Ok(a));
-        assert_eq!(a.sub(d), Ok(a));
-        assert_eq!(d.add(d), Ok(d));
-        assert_eq!(d.sub(d), Ok(d));
-        assert!(a.add(a).is_err());
-        assert!(d.sub(a).is_err());
-    }
-
-    #[test]
-    fn plain_does_not_mix_with_temperature() {
-        for k in [Kind::AbsoluteTemperature, Kind::TemperatureDifference] {
-            assert!(Kind::Plain.add(k).is_err());
-            assert!(k.add(Kind::Plain).is_err());
-            assert!(Kind::Plain.sub(k).is_err());
-            assert!(k.sub(Kind::Plain).is_err());
-        }
-        assert_eq!(Kind::Plain.add(Kind::Plain), Ok(Kind::Plain));
     }
 
     #[test]

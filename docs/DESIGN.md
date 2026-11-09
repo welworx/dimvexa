@@ -16,7 +16,7 @@ The library is standalone: it has no dependency on any consumer project and noth
 
 1. **Exact by default.** Every factor is a rational. Each definition records whether it is exact by definition or measured.
 2. **Fast at runtime.** Parse and compose once. A pre-parsed conversion is one multiply-add, with no allocation.
-3. **No silent ambiguity.** `ton`, `oz`, `pt`, bare `ppm` and bare `gal` are errors unless a profile resolves them.
+3. **No silent ambiguity.** `ton`, `oz`, `pt`, bare `ppm` and bare `gal` are errors unless a config resolves them (`--config us`, ADR-014).
 4. **Kinds, not just dimensions.** Absolute vs delta temperature, gauge vs absolute pressure, mass vs mole fraction are distinct.
 5. **Context is explicit.** Conversions that need density, molar mass or an equation of state are refused unless the caller supplies the context.
 6. **Data-driven.** Units and scales are data. Extending the library should not require writing Rust.
@@ -58,7 +58,7 @@ Formula scales are chosen from this set by name in the data table, so a plugin c
 Factors are composed symbolically as rationals while parsing a compound unit, then collapsed to f64 for runtime use.
 
 ### 3.5 Variants are separate units
-`US:gal` vs `imp:gal`, `BTU_IT` vs `BTU_th`, `cal_th` vs `cal_IT`, short, long and metric tons, survey vs international foot. A profile can map a bare symbol to a variant (e.g. an `us-customary` profile resolves `gal`); without a profile it is an error.
+`US:gal` vs `imp:gal`, `BTU_IT` vs `BTU_th`, `cal_th` vs `cal_IT`, short, long and metric tons, survey vs international foot. A config can map a bare symbol to a variant (e.g. the shipped `us` config resolves `gal` to `gal_us`, `gb` to `gal_imp`); without a config it is an error. A shipped config is a bundled file in the same format as a user file (ADR-014).
 
 ## 4. Unit table
 
@@ -68,7 +68,7 @@ Units are data (TOML, with a JSON export). Fields:
 
 - Compiled into a perfect-hash map at load time.
 - Core namespace: `si:` and `std:`. Plugins register their own (`acme:bbl_oil`) and cannot shadow core symbols.
-- Unqualified lookup order: active profile, then core, then declared imports. Ambiguity is an error.
+- Unqualified lookup order: loaded configs (later wins), then core, then declared imports. Ambiguity is an error.
 - The table is versioned and hashed so saved data can detect a changed definition.
 
 ## 5. Parser
@@ -132,7 +132,7 @@ dimvexa/
 ### 8.1 Correctness
 - Golden tests generated from the rational table.
 - Cross-checks against NIST SP 811, UCUM and UDUNITS test vectors; ucum-units and octofhir-ucum-core as oracles. GNU units and rink are oracles only, because their definitions are GPL.
-- Property tests: kind algebra closure, round-trip, inverse of every shape, dimension algebra laws.
+- Property tests: kind mismatches never convert silently, round-trip, inverse of every shape, dimension algebra laws.
 - Every unit entry needs at least one test vector with a cited source.
 - Fuzzing for the parser.
 
@@ -176,7 +176,7 @@ dimvexa/
 1. Final set of conversion shapes and their exact inverses.
 2. Error-bound guarantee for the fast path (≤ 1 ulp or other).
 3. Default behaviour of angle (dimensionless) vs UCUM.
-4. How profiles resolve ambiguous symbols, and which profiles ship.
+4. How configs resolve ambiguous symbols (decided in ADR-009 and ADR-014: `--config NAME_OR_PATH`; shipped: `us`, `gb`, `metric-trade`, `year-julian`, `year-civil`, `water`).
 5. Whether `i128` rationals suffice, or big rationals are needed at load time.
 6. Licence and the policy for data derived from external tables (GPL sources are excluded).
 7. Name and namespace availability.
