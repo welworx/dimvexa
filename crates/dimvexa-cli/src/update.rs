@@ -661,7 +661,7 @@ mod tests {
     fn checksum_checks_hash_and_name() {
         let good = format!("{}  dimvexa.exe\n", sha256_hex(b"abc"));
         assert!(verify_checksum(b"abc", &good, "dimvexa.exe").is_ok());
-        assert!(verify_checksum(b"abd", &good, "dimvexa.exe").is_err());
+        assert!(verify_checksum(b"xyz", &good, "dimvexa.exe").is_err());
         assert!(verify_checksum(b"abc", &good, "other.exe").is_err());
         let star = format!("{} *dimvexa.exe", sha256_hex(b"abc").to_uppercase());
         assert!(verify_checksum(b"abc", &star, "dimvexa.exe").is_ok());

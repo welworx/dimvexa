@@ -2099,7 +2099,7 @@ mod tests {
 
     #[test]
     fn normalisation_edges() {
-        // º (U+00BA) joins; an angle degree before a real unit does not.
+        // the masculine ordinal sign joins; an angle degree before a real unit does not.
         assert_eq!(run_str(&["0", "°C", "º", "F"]).1, "32 °F\n");
         assert_eq!(run_str(&["180", "°", "rad"]).0, 0);
         assert_eq!(run_str(&["0", "°C", "to"]).0, 1);
