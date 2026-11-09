@@ -1,3 +1,5 @@
+dimvexa VERSION - Exact factors. Loud failures. Zero guessing.
+
 Usage:
   dimvexa convert VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
   dimvexa VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
@@ -20,6 +22,9 @@ Options:
   --exact      print the exact rational result (num/den) instead of a decimal
   --json       machine-readable output (schema dimvexa.convert/2; dimvexa.units/2 for units,
                dimvexa.configs/1 for configs)
+  --color WHEN auto (default: a terminal, unless NO_COLOR is set), always (also
+               CLICOLOR_FORCE=1) or never; JSON is never coloured
+  --pretty     --json, indented for reading (same fields, same order)
   --config NAME_OR_PATH  (beta) apply a config (repeatable, later ones win; see
                docs/adr/014-one-config-mechanism.md). A shipped one is named (us, gb,
                metric-trade, year-julian, year-civil, water); a file has a path (./mine.toml,
@@ -34,6 +39,7 @@ Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
+  dimvexa convert 100 degC degF --pretty
   dimvexa convert 1 ton kg --config us
   dimvexa convert 1 mt kg --config metric-trade
   dimvexa convert 1 L kg --config water --density water_25C
@@ -45,3 +51,12 @@ rounded once to the nearest f64 (0 ulp). The library's fast f64 path is within 1
 units) or 2 ulp (temperature scales such as degC and degF) of it; see docs/precision.md.
 
 Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
+
+License:    MIT OR Apache-2.0
+Authors:    Werner Liemberger
+Repository: https://github.com/welworx/dimvexa
+
+Provided as is, without warranty. Unit factors and sources can contain errors: verify any
+result you depend on against the primary source, and do not use it as the only safeguard in
+safety-critical, medical, legal, financial or custody-transfer settings. Independent project,
+not affiliated with other unit libraries. Terms: LICENSE-MIT and LICENSE-APACHE.

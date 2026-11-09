@@ -32,7 +32,7 @@ repository = "https://github.com/welworx/dimvexa"
 homepage = "https://github.com/welworx/dimvexa"
 documentation = "https://docs.rs/dimvexa"
 readme = "README.md"
-authors = ["The Dimvexa contributors"]
+authors = ["Werner Liemberger"]
 keywords = ["units", "unit-conversion", "dimensional-analysis", "science", "engineering"]
 categories = ["science", "mathematics"]
 
