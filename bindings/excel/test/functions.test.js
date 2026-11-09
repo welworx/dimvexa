@@ -51,6 +51,26 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
     assert.match(e.message, /^dimvexa unknown_unit:/);
     return true;
   });
+  // Blank cells stay blank (never 0); a cell that is not a number is a loud error.
+  assert.deepStrictEqual(
+    await associated.CONVERTRANGE([[1, null], ["", 3], ["  ", undefined], [2, 4]], "km", "m"),
+    [[1000, ""], ["", 3000], ["", ""], [2000, 4000]],
+  );
+  assert.deepStrictEqual(await associated.CONVERTRANGE([[0]], "degC", "K"), [[273.15]]);
+  await assert.rejects(async () => associated.CONVERTRANGE([[1, "abc"]], "km", "m"), (e) => {
+    assert.strictEqual(e.code, "#VALUE!");
+    assert.match(e.message, /^dimvexa invalid_number: row 1, column 2 of the range is not a number/);
+    return true;
+  });
+  await assert.rejects(async () => associated.CONVERTRANGE([[1, true]], "km", "m"), /not a number/);
+  await assert.rejects(async () => associated.CONVERTRANGE([[1, NaN]], "km", "m"), /not a number/);
+  await assert.rejects(async () => associated.CONVERTRANGE([[1, 2], [3]], "km", "m"), /not rectangular \(row 2\)/);
+  // A unit error still wins over the cells.
+  await assert.rejects(async () => associated.CONVERTRANGE([["abc"]], "kg", "m"), (e) => {
+    assert.match(e.message, /^dimvexa dimension_mismatch:/);
+    return true;
+  });
+
   // Densities (ADR-014): mass to volume only with a stated density, never assumed.
   const near = (a, b) => assert.ok(Math.abs(a - b) <= 1e-12 * Math.abs(b), `${a} is not ${b}`);
   near(await associated.CONVERT(1, "L", "kg", "998.2067kg/m3"), 0.9982067);

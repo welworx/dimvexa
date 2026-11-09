@@ -34,6 +34,7 @@ The npm tools are development aids only; nothing here is a dependency of the lib
 
 * Classic scripts, no bundler: the `no-modules` glue plus the `.wasm` embedded as base64
   (about 300 KB), so the runtime never fetches the binary.
+* `CONVERTRANGE` takes its range as `any`, not `number`, so that a blank cell can be told from a 0: blanks (and cells of only spaces) stay blank in the result, and a cell that is not a number is an error naming its row and column.
 * Functions are pure, so none is volatile or streaming. Once the module is compiled (it starts at script load) they return plain values, not Promises, so Excel treats them as synchronous; a call that arrives earlier returns a Promise (#BUSY!). Making them synchronous helped little on Mac: a diagnostic function that only returned `x + 1` in JavaScript took the same 2 seconds, so that lag is Excel for Mac's, not the add-in's (ADR-016).
 * The `DIMVEXA.` namespace keeps clear of Excel's built-in `CONVERT`.
 * `DIMVEXA.CONVERTRANGE(range, from, to)` converts a whole range with one composed conversion and one WASM call (`applyBatch`) and spills the result.

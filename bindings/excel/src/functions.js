@@ -47,6 +47,7 @@ init().catch(() => {});
 
 // A refusal is an Excel error with the stable Dimvexa code in the message, never a guess.
 function toExcelError(e) {
+  if (e instanceof CustomFunctions.Error) return e;
   const code = e && e.code ? e.code : "internal";
   let message = "dimvexa " + code + ": " + (e && e.message ? e.message : String(e));
   if (e && e.suggestions && e.suggestions.length > 0) {
@@ -78,6 +79,19 @@ function convert(value, from, to, density, config) {
   });
 }
 
+// The range is declared `any` so a blank cell can be told from a 0 (a `number` range makes Excel
+// pass blanks as 0 and refuse text itself). A cell of only spaces counts as blank.
+function isBlank(v) {
+  return v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+}
+
+function rangeError(message) {
+  return new CustomFunctions.Error(
+    CustomFunctions.ErrorCode.invalidValue,
+    "dimvexa invalid_number: " + message,
+  );
+}
+
 /** @customfunction CONVERTRANGE */
 function convertRange(values, from, to, density, config) {
   return whenReady(() => convertRangeNow(values, from, to, density, config));
@@ -93,13 +107,31 @@ function convertRangeNow(values, from, to, density, config) {
     const rows = values.length;
     const cols = rows > 0 ? values[0].length : 0;
     const flat = new Float64Array(rows * cols);
+    const blank = new Array(rows * cols).fill(false);
     for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) flat[r * cols + c] = values[r][c];
+      if (!values[r] || values[r].length !== cols) {
+        throw rangeError("the range is not rectangular (row " + (r + 1) + ")");
+      }
+      for (let c = 0; c < cols; c++) {
+        const v = values[r][c];
+        const i = r * cols + c;
+        if (isBlank(v)) {
+          blank[i] = true; // stays empty in the result, never read as 0
+        } else if (typeof v === "number" && Number.isFinite(v)) {
+          flat[i] = v;
+        } else {
+          throw rangeError("row " + (r + 1) + ", column " + (c + 1) + " of the range is not a number");
+        }
+      }
     }
     const out = conversion.applyBatch(flat);
     const result = [];
     for (let r = 0; r < rows; r++) {
-      result.push(Array.from(out.subarray(r * cols, (r + 1) * cols)));
+      const line = [];
+      for (let c = 0; c < cols; c++) {
+        line.push(blank[r * cols + c] ? "" : out[r * cols + c]);
+      }
+      result.push(line);
     }
     return result;
   } catch (e) {

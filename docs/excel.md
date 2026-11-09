@@ -39,6 +39,10 @@ All functions live in the `DIMVEXA` namespace. Excel ignores letter case, so
 * **`config`** (optional): a shipped config that resolves names that are otherwise refused as
   ambiguous (ADR-006, ADR-014): `us`, `gb`, `metric-trade`, `year-julian`, `year-civil`, `water`.
   Several can be combined: `"us,water"`. A file path cannot be used from a worksheet.
+* **Ranges (`DIMVEXA.CONVERTRANGE`):** a blank cell, or one with only spaces, stays blank in the
+  result and is never read as 0. A cell that is not a number (text, TRUE, an error) makes the
+  whole result an error that names the position, for example `dimvexa invalid_number: row 1,
+  column 2 of the range is not a number`. An unknown unit is reported before any cell is looked at.
 * Leave an optional argument empty or out. To give `config` without a density, keep the comma:
   `,,"us"`.
 
