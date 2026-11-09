@@ -508,10 +508,10 @@ fn readme_supported_units_table_is_exactly_the_cli_table() {
     }
     let mut expected = vec!["| Group | Unit symbols |".to_string()];
     for (g, syms) in &groups {
-        // Powers of a length that the README lists first in their group (not table symbols).
+        // Squares and cubes of a length that the README lists first in their group.
         let powers: &[&str] = match g.as_str() {
-            "area" => &["m2", "cm2", "mm2", "km2"],
-            "volume" => &["m3", "cm3", "mm3"],
+            "area" => &["m2", "dm2", "cm2", "mm2", "km2", "in2", "ft2", "yd2", "mi2"],
+            "volume" => &["m3", "dm3", "cm3", "mm3", "km3", "in3", "ft3", "yd3"],
             _ => &[],
         };
         for p in powers {

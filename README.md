@@ -102,8 +102,8 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | magnetic_flux | `Wb` |
 | magnetic_flux_density | `T` |
 | inductance | `H` |
-| volume | `m3`, `cm3`, `mm3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp` |
-| area | `m2`, `cm2`, `mm2`, `km2`, `ha`, `acre_int`, `acre_us_survey` |
+| volume | `m3`, `dm3`, `cm3`, `mm3`, `km3`, `in3`, `ft3`, `yd3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp` |
+| area | `m2`, `dm2`, `cm2`, `mm2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `ha`, `acre_int`, `acre_us_survey` |
 | absorbed_dose | `Gy`, `Sv` |
 | illuminance | `lx` |
 | catalytic_activity | `kat` |
@@ -112,9 +112,6 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | speed | `kn` |
 | dynamic_viscosity | `P` |
 | kinematic_viscosity | `St` |
-
-`m2`, `cm2`, `mm2`, `km2`, `m3`, `cm3` and `mm3` are powers of a length, not table symbols; any
-other power works the same way (`ft2`, `m^3`), see [Combining units](#combining-units).
 
 ## Combining units
 
