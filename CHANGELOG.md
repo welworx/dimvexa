@@ -16,6 +16,15 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
   installs, asks first unless `-y`, never downgrades, and leaves Homebrew and `cargo install`
   copies to their own tools. `--check` only reports: exit 0 up to date, 3 newer release available,
   1 error. It uses the system `curl` and `tar`; the workspace stays free of dependencies.
+- CLI: `--help` starts with name, version and tagline and ends with licence, authors, repository and a short disclaimer; `--version` lists the same facts.
+- CLI: `--color auto|always|never` and `CLICOLOR_FORCE=1` control colour; `NO_COLOR` still wins over
+  the environment, and `--color` wins over everything.
+- CLI: `--pretty` prints the `--json` output indented (same fields and order; implies `--json`).
+- CLI: colour for the result and for `error`, `hint` and `note` labels, only on a terminal and
+  never with `NO_COLOR` set or `TERM=dumb`. JSON is never coloured.
+- CLI: `° F` is read as `°F`, and a filler `to` is ignored (`dimvexa convert 0 °C to °F`).
+- CLI: a bare `F` or `C` next to a
+  temperature (or to each other, as in `0 C F`) hints at `degF`/`°F` (`F` is the farad).
 
 ## [0.2.0] - 2026-11-09
 

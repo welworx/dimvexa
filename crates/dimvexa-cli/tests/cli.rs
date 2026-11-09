@@ -298,8 +298,24 @@ fn error_snapshots() {
 fn help_and_version() {
     let r = dimvexa(&["--help"]);
     assert_eq!(r.code, 0);
-    snapshot("help.txt", &r.stdout);
+    assert!(
+        r.stdout
+            .starts_with(&format!("dimvexa {} - ", env!("CARGO_PKG_VERSION")))
+    );
+    snapshot(
+        "help.txt",
+        &r.stdout.replacen(env!("CARGO_PKG_VERSION"), "VERSION", 1),
+    );
     let r = dimvexa(&["--version"]);
+    assert!(
+        r.stdout.contains("License:    MIT OR Apache-2.0"),
+        "{}",
+        r.stdout
+    );
+    assert!(
+        r.stdout
+            .contains("Repository: https://github.com/welworx/dimvexa")
+    );
     assert_eq!(r.code, 0);
     assert!(
         r.stdout
