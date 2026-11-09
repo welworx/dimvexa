@@ -56,6 +56,32 @@ async function convert(value, from, to) {
   }
 }
 
+/** @customfunction CONVERTRANGE */
+async function convertRange(values, from, to) {
+  await init();
+  let conversion;
+  try {
+    // One composed conversion and one WASM call for the whole range.
+    conversion = new wasm_bindgen.DimvexaConversion(from, to);
+    const rows = values.length;
+    const cols = rows > 0 ? values[0].length : 0;
+    const flat = new Float64Array(rows * cols);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) flat[r * cols + c] = values[r][c];
+    }
+    const out = conversion.applyBatch(flat);
+    const result = [];
+    for (let r = 0; r < rows; r++) {
+      result.push(Array.from(out.subarray(r * cols, (r + 1) * cols)));
+    }
+    return result;
+  } catch (e) {
+    throw toExcelError(e);
+  } finally {
+    if (conversion) conversion.free();
+  }
+}
+
 /** @customfunction VERSION */
 async function version() {
   await init();
@@ -63,4 +89,5 @@ async function version() {
 }
 
 CustomFunctions.associate("CONVERT", convert);
+CustomFunctions.associate("CONVERTRANGE", convertRange);
 CustomFunctions.associate("VERSION", version);

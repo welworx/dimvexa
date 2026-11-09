@@ -34,4 +34,5 @@ The npm tools are development aids only; nothing here is a dependency of the lib
   (about 300 KB), so the runtime never fetches the binary.
 * Functions are pure, so none is volatile or streaming.
 * The `DIMVEXA.` namespace keeps clear of Excel's built-in `CONVERT`.
-* Not built yet: array conversion (`applyBatch`), exact decimal input, configs (ADR-014).
+* `DIMVEXA.CONVERTRANGE(range, from, to)` converts a whole range with one composed conversion and one WASM call (`applyBatch`) and spills the result.
+* Not built yet: exact decimal input, configs (ADR-014).

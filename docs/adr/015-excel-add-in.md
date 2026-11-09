@@ -14,7 +14,7 @@ add-in never shapes the core).
 
 * The add-in lives in `bindings/excel` and calls the WASM binding of ADR-011. It has no
   conversion logic and no npm dependency.
-* Functions live in the `DIMVEXA` namespace (`DIMVEXA.CONVERT`, `DIMVEXA.VERSION`); a refusal is
+* Functions live in the `DIMVEXA` namespace (`DIMVEXA.CONVERT`, `DIMVEXA.CONVERTRANGE`, `DIMVEXA.VERSION`); a refusal is
   an Excel error with the stable code in the message (`dimvexa unknown_unit: ...`).
 * The wasm-bindgen `no-modules` glue and the `.wasm` as base64 are loaded as classic scripts, so
   no bundler and no fetch of the binary.

@@ -32,6 +32,16 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
   assert.strictEqual(await associated.CONVERT(100, "degC", "K"), 373.15);
   assert.match(await associated.VERSION(), /units/);
 
+  assert.deepStrictEqual(
+    await associated.CONVERTRANGE([[1, 2], [3, 4], [0.5, 10]], "km", "m"),
+    [[1000, 2000], [3000, 4000], [500, 10000]],
+  );
+  assert.deepStrictEqual(await associated.CONVERTRANGE([[100]], "degC", "K"), [[373.15]]);
+  await assert.rejects(associated.CONVERTRANGE([[1, 2]], "kg", "m"), (e) => {
+    assert.match(e.message, /^dimvexa dimension_mismatch:/);
+    return true;
+  });
+
   await assert.rejects(associated.CONVERT(1, "kg", "m"), (e) => {
     assert.strictEqual(e.code, "#VALUE!");
     assert.match(e.message, /^dimvexa dimension_mismatch:/);

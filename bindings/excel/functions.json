@@ -13,6 +13,17 @@
       ]
     },
     {
+      "id": "CONVERTRANGE",
+      "name": "CONVERTRANGE",
+      "description": "Converts every number in a range between units with one exact factor, and spills the results. A unit that is unknown or ambiguous is an error, never a guess.",
+      "result": { "type": "number", "dimensionality": "matrix" },
+      "parameters": [
+        { "name": "values", "description": "The range of numbers to convert.", "type": "number", "dimensionality": "matrix" },
+        { "name": "from", "description": "Unit to convert from, for example km/h.", "type": "string", "dimensionality": "scalar" },
+        { "name": "to", "description": "Unit to convert to, for example m/s.", "type": "string", "dimensionality": "scalar" }
+      ]
+    },
+    {
       "id": "VERSION",
       "name": "VERSION",
       "description": "The unit table version and the number of units.",
