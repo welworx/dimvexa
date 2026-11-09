@@ -1,0 +1,23 @@
+{
+  "allowCustomDataForDataTypeAny": false,
+  "functions": [
+    {
+      "id": "CONVERT",
+      "name": "CONVERT",
+      "description": "Converts a number between units with an exact factor. A unit that is unknown or ambiguous is an error, never a guess.",
+      "result": { "type": "number", "dimensionality": "scalar" },
+      "parameters": [
+        { "name": "value", "description": "The number to convert.", "type": "number", "dimensionality": "scalar" },
+        { "name": "from", "description": "Unit to convert from, for example km/h.", "type": "string", "dimensionality": "scalar" },
+        { "name": "to", "description": "Unit to convert to, for example m/s.", "type": "string", "dimensionality": "scalar" }
+      ]
+    },
+    {
+      "id": "VERSION",
+      "name": "VERSION",
+      "description": "The unit table version and the number of units.",
+      "result": { "type": "string", "dimensionality": "scalar" },
+      "parameters": []
+    }
+  ]
+}

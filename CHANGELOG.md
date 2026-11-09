@@ -7,6 +7,10 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+### Added
+
+- `bindings/excel`: spike of an Office.js custom functions add-in (`DIMVEXA.CONVERT`, `DIMVEXA.VERSION`) over the WASM build, ADR-015 (proposed). Built and tested with a mocked Excel runtime; not yet run in Excel.
+
 ## [0.2.0] - 2026-11-09
 
 ### Breaking
