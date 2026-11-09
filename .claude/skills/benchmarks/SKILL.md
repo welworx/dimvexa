@@ -12,6 +12,10 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
 * Record results in `docs/benchmarks/M0.md` (or a new file per milestone) with the machine,
   compiler, profile and method, and copy the numbers from the output. **Only claim numbers you
   measured**; say what was not run.
+* Regression guard: `cargo xtask bench-check` compares a fresh `m0` run with
+  `docs/benchmarks/baseline-m0.tsv` (10 percent threshold, reruns up to 3 times and judges the best
+  median, see `xtask/src/bench_check.rs`). Re-record with `--update` only on a new machine or
+  toolchain, or when a change is explained and accepted.
 * Compare medians, not minima. Treat a slowdown above about 10 percent on a hot-path row
   (scalar apply, `apply_slice`, `apply_in_place`) as a regression: explain it or fix it. The
   1 ulp and 2 ulp bounds (`docs/precision.md`) are not traded for speed.

@@ -245,14 +245,26 @@ function classifyConvert(ad, mode, cases) {
     }
   });
 }
+function refuseGroup(c) {
+  return c.group || (c.category === 'ambiguous_name' ? 'ambiguous_name' : 'other');
+}
+function byGroup(recs) {
+  const out = {};
+  for (const r of recs) {
+    const g = out[r.group] || (out[r.group] = { total: 0, refused: 0, silently_accepted: 0, not_applicable: 0 });
+    g.total += 1;
+    g[r.outcome] += 1;
+  }
+  return out;
+}
 function classifyRefuse(ad, mode, cases) {
   return cases.map((c) => {
     try {
       const got = c.op === 'convert' ? ad.convertCase(mode, c.value, c.from, c.to) : ad.addCase(mode, c.a, c.b);
-      return { id: c.id, category: c.category, outcome: 'silently_accepted', got: String(got).slice(0, 80), why_it_should_refuse: c.why };
+      return { id: c.id, category: c.category, group: refuseGroup(c), outcome: 'silently_accepted', got: String(got).slice(0, 80), why_it_should_refuse: c.why };
     } catch (e) {
-      if (e instanceof NotApplicable) return { id: c.id, category: c.category, outcome: 'not_applicable' };
-      return { id: c.id, category: c.category, outcome: 'refused', detail: `${e.name}: ${e.message}`.slice(0, 160) };
+      if (e instanceof NotApplicable) return { id: c.id, category: c.category, group: refuseGroup(c), outcome: 'not_applicable' };
+      return { id: c.id, category: c.category, group: refuseGroup(c), outcome: 'refused', detail: `${e.name}: ${e.message}`.slice(0, 160) };
     }
   });
 }
@@ -290,7 +302,7 @@ function measureSemantics(ad, corpus) {
       must_convert: { total: mc.length, correct: n(mc, 'correct'), wrong_value: n(mc, 'wrong_value'), unsupported: n(mc, 'unsupported'),
                       by_category: byCategory(mc, ['correct', 'wrong_value', 'unsupported']) },
       must_refuse: { total: mr.length, refused: n(mr, 'refused'), silently_accepted: n(mr, 'silently_accepted'),
-                     not_applicable: n(mr, 'not_applicable'), by_category: byCategory(mr, ['refused', 'silently_accepted', 'not_applicable']) },
+                     not_applicable: n(mr, 'not_applicable'), by_category: byCategory(mr, ['refused', 'silently_accepted', 'not_applicable']), by_group: byGroup(mr) },
       coverage: cov, cases: { must_convert: mc, must_refuse: mr }, accuracy: accuracy(mc),
     };
   }

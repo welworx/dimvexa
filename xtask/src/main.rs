@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! Repository automation: `cargo xtask ci`, `check-docs`, `validate-data` and
-//! `update-data-hash`.
+//! Repository automation: `cargo xtask ci`, `check-docs`, `bench-check`,
+//! `validate-data` and `update-data-hash`.
 //!
 //! `validate-data` is the gatekeeper of the unit table. It fails on a missing source,
 //! exactness, dimension, note or golden vector, on duplicate symbols, ambiguous bare
@@ -19,6 +19,7 @@
 #[path = "../../crates/dimvexa-data/tooling/toml_lite.rs"]
 mod toml_lite;
 
+mod bench_check;
 mod chains;
 mod ci;
 mod docs_check;
@@ -67,6 +68,7 @@ fn main() -> ExitCode {
                 ExitCode::FAILURE
             }
         }
+        "bench-check" => bench_check::run(&rest, &root),
         "check-docs" => {
             let errors = docs_check::run(&root);
             for e in &errors {
@@ -92,7 +94,7 @@ fn main() -> ExitCode {
         },
         _ => {
             eprintln!(
-                "usage: cargo xtask <ci [STAGE...] | check-docs | validate-data | update-data-hash>"
+                "usage: cargo xtask <ci [STAGE...] | check-docs | bench-check | validate-data | update-data-hash>"
             );
             ExitCode::from(2)
         }

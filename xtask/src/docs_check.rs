@@ -19,7 +19,13 @@ use std::path::{Path, PathBuf};
 use crate::ci;
 
 /// Commands `cargo xtask` understands (see `main.rs`).
-const COMMANDS: &[&str] = &["ci", "validate-data", "update-data-hash", "check-docs"];
+const COMMANDS: &[&str] = &[
+    "ci",
+    "validate-data",
+    "update-data-hash",
+    "check-docs",
+    "bench-check",
+];
 
 /// Top-level directories whose paths are checked for existence when named in backticks.
 const ROOTS: &[&str] = &[

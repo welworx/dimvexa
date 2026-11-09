@@ -15,6 +15,7 @@ cargo xtask ci fmt clippy      # only some stages (see: cargo xtask ci --list)
 cargo test --workspace         # quick loop
 cargo xtask validate-data      # after touching the unit tables
 cargo xtask update-data-hash   # after a data change; commit the new data_version.toml
+cargo xtask bench-check        # after a hot-path change: >10% slowdown on guarded rows fails
 ```
 
 The workspace has no third-party dependencies and must build offline (std only). Do not add a
@@ -45,7 +46,7 @@ dependency without an issue and an ADR. Edition 2024, MSRV 1.85 (do not change i
 | `crates/dimvexa` | facade crate (re-exports core + data) |
 | `crates/dimvexa-cli` | `dimvexa convert`, `dimvexa units`; no conversion logic of its own; snapshots in `tests/snapshots` |
 | `crates/dimvexa-testkit` | test helpers; differential, exact-path, property, overflow and zero-allocation tests |
-| `xtask` | `ci`, `validate-data`, `update-data-hash` |
+| `xtask` | `ci`, `validate-data`, `update-data-hash`, `bench-check` |
 | `docs/` | `PLAN.md`, `DESIGN.md`, `adr/`, `precision.md`, `benchmarks/`, `ci-pinning.md`, `schemas/` |
 | `.github/` | workflows (pinned actions, see `docs/ci-pinning.md`), issue forms, PR template |
 | `extras/`, `fuzz/` | network-only tooling; separate workspaces, never built offline |

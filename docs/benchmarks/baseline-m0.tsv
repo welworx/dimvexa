@@ -1,0 +1,62 @@
+# Baseline for `cargo xtask bench-check` (median ns/op of 3 runs of the m0 bench).
+# Only comparable on the machine that recorded it; see xtask/src/bench_check.rs.
+# compiler: rustc 1.97.0 (2d8144b78 2026-07-07)
+# machine: 4 logical CPUs, shared VM; profile: bench (release, thin LTO)
+
+Dim::checked_add	13.076
+Dim::checked_scale(3)	15.199
+Dim::checked_sub	14.968
+Kind::sub / Kind::add (algebra only)	0.354
+Quantity abs + abs (error path)	56.259
+Quantity abs + diff (degC + delta_K)	330.667
+Quantity abs - abs (degC - degF)	408.178
+Quantity mul (kW * h)	221.382
+Quantity::to_unit (kW.h -> kWh)	359.174
+Ratio::checked_add	111.811
+Ratio::checked_mul	105.471
+Ratio::to_f64	222.147
+apply_exact (Ratio, linear)	59.907
+apply_exact_f64 (affine, correctly rounded)	381.363
+apply_exact_f64 (linear, correctly rounded)	315.525
+conversion("degF","degC")	1183.536
+conversion("m/s","km/h") (parse+compose both)	2051.111
+parse `Btu_IT/(h.ft2.delta_degF)` (cold)	2395.269
+parse unit `kg.m2/s2` (cold)	1849.789
+parse unit `psi` (cold, every call)	179.677
+plain multiply `x * 3.6` (reference)	0.617
+registry construction, 63 units (cold start)	51069.903
+registry get() with 10 units	15.579
+registry get() with 10000 units	14.820
+registry miss (unknown symbol) with 10 units	426.350
+registry miss (unknown symbol) with 10000 units	399.764
+registry miss, valid-looking, 10 units	319.349
+registry miss, valid-looking, 10000 units	294.657
+registry parse() with 10 units	146.395
+registry parse() with 10000 units	154.125
+reuse prepared handle (`cached` by the caller)	0.864
+scalar affine apply (latency chain)	5.193
+scalar affine apply (throughput)	0.649
+scalar linear apply (latency chain)	4.054
+scalar linear apply (throughput)	0.631
+single call via black_box(&conv)	0.698
+slice affine apply_slice 10^3	0.257
+slice affine apply_slice 10^5	0.246
+slice affine apply_slice 10^6	0.524
+slice clone only 10^3	0.077
+slice clone only 10^5	0.206
+slice clone only 10^6	0.540
+slice linear apply_in_place 10^3	0.195
+slice linear apply_in_place 10^5	0.370
+slice linear apply_in_place 10^6	0.831
+slice linear apply_slice 10^3	0.115
+slice linear apply_slice 10^5	0.249
+slice linear apply_slice 10^6	0.563
+slice memcpy ceiling 10^3	0.059
+slice memcpy ceiling 10^5	0.203
+slice memcpy ceiling 10^6	0.534
+slice plain (x - 32) * 5/9 loop 10^3	0.273
+slice plain (x - 32) * 5/9 loop 10^5	0.243
+slice plain (x - 32) * 5/9 loop 10^6	0.510
+slice plain multiply loop 10^3	0.119
+slice plain multiply loop 10^5	0.247
+slice plain multiply loop 10^6	0.560
