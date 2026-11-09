@@ -9,8 +9,8 @@
 #
 # Safety:
 #   * `cargo xtask ci` and scripts/check-versions.sh must pass first.
-#   * Nothing is published before every artifact (crates package check, wheels, sdist, npm
-#     package) has been built and the wheels have passed the Python tests.
+#   * Nothing is published before every artifact (crates package check, wheels, CLI binaries,
+#     sdist, npm package) has been built and the wheels have passed the Python tests.
 #   * Publishing jobs run in the GitHub environment `release`; give it required reviewers and
 #     the owner approves each release (AGENTS.md: publishing is an owner decision).
 #   * No long-lived tokens: crates.io, PyPI and npm trusted publishing (OIDC). One-time setup
@@ -173,7 +173,9 @@ jobs:
       - name: Smoke test (native targets only)
         if: matrix.name != 'macos-x86_64'
         shell: bash
-        run: "target/${{ matrix.target }}/release/dimvexa --version"
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: target/${{ matrix.target }}/release/dimvexa --version | grep -F "dimvexa $VERSION "
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cli-${{ matrix.name }}
@@ -260,7 +262,7 @@ jobs:
 
   publish-crates:
     name: publish to crates.io
-    needs: [plan, wheels, sdist, npm-package, crates-check]
+    needs: [plan, wheels, cli-binaries, sdist, npm-package, crates-check]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: release
