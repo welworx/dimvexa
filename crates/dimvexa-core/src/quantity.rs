@@ -11,9 +11,8 @@ use crate::unit::UnitExpr;
 
 /// A value with a unit, held as an exact rational.
 ///
-/// Multiplication and division compose units. Addition and subtraction follow the
-/// [`Kind`] algebra: `20 degC + 20 degC` is an error, `20 degC + 5 delta_K` is `25 degC`,
-/// and `30 degC - 20 degC` is `10 delta_degC`.
+/// Multiplication and division compose units. There is no addition or subtraction: dimvexa
+/// converts, it does not calculate with temperatures (ADR-014).
 ///
 /// # Examples
 ///
@@ -23,10 +22,8 @@ use crate::unit::UnitExpr;
 /// let mut reg = Registry::new();
 /// reg.register(Unit::linear("m", Dim::M, Ratio::ONE)?.with_prefixes(PrefixMode::Si))?;
 /// let a = reg.quantity("1.5 km")?;
-/// let b = reg.quantity("250 m")?;
-/// let sum = a.checked_add(&b)?;
-/// assert_eq!(sum.to_unit(&reg.parse("m")?)?.value(), Ratio::from_int(1750));
-/// assert_eq!(sum.to_string(), "1.75 km");
+/// assert_eq!(a.to_unit(&reg.parse("m")?)?.value(), Ratio::from_int(1500));
+/// assert_eq!(a.to_string(), "1.5 km");
 /// # Ok::<(), dimvexa_core::Error>(())
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -124,108 +121,6 @@ impl Quantity {
             value: self.value.checked_div(rhs.value)?,
             unit: self.unit.div(&rhs.unit)?,
         })
-    }
-
-    fn si_value(&self, use_offset: bool) -> Result<Ratio> {
-        let scaled = self.unit.factor().checked_mul(self.value)?;
-        if use_offset {
-            scaled.checked_add(self.unit.offset())
-        } else {
-            Ok(scaled)
-        }
-    }
-
-    /// Adds the delta units of the temperature-point operands to a kind error, so that
-    /// `20 degC + 5 K` tells the caller to write `5 delta_K`.
-    fn with_difference_hint(&self, err: Error, rhs: &Self) -> Error {
-        match err {
-            Error::KindMismatch {
-                from,
-                to,
-                operation,
-                ..
-            } => {
-                let mut suggestions: Vec<String> = Vec::new();
-                for u in [&rhs.unit, &self.unit] {
-                    if let Some(d) = u.difference_symbol() {
-                        if !suggestions.iter().any(|s| s == d) {
-                            suggestions.push(d.to_string());
-                        }
-                    }
-                }
-                Error::KindMismatch {
-                    from,
-                    to,
-                    operation,
-                    suggestions,
-                }
-            }
-            other => other,
-        }
-    }
-
-    fn combine(&self, rhs: &Self, subtract: bool) -> Result<Self> {
-        let operation = if subtract { "subtraction" } else { "addition" };
-        if self.unit.dim() != rhs.unit.dim() {
-            return Err(Error::DimensionMismatch {
-                from: self.unit.dim(),
-                to: rhs.unit.dim(),
-            });
-        }
-        let kind = if subtract {
-            self.unit.kind().sub(rhs.unit.kind())
-        } else {
-            self.unit.kind().add(rhs.unit.kind())
-        }
-        .map_err(|e| self.with_difference_hint(e, rhs))?;
-        // Absolute temperatures carry their offset; differences and plain values do not.
-        let l = self.si_value(self.unit.kind() == Kind::AbsoluteTemperature)?;
-        let r = rhs.si_value(rhs.unit.kind() == Kind::AbsoluteTemperature)?;
-        let total = if subtract {
-            l.checked_sub(r)?
-        } else {
-            l.checked_add(r)?
-        };
-        let unit = match (kind, self.unit.kind()) {
-            (Kind::AbsoluteTemperature, Kind::AbsoluteTemperature) => self.unit.clone(),
-            (Kind::AbsoluteTemperature, _) => rhs.unit.clone(),
-            (Kind::TemperatureDifference, Kind::AbsoluteTemperature) => {
-                self.unit.difference_counterpart()?
-            }
-            (Kind::Plain | Kind::TemperatureDifference, _) => self.unit.clone(),
-        };
-        if unit.kind() != kind {
-            return Err(Error::KindMismatch {
-                from: unit.kind(),
-                to: kind,
-                operation,
-                suggestions: Vec::new(),
-            });
-        }
-        let value = total
-            .checked_sub(unit.offset())?
-            .checked_div(unit.factor())?;
-        Ok(Self { value, unit })
-    }
-
-    /// Sum. The result is expressed in the unit of the left operand, except for
-    /// difference + absolute, which is expressed in the unit of the absolute operand.
-    ///
-    /// # Errors
-    ///
-    /// [`Error::DimensionMismatch`], [`Error::KindMismatch`] (for example absolute +
-    /// absolute temperature) or [`Error::Overflow`].
-    pub fn checked_add(&self, rhs: &Self) -> Result<Self> {
-        self.combine(rhs, false)
-    }
-
-    /// Difference; absolute - absolute temperature gives a temperature difference.
-    ///
-    /// # Errors
-    ///
-    /// [`Error::DimensionMismatch`], [`Error::KindMismatch`] or [`Error::Overflow`].
-    pub fn checked_sub(&self, rhs: &Self) -> Result<Self> {
-        self.combine(rhs, true)
     }
 }
 

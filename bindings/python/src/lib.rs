@@ -129,20 +129,6 @@ impl Quantity {
         self.inner.to_f64().map_err(|e| to_py(&e))
     }
 
-    fn __add__(&self, other: &Self) -> PyResult<Self> {
-        self.inner
-            .checked_add(&other.inner)
-            .map(|inner| Self { inner })
-            .map_err(|e| to_py(&e))
-    }
-
-    fn __sub__(&self, other: &Self) -> PyResult<Self> {
-        self.inner
-            .checked_sub(&other.inner)
-            .map(|inner| Self { inner })
-            .map_err(|e| to_py(&e))
-    }
-
     fn __mul__(&self, other: &Self) -> PyResult<Self> {
         self.inner
             .checked_mul(&other.inner)

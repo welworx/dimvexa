@@ -170,7 +170,7 @@ fn named_requirements_from_the_spec() {
 
 #[test]
 fn temperature_kinds_in_the_seed_table() {
-    use dimvexa_core::{Kind, Quantity};
+    use dimvexa_core::Kind;
     let reg = dimvexa_data::registry().unwrap();
     assert_eq!(reg.parse("degC").unwrap().kind(), Kind::AbsoluteTemperature);
     assert_eq!(
@@ -182,26 +182,11 @@ fn temperature_kinds_in_the_seed_table() {
         reg.conversion("degC", "delta_degC").unwrap_err().code(),
         "kind_mismatch"
     );
-    let q = |s: &str| -> Quantity { reg.quantity(s).unwrap() };
-    assert_eq!(
-        q("20 degC").checked_add(&q("20 degC")).unwrap_err().code(),
-        "kind_mismatch"
-    );
-    let sum = q("20 degC").checked_add(&q("5 delta_K")).unwrap();
-    assert_eq!(
-        (sum.value(), sum.unit().to_string()),
-        (r_int(25), "degC".to_string())
-    );
-    let diff = q("30 degC").checked_sub(&q("20 degC")).unwrap();
-    assert_eq!(
-        (diff.value(), diff.unit().kind()),
-        (r_int(10), Kind::TemperatureDifference)
-    );
-    // 68 degF - 20 degC = 20 degC = 20 K difference expressed in degF scale: 36 delta_degF
-    let d = q("68 degF").checked_sub(&q("20 degC")).unwrap();
-    assert_eq!(d.value(), r_int(0));
-    let hot = q("100 degF").checked_sub(&q("32 degF")).unwrap();
-    assert_eq!(hot.value(), r_int(68));
+    // points convert to points, differences to differences (no calculation, ADR-014)
+    let c = reg.conversion("degC", "degF").unwrap();
+    assert_eq!(c.apply_exact(r_int(100)).unwrap(), r_int(212));
+    let c = reg.conversion("delta_degF", "delta_K").unwrap();
+    assert_eq!(c.apply_exact(r_int(9)).unwrap(), r_int(5));
     // kJ/(kg.K): K inside a compound unit is a plain divisor
     assert!(reg.conversion("kJ/(kg.K)", "J/(g.K)").is_ok());
     // The defining identity of Btu_IT: 1 Btu_IT/(lb degF) = 4.1868 kJ/(kg K) exactly.
@@ -215,38 +200,23 @@ fn temperature_kinds_in_the_seed_table() {
 }
 
 #[test]
-fn temperature_point_plus_point_is_an_error_that_suggests_the_delta_unit() {
+fn a_kind_mismatch_in_a_conversion_suggests_the_delta_unit() {
     use dimvexa_core::Quantity;
     let reg = dimvexa_data::registry().unwrap();
     let q = |s: &str| -> Quantity { reg.quantity(s).unwrap() };
 
-    // The documented rule: a point plus an interval works, a point plus a point does not.
-    assert!(q("20 degC").checked_add(&q("5 delta_K")).is_ok());
-    let err = q("20 degC").checked_add(&q("5 K")).unwrap_err();
-    assert_eq!(err.code(), "kind_mismatch");
-    assert_eq!(err.suggestions(), ["delta_K", "delta_degC"]);
-    let text = err.to_string();
-    assert!(text.contains("delta_K"), "{text}");
-    assert!(text.contains("temperature difference"), "{text}");
-    // Same for the other scales, and with the symbol written as an alias.
-    let err = q("68 degF").checked_add(&q("5 degF")).unwrap_err();
-    assert_eq!(err.suggestions(), ["delta_degF"]);
-    let err = q("20 \u{b0}C").checked_add(&q("5 \u{b0}C")).unwrap_err();
-    assert_eq!(err.suggestions(), ["delta_degC"]);
-    // Scaling a temperature point by a number is refused with the same advice.
-    let err = q("20 degC").checked_mul(&q("2")).unwrap_err();
-    assert_eq!(err.suggestions(), ["delta_degC"]);
     // Converting a point into an interval names the delta unit to use.
     let err = reg.conversion("K", "delta_degF").unwrap_err();
     assert_eq!(err.code(), "kind_mismatch");
     assert_eq!(err.suggestions(), ["delta_K"]);
-    // The result of subtracting points prints with a symbol that parses back.
-    let d = q("30 \u{b0}C").checked_sub(&q("20 \u{b0}C")).unwrap();
-    assert_eq!(d.unit().to_string(), "delta_degC");
-    assert!(reg.parse(&d.unit().to_string()).is_ok());
-    // A prefixed temperature has no registered difference unit: loud refusal, no guess.
-    let err = q("1 mK").checked_sub(&q("1 mK")).unwrap_err();
-    assert_eq!(err.code(), "refused");
+    let text = err.to_string();
+    assert!(text.contains("delta_K"), "{text}");
+    assert!(text.contains("temperature difference"), "{text}");
+    let err = reg.conversion("degF", "delta_K").unwrap_err();
+    assert_eq!(err.code(), "kind_mismatch");
+    // Scaling a temperature point by a number is refused with the same advice.
+    let err = q("20 degC").checked_mul(&q("2")).unwrap_err();
+    assert_eq!(err.suggestions(), ["delta_degC"]);
 }
 
 #[test]

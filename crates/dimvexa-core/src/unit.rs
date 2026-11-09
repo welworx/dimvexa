@@ -522,40 +522,6 @@ impl UnitExpr {
             difference: None,
         })
     }
-
-    /// The temperature-difference counterpart of an absolute temperature unit: the
-    /// registered `delta_` unit of the same scale ([`difference_symbol`](Self::difference_symbol)),
-    /// with the same factor and no offset.
-    ///
-    /// # Errors
-    ///
-    /// [`Error::KindMismatch`] if `self` is not an absolute temperature;
-    /// [`Error::Refused`] if no difference unit is registered for it (for example `mK`).
-    pub fn difference_counterpart(&self) -> Result<Self> {
-        if self.kind != Kind::AbsoluteTemperature {
-            return Err(Error::KindMismatch {
-                from: self.kind,
-                to: Kind::AbsoluteTemperature,
-                operation: "difference counterpart",
-                suggestions: Vec::new(),
-            });
-        }
-        let Some(symbol) = self.difference.clone() else {
-            return Err(Error::Refused {
-                reason: format!(
-                    "no temperature-difference unit is registered for '{}'; convert to K or degC first",
-                    self.expr
-                ),
-                suggestions: vec![String::from("delta_K")],
-            });
-        };
-        let mut out = self.clone();
-        out.kind = Kind::TemperatureDifference;
-        out.offset = Ratio::ZERO;
-        out.expr = Expr::Unit(symbol);
-        out.difference = None;
-        Ok(out)
-    }
 }
 
 impl fmt::Display for UnitExpr {

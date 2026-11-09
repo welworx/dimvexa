@@ -132,7 +132,7 @@ dimvexa/
 ### 8.1 Correctness
 - Golden tests generated from the rational table.
 - Cross-checks against NIST SP 811, UCUM and UDUNITS test vectors; ucum-units and octofhir-ucum-core as oracles. GNU units and rink are oracles only, because their definitions are GPL.
-- Property tests: kind algebra closure, round-trip, inverse of every shape, dimension algebra laws.
+- Property tests: kind mismatches never convert silently, round-trip, inverse of every shape, dimension algebra laws.
 - Every unit entry needs at least one test vector with a cited source.
 - Fuzzing for the parser.
 

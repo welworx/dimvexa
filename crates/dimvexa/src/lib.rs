@@ -17,20 +17,20 @@
 //! # Ok::<(), dimvexa::Error>(())
 //! ```
 //!
-//! Temperature points and temperature differences are different kinds. A point plus a
-//! difference works; a point plus a point is an error that names the unit to use:
+//! Temperature points and temperature differences are different kinds, and dimvexa only
+//! converts (it does not add or subtract). A point converts to a point and a difference to a
+//! difference; mixing them is an error that names the unit to use:
 //!
 //! ```
 //! use dimvexa::registry;
 //!
 //! let reg = registry()?;
-//! let t = reg.quantity("20 degC")?;
-//! let warmer = t.checked_add(&reg.quantity("5 delta_K")?)?;
-//! assert_eq!(warmer.to_string(), "25 degC");
+//! let c = reg.conversion("degC", "degF")?;
+//! assert_eq!(c.apply(100.0), 212.0);
 //!
-//! let err = t.checked_add(&reg.quantity("5 K")?).unwrap_err();
+//! let err = reg.conversion("K", "delta_degF").unwrap_err();
 //! assert_eq!(err.code(), "kind_mismatch");
-//! assert_eq!(err.suggestions(), ["delta_K", "delta_degC"]);
+//! assert_eq!(err.suggestions(), ["delta_K"]);
 //!
 //! // Inside a compound unit a K factor is an interval, so this is fine:
 //! let c = reg.conversion("kJ/(kg.K)", "Btu_IT/(lb.delta_degF)")?;

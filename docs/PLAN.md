@@ -168,7 +168,7 @@ CI runs `cargo clippy --workspace --all-targets --all-features -- -D warnings`.
 | Unit tests | built-in | Every function, error path and edge case |
 | Doc tests | rustdoc | Every public example compiles and runs |
 | Golden vectors | `crates/dimvexa-data/data/vectors/*.toml` | Every unit has at least one vector: value, from, to, exact expected rational, citation |
-| Property tests | `proptest` | Round trip `a -> b -> a` exact in exact mode; dimension algebra laws (associativity, identity, inverse); kind algebra closure; parser/printer round trip; affine and reciprocal inverses |
+| Property tests | `proptest` | Round trip `a -> b -> a` exact in exact mode; dimension algebra laws (associativity, identity, inverse); parser/printer round trip; affine and reciprocal inverses |
 | Oracle tests | local only | Compare against `ucum-units`, Pint (via a script) and UDUNITS values. Oracle data is never copied into the repo; only agreed results are, with citations |
 | Snapshot tests | `insta` | Error messages and the unit reference output |
 | Fuzzing | `cargo-fuzz` | Parser, registry load, rational arithmetic. Run a short fuzz in CI on PRs touching them, long runs weekly |
@@ -545,7 +545,7 @@ The API below is a provisional sketch to show the intent, not a final design.
    println!("{}", energy.to("MJ")?);    // 950.4 MJ
    ```
 2. **Process plant:** gauge to absolute pressure (`barg` to `bar` with an explicit atmospheric pressure), `kmol/h` and `lbmol/h`, `Nm3/h` as a stated reference-condition unit, and what happens when you try to convert `Nm3/h` to `m3/h` (a refusal with a clear message, plus how to pass your own factor).
-3. **Temperature done right:** absolute vs difference; why `20 degC + 20 degC` is an error and so is `20 degC + 5 K` (the error suggests `delta_K`), while `20 degC + 5 delta_K` is `25 degC`; and why a K inside a compound unit such as kJ/(kg K) or W/(m K) is a temperature difference, so `kJ/(kg K)` and `kJ/(kg delta_K)` are the same unit.
+3. **Temperature done right:** absolute vs difference; why `degC` to `delta_degC` is refused (the error suggests the `delta_` unit), why `degC` to `K` converts, and why a K inside a compound unit such as kJ/(kg K) or W/(m K) is a temperature difference, so `kJ/(kg K)` and `kJ/(kg delta_K)` are the same unit. (Adding and subtracting temperatures was removed by ADR-014: dimvexa converts only.)
 4. **Home heating:** gas consumption in m3, kWh, MJ, therm and MMBtu using stated calorific-value factors supplied by the caller (not computed by the library).
 5. **Cooking and household:** US cup, tablespoon, fluid ounce vs imperial ones; why a bare `gal` or `oz` is rejected unless a profile is chosen.
 6. **Fuel economy:** mpg (US and imperial) to L/100 km (reciprocal shape).

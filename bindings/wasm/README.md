@@ -13,7 +13,6 @@ const d = require('@dimvexa/wasm');   // after `npm install @dimvexa/wasm`; loca
 d.convert(212, 'degF', 'degC');            // 100  (fast path, f64)
 d.convertExact('98.6', 'degF', 'degC');    // 37   (exact rational, rounded once)
 d.convertQuantity('5 ft', 'm');            // "1.524 m"
-d.addQuantities('20 degC', '5 delta_K');   // "25 degC"
 
 const c = new d.DimvexaConversion('m/s', 'km/h');   // parse and compose once
 c.apply(10);                               // 36

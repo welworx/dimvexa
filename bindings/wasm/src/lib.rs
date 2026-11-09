@@ -175,17 +175,3 @@ pub fn error_codes() -> Array {
         .map(|c| JsValue::from_str(c))
         .collect()
 }
-
-/// Adds two quantity texts exactly (`"20 degC"` + `"5 delta_K"`) and returns the result as text.
-/// A temperature point plus a temperature point is refused with code `kind_mismatch`.
-///
-/// # Errors
-///
-/// Throws a `DimvexaError` with a stable `code`.
-#[wasm_bindgen(js_name = addQuantities)]
-pub fn add_quantities(a: &str, b: &str) -> Result<String, JsValue> {
-    let reg = registry()?;
-    let qa = reg.quantity(a).map_err(|e| fail(&e))?;
-    let qb = reg.quantity(b).map_err(|e| fail(&e))?;
-    Ok(qa.checked_add(&qb).map_err(|e| fail(&e))?.to_string())
-}

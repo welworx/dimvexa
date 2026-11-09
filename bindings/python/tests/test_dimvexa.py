@@ -59,12 +59,11 @@ def test_dimension_mismatch() -> None:
 
 
 def test_quantity_kinds() -> None:
-    t = dimvexa.quantity("20 degC")
-    assert str(t + dimvexa.quantity("5 delta_K")) == "25 degC"
+    t = dimvexa.quantity("100 degC")
+    assert t.to("degF").to_float() == 212.0
     with pytest.raises(dimvexa.DimvexaError) as e:
-        t + dimvexa.quantity("5 K")
+        t.to("delta_K")
     assert e.value.code == "kind_mismatch"
-    assert e.value.suggestions == ["delta_K", "delta_degC"]
 
 
 def test_quantity_to() -> None:

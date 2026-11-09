@@ -50,7 +50,7 @@ $ dimvexa units volume      # which volume units exist? (see "Finding a unit" be
 
 - **Exact.** Factors are rational numbers with a source and an exact/measured flag.
 - **Loud.** Ambiguous names (`ton`, `gal`, `oz`), overflow and unsupported requests are errors with stable codes.
-- **Right about temperature.** Points and differences differ: `20 degC + 5 delta_K` works, `20 degC + 5 K` fails and says why.
+- **Right about temperature.** Points and differences differ: `degC` to `K` converts, `delta_degF` to `delta_K` converts, and a point to a difference fails and says which `delta_` unit to use. dimvexa converts; it does not add or subtract.
 - **Fast and honest.** About 0.5 ns per prepared conversion; within 1 ulp (linear) or 2 ulp (temperature scales) of the exact answer, and `apply_exact_f64` gives the correctly rounded value ([`docs/precision.md`](docs/precision.md), [`docs/benchmarks/M0.md`](docs/benchmarks/M0.md)).
 - **Covers the everyday units.** SI and prefixes, US customary and imperial, pressure, energy, power and temperature (about 100 units, more by request).
 - **Extensible by data.** Units live in cited TOML tables; missing one? Open a *Unit request* issue.
