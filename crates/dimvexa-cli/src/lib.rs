@@ -1851,6 +1851,20 @@ where
     code
 }
 
+/// Prints a usage error (JSON on stdout for `--json`, text with the usage on stderr); returns 2.
+fn report_usage_error(u: &UsageError, out: &mut dyn Write, err: &mut dyn Write) -> u8 {
+    if u.json {
+        let _ = writeln!(
+            out,
+            "{}",
+            json_error(u.schema, "usage", &u.message, &[], &u.suggestions)
+        );
+    } else {
+        let _ = writeln!(err, "error[usage]: {}\n\n{USAGE}", u.message);
+    }
+    2
+}
+
 fn run_inner<I>(args: I, out: &mut dyn Write, err: &mut dyn Write, color: Color) -> u8
 where
     I: IntoIterator<Item = String>,
@@ -1858,18 +1872,7 @@ where
     let args: Vec<String> = args.into_iter().collect();
     let (parsed, config_files) = match parse_args(&args) {
         Ok(p) => p,
-        Err(u) => {
-            if u.json {
-                let _ = writeln!(
-                    out,
-                    "{}",
-                    json_error(u.schema, "usage", &u.message, &[], &u.suggestions)
-                );
-            } else {
-                let _ = writeln!(err, "error[usage]: {}\n\n{USAGE}", u.message);
-            }
-            return 2;
-        }
+        Err(u) => return report_usage_error(&u, out, err),
     };
     let args = match parsed {
         Parsed::Help => {
