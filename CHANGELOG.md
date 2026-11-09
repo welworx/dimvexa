@@ -9,7 +9,26 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Added
 
-- `bindings/excel`: spike of an Office.js custom functions add-in (`DIMVEXA.CONVERT`, `DIMVEXA.CONVERTRANGE`, `DIMVEXA.VERSION`) over the WASM build, ADR-015 (proposed). `DIMVEXA.CONVERT` and `DIMVEXA.CONVERTRANGE` take an optional `density` and an optional shipped `config` (ADR-014); the WASM binding gains `convertWith` and `DimvexaConversion.withOptions`. Tested with a mocked Excel runtime and by hand in Excel on the web and on Mac; Windows is untested.
+- `bindings/excel`: spike of an Office.js custom functions add-in (`DIMVEXA.CONVERT`, `DIMVEXA.CONVERTRANGE`, `DIMVEXA.VERSION`) over the WASM build, ADR-016 (proposed). `DIMVEXA.CONVERT` and `DIMVEXA.CONVERTRANGE` take an optional `density` and an optional shipped `config` (ADR-014); the WASM binding gains `convertWith` and `DimvexaConversion.withOptions`. Tested with a mocked Excel runtime and by hand in Excel on the web and on Mac; Windows is untested.
+
+## [0.2.1] - 2026-11-09
+
+### Added
+
+- `dimvexa update [--check] [-y]`: replaces the running binary with the latest GitHub release
+  (ADR-015, modelled on `flatex-pdf-cli upgrade`). It verifies the published SHA-256 before it
+  installs, asks first unless `-y`, never downgrades, and leaves Homebrew and `cargo install`
+  copies to their own tools. `--check` only reports: exit 0 up to date, 3 newer release available,
+  1 error. It uses the system `curl` and `tar`; the workspace stays free of dependencies.
+- CLI: `--help` starts with name, version and tagline and ends with licence, authors, repository and a short disclaimer; `--version` lists the same facts.
+- CLI: `--color auto|always|never` and `CLICOLOR_FORCE=1` control colour; `NO_COLOR` still wins over
+  the environment, and `--color` wins over everything.
+- CLI: `--pretty` prints the `--json` output indented (same fields and order; implies `--json`).
+- CLI: colour for the result and for `error`, `hint` and `note` labels, only on a terminal and
+  never with `NO_COLOR` set or `TERM=dumb`. JSON is never coloured.
+- CLI: `° F` is read as `°F`, and a filler `to` is ignored (`dimvexa convert 0 °C to °F`).
+- CLI: a bare `F` or `C` next to a
+  temperature (or to each other, as in `0 C F`) hints at `degF`/`°F` (`F` is the farad).
 
 ## [0.2.0] - 2026-11-09
 

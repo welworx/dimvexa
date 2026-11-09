@@ -26,12 +26,15 @@ use std::io::Write;
 use dimvexa::{Conversion, Dim, Error, Ratio, Registry, Unit, UnitExpr, registry};
 use dimvexa_config::{Config, ConfigUnit, Constant, Mapping};
 
+mod update;
+
 const USAGE: &str = "\
 Usage:
   dimvexa convert VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
   dimvexa VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
   dimvexa units [--groups | GROUP | UNIT] [--json] [--config NAME_OR_PATH]...
   dimvexa configs [NAME_OR_PATH] [--json]
+  dimvexa update [--check] [-y]
 
 Converts VALUE from unit FROM to unit TO.
 
@@ -44,11 +47,19 @@ Commands:
   configs          list the configs that ship with dimvexa (us, gb, ...)
   configs NAME     show what one config contains: names, units and densities with their
                    conditions and sources; a path shows your own file
+  update           replace this binary with the latest GitHub release (needs curl and tar;
+                   checks the published SHA-256 first; see docs/adr/015-update-command.md)
+  update --check   only report whether a newer release exists; exit 0 up to date, 3 newer
+                   release available, 1 error
+  update -y        do not ask \"Update to vX.Y.Z? [y/N]\" first (also --yes)
 
 Options:
   --exact      print the exact rational result (num/den) instead of a decimal
   --json       machine-readable output (schema dimvexa.convert/2; dimvexa.units/2 for units,
                dimvexa.configs/1 for configs)
+  --color WHEN auto (default: a terminal, unless NO_COLOR is set), always (also
+               CLICOLOR_FORCE=1) or never; JSON is never coloured
+  --pretty     --json, indented for reading (same fields, same order)
   --config NAME_OR_PATH  (beta) apply a config (repeatable, later ones win; see
                docs/adr/014-one-config-mechanism.md). A shipped one is named (us, gb,
                metric-trade, year-julian, year-civil, water); a file has a path (./mine.toml,
@@ -63,6 +74,7 @@ Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
+  dimvexa convert 100 degC degF --pretty
   dimvexa convert 1 ton kg --config us
   dimvexa convert 1 mt kg --config metric-trade
   dimvexa convert 1 L kg --config water --density water_25C
@@ -73,8 +85,252 @@ Precision: the CLI always uses the exact path, so the number printed is the exac
 rounded once to the nearest f64 (0 ulp). The library's fast f64 path is within 1 ulp (linear
 units) or 2 ulp (temperature scales such as degC and degF) of it; see docs/precision.md.
 
-Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
+Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error; `update --check`
+also exits 3 when a newer release exists.
 ";
+
+/// Shown after the project facts; the long form is `docs/licensing.md`.
+const DISCLAIMER: &str = "\
+Provided as is, without warranty. Unit factors and sources can contain errors: verify any
+result you depend on against the primary source, and do not use it as the only safeguard in
+safety-critical, medical, legal, financial or custody-transfer settings. Independent project,
+not affiliated with other unit libraries. Terms: LICENSE-MIT and LICENSE-APACHE.";
+
+/// The value of `--color`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ColorWhen {
+    Auto,
+    Always,
+    Never,
+}
+
+/// Removes `--color WHEN` / `--color=WHEN` from `args`; the last one wins.
+fn take_color_option(args: &mut Vec<String>) -> Result<Option<ColorWhen>, String> {
+    let mut found = None;
+    let mut rest = Vec::with_capacity(args.len());
+    let mut it = std::mem::take(args).into_iter();
+    while let Some(a) = it.next() {
+        let value = if a == "--color" {
+            it.next().filter(|v| !v.starts_with("--"))
+        } else if let Some(v) = a.strip_prefix("--color=") {
+            Some(v.to_string())
+        } else {
+            rest.push(a);
+            continue;
+        };
+        found = Some(match value.as_deref() {
+            Some("auto") => ColorWhen::Auto,
+            Some("always") => ColorWhen::Always,
+            Some("never") => ColorWhen::Never,
+            _ => {
+                *args = rest;
+                return Err("'--color' needs auto, always or never (--color=always)".to_string());
+            }
+        });
+    }
+    *args = rest;
+    Ok(found)
+}
+
+/// Name, version, tagline and where the project lives, from the package metadata.
+fn about() -> String {
+    format!(
+        "License:    {}\nAuthors:    {}\nRepository: {}\n\n{DISCLAIMER}\n",
+        env!("CARGO_PKG_LICENSE"),
+        env!("CARGO_PKG_AUTHORS"),
+        env!("CARGO_PKG_REPOSITORY")
+    )
+}
+
+/// The text of `--help`: a title line, the usage, and the project facts.
+fn help_text() -> String {
+    format!(
+        "dimvexa {} - Exact factors. Loud failures. Zero guessing.\n\n{USAGE}\n{}",
+        env!("CARGO_PKG_VERSION"),
+        about()
+    )
+}
+
+/// Whether each output stream may carry ANSI colour. Off unless the caller turns it on
+/// (the binary does so for a terminal, honouring `NO_COLOR`).
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Color {
+    /// Colour the result on stdout.
+    pub out: bool,
+    /// Colour `error`, `hint` and `note` lines on stderr.
+    pub err: bool,
+}
+
+const BOLD_GREEN: &str = "\x1b[1;32m";
+const CYAN: &str = "\x1b[36m";
+const BOLD_RED: &str = "\x1b[1;31m";
+const YELLOW: &str = "\x1b[33m";
+const RESET: &str = "\x1b[0m";
+
+/// Colours the leading label of `error[..]:`, `hint:` and `note:` lines.
+fn colorize_diagnostics(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    for line in text.split_inclusive('\n') {
+        let split = if line.starts_with("error[") {
+            line.find("]:").map(|i| (i.saturating_add(1), BOLD_RED))
+        } else if line.starts_with("hint:") {
+            Some((5, CYAN))
+        } else if line.starts_with("note:") {
+            Some((5, YELLOW))
+        } else {
+            None
+        };
+        match split.and_then(|(n, c)| Some((line.get(..n)?, line.get(n..)?, c))) {
+            Some((label, rest, c)) => {
+                let _ = write!(out, "{c}{label}{RESET}{rest}");
+            }
+            None => out.push_str(line),
+        }
+    }
+    out
+}
+
+/// A JSON value for re-indenting: scalars are kept as their source text.
+enum Node {
+    Scalar(String),
+    Array(Vec<Self>),
+    Object(Vec<(String, Self)>),
+}
+
+/// Reads one value of the compact JSON that this crate writes. `None` if it is not JSON.
+fn read_node(chars: &[char], i: &mut usize) -> Option<Node> {
+    fn string(chars: &[char], i: &mut usize) -> Option<String> {
+        let start = *i;
+        *i = i.checked_add(1)?;
+        while let Some(&c) = chars.get(*i) {
+            *i = i.checked_add(1)?;
+            match c {
+                '\\' => *i = i.checked_add(1)?,
+                '"' => return Some(chars.get(start..*i)?.iter().collect()),
+                _ => {}
+            }
+        }
+        None
+    }
+    match *chars.get(*i)? {
+        '"' => string(chars, i).map(Node::Scalar),
+        open @ ('[' | '{') => {
+            *i = i.checked_add(1)?;
+            let close = if open == '[' { ']' } else { '}' };
+            let (mut items, mut fields) = (Vec::new(), Vec::new());
+            if chars.get(*i) == Some(&close) {
+                *i = i.checked_add(1)?;
+            } else {
+                loop {
+                    if open == '{' {
+                        let key = string(chars, i)?;
+                        if chars.get(*i) != Some(&':') {
+                            return None;
+                        }
+                        *i = i.checked_add(1)?;
+                        fields.push((key, read_node(chars, i)?));
+                    } else {
+                        items.push(read_node(chars, i)?);
+                    }
+                    let c = *chars.get(*i)?;
+                    *i = i.checked_add(1)?;
+                    if c == close {
+                        break;
+                    }
+                    if c != ',' {
+                        return None;
+                    }
+                }
+            }
+            Some(if open == '[' {
+                Node::Array(items)
+            } else {
+                Node::Object(fields)
+            })
+        }
+        _ => {
+            let start = *i;
+            while chars.get(*i).is_some_and(|c| !matches!(c, ',' | ']' | '}')) {
+                *i = i.checked_add(1)?;
+            }
+            Some(Node::Scalar(chars.get(start..*i)?.iter().collect()))
+        }
+    }
+}
+
+/// An array of scalars stays on one line while it is short.
+fn fits_on_a_line(items: &[Node]) -> bool {
+    let mut width = 0usize;
+    for n in items {
+        match n {
+            Node::Scalar(s) => width = width.saturating_add(s.chars().count()).saturating_add(2),
+            _ => return false,
+        }
+    }
+    width <= 60
+}
+
+/// Writes `node` indented by two spaces per level. Short arrays of scalars stay on one line.
+fn write_node(node: &Node, depth: usize, out: &mut String) {
+    let pad = |n: usize| "  ".repeat(n);
+    match node {
+        Node::Scalar(s) => out.push_str(s),
+        Node::Array(items) if fits_on_a_line(items) => {
+            out.push('[');
+            for (k, n) in items.iter().enumerate() {
+                if k > 0 {
+                    out.push_str(", ");
+                }
+                write_node(n, depth, out);
+            }
+            out.push(']');
+        }
+        Node::Array(items) => {
+            out.push_str("[\n");
+            for (k, n) in items.iter().enumerate() {
+                out.push_str(&pad(depth.saturating_add(1)));
+                write_node(n, depth.saturating_add(1), out);
+                out.push_str(if k.saturating_add(1) < items.len() {
+                    ",\n"
+                } else {
+                    "\n"
+                });
+            }
+            out.push_str(&pad(depth));
+            out.push(']');
+        }
+        Node::Object(fields) if fields.is_empty() => out.push_str("{}"),
+        Node::Object(fields) => {
+            out.push_str("{\n");
+            for (k, (key, n)) in fields.iter().enumerate() {
+                out.push_str(&pad(depth.saturating_add(1)));
+                let _ = write!(out, "{key}: ");
+                write_node(n, depth.saturating_add(1), out);
+                out.push_str(if k.saturating_add(1) < fields.len() {
+                    ",\n"
+                } else {
+                    "\n"
+                });
+            }
+            out.push_str(&pad(depth));
+            out.push('}');
+        }
+    }
+}
+
+/// Re-indents one line of compact JSON (`--pretty`); anything that is not JSON is returned as is.
+fn pretty_json(line: &str) -> String {
+    let chars: Vec<char> = line.chars().collect();
+    let mut i = 0;
+    match read_node(&chars, &mut i) {
+        Some(node) if i == chars.len() => {
+            let mut out = String::new();
+            write_node(&node, 0, &mut out);
+            out
+        }
+        _ => line.to_string(),
+    }
+}
 
 /// Parsed command line.
 struct Args {
@@ -107,6 +363,11 @@ enum Parsed {
     Configs {
         target: Option<String>,
         json: bool,
+    },
+    /// `dimvexa update [--check] [--yes]`.
+    Update {
+        check: bool,
+        yes: bool,
     },
     Help,
     Version,
@@ -257,6 +518,53 @@ fn parse_configs(
     }
 }
 
+/// Checks what the command line says next to `update`: `extra` is a positional argument,
+/// `--exact`, `--json` or `--groups`; `value_options` is `--config` or `--density`. A refusal is
+/// never a `--json` error: the update has no JSON output and no schema.
+fn check_update_args(
+    extra: bool,
+    value_options: bool,
+    schema: &'static str,
+) -> Result<(), UsageError> {
+    let plain = |message: &str| UsageError {
+        message: message.to_string(),
+        json: false,
+        schema,
+        suggestions: Vec::new(),
+    };
+    if extra {
+        return Err(plain("'update' takes only --check and -y"));
+    }
+    if value_options {
+        return Err(plain("'update' does not take --config or --density"));
+    }
+    Ok(())
+}
+
+/// Forgives how people write a conversion: a degree sign set apart from its scale
+/// (`° F` is `°F`) and a filler `to` (`0 °C to °F` is `0 °C °F`).
+fn normalize_convert(words: &[&str]) -> Vec<String> {
+    let mut out: Vec<String> = Vec::with_capacity(words.len());
+    let mut i = 0;
+    while let Some(&w) = words.get(i) {
+        i = i.saturating_add(1);
+        if matches!(w, "°" | "º") {
+            if let Some(&scale) = words.get(i).filter(|n| matches!(**n, "C" | "F" | "R")) {
+                out.push(format!("°{scale}"));
+                i = i.saturating_add(1);
+                continue;
+            }
+        }
+        out.push(w.to_string());
+    }
+    if let [value, from, to, dest] = out.as_slice() {
+        if to == "to" {
+            return vec![value.clone(), from.clone(), dest.clone()];
+        }
+    }
+    out
+}
+
 fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     let (opts, args) = split_options(all)?;
     let configs = opts.configs;
@@ -271,8 +579,11 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     };
     let mut positional: Vec<&str> = Vec::new();
     let (mut exact, mut want_json, mut want_groups) = (false, false, false);
+    let (mut want_check, mut want_yes) = (false, false);
     for a in args {
         match a.as_str() {
+            "--check" => want_check = true,
+            "-y" | "--yes" => want_yes = true,
             "--exact" => exact = true,
             "--json" => want_json = true,
             "--groups" => want_groups = true,
@@ -281,6 +592,25 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
             s if s.starts_with("--") => return Err(usage(format!("unknown option '{s}'"))),
             s => positional.push(s),
         }
+    }
+    if let Some((&"update", rest)) = positional.split_first() {
+        check_update_args(
+            !rest.is_empty() || exact || want_json || want_groups,
+            !configs.is_empty() || opts.density.is_some(),
+            schema,
+        )?;
+        return Ok((
+            Parsed::Update {
+                check: want_check,
+                yes: want_yes,
+            },
+            configs,
+        ));
+    }
+    if want_check || want_yes {
+        return Err(usage(
+            "'--check' and '-y' only apply to 'update'".to_string(),
+        ));
     }
     if let Some((&"units", rest)) = positional.split_first() {
         if exact {
@@ -314,13 +644,14 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     if positional.first() == Some(&"convert") {
         positional.remove(0);
     }
+    let positional = normalize_convert(&positional);
     match positional.as_slice() {
         [value, from, to] => Ok((
             Parsed::Convert(Args {
                 density,
-                value: (*value).to_string(),
-                from: (*from).to_string(),
-                to: (*to).to_string(),
+                value: value.clone(),
+                from: from.clone(),
+                to: to.clone(),
                 exact,
                 json: want_json,
             }),
@@ -603,11 +934,16 @@ fn resolve_density(spec: &str, loaded: &Loaded) -> Result<Constant, DensityError
         })
 }
 
-fn render_text(o: &Outcome<'_>) -> String {
-    if o.args.exact {
-        format!("{} {}", o.exact.to_fraction_string(), o.to)
+fn render_text(o: &Outcome<'_>, color: bool) -> String {
+    let value = if o.args.exact {
+        o.exact.to_fraction_string()
     } else {
-        format!("{} {}", f64_text(o.approx), o.to)
+        f64_text(o.approx)
+    };
+    if color {
+        format!("{BOLD_GREEN}{value}{RESET} {CYAN}{}{RESET}", o.to)
+    } else {
+        format!("{value} {}", o.to)
     }
 }
 
@@ -1456,25 +1792,91 @@ pub fn run<I>(args: I, out: &mut dyn Write, err: &mut dyn Write) -> u8
 where
     I: IntoIterator<Item = String>,
 {
-    let args: Vec<String> = args.into_iter().collect();
-    let (parsed, config_files) = match parse_args(&args) {
-        Ok(p) => p,
-        Err(u) => {
-            if u.json {
-                let _ = writeln!(
-                    out,
-                    "{}",
-                    json_error(u.schema, "usage", &u.message, &[], &u.suggestions)
-                );
+    run_with(args, out, err, Color::default())
+}
+
+/// Like [`run`], with ANSI colour on the streams `color` names. JSON output is never coloured.
+pub fn run_with<I>(args: I, out: &mut dyn Write, err: &mut dyn Write, color: Color) -> u8
+where
+    I: IntoIterator<Item = String>,
+{
+    let mut args: Vec<String> = args.into_iter().collect();
+    let mut color = color;
+    match take_color_option(&mut args) {
+        Ok(Some(when)) => {
+            color = match when {
+                ColorWhen::Always => Color {
+                    out: true,
+                    err: true,
+                },
+                ColorWhen::Never => Color {
+                    out: false,
+                    err: false,
+                },
+                ColorWhen::Auto => color,
+            };
+        }
+        Ok(None) => {}
+        Err(message) => {
+            if args.iter().any(|a| a == "--json" || a == "--pretty") {
+                let line = json_error(command_schema(&args), "usage", &message, &[], &[]);
+                let _ = writeln!(out, "{line}");
             } else {
-                let _ = writeln!(err, "error[usage]: {}\n\n{USAGE}", u.message);
+                let _ = writeln!(err, "error[usage]: {message}\n\n{USAGE}");
             }
             return 2;
         }
+    }
+    if args.iter().any(|a| a == "--pretty") {
+        // `--pretty` is `--json` with indentation.
+        args.retain(|a| a != "--pretty");
+        if !args.iter().any(|a| a == "--json") {
+            args.push("--json".to_string());
+        }
+        let mut buffered = Vec::new();
+        let code = run_with(args, &mut buffered, err, color);
+        let text = String::from_utf8_lossy(&buffered);
+        for line in text.lines() {
+            let _ = writeln!(out, "{}", pretty_json(line));
+        }
+        return code;
+    }
+    if !color.err {
+        return run_inner(args, out, err, color);
+    }
+    let mut buffered = Vec::new();
+    let code = run_inner(args, out, &mut buffered, color);
+    let text = String::from_utf8_lossy(&buffered);
+    let _ = write!(err, "{}", colorize_diagnostics(&text));
+    code
+}
+
+/// Prints a usage error (JSON on stdout for `--json`, text with the usage on stderr); returns 2.
+fn report_usage_error(u: &UsageError, out: &mut dyn Write, err: &mut dyn Write) -> u8 {
+    if u.json {
+        let _ = writeln!(
+            out,
+            "{}",
+            json_error(u.schema, "usage", &u.message, &[], &u.suggestions)
+        );
+    } else {
+        let _ = writeln!(err, "error[usage]: {}\n\n{USAGE}", u.message);
+    }
+    2
+}
+
+fn run_inner<I>(args: I, out: &mut dyn Write, err: &mut dyn Write, color: Color) -> u8
+where
+    I: IntoIterator<Item = String>,
+{
+    let args: Vec<String> = args.into_iter().collect();
+    let (parsed, config_files) = match parse_args(&args) {
+        Ok(p) => p,
+        Err(u) => return report_usage_error(&u, out, err),
     };
     let args = match parsed {
         Parsed::Help => {
-            let _ = write!(out, "{USAGE}");
+            let _ = write!(out, "{}", help_text());
             return 0;
         }
         Parsed::Version => {
@@ -1485,6 +1887,7 @@ where
                 env!("CARGO_PKG_VERSION"),
                 dimvexa::data_version()
             );
+            let _ = write!(out, "{}", about());
             return 0;
         }
         Parsed::Units { target, json } => {
@@ -1493,6 +1896,7 @@ where
         Parsed::Configs { target, json } => {
             return run_configs(target.as_deref(), json, out, err);
         }
+        Parsed::Update { check, yes } => return update::run(check, yes, out, err),
         Parsed::Convert(a) => a,
     };
     let loaded = match load(&config_files) {
@@ -1534,7 +1938,7 @@ where
                     Err(e) => return fail(&args, &e, out, err),
                 }
             } else {
-                render_text(&outcome)
+                render_text(&outcome, color.out)
             };
             let _ = writeln!(out, "{text}");
             if !args.json {
@@ -1573,6 +1977,24 @@ fn fail(args: &Args, e: &Error, out: &mut dyn Write, err: &mut dyn Write) -> u8 
     } else {
         let _ = writeln!(err, "error[{}]: {e}", e.code());
         if let Error::DimensionMismatch { from, to } = e {
+            let bare = |w: &str| matches!(w, "F" | "C");
+            for (word, other, other_word) in
+                [(&args.to, *from, &args.from), (&args.from, *to, &args.to)]
+            {
+                // A bare F or C beside a temperature, or beside another bare F or C
+                // (`0 C F`), is almost always a temperature scale.
+                if bare(word) && (other == Dim::K || bare(other_word)) {
+                    let (what, fix) = if word == "F" {
+                        ("farad", "degF or °F")
+                    } else {
+                        ("coulomb", "degC or °C")
+                    };
+                    let _ = writeln!(
+                        err,
+                        "hint: '{word}' alone is the {what}, not a temperature scale; for the scale write {fix}"
+                    );
+                }
+            }
             if Constant::density_needed(*from, *to) && args.density.is_none() {
                 let _ = writeln!(
                     err,
@@ -1649,6 +2071,163 @@ mod tests {
         assert_eq!(run_str(&["1", "m", "km", "--groups"]).0, 2);
         assert_eq!(run_str(&["units", "length", "mass"]).0, 2);
         assert_eq!(run_str(&["convert", "units"]).0, 2);
+    }
+
+    #[test]
+    fn forgives_degree_spacing_and_to() {
+        for args in [
+            ["0", "°C", "°F"].as_slice(),
+            &["0", "°C", "°", "F"],
+            &["0", "°C", "to", "°F"],
+            &["convert", "0", "°C", "to", "°", "F"],
+        ] {
+            assert_eq!(
+                run_str(args),
+                (0, "32 °F\n".into(), String::new()),
+                "{args:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn bare_f_after_a_temperature_hints_at_degf() {
+        let (code, _, err) = run_str(&["0", "°C", "F"]);
+        assert_eq!(code, 1);
+        assert!(err.contains("'F' alone is the farad"), "{err}");
+        assert!(err.contains("write degF or °F"), "{err}");
+    }
+
+    #[test]
+    fn normalisation_edges() {
+        // the masculine ordinal sign joins; an angle degree before a real unit does not.
+        assert_eq!(run_str(&["0", "°C", "º", "F"]).1, "32 °F\n");
+        assert_eq!(run_str(&["180", "°", "rad"]).0, 0);
+        assert_eq!(run_str(&["0", "°C", "to"]).0, 1);
+        assert_eq!(run_str(&["units", "°", "F"]).0, 2);
+    }
+
+    #[test]
+    fn scale_hints_cover_both_sides() {
+        let hint = |a: &[&str]| run_str(a).2;
+        assert!(hint(&["32", "F", "°C"]).contains("'F' alone is the farad"));
+        assert!(hint(&["0", "°C", "C"]).contains("'C' alone is the coulomb"));
+        assert!(hint(&["0", "C", "F"]).contains("write degC or °C"));
+        assert!(hint(&["0", "C", "F"]).contains("write degF or °F"));
+        assert!(!hint(&["1", "m", "F"]).contains("hint:"));
+    }
+
+    #[test]
+    fn diagnostics_colour_labels_only() {
+        let text = "error[usage]: x\nhint: y\nnote: z\nerror[ broken\nplain\n";
+        let c = colorize_diagnostics(text);
+        assert!(c.contains("\x1b[1;31merror[usage]\x1b[0m: x"));
+        assert!(c.contains("\x1b[36mhint:\x1b[0m y"));
+        assert!(c.contains("\x1b[33mnote:\x1b[0m z"));
+        assert!(c.contains("error[ broken\nplain\n"));
+    }
+
+    #[test]
+    fn pretty_passes_help_and_version_through() {
+        assert_eq!(run_str(&["--help", "--pretty"]).1, run_str(&["--help"]).1);
+        assert_eq!(
+            run_str(&["--version", "--pretty"]).1,
+            run_str(&["--version"]).1
+        );
+        let both = run_str(&["1", "m", "km", "--pretty", "--json"]).1;
+        assert_eq!(both, run_str(&["1", "m", "km", "--pretty"]).1);
+        let (_, units, _) = run_str(&["units", "gal", "--pretty"]);
+        assert!(units.starts_with("{\n"), "{units}");
+    }
+
+    #[test]
+    fn color_option_overrides_the_default() {
+        let run = |a: &[&str], c: Color| {
+            let (mut out, mut err) = (Vec::new(), Vec::new());
+            let code = run_with(a.iter().map(ToString::to_string), &mut out, &mut err, c);
+            (
+                code,
+                String::from_utf8(out).unwrap(),
+                String::from_utf8(err).unwrap(),
+            )
+        };
+        let on = Color {
+            out: true,
+            err: true,
+        };
+        let off = Color::default();
+        assert!(
+            run(&["1", "m", "km", "--color=always"], off)
+                .1
+                .contains('\x1b')
+        );
+        assert!(
+            run(&["--color", "always", "1", "m", "km"], off)
+                .1
+                .contains('\x1b')
+        );
+        assert!(
+            !run(&["1", "m", "km", "--color=never"], on)
+                .1
+                .contains('\x1b')
+        );
+        assert!(
+            run(&["1", "m", "km", "--color=auto"], on)
+                .1
+                .contains('\x1b')
+        );
+        assert!(
+            !run(&["1", "m", "km", "--color=always", "--json"], off)
+                .1
+                .contains('\x1b')
+        );
+        let (code, _, err) = run(&["1", "m", "km", "--color=sometimes"], off);
+        assert_eq!(code, 2);
+        assert!(err.contains("auto, always or never"));
+        assert_eq!(run(&["1", "m", "km", "--color"], off).0, 2);
+    }
+
+    #[test]
+    fn color_only_where_asked() {
+        let (mut out, mut err) = (Vec::new(), Vec::new());
+        let on = Color {
+            out: true,
+            err: true,
+        };
+        let args = ["0", "°C", "F"].map(String::from);
+        run_with(args, &mut out, &mut err, on);
+        assert!(
+            String::from_utf8(err)
+                .unwrap()
+                .contains("\x1b[1;31merror[dimension_mismatch]\x1b[0m")
+        );
+        let args = ["0", "degC", "degF"].map(String::from);
+        let mut out = Vec::new();
+        run_with(args, &mut out, &mut Vec::new(), on);
+        assert_eq!(
+            String::from_utf8(out).unwrap(),
+            "\x1b[1;32m32\x1b[0m \x1b[36mdegF\x1b[0m\n"
+        );
+        let (_, json, _) = run_str(&["0", "degC", "degF", "--json"]);
+        assert!(!json.contains('\x1b'));
+    }
+
+    #[test]
+    fn pretty_is_json_with_indentation() {
+        let (code, out, _) = run_str(&["100", "degC", "degF", "--pretty"]);
+        assert_eq!(code, 0);
+        assert!(
+            out.contains("\n  \"output\": {\n    \"value\": \"212\""),
+            "{out}"
+        );
+        assert!(
+            out.contains("\"dimension\": [0, 0, 0, 0, 1, 0, 0]"),
+            "{out}"
+        );
+        let compact = run_str(&["100", "degC", "degF", "--json"]).1;
+        assert_eq!(pretty_json(compact.trim()), out.trim_end());
+        let (code, out, _) = run_str(&["1", "m", "--pretty"]);
+        assert_eq!(code, 2);
+        assert!(out.contains("\"code\": \"usage\""));
     }
 
     #[test]

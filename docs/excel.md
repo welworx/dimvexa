@@ -1,10 +1,10 @@
 # Dimvexa for Excel
 
 Unit conversion in worksheet cells, with the same exact factors and loud failures as the library.
-The add-in is an Office.js custom functions add-in over the WASM build (ADR-015, proposed). It is
+The add-in is an Office.js custom functions add-in over the WASM build (ADR-016, proposed). It is
 a spike: it works, but only part of it has been tested (see [Status](#status)).
 
-Source: [`bindings/excel`](../bindings/excel). Decision record: [ADR-015](adr/015-excel-add-in.md).
+Source: [`bindings/excel`](../bindings/excel). Decision record: [ADR-016](adr/016-excel-add-in.md).
 
 ## What you get
 
@@ -246,7 +246,7 @@ testing, a hosted version (so for now you serve the files yourself, as above).
 
 ## Related
 
-* [ADR-015](adr/015-excel-add-in.md): the decision and the open questions.
+* [ADR-016](adr/016-excel-add-in.md): the decision and the open questions.
 * [ADR-011](adr/011-wasm-binding.md): the WASM binding the add-in uses.
 * [ADR-014](adr/014-one-config-mechanism.md): configs and densities.
 * [`bindings/excel/README.md`](../bindings/excel/README.md): the developer notes next to the code.

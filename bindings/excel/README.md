@@ -1,4 +1,4 @@
-# Dimvexa for Excel (spike, ADR-015)
+# Dimvexa for Excel (spike, ADR-016)
 
 User guide, how to add it to Excel and hosting plan: [`docs/excel.md`](../../docs/excel.md).
 
@@ -15,7 +15,7 @@ Verified by hand in **Excel on the web and in Mac desktop Excel** (2026-11-09): 
 JavaScript-only runtime, `VERSION`, `CONVERT` and a refusal (`#VALUE!`) behave as designed.
 
 What is **not** verified: Windows desktop Excel, and performance. On Mac every custom function call takes about
-2 seconds, even one without WASM (ADR-015). The functions appear in cells, not in the add-ins list (no ribbon button).
+2 seconds, even one without WASM (ADR-016). The functions appear in cells, not in the add-ins list (no ribbon button).
 
 ## Build and try
 
@@ -34,7 +34,7 @@ The npm tools are development aids only; nothing here is a dependency of the lib
 
 * Classic scripts, no bundler: the `no-modules` glue plus the `.wasm` embedded as base64
   (about 300 KB), so the runtime never fetches the binary.
-* Functions are pure, so none is volatile or streaming. Once the module is compiled (it starts at script load) they return plain values, not Promises, so Excel treats them as synchronous; a call that arrives earlier returns a Promise (#BUSY!). Making them synchronous helped little on Mac: a diagnostic function that only returned `x + 1` in JavaScript took the same 2 seconds, so that lag is Excel for Mac's, not the add-in's (ADR-015).
+* Functions are pure, so none is volatile or streaming. Once the module is compiled (it starts at script load) they return plain values, not Promises, so Excel treats them as synchronous; a call that arrives earlier returns a Promise (#BUSY!). Making them synchronous helped little on Mac: a diagnostic function that only returned `x + 1` in JavaScript took the same 2 seconds, so that lag is Excel for Mac's, not the add-in's (ADR-016).
 * The `DIMVEXA.` namespace keeps clear of Excel's built-in `CONVERT`.
 * `DIMVEXA.CONVERTRANGE(range, from, to)` converts a whole range with one composed conversion and one WASM call (`applyBatch`) and spills the result.
 * Both conversion functions take two optional arguments after `to`: `density` and `config`

@@ -24,7 +24,7 @@ default-members = [
 exclude = ["extras", "fuzz", "benchmarks", "bindings"]
 
 [workspace.package]
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
@@ -32,16 +32,16 @@ repository = "https://github.com/welworx/dimvexa"
 homepage = "https://github.com/welworx/dimvexa"
 documentation = "https://docs.rs/dimvexa"
 readme = "README.md"
-authors = ["The Dimvexa contributors"]
+authors = ["Werner Liemberger"]
 keywords = ["units", "unit-conversion", "dimensional-analysis", "science", "engineering"]
 categories = ["science", "mathematics"]
 
 [workspace.dependencies]
-dimvexa-core = { version = "0.2.0", path = "crates/dimvexa-core" }
-dimvexa-data = { version = "0.2.0", path = "crates/dimvexa-data" }
-dimvexa-config = { version = "0.2.0", path = "crates/dimvexa-config" }
-dimvexa = { version = "0.2.0", path = "crates/dimvexa" }
-dimvexa-testkit = { version = "0.2.0", path = "crates/dimvexa-testkit" }
+dimvexa-core = { version = "0.2.1", path = "crates/dimvexa-core" }
+dimvexa-data = { version = "0.2.1", path = "crates/dimvexa-data" }
+dimvexa-config = { version = "0.2.1", path = "crates/dimvexa-config" }
+dimvexa = { version = "0.2.1", path = "crates/dimvexa" }
+dimvexa-testkit = { version = "0.2.1", path = "crates/dimvexa-testkit" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

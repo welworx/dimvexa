@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-// Excel custom functions over the Dimvexa WASM build (ADR-015). No conversion logic lives here.
+// Excel custom functions over the Dimvexa WASM build (ADR-016). No conversion logic lives here.
 // Loaded after dimvexa-glue.js (defines `wasm_bindgen`) and dimvexa-wasm-b64.js (defines
 // `DIMVEXA_WASM_B64`) by functions.html.
 /* global wasm_bindgen, DIMVEXA_WASM_B64, CustomFunctions */

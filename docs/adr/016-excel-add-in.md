@@ -1,4 +1,4 @@
-# ADR-015: The Excel add-in is an Office.js custom functions add-in over the WASM build
+# ADR-016: The Excel add-in is an Office.js custom functions add-in over the WASM build
 
 Status: Proposed (direction chosen by the owner, 2026-11-09: one Office.js add-in for every
 platform; the spike below is built, but not yet run in Excel)

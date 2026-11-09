@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Runs the built add-in assets in Node with a mocked Excel runtime: the functions run the real
 // WASM build and are checked against known conversions. Run `./build.sh` first, then
-// `node test/functions.test.js`. This does not prove anything about real Excel (see ADR-015).
+// `node test/functions.test.js`. This does not prove anything about real Excel (see ADR-016).
 "use strict";
 const fs = require("fs");
 const path = require("path");
