@@ -14,7 +14,7 @@ implemented.
 
 Today `ton`, `mile`, `yr` and `year` are refused as ambiguous (ADR-006) and the error says "or
 choose a profile", which does not exist. Mass to volume needs a density, and the only way to
-supply one is a `[[bridge]]` in a file the user writes. ADR-009 rule 8 forbids shipped bridges,
+supply one is a `[[bridge]]` in a file the user writes, selected with `--bridge`. ADR-009 rule 8 forbids shipped bridges,
 so even water needs a user file.
 
 Separately, the core offers temperature arithmetic (`Quantity` add and subtract with a `Kind`
@@ -35,17 +35,28 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
 2. **"Profile" disappears as a separate concept.** `--profile` is not added. A bundled config is
    "a config that ships with dimvexa", with the same format and the same validation as a user
    file. The JSON field `profile` stays and stays `null` (removing a field is breaking).
-3. **Bundled configs may carry densities.** ADR-009 rule 8 ("shipped profiles carry no bridge")
-   is replaced by: a bundled bridge needs `conditions` and a `source` verified against the
+3. **"Bridge" leaves the user-facing vocabulary; density replaces it.** Only densities exist
+   (KL-5), so the config table is `[[density]]` (no `kind` field) and the option is
+   `--density NAME_OR_VALUE`, replacing `[[bridge]]` and `--bridge NAME`:
+   * a name (no digits-and-unit form) selects a `[[density]]` from the loaded configs;
+   * a literal such as `--density 998.2067kg/m3` is the caller's own number, and its result says
+     "density supplied by the caller, no source".
+   The config layer is beta, so renaming the table is allowed; the old names are refused with a
+   message that names the new ones. A later `molar_mass` gets its own table `[[molar_mass]]` and
+   option `--molar-mass`, with its unit (kg/mol) fixed by the table, not by a field.
+   **Rust names stay**: `Bridge` and `BridgeKind` remain the types in `dimvexa-config`
+   ("a caller-supplied constant for a conversion the core refuses"). `BridgeKind` is already
+   `#[non_exhaustive]`, each table maps to one variant, and a new kind is a new variant, not a
+   new type. The JSON output object stays `bridge` within `dimvexa.convert/1` (removing a field
+   is breaking); it gains no new name.
+4. **Bundled configs may carry densities.** ADR-009 rule 8 ("shipped profiles carry no bridge")
+   is replaced by: a bundled density needs `conditions` and a `source` verified against the
    original, like a shipped unit, and its name states the conditions (`water_20C`, never
    `water`). A bundled config can include a density so that `--config us` makes `1 L kg` work
-   with a stated water density. A density is still never computed (ADR-001): the library
-   multiplies by the number written in the config.
-4. **A density can also come from the caller.** The `[[bridge]]` table in the user's own config
-   stays. A literal, `--density 998.2067kg/m3`, is accepted too; its result echoes "density
-   supplied by the caller, no source". Every bridged result is `measured`, carries the
-   assumption on stderr in text mode and in the JSON `bridge` object, and adds the source to
-   `sources` (unchanged from ADR-009 rule 4).
+   with a stated water density. A density is never computed (ADR-001): the library multiplies by
+   the number written in the config or on the command line. Every result that uses one is
+   `measured`, carries the assumption on stderr in text mode and in the JSON `bridge` object, and
+   adds the source to `sources` (unchanged from ADR-009 rule 4).
 5. **A command to see what is included.** `dimvexa configs` lists the bundled configs;
    `dimvexa configs NAME` shows what one contains: the names it maps, the units it defines and
    each density with its value, `conditions` and `source`. `--json` gives a stable schema
@@ -78,7 +89,10 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
 * **OPEN 4: scope of the removal in point 7.** The public items that go, and whether anything
   else (the `Kind` add/sub rules in the docs, ADR-005 notes) needs a note. Checked against the
   code before the removal is written.
-* **OPEN 5: the literal `--density`.** Whether it ships with the first change or later.
+* **OPEN 5: the literal `--density 998.2067kg/m3`.** Whether it ships with the first change or
+  later, and its accepted unit forms (suggested: kg/m3, g/cm3, g/mL, kg/L, lb/ft3).
+* **OPEN 6: molar mass.** Table and option names (`[[molar_mass]]`, `--molar-mass`) are only
+  reserved here; no values ship until a primary source is checked.
 
 ## Consequences
 
