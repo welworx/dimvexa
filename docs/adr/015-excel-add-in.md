@@ -35,8 +35,12 @@ add-in never shapes the core).
    (2026-11-09, owner's test, sideloaded through the `wef` folder): also works**, with a noticeable
    time lag that is not yet measured or explained. Node (V8) on a dev machine spends about 25 to
    50 ms on decode, compile and the first call, about 6 microseconds per later call and about
-   8 ms for a 10 000 cell range, so the lag is not the conversion; suspects are Excel's runtime
-   start, the dev server (`-c-1` disables caching) and JavaScriptCore compile time. Still open:
+   8 ms for a 10 000 cell range, so the lag is not the conversion. Measured by the owner on Mac
+   Excel: every call takes about 2 seconds, also for a diagnostic function that only returned
+   `x + 1` in JavaScript, and also after making the functions synchronous. The delay is Excel for
+   Mac's per-call cost, not the add-in's or WASM's; it makes many single-cell formulas slow there
+   and is the reason to prefer `DIMVEXA.CONVERTRANGE` for bulk work. Not yet compared: Windows,
+   the web (felt fast, not timed) and a real host instead of the dev server. Still open:
    Windows desktop. The first call after sideloading took a while; the cause (registration or
    WASM compile) is not measured.
 2. Does Excel on Mac support custom functions (Microsoft pages disagree)?
