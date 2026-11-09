@@ -22,8 +22,6 @@ criterion = "0.8"
 # The library and its runner must be the same version: pin both exactly. Install the runner
 # with `cargo install iai-callgrind-runner --version 0.16.1 --locked`.
 iai-callgrind = "=0.16.1"
-insta = "1"
-assert_cmd = "2"
 
 [[bench]]
 name = "criterion"
