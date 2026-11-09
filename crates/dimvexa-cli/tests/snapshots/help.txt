@@ -51,5 +51,5 @@ units) or 2 ulp (temperature scales such as degC and degF) of it; see docs/preci
 Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
 
 License:    MIT OR Apache-2.0
-Authors:    The Dimvexa contributors
+Authors:    Werner Liemberger
 Repository: https://github.com/welworx/dimvexa
