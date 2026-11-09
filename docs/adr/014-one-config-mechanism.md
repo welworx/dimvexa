@@ -44,10 +44,12 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
    The config layer is beta, so renaming the table is allowed; the old names are refused with a
    message that names the new ones. A later `molar_mass` gets its own table `[[molar_mass]]` and
    option `--molar-mass`, with its unit (kg/mol) fixed by the table, not by a field.
-   **Rust names stay**: `Bridge` and `BridgeKind` remain the types in `dimvexa-config`
-   ("a caller-supplied constant for a conversion the core refuses"). `BridgeKind` is already
-   `#[non_exhaustive]`, each table maps to one variant, and a new kind is a new variant, not a
-   new type.
+   **Rust types are renamed** (breaking, accepted): `Bridge` becomes `Constant` and
+   `BridgeKind` becomes `ConstantKind` in `dimvexa-config` ("a caller-supplied constant for a
+   conversion the core refuses"), and `Bridge::conversion` and the related error and core items
+   follow. `ConstantKind` stays `#[non_exhaustive]` with one variant, `Density`; each config
+   table maps to one variant, and a new kind (molar mass) is a new variant, not a new type.
+   The word "bridge" then no longer appears in the code, the CLI, the config or the JSON.
    **JSON changes now (breaking, accepted).** Within `dimvexa.convert/1` a field cannot be
    removed or renamed, so the schemas move to `dimvexa.convert/2` and `dimvexa.units/2`:
    * the `bridge` object becomes `density` (null when none was used), with the same members;
