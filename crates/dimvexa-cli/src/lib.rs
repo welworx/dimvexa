@@ -49,6 +49,8 @@ Options:
   --exact      print the exact rational result (num/den) instead of a decimal
   --json       machine-readable output (schema dimvexa.convert/2; dimvexa.units/2 for units,
                dimvexa.configs/1 for configs)
+  --color WHEN auto (default: a terminal, unless NO_COLOR is set), always (also
+               CLICOLOR_FORCE=1) or never; JSON is never coloured
   --pretty     --json, indented for reading (same fields, same order)
   --config NAME_OR_PATH  (beta) apply a config (repeatable, later ones win; see
                docs/adr/014-one-config-mechanism.md). A shipped one is named (us, gb,
@@ -84,6 +86,42 @@ Provided as is, without warranty. Unit factors and sources can contain errors: v
 result you depend on against the primary source, and do not use it as the only safeguard in
 safety-critical, medical, legal, financial or custody-transfer settings. Independent project,
 not affiliated with other unit libraries. Terms: LICENSE-MIT and LICENSE-APACHE.";
+
+/// The value of `--color`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ColorWhen {
+    Auto,
+    Always,
+    Never,
+}
+
+/// Removes `--color WHEN` / `--color=WHEN` from `args`; the last one wins.
+fn take_color_option(args: &mut Vec<String>) -> Result<Option<ColorWhen>, String> {
+    let mut found = None;
+    let mut rest = Vec::with_capacity(args.len());
+    let mut it = std::mem::take(args).into_iter();
+    while let Some(a) = it.next() {
+        let value = if a == "--color" {
+            it.next().filter(|v| !v.starts_with("--"))
+        } else if let Some(v) = a.strip_prefix("--color=") {
+            Some(v.to_string())
+        } else {
+            rest.push(a);
+            continue;
+        };
+        found = Some(match value.as_deref() {
+            Some("auto") => ColorWhen::Auto,
+            Some("always") => ColorWhen::Always,
+            Some("never") => ColorWhen::Never,
+            _ => {
+                *args = rest;
+                return Err("'--color' needs auto, always or never (--color=always)".to_string());
+            }
+        });
+    }
+    *args = rest;
+    Ok(found)
+}
 
 /// Name, version, tagline and where the project lives, from the package metadata.
 fn about() -> String {
@@ -1704,6 +1742,32 @@ where
     I: IntoIterator<Item = String>,
 {
     let mut args: Vec<String> = args.into_iter().collect();
+    let mut color = color;
+    match take_color_option(&mut args) {
+        Ok(Some(when)) => {
+            color = match when {
+                ColorWhen::Always => Color {
+                    out: true,
+                    err: true,
+                },
+                ColorWhen::Never => Color {
+                    out: false,
+                    err: false,
+                },
+                ColorWhen::Auto => color,
+            };
+        }
+        Ok(None) => {}
+        Err(message) => {
+            if args.iter().any(|a| a == "--json" || a == "--pretty") {
+                let line = json_error(command_schema(&args), "usage", &message, &[], &[]);
+                let _ = writeln!(out, "{line}");
+            } else {
+                let _ = writeln!(err, "error[usage]: {message}\n\n{USAGE}");
+            }
+            return 2;
+        }
+    }
     if args.iter().any(|a| a == "--pretty") {
         // `--pretty` is `--json` with indentation.
         args.retain(|a| a != "--pretty");
@@ -2010,6 +2074,53 @@ mod tests {
         assert_eq!(both, run_str(&["1", "m", "km", "--pretty"]).1);
         let (_, units, _) = run_str(&["units", "gal", "--pretty"]);
         assert!(units.starts_with("{\n"), "{units}");
+    }
+
+    #[test]
+    fn color_option_overrides_the_default() {
+        let run = |a: &[&str], c: Color| {
+            let (mut out, mut err) = (Vec::new(), Vec::new());
+            let code = run_with(a.iter().map(ToString::to_string), &mut out, &mut err, c);
+            (
+                code,
+                String::from_utf8(out).unwrap(),
+                String::from_utf8(err).unwrap(),
+            )
+        };
+        let on = Color {
+            out: true,
+            err: true,
+        };
+        let off = Color::default();
+        assert!(
+            run(&["1", "m", "km", "--color=always"], off)
+                .1
+                .contains('\x1b')
+        );
+        assert!(
+            run(&["--color", "always", "1", "m", "km"], off)
+                .1
+                .contains('\x1b')
+        );
+        assert!(
+            !run(&["1", "m", "km", "--color=never"], on)
+                .1
+                .contains('\x1b')
+        );
+        assert!(
+            run(&["1", "m", "km", "--color=auto"], on)
+                .1
+                .contains('\x1b')
+        );
+        assert!(
+            !run(&["1", "m", "km", "--color=always", "--json"], off)
+                .1
+                .contains('\x1b')
+        );
+        let (code, _, err) = run(&["1", "m", "km", "--color=sometimes"], off);
+        assert_eq!(code, 2);
+        assert!(err.contains("auto, always or never"));
+        assert_eq!(run(&["1", "m", "km", "--color"], off).0, 2);
     }
 
     #[test]

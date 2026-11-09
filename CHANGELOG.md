@@ -10,6 +10,8 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 ### Added
 
 - CLI: `--help` starts with name, version and tagline and ends with licence, authors, repository and a short disclaimer; `--version` lists the same facts.
+- CLI: `--color auto|always|never` and `CLICOLOR_FORCE=1` control colour; `NO_COLOR` still wins over
+  the environment, and `--color` wins over everything.
 - CLI: `--pretty` prints the `--json` output indented (same fields and order; implies `--json`).
 - CLI: colour for the result and for `error`, `hint` and `note` labels, only on a terminal and
   never with `NO_COLOR` set or `TERM=dumb`. JSON is never coloured.

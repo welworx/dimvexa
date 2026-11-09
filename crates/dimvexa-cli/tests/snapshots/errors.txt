@@ -86,6 +86,8 @@ Options:
   --exact      print the exact rational result (num/den) instead of a decimal
   --json       machine-readable output (schema dimvexa.convert/2; dimvexa.units/2 for units,
                dimvexa.configs/1 for configs)
+  --color WHEN auto (default: a terminal, unless NO_COLOR is set), always (also
+               CLICOLOR_FORCE=1) or never; JSON is never coloured
   --pretty     --json, indented for reading (same fields, same order)
   --config NAME_OR_PATH  (beta) apply a config (repeatable, later ones win; see
                docs/adr/014-one-config-mechanism.md). A shipped one is named (us, gb,

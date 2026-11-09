@@ -10,12 +10,14 @@ fn main() -> ExitCode {
     let stderr = std::io::stderr();
     let mut out = stdout.lock();
     let mut err = stderr.lock();
-    // Colour only for a terminal, never with NO_COLOR set or TERM=dumb.
-    let allowed = std::env::var_os("NO_COLOR").is_none_or(|v| v.is_empty())
-        && std::env::var("TERM").map_or(true, |t| t != "dumb");
+    // Colour: never with NO_COLOR or TERM=dumb; otherwise on a terminal, or everywhere with
+    // CLICOLOR_FORCE set to something other than 0. `--color` overrides all of this.
+    let var = |k: &str| std::env::var_os(k).filter(|v| !v.is_empty());
+    let allowed = var("NO_COLOR").is_none() && std::env::var("TERM").map_or(true, |t| t != "dumb");
+    let force = var("CLICOLOR_FORCE").is_some_and(|v| v != "0");
     let color = dimvexa_cli::Color {
-        out: allowed && stdout.is_terminal(),
-        err: allowed && stderr.is_terminal(),
+        out: allowed && (force || stdout.is_terminal()),
+        err: allowed && (force || stderr.is_terminal()),
     };
     let code = dimvexa_cli::run_with(args, &mut out, &mut err, color);
     let _ = out.flush();
