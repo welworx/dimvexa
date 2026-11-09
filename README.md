@@ -297,7 +297,7 @@ $ dimvexa convert 1 L kg --config water --density water_25C
 note: used density water_25C (997.04702 kg/m3; air-free VSMOW water, 25 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309 (recommended density table); value 0.99704702(83) g/mL as quoted in en.wikipedia.org/wiki/Properties_of_water, which agrees with the paper's formula; confirm against Table 1 of the paper; bundled:water:7)
 ```
 
-The configs `water`, `us`, `gb` and `metric-trade` carry two densities of water
+The `water` config carries two densities of water
 (`water_25C` and `water_max_density`, at 3.983035 degC); `dimvexa configs water` shows them with
 their sources. For another liquid or temperature, write your own `[[density]]` with its
 conditions and source:

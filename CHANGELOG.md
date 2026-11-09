@@ -37,7 +37,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
   `998.2067kg/m3` (any unit of mass per volume), echoed as supplied by the caller. Results stay
   `measured`.
 - Shipped densities of water at 25 degC and at its maximum density (3.983035 degC), with
-  conditions and source, in `water`, `us`, `gb` and `metric-trade`. They still need a check against
+  conditions and source, in the `water` config only. They still need a check against
   Table 1 of Tanaka et al. (2001); see `docs/known-limitations.md`.
 - `dimvexa configs [NAME_OR_PATH]` (schema `dimvexa.configs/1`) shows the shipped configs and what
   one contains: names, units and densities with their conditions and sources.

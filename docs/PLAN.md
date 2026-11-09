@@ -181,7 +181,7 @@ CI runs `cargo clippy --workspace --all-targets --all-features -- -D warnings`.
 Runs in CI and fails on:
 - missing `source`, `exactness`, `dimension` or test vector,
 - duplicate symbols or aliases within a namespace,
-- ambiguous bare symbols without a profile mapping (`ton`, `gal`, `oz`, `pt`, `cal`, `BTU`, `mile`, bare `ppm`),
+- ambiguous bare symbols without a config mapping (`ton`, `gal`, `oz`, `pt`, `cal`, `BTU`, `mile`, bare `ppm`),
 - non-reduced rationals, zero or negative factors where not allowed,
 - a unit whose factor does not reproduce its definition chain (for example `psi` must derive exactly from `lb`, `in` and `g_n`),
 - a unit table whose hash differs from the recorded one without a version bump.
@@ -203,7 +203,7 @@ Full model: `unit-system-design.md`. The points below are decisions the first im
 - **ADR-003, `no_std`.** Decide whether the core is `no_std` + `alloc`. Helps WASM size and embedded users. Cost: restrictions on dependencies.
 - **ADR-004, number representation.** Candidates: `i128` rational with checked arithmetic (fast, may overflow on exotic compound units); big rational behind an `exact` feature (slow, always exact); decimal. Proposed: `i128` rational in the core with checked ops, an `exact` feature with big integers for audits and for compounding at load time, and a collapsed `f64` multiply-add for the fast path. Prototype in M0 and measure overflow on the planned table.
 - **ADR-005, formula scales (owner decision needed).** Baumé, API gravity, Brix, Plato, Oechsle, Klosterneuburger KMW and similar are defined by published formulas or tables, not by a single factor. These are scale definitions, not physics, but they are not pure rationals either. Options: (a) exclude from the core, (b) ship in an optional `scales` pack where each scale carries its published definition and an explicit exactness label, (c) tabulated values only. Recommendation: (b), with the formulas treated as exact-by-definition only when the standard defines them that way, and the decision recorded per scale. The base package stays purely rational.
-- **ADR-006, ambiguity.** Bare `ton`, `gal`, `oz`, `pt`, `cal`, `BTU`, `mile`, `ppm` are errors. Profiles (for example `us-customary`, `imperial`, `metric-trade`) map bare symbols to explicit variants. Variants are always available under their explicit names.
+- **ADR-006, ambiguity.** Bare `ton`, `gal`, `oz`, `pt`, `cal`, `BTU`, `mile`, `ppm` are errors. Configs (shipped: `us`, `gb`, `metric-trade`, `year-julian`, `year-civil`; ADR-014) map bare symbols to explicit variants. Variants are always available under their explicit names.
 - **ADR-007, angle.** Plane angle is dimensionless by default (SI convention), unlike UCUM.
 - **ADR-008, namespaces.** Core owns `si:` and `std:`. Plugin or user packs register their own namespace and cannot shadow core symbols.
 
@@ -283,7 +283,7 @@ Owner decision: a wrong conversion makes the library useless, so correctness out
 - **A cache, or any other optimisation that could affect results (SIMD tricks, fused operations, parallel chunking, GPU), is added only if all gates pass:**
   1. A benchmark on a realistic workload shows a clear, repeatable speed-up, with the threshold stated in the PR (for example at least 2x on the target workload). If it is within noise, it is not merged.
   2. **Differential test:** the optimised path returns results identical to the reference path. For exact-mode results this means equal rationals. For fast-mode `f64` results it means bit-identical to the plain serial implementation, or within the documented bound (at most 1 ulp) checked against the exact path over millions of random and edge-case inputs (property tests, subnormals, huge values, negative zero, NaN, infinities).
-  3. Cache-key completeness test, if a cache is added: the key includes unit strings, active profile, namespace imports and registry version/hash. Tests switch profiles and register units mid-run and assert no stale result is ever returned (for example `gal` under `us-customary` vs `imperial`).
+  3. Cache-key completeness test, if a cache is added: the key includes unit strings, loaded configs, namespace imports and registry version/hash. Tests switch configs and register units mid-run and assert no stale result is ever returned (for example `gal` under `us` vs `gb`).
   4. The change is behind a Cargo feature or runtime switch that can be turned off, so any user can fall back to the reference path.
   5. Mutation testing and fuzzing cover the new code.
 - **Reference path:** the simple, exact, unoptimised implementation stays in the codebase permanently as the oracle. CI compares every optimised path against it.
@@ -309,7 +309,7 @@ dimvexa search bar                     # find units by name/alias
 dimvexa packs                          # packs compiled in, versions, data hash
 ```
 
-Global options: `--packs process,common`, `--profile us-customary`, `--json`, `--exact`, `--no-color`, `--quiet`. Refused conversions (for example `Nm3` to `m3`) print the reason and how to pass an explicit factor (`--bridge-factor`), and exit non-zero.
+Global options: `--packs process,common`, `--config us` (a shipped config by name, or your own file by path; ADR-014), `--density NAME_OR_VALUE`, `--json`, `--exact`, `--no-color`, `--quiet`. Refused conversions (for example `L` to `kg`) print the reason and how to pass an explicit number (`--density 998.2067kg/m3`), and exit non-zero.
 
 ### `--json` output
 
@@ -317,7 +317,7 @@ Available on every command. Stable, versioned schema, one JSON document per invo
 
 ```json
 {
-  "schema": "dimvexa.convert/1",
+  "schema": "dimvexa.convert/2",
   "ok": true,
   "input":  { "value": "10", "unit": "m/s" },
   "output": { "value": "36", "unit": "km/h", "f64": 36.0 },
@@ -325,7 +325,7 @@ Available on every command. Stable, versioned schema, one JSON document per invo
   "exactness": "defined",
   "dimension": [0, 1, -1, 0, 0, 0, 0],
   "kind": "linear",
-  "profile": null,
+  "density": null,
   "packs": ["base"],
   "data_version": "<table hash>",
   "sources": ["SI Brochure 9th ed."]
@@ -336,11 +336,11 @@ Errors use the same shape with `"ok": false` and a machine-readable code:
 
 ```json
 {
-  "schema": "dimvexa.convert/1",
+  "schema": "dimvexa.convert/2",
   "ok": false,
   "error": {
     "code": "ambiguous_symbol",
-    "message": "'gal' is ambiguous: use gal_us or gal_imp, or choose a profile",
+    "message": "'gal' is ambiguous: use gal_us or gal_imp, or load a config that resolves it",
     "candidates": ["gal_us", "gal_imp"]
   }
 }
@@ -547,7 +547,7 @@ The API below is a provisional sketch to show the intent, not a final design.
 2. **Process plant:** gauge to absolute pressure (`barg` to `bar` with an explicit atmospheric pressure), `kmol/h` and `lbmol/h`, `Nm3/h` as a stated reference-condition unit, and what happens when you try to convert `Nm3/h` to `m3/h` (a refusal with a clear message, plus how to pass your own factor).
 3. **Temperature done right:** absolute vs difference; why `degC` to `delta_degC` is refused (the error suggests the `delta_` unit), why `degC` to `K` converts, and why a K inside a compound unit such as kJ/(kg K) or W/(m K) is a temperature difference, so `kJ/(kg K)` and `kJ/(kg delta_K)` are the same unit. (Adding and subtracting temperatures was removed by ADR-014: dimvexa converts only.)
 4. **Home heating:** gas consumption in m3, kWh, MJ, therm and MMBtu using stated calorific-value factors supplied by the caller (not computed by the library).
-5. **Cooking and household:** US cup, tablespoon, fluid ounce vs imperial ones; why a bare `gal` or `oz` is rejected unless a profile is chosen.
+5. **Cooking and household:** US cup, tablespoon, fluid ounce vs imperial ones; why a bare `gal` or `oz` is rejected unless a config such as `us` or `gb` is loaded.
 6. **Fuel economy:** mpg (US and imperial) to L/100 km (reciprocal shape).
 7. **Austrian practical units:** Klosterneuburger Mostwaage (KMW) as a scale, Zentner, Joch, Klafter (depends on the scale decision in ADR-005 and the historical pack).
 8. **Custom pack:** adding your own namespaced unit from a TOML file.
@@ -558,7 +558,7 @@ The API below is a provisional sketch to show the intent, not a final design.
 | Pack | First-release content |
 |---|---|
 | base | SI base and derived units, SI prefixes, binary prefixes, dimensionless units, time units, percent and per-mille, temperature kinds (points: K, degC, degF, degR; differences: delta_K, delta_degC, delta_degF, delta_degR) |
-| `common` | The optional pack of everyday conversions: energy (kWh, MJ, BTU variants, kcal, therm), power (kW, hp variants), volume (L, US and imperial gal, cup, fl oz), mass (lb, oz variants, tonne, US ton, long ton), length (in, ft, yd, mi, nmi), pressure (bar, psi, atm, mmHg, torr), speed, area, fuel economy. Ambiguous names only through profiles |
+| `common` | The optional pack of everyday conversions: energy (kWh, MJ, BTU variants, kcal, therm), power (kW, hp variants), volume (L, US and imperial gal, cup, fl oz), mass (lb, oz variants, tonne, US ton, long ton), length (in, ft, yd, mi, nmi), pressure (bar, psi, atm, mmHg, torr), speed, area, fuel economy. Ambiguous names only through configs |
 | `process` | barg/psig, kmol/h, lbmol/h, standard-volume units with stated reference conditions, cP, cSt, W/(m K), kJ/(kg K), Btu/(lb degF), bbl/d, ppm variants, mol%, wt% |
 | `imperial` | Full US customary, imperial, survey units, avoirdupois, troy, apothecary |
 
@@ -580,7 +580,7 @@ Create these as GitHub issues and a milestone each.
 9. ADR-001 to ADR-008 drafted. ADR-004 decided from the spike.
 
 **M1: kinds and registry**
-- Temperature kinds and pressure kinds, namespaces and profiles, `process` and `common` packs (Tier 1 subset), mdBook skeleton, first cookbook examples (pool pump first), `release-plz`, first `0.1.0`.
+- Temperature kinds and pressure kinds, namespaces and configs, `process` and `common` packs (Tier 1 subset), mdBook skeleton, first cookbook examples (pool pump first), `release-plz`, first `0.1.0`.
 - `dimvexa-cli` with `convert`, `batch`, `info`, `list`, `search`, `--exact` and `--json` (schema `dimvexa.convert/1`), snapshot tests, release binaries.
 
 **M2: composition, standard volumes, scales**
@@ -606,7 +606,7 @@ Create these as GitHub issues and a milestone each.
 | Scope creep ("all units") | Tiering, issue-driven additions, packs |
 | Parallel or GPU paths add complexity without speed-up (memory-bound workload, transfer cost, weak `f64` on GPUs) | Optional features, off by default, benchmark go/no-go gates, CPU path stays the reference |
 | An optimisation (cache, SIMD, parallel, GPU) causes a wrong or stale conversion | Section 6.2: deferred until measured, differential tests against the exact reference path, cache-key completeness tests, opt-out switch |
-| Ambiguity complaints ("why can't I write `gal`?") | Profiles, very clear error messages with suggestions, concept page |
+| Ambiguity complaints ("why can't I write `gal`?") | Shipped configs (`us`, `gb`), very clear error messages with suggestions, concept page |
 | Name clash discovered late | Name check before the first public push (section 14) |
 
 ## 11a. M1 item: release automation
@@ -621,7 +621,7 @@ request is prepared automatically and merged by the owner.
 1. Final name (research pending).
 2. Licence confirmation: `MIT OR Apache-2.0`, plus whether a `CITATION.cff` request is enough for attribution.
 3. ADR-005: how to treat formula scales.
-4. Which profiles ship by default, and whether any profile is on by default (recommended: none; the base rejects ambiguous symbols).
+4. Which configs ship, and whether any is on by default. Decided (ADR-014): `us`, `gb`, `metric-trade`, `year-julian`, `year-civil` and `water` ship; none is on by default, the base rejects ambiguous symbols.
 5. MSRV policy.
 6. `no_std` for the core.
 7. Whether CI speed checks run on GitHub-hosted runners only (instruction counts) or also on a self-hosted machine for wall-clock numbers.

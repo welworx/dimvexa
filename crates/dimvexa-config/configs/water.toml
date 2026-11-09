@@ -3,7 +3,7 @@
 #   dimvexa convert 1 L kg --config water --density water_25C
 
 # Densities of water. Each is a stated constant for the conditions below (ADR-014), used only
-# when you ask for it: dimvexa convert 1 L kg --config NAME --density water_25C
+# when you ask for it: dimvexa convert 1 L kg --config water --density water_25C
 [[density]]
 name = "water_25C"
 # 997.04702 kg/m3

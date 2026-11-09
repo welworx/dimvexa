@@ -2055,7 +2055,13 @@ fn configs_lists_and_shows_what_is_included() {
     assert_eq!(r.code, 0);
     snapshot("configs_us.txt", &r.stdout);
     assert!(r.stdout.contains("ton\tton_short"));
+    assert!(
+        !r.stdout.contains("## densities"),
+        "only water carries densities"
+    );
+    let r = dimvexa(&["configs", "water"]);
     assert!(r.stdout.contains("water_25C\t49852351/50000\tkg/m3\t"));
+    snapshot("configs_water.txt", &r.stdout);
     let r = dimvexa(&["configs", "year-julian"]);
     assert!(!r.stdout.contains("## densities"));
     // A path shows your own file, validated like any config.
@@ -2131,7 +2137,7 @@ fn a_user_file_overrides_a_shipped_density_and_a_shipped_name() {
 
 #[test]
 fn units_lists_the_names_and_densities_of_a_shipped_config() {
-    let r = dimvexa(&["units", "--config", "us"]);
+    let r = dimvexa(&["units", "--config", "us", "--config", "water"]);
     assert_eq!(r.code, 0);
     assert!(r.stdout.contains("## config mappings"));
     assert!(

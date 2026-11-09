@@ -590,25 +590,16 @@ fn metric_trade_and_the_year_configs_resolve_their_names() {
 }
 
 #[test]
-fn bundled_densities_are_identical_in_every_config_that_carries_them() {
+fn only_the_water_config_carries_densities() {
     let water = dimvexa_config::bundled("water").unwrap().config().unwrap();
     assert!(!water.constants().is_empty());
     for c in water.constants() {
         assert!(!c.conditions.trim().is_empty() && !c.source.trim().is_empty());
+        assert!(c.conditions.contains("air-free"), "{}", c.name);
     }
-    for name in ["us", "gb", "metric-trade"] {
-        let cfg = dimvexa_config::bundled(name).unwrap().config().unwrap();
-        let theirs: Vec<_> = cfg
-            .constants()
-            .iter()
-            .map(|c| (&c.name, c.value, &c.conditions, &c.source))
-            .collect();
-        let ours: Vec<_> = water
-            .constants()
-            .iter()
-            .map(|c| (&c.name, c.value, &c.conditions, &c.source))
-            .collect();
-        assert_eq!(theirs, ours, "{name} carries the water densities");
+    for b in dimvexa_config::BUNDLED.iter().filter(|b| b.name != "water") {
+        let cfg = b.config().unwrap();
+        assert!(cfg.constants().is_empty(), "{} carries a density", b.name);
     }
     // 25 degC: 997.04702 kg/m3; maximum density: 999.97495 kg/m3
     let get = |n: &str| {

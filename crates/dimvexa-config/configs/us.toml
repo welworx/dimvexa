@@ -12,19 +12,3 @@ mile = "mi"
 gal = "gal_us"
 pt = "pt_us"
 qt = "qt_us"
-
-# Densities of water. Each is a stated constant for the conditions below (ADR-014), used only
-# when you ask for it: dimvexa convert 1 L kg --config NAME --density water_25C
-[[density]]
-name = "water_25C"
-# 997.04702 kg/m3
-value = "99704702/100000"
-conditions = "air-free VSMOW water, 25 degC (ITS-90), 101.325 kPa"
-source = "Tanaka et al., Metrologia 38 (2001) 301-309 (recommended density table); value 0.99704702(83) g/mL as quoted in en.wikipedia.org/wiki/Properties_of_water, which agrees with the paper's formula; confirm against Table 1 of the paper"
-
-[[density]]
-name = "water_max_density"
-# 999.97495 kg/m3
-value = "99997495/100000"
-conditions = "air-free VSMOW water at its temperature of maximum density, 3.983035 degC (ITS-90), 101.325 kPa"
-source = "Tanaka et al., Metrologia 38 (2001) 301-309 (recommended density table); value 0.99997495(84) g/mL as quoted in en.wikipedia.org/wiki/Properties_of_water, which agrees with the paper's formula; confirm against Table 1 of the paper"

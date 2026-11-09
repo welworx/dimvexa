@@ -65,8 +65,9 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
    original, like a shipped unit, and its name states the conditions (`water_25C`, never
    `water`). Where only a secondary quote of the original could be read, the `source` string says
    so ("confirm against Table 1") and `docs/known-limitations.md` lists it until someone checks
-   the original; that is the case for the two water densities that ship today. A bundled config
-   can include a density so that `--config us` makes `1 L kg` work
+   the original; that is the case for the two water densities that ship today. Densities ship
+   only in the `water` config (OPEN 3), so a name config such as `us` never brings a number with
+   it: `--config us --config water --density water_25C` makes `1 L kg` work
    with a stated water density. A density is never computed (ADR-001): the library multiplies by
    the number written in the config or on the command line. Every result that uses one is
    `measured`, carries the assumption on stderr in text mode and in the JSON `density` object, and
@@ -108,9 +109,10 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
   density is not shipped for the same reason (the formula gives 998.2067; the repo's example file
   still carries it as the caller's own number). Seawater, ethanol and diesel need a primary
   source that states the conditions and are not shipped.
-* **OPEN 3: densities in the regional configs.** Implemented default: the two water densities
-  are in `water` and also in `us`, `gb` and `metric-trade` (an identical copy, kept equal by a
-  test), so `--config us --density water_25C` works. The year configs carry none.
+* **OPEN 3: densities in the regional configs.** Decided by the owner on 2026-11-09 after the
+  first implementation: densities ship only in the `water` config, not in `us`, `gb` or
+  `metric-trade`, so a name config never brings a number with it. Use
+  `--config us --config water --density water_25C`.
 * **OPEN 4: scope of the removal in point 7.** Implemented: `Quantity::checked_add` and
   `checked_sub`, `Kind::add` and `sub`, `UnitExpr::difference_counterpart`, the Python
   `__add__`/`__sub__` and the WASM `addQuantities`. `Quantity::checked_mul` and `checked_div`
