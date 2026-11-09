@@ -1,5 +1,7 @@
 # Dimvexa for Excel (spike, ADR-015)
 
+User guide, how to add it to Excel and hosting plan: [`docs/excel.md`](../../docs/excel.md).
+
 Custom functions `DIMVEXA.CONVERT(value, from, to, [density], [config])`, `DIMVEXA.CONVERTRANGE` and `DIMVEXA.VERSION()` over the WASM build
 in `../wasm`. A refusal (unknown or ambiguous unit, dimension mismatch, overflow) is an Excel
 error whose message starts with `dimvexa <code>:`; nothing is guessed.

@@ -33,7 +33,7 @@ All are thin shells over the Rust core, after the API is stable.
 | WASM binding (`bindings/wasm`, Node.js target, ADR-011) | Published on npm as `@dimvexa/wasm` (0.1.0); builds and runs in the Node benchmark |
 | MCP server (`convert`, `batch_convert`, `unit_info`, `search_units`, `explain_refusal`, `list_packs`, `list_contexts`) | Planned |
 | Web tool on Cloudflare using the WASM build (domain dimvexa.com, to be confirmed) | Planned |
-| Excel add-in, optional: Office.js custom functions on the WASM build (ADR-015) | Spike in `bindings/excel` (works in Excel on the web and on Mac; Windows untested) |
+| Excel add-in, optional: Office.js custom functions on the WASM build (ADR-015, [guide](docs/excel.md)) | Spike in `bindings/excel` (works in Excel on the web and on Mac; Windows untested) |
 | C ABI | Planned |
 | GPU experiments, only through the gates in `docs/PLAN.md` section 6.2 | Planned |
 
