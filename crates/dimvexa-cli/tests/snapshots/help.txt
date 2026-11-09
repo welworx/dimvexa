@@ -1,13 +1,15 @@
 dimvexa VERSION - Exact factors. Loud failures. Zero guessing.
 
 Usage:
-  dimvexa convert VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
-  dimvexa VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
+  dimvexa convert VALUE FROM TO [--round N] [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
+  dimvexa VALUE FROM TO [--round N] [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
   dimvexa units [--groups | GROUP | UNIT] [--json] [--config NAME_OR_PATH]...
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa update [--check] [-y]
 
-Converts VALUE from unit FROM to unit TO.
+Converts VALUE from unit FROM to unit TO. TO may be several units of one quantity joined by
+'+', largest first: ft+in, yd+ft+in, lb+oz, h+min+s. The value is split into them, whole
+numbers first and the remainder in the last unit (see docs/adr/016-mixed-units.md).
 
 Commands:
   units            list the supported units grouped by quantity, and the ambiguous symbols
@@ -25,6 +27,9 @@ Commands:
   update -y        do not ask "Update to vX.Y.Z? [y/N]" first (also --yes)
 
 Options:
+  --round N    round the result to N decimal places (0 to 30), halves away from zero; with
+               a mixed TO the rounding is done on the last unit, so the carry is right:
+               71.7 in with --round 0 is 6 ft 0 in. Without --round nothing is rounded
   --exact      print the exact rational result (num/den) instead of a decimal
   --json       machine-readable output (schema dimvexa.convert/2; dimvexa.units/2 for units,
                dimvexa.configs/1 for configs)
@@ -44,6 +49,9 @@ Options:
 Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
+  dimvexa convert 1.94 m ft+in --round 0     # 6 ft 4 in
+  dimvexa convert 2.5 m yd+ft+in --round 1
+  dimvexa convert 3.14159 m cm --round 2
   dimvexa convert 100 degC degF --json
   dimvexa convert 100 degC degF --pretty
   dimvexa convert 1 ton kg --config us

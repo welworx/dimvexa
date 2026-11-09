@@ -250,6 +250,23 @@ pub fn check_convert_schema(v: &V) {
         V::Null => {}
         b => check_density(b),
     }
+    // `round` and `parts` were added within convert/2 (ADR-016): null unless asked for.
+    match v.get("round").expect("missing round") {
+        V::Null => {}
+        r => assert!(r.as_f64() >= 0.0 && r.as_f64() <= 30.0),
+    }
+    match v.get("parts").expect("missing parts") {
+        V::Null => {}
+        parts => {
+            assert!(parts.as_array().len() >= 2);
+            for part in parts.as_array() {
+                for k in ["value", "unit", "exact"] {
+                    assert!(!part.get(k).unwrap().as_str().is_empty(), "parts.{k}");
+                }
+                assert!(part.get("exact").unwrap().as_str().contains('/'));
+            }
+        }
+    }
     assert!(!v.get("sources").unwrap().as_array().is_empty());
     assert!(
         v.get("exact")

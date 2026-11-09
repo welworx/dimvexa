@@ -157,6 +157,27 @@ Not in the table on purpose:
   (`dB`, `Np`), the parsec, months and oil barrels (see the `--config` example). Open a *Unit
   request* issue.
 
+## Feet and inches, pounds and ounces
+
+Join units with `+`, largest first, to split a value over them. `--round N` rounds to N decimal
+places (halves away from zero) and carries correctly, so `5 ft 11.7 in` is never printed as
+`5 ft 12 in`:
+
+```console
+$ dimvexa convert 1.94 m ft+in --round 0
+6 ft 4 in
+$ dimvexa convert 1.94 m ft+in --round 2
+6 ft 4.38 in
+$ dimvexa convert 2.5 m yd+ft+in --round 1
+2 yd 2 ft 2.4 in
+$ dimvexa convert 1.94 m ft+in --exact
+6/1 ft 556/127 in
+```
+
+Units of one dimension only, in decreasing order (`in+ft` is refused and names `ft+in`), and
+an ambiguous symbol such as `oz` stays an error: write `lb+oz_av` or load a config. See
+[ADR-016](docs/adr/016-mixed-units.md).
+
 ## Finding a unit
 
 The CLI answers "what exists, and what exactly is it?" without leaving the terminal:

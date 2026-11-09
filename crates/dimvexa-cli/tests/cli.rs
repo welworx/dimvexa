@@ -2208,3 +2208,200 @@ fn update_command_line_is_checked_before_any_network_use() {
     let r = dimvexa(&["--help"]);
     assert!(r.stdout.contains("dimvexa update [--check] [-y]"));
 }
+
+// ---- mixed units and --round (ADR-016) ----
+
+fn text_of(args: &[&str]) -> String {
+    let r = dimvexa(args);
+    assert_eq!((r.code, r.stderr.as_str()), (0, ""), "{args:?}");
+    r.stdout.trim_end().to_string()
+}
+
+#[test]
+fn a_mixed_target_splits_the_value() {
+    assert_eq!(
+        text_of(&["convert", "1.94", "m", "ft+in", "--round", "0"]),
+        "6 ft 4 in"
+    );
+    assert_eq!(
+        text_of(&["convert", "1.94", "m", "ft+in", "--round", "2"]),
+        "6 ft 4.38 in"
+    );
+    // Without --round nothing is rounded: the remainder is the exact value, printed once.
+    assert_eq!(
+        text_of(&["convert", "1.94", "m", "ft+in"]),
+        "6 ft 4.377952755905512 in"
+    );
+    // The bare form (no `convert`) and the filler `to` work like any conversion.
+    assert_eq!(text_of(&["1.94", "m", "ft+in", "--round=0"]), "6 ft 4 in");
+    assert_eq!(
+        text_of(&["convert", "1.94", "m", "to", "ft+in", "--round", "0"]),
+        "6 ft 4 in"
+    );
+    // Yards, feet and inches for a longer length: 2.5 m is 98.425... in.
+    assert_eq!(
+        text_of(&["convert", "2.5", "m", "yd+ft+in", "--round", "1"]),
+        "2 yd 2 ft 2.4 in"
+    );
+    // The exact path: whole parts and the remainder as fractions.
+    assert_eq!(
+        text_of(&["convert", "1.94", "m", "ft+in", "--exact"]),
+        "6/1 ft 556/127 in"
+    );
+}
+
+#[test]
+fn rounding_a_mixed_target_carries_into_the_larger_unit() {
+    // 1.82118 m is 71.7 in, which is 5 ft 11.7 in: whole inches must give 6 ft 0 in.
+    assert_eq!(
+        text_of(&["convert", "1.82118", "m", "ft+in", "--round", "0"]),
+        "6 ft 0 in"
+    );
+    assert_eq!(
+        text_of(&["convert", "1.82118", "m", "ft+in", "--round", "1"]),
+        "5 ft 11.7 in"
+    );
+}
+
+#[test]
+fn a_negative_mixed_value_has_one_sign() {
+    assert_eq!(
+        text_of(&["convert", "-1.94", "m", "ft+in", "--round", "0"]),
+        "-6 ft 4 in"
+    );
+    assert_eq!(
+        text_of(&["convert", "-0.1", "m", "ft+in", "--round", "1"]),
+        "-0 ft 3.9 in"
+    );
+}
+
+#[test]
+fn round_applies_to_an_ordinary_conversion_too() {
+    assert_eq!(
+        text_of(&["convert", "3.14159", "m", "cm", "--round", "2"]),
+        "314.16 cm"
+    );
+    assert_eq!(
+        text_of(&["convert", "2.5", "m", "m", "--round", "0"]),
+        "3 m"
+    );
+    assert_eq!(
+        text_of(&["convert", "-2.5", "m", "m", "--round", "0"]),
+        "-3 m"
+    );
+    // A value that is already short is not padded.
+    assert_eq!(
+        text_of(&["convert", "1", "km", "m", "--round", "3"]),
+        "1000 m"
+    );
+}
+
+#[test]
+fn mixed_json_has_parts_and_the_whole_value_in_the_last_unit() {
+    let r = dimvexa(&["convert", "1.94", "m", "ft+in", "--round", "1", "--json"]);
+    assert_eq!((r.code, r.stderr.as_str()), (0, ""));
+    snapshot("json_mixed_ft_in.json", &stable(&r.stdout));
+    let v = json::parse(&r.stdout).unwrap();
+    json::check_convert_schema(&v);
+    assert!((v.get("round").unwrap().as_f64() - 1.0).abs() < f64::EPSILON);
+    assert_eq!(v.get("output").unwrap().get("unit").unwrap().as_str(), "in");
+    assert_eq!(
+        v.get("output").unwrap().get("value").unwrap().as_str(),
+        "76.4"
+    );
+    // The exact block is the conversion that was done, not the rounded value.
+    assert_eq!(
+        v.get("exact").unwrap().get("value").unwrap().as_str(),
+        "9700/127"
+    );
+    let parts = v.get("parts").unwrap().as_array();
+    assert_eq!(parts.len(), 2);
+    assert_eq!(parts[0].get("unit").unwrap().as_str(), "ft");
+    assert_eq!(parts[0].get("value").unwrap().as_str(), "6");
+    assert_eq!(parts[1].get("unit").unwrap().as_str(), "in");
+    assert_eq!(parts[1].get("value").unwrap().as_str(), "4.4");
+    // An ordinary conversion has neither.
+    let plain = json::parse(&dimvexa(&["convert", "1", "m", "ft", "--json"]).stdout).unwrap();
+    assert!(matches!(plain.get("parts").unwrap(), json::V::Null));
+    assert!(matches!(plain.get("round").unwrap(), json::V::Null));
+}
+
+#[test]
+fn mixed_targets_that_cannot_be_split_are_refused() {
+    for (args, code, needle) in [
+        (
+            &["convert", "1.8", "m", "in+ft"][..],
+            "refused",
+            "largest to the smallest",
+        ),
+        (&["convert", "1.8", "m", "ft+ft"], "refused", "not larger"),
+        (&["convert", "1.8", "m", "ft+s"], "dimension_mismatch", ""),
+        (&["convert", "1.8", "m", "ft+"], "parse_error", ""),
+        (&["convert", "1.8", "m", "ft+nothing"], "unknown_unit", ""),
+        (
+            &["convert", "1", "degC", "degC+degF"],
+            "refused",
+            "not a linear",
+        ),
+        // `oz` is ambiguous without a config: a mixed unit does not guess either.
+        (&["convert", "1", "kg", "lb+oz"], "ambiguous_symbol", ""),
+    ] {
+        let r = dimvexa(args);
+        assert_eq!(r.code, 1, "{args:?}: {}", r.stderr);
+        assert!(r.stdout.is_empty(), "{args:?}");
+        assert!(
+            r.stderr.starts_with(&format!("error[{code}]:")),
+            "{args:?}: {}",
+            r.stderr
+        );
+        assert!(r.stderr.contains(needle), "{args:?}: {}", r.stderr);
+    }
+    // The same refusals in JSON keep the convert schema and exit 1.
+    let r = dimvexa(&["convert", "1.8", "m", "in+ft", "--json"]);
+    assert_eq!(r.code, 1);
+    let v = json::parse(&r.stdout).unwrap();
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/2");
+    assert_eq!(
+        v.get("error").unwrap().get("code").unwrap().as_str(),
+        "refused"
+    );
+    // The error names the order that works.
+    assert!(r.stdout.contains("ft+in"), "{}", r.stdout);
+}
+
+#[test]
+fn round_is_checked_and_belongs_to_conversions() {
+    for args in [
+        &["convert", "1", "m", "ft", "--round"][..],
+        &["convert", "1", "m", "ft", "--round", "x"],
+        &["convert", "1", "m", "ft", "--round", "-1"],
+        &["convert", "1", "m", "ft", "--round", "1.5"],
+        &["convert", "1", "m", "ft", "--round", "31"],
+        &["convert", "1", "m", "ft", "--round", "1", "--round", "2"],
+        &["units", "--round", "1"],
+        &["configs", "--round", "1"],
+        &["update", "--round", "1"],
+    ] {
+        let r = dimvexa(args);
+        assert_eq!(r.code, 2, "{args:?}: {}", r.stderr);
+        assert!(
+            r.stderr.starts_with("error[usage]:"),
+            "{args:?}: {}",
+            r.stderr
+        );
+    }
+    let r = dimvexa(&["convert", "1", "m", "ft", "--round", "x"]);
+    assert!(
+        r.stderr.contains("'--round' needs a whole number"),
+        "{}",
+        r.stderr
+    );
+}
+
+#[test]
+fn a_rounding_that_does_not_fit_is_an_overflow_error() {
+    // 10^30 scaling of a big value exceeds i128: an error, never a wrong number.
+    let r = dimvexa(&["convert", "1e20", "m", "km", "--round", "30"]);
+    assert_eq!(r.code, 1, "{}", r.stderr);
+    assert!(r.stderr.starts_with("error[overflow]:"), "{}", r.stderr);
+}

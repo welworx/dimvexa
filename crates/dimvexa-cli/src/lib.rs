@@ -23,20 +23,22 @@
 use std::fmt::Write as _;
 use std::io::Write;
 
-use dimvexa::{Conversion, Dim, Error, Ratio, Registry, Unit, UnitExpr, registry};
+use dimvexa::{Conversion, Dim, Error, Mixed, Ratio, Registry, Unit, UnitExpr, registry};
 use dimvexa_config::{Config, ConfigUnit, Constant, Mapping};
 
 mod update;
 
 const USAGE: &str = "\
 Usage:
-  dimvexa convert VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
-  dimvexa VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
+  dimvexa convert VALUE FROM TO [--round N] [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
+  dimvexa VALUE FROM TO [--round N] [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
   dimvexa units [--groups | GROUP | UNIT] [--json] [--config NAME_OR_PATH]...
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa update [--check] [-y]
 
-Converts VALUE from unit FROM to unit TO.
+Converts VALUE from unit FROM to unit TO. TO may be several units of one quantity joined by
+'+', largest first: ft+in, yd+ft+in, lb+oz, h+min+s. The value is split into them, whole
+numbers first and the remainder in the last unit (see docs/adr/016-mixed-units.md).
 
 Commands:
   units            list the supported units grouped by quantity, and the ambiguous symbols
@@ -54,6 +56,9 @@ Commands:
   update -y        do not ask \"Update to vX.Y.Z? [y/N]\" first (also --yes)
 
 Options:
+  --round N    round the result to N decimal places (0 to 30), halves away from zero; with
+               a mixed TO the rounding is done on the last unit, so the carry is right:
+               71.7 in with --round 0 is 6 ft 0 in. Without --round nothing is rounded
   --exact      print the exact rational result (num/den) instead of a decimal
   --json       machine-readable output (schema dimvexa.convert/2; dimvexa.units/2 for units,
                dimvexa.configs/1 for configs)
@@ -73,6 +78,9 @@ Options:
 Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
+  dimvexa convert 1.94 m ft+in --round 0     # 6 ft 4 in
+  dimvexa convert 2.5 m yd+ft+in --round 1
+  dimvexa convert 3.14159 m cm --round 2
   dimvexa convert 100 degC degF --json
   dimvexa convert 100 degC degF --pretty
   dimvexa convert 1 ton kg --config us
@@ -341,6 +349,8 @@ struct Args {
     to: String,
     exact: bool,
     json: bool,
+    /// Decimal places for `--round`, if given.
+    round: Option<u32>,
 }
 
 /// What `dimvexa units` was asked for.
@@ -395,18 +405,24 @@ fn command_schema(args: &[String]) -> &'static str {
     }
 }
 
+/// The most decimal places `--round` accepts. Rounding scales by 10^N in exact `i128`
+/// arithmetic, which overflows well before 38; a larger N is refused instead of failing late.
+const MAX_ROUND: u32 = 30;
+
 /// The options that take a value, split off the command line before the rest is read.
 struct ValueOptions {
     configs: Vec<String>,
     density: Option<String>,
+    round: Option<u32>,
 }
 
-/// Splits `--config NAME_OR_PATH` (repeatable) and `--density NAME_OR_VALUE`, also as
-/// `--opt=value`.
+/// Splits `--config NAME_OR_PATH` (repeatable), `--density NAME_OR_VALUE` and `--round N`,
+/// also as `--opt=value`.
 fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), UsageError> {
     let mut opts = ValueOptions {
         configs: Vec::new(),
         density: None,
+        round: None,
     };
     let mut rest = Vec::new();
     let missing = |what: &str| UsageError {
@@ -418,7 +434,7 @@ fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), UsageEr
     let mut it = args.iter();
     while let Some(a) = it.next() {
         let (name, inline) = match a.split_once('=') {
-            Some((n @ ("--config" | "--density"), v)) => (n, Some(v.to_string())),
+            Some((n @ ("--config" | "--density" | "--round"), v)) => (n, Some(v.to_string())),
             _ => (a.as_str(), None),
         };
         match name {
@@ -430,7 +446,7 @@ fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), UsageEr
                     ..missing(name)
                 });
             }
-            "--config" | "--density" => {
+            "--config" | "--density" | "--round" => {
                 let value = match inline {
                     Some(v) => v,
                     // The next word must be a value, not another option (`--config --json`).
@@ -442,6 +458,22 @@ fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), UsageEr
                 };
                 if name == "--config" {
                     opts.configs.push(value);
+                } else if name == "--round" {
+                    let digits = value.parse::<u32>().ok().filter(|d| *d <= MAX_ROUND);
+                    let Some(digits) = digits else {
+                        return Err(UsageError {
+                            message: format!(
+                                "'--round' needs a whole number of decimal places from 0 to {MAX_ROUND}, got '{value}'"
+                            ),
+                            ..missing(name)
+                        });
+                    };
+                    if opts.round.replace(digits).is_some() {
+                        return Err(UsageError {
+                            message: "'--round' is given twice; give one number".to_string(),
+                            ..missing(name)
+                        });
+                    }
                 } else if opts.density.replace(value).is_some() {
                     return Err(UsageError {
                         message: "'--density' is given twice; give one density".to_string(),
@@ -536,7 +568,9 @@ fn check_update_args(
         return Err(plain("'update' takes only --check and -y"));
     }
     if value_options {
-        return Err(plain("'update' does not take --config or --density"));
+        return Err(plain(
+            "'update' does not take --config, --density or --round",
+        ));
     }
     Ok(())
 }
@@ -563,6 +597,14 @@ fn normalize_convert(words: &[&str]) -> Vec<String> {
         }
     }
     out
+}
+
+/// `--round` belongs to a conversion; `units`, `configs` and `update` refuse it.
+fn no_round(round: Option<u32>, usage: &dyn Fn(String) -> UsageError) -> Result<(), UsageError> {
+    if round.is_some() {
+        return Err(usage("'--round' only applies to a conversion".to_string()));
+    }
+    Ok(())
 }
 
 fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
@@ -596,7 +638,7 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     if let Some((&"update", rest)) = positional.split_first() {
         check_update_args(
             !rest.is_empty() || exact || want_json || want_groups,
-            !configs.is_empty() || opts.density.is_some(),
+            !configs.is_empty() || opts.density.is_some() || opts.round.is_some(),
             schema,
         )?;
         return Ok((
@@ -621,6 +663,7 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
                 "'--density' selects a density for a conversion; 'units' lists them".to_string(),
             ));
         }
+        no_round(opts.round, &usage)?;
         return parse_units(rest, want_groups, want_json, configs, &usage);
     }
     if let Some((&"configs", rest)) = positional.split_first() {
@@ -629,6 +672,7 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
                 "'configs' takes only NAME_OR_PATH and --json".to_string(),
             ));
         }
+        no_round(opts.round, &usage)?;
         if !configs.is_empty() || opts.density.is_some() {
             return Err(usage(
                 "'configs' shows configs by name or path; it does not take --config or --density"
@@ -654,6 +698,7 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
                 to: to.clone(),
                 exact,
                 json: want_json,
+                round: opts.round,
             }),
             configs,
         )),
@@ -866,8 +911,12 @@ struct Outcome<'a> {
     to: UnitExpr,
     conv: Conversion,
     exact: Ratio,
+    /// The exact result after `--round` (the same as `exact` without it).
+    shown: Ratio,
     /// The exact result rounded once to the nearest `f64` (the CLI always uses the exact path).
     approx: f64,
+    /// The mixed target and the value split over its units, when TO was `ft+in` and the like.
+    mixed: Option<(Mixed, Vec<Ratio>)>,
 }
 
 fn compute<'a>(
@@ -878,7 +927,13 @@ fn compute<'a>(
     let reg = &loaded.reg;
     let value: Ratio = args.value.parse()?;
     let from = reg.parse(&args.from)?;
-    let to = reg.parse(&args.to)?;
+    // A mixed target (`ft+in`) is converted to its smallest unit and split afterwards.
+    let (to, mixed) = if Mixed::is_mixed(&args.to) {
+        let mixed = Mixed::parse(reg, &args.to)?;
+        (mixed.smallest().clone(), Some(mixed))
+    } else {
+        (reg.parse(&args.to)?, None)
+    };
     // A density is used only when asked for and only when the plain conversion is refused
     // for lack of a density; otherwise the ordinary exact conversion stands.
     let (conv, used) = match (Conversion::between(&from, &to), density) {
@@ -887,7 +942,18 @@ fn compute<'a>(
         (Err(e), _) => return Err(e),
     };
     let exact = conv.apply_exact(value)?;
-    let approx = exact.to_f64()?;
+    let shown = match args.round {
+        Some(digits) => exact.checked_round(digits)?,
+        None => exact,
+    };
+    let approx = shown.to_f64()?;
+    let mixed = match mixed {
+        Some(m) => {
+            let parts = m.split(exact, args.round)?;
+            Some((m, parts))
+        }
+        None => None,
+    };
     Ok(Outcome {
         args,
         configs: &loaded.configs,
@@ -896,7 +962,9 @@ fn compute<'a>(
         to,
         conv,
         exact,
+        shown,
         approx,
+        mixed,
     })
 }
 
@@ -934,17 +1002,58 @@ fn resolve_density(spec: &str, loaded: &Loaded) -> Result<Constant, DensityError
         })
 }
 
-fn render_text(o: &Outcome<'_>, color: bool) -> String {
-    let value = if o.args.exact {
-        o.exact.to_fraction_string()
-    } else {
-        f64_text(o.approx)
-    };
-    if color {
-        format!("{BOLD_GREEN}{value}{RESET} {CYAN}{}{RESET}", o.to)
-    } else {
-        format!("{value} {}", o.to)
+/// The text of one number of the result. A rounded value is written as the exact decimal
+/// (`4.38`, never `4.380000000000001`); an unrounded one as the shortest `f64` that reads back.
+fn number_text(o: &Outcome<'_>, exact: Ratio) -> String {
+    if o.args.exact {
+        return exact.to_fraction_string();
     }
+    o.args.round.map_or_else(
+        || {
+            exact
+                .to_f64()
+                .map_or_else(|_| exact.to_fraction_string(), f64_text)
+        },
+        |digits| {
+            exact
+                .to_decimal(digits)
+                .map_or_else(|_| exact.to_fraction_string(), |(text, _)| text)
+        },
+    )
+}
+
+fn render_text(o: &Outcome<'_>, color: bool) -> String {
+    let paint = |value: &str, unit: &dyn std::fmt::Display| {
+        if color {
+            format!("{BOLD_GREEN}{value}{RESET} {CYAN}{unit}{RESET}")
+        } else {
+            format!("{value} {unit}")
+        }
+    };
+    let Some((mixed, parts)) = &o.mixed else {
+        return paint(&number_text(o, o.shown), &o.to);
+    };
+    // One sign in front of the whole result: `-6 ft 4 in`, not `-6 ft -4 in`.
+    let negative = parts.iter().any(|p| p.signum() < 0);
+    let words: Vec<String> = mixed
+        .units()
+        .iter()
+        .zip(parts)
+        .enumerate()
+        .map(|(i, (unit, part))| {
+            let magnitude = if part.signum() < 0 {
+                part.checked_neg().unwrap_or(*part)
+            } else {
+                *part
+            };
+            let mut value = number_text(o, magnitude);
+            if i == 0 && negative {
+                value.insert(0, '-');
+            }
+            paint(&value, unit)
+        })
+        .collect();
+    words.join(" ")
 }
 
 /// The JSON object describing a density: everything a reader needs to judge the assumption.
@@ -993,7 +1102,7 @@ fn density_note(b: &Constant) -> String {
 }
 
 fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
-    let (decimal, complete) = o.exact.to_decimal(15)?;
+    let (decimal, complete) = o.shown.to_decimal(15)?;
     let dims: Vec<String> =
         o.to.dim()
             .exponents()
@@ -1026,7 +1135,8 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
 \"output\":{{\"value\":{},\"unit\":{},\"f64\":{},\"truncated\":{}}},\
 \"exact\":{{\"value\":{},\"factor\":{},\"offset\":{}}},\
 \"exactness\":{},\"dimension\":[{}],\"kind\":{},\"quantity_kind\":{},\
-\"packs\":[{}],\"data_version\":{},\"sources\":[{}],\"config\":{},\"density\":{}}}",
+\"packs\":[{}],\"data_version\":{},\"sources\":[{}],\"config\":{},\"density\":{},\
+\"round\":{},\"parts\":{}}}",
         json_string(&schema_id("convert")),
         json_string(&o.args.value),
         json_string(&o.from.to_string()),
@@ -1046,7 +1156,35 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
         sources.join(","),
         configs_json(o.configs),
         o.density.map_or_else(|| "null".to_string(), density_json),
+        o.args
+            .round
+            .map_or_else(|| "null".to_string(), |d| d.to_string()),
+        parts_json(o)?,
     ))
+}
+
+/// The `parts` field: the value split over a mixed target, or `null`. Each part is a decimal
+/// string (exact for rounded values, cut at 15 digits otherwise) with its unit and its exact
+/// fraction. All parts of a negative value are zero or negative.
+fn parts_json(o: &Outcome<'_>) -> Result<String, Error> {
+    let Some((mixed, parts)) = &o.mixed else {
+        return Ok("null".to_string());
+    };
+    let items = mixed
+        .units()
+        .iter()
+        .zip(parts)
+        .map(|(unit, part)| {
+            let (decimal, _) = part.to_decimal(15)?;
+            Ok(format!(
+                "{{\"value\":{},\"unit\":{},\"exact\":{}}}",
+                json_string(&decimal),
+                json_string(&unit.to_string()),
+                json_string(&part.to_fraction_string())
+            ))
+        })
+        .collect::<Result<Vec<_>, Error>>()?;
+    Ok(format!("[{}]", items.join(",")))
 }
 
 /// Quantity group of a dimension (`[kg, m, s, A, K, mol, cd]` exponents), for listing.

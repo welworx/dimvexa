@@ -157,6 +157,25 @@
             }
           }
         },
+        "round": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 30,
+          "description": "Decimal places given with `--round`, halves away from zero; null when the result is not rounded. `output.value` and `output.f64` are the rounded value, `exact` is not."
+        },
+        "parts": {
+          "type": ["array", "null"],
+          "description": "For a mixed target such as `ft+in`: the value split over its units, largest first, whole numbers first and the remainder in the last unit. `output` then holds the whole value in the last (smallest) unit. null for an ordinary conversion. All parts of a negative value are zero or negative.",
+          "items": {
+            "type": "object",
+            "required": ["value", "unit", "exact"],
+            "properties": {
+              "value": { "type": "string", "description": "Decimal expansion, at most 15 fraction digits." },
+              "unit": { "type": "string" },
+              "exact": { "type": "string", "description": "The exact part as num/den." }
+            }
+          }
+        },
         "density": {
           "description": "The density the conversion went through (ADR-014), or null. A density is used only when requested with --density and only when the plain conversion is refused (mass <-> volume needs a density). The result's exactness is then `measured`, and the density's source is also listed in `sources`. A number written on the command line (`--density 998.2067kg/m3`) has file `--density` and line 0.",
           "oneOf": [

@@ -23,6 +23,7 @@
 //! * [`Expr`]: the syntax of unit expressions with a documented, strict precedence,
 //! * [`Registry`]: symbol lookup, SI and binary prefixes, rejection of ambiguous symbols,
 //! * [`Conversion`]: a prepared conversion with exact and `f64` fast paths,
+//! * [`Mixed`]: a list of units such as `ft+in`, to split one value into feet and inches,
 //! * [`Quantity`]: exact values with units following the kind algebra,
 //! * [`Error`]: one error type with stable machine-readable codes.
 //!
@@ -50,6 +51,7 @@ mod dim;
 mod error;
 mod expr;
 mod kind;
+mod mixed;
 mod prefix;
 mod quantity;
 mod ratio;
@@ -61,6 +63,7 @@ pub use dim::Dim;
 pub use error::{Error, Result};
 pub use expr::{Expr, MAX_DEPTH, MAX_INPUT_CHARS, is_symbol_char, is_valid_symbol};
 pub use kind::{Exactness, Kind, Shape};
+pub use mixed::Mixed;
 pub use prefix::{BINARY_PREFIXES, Prefix, PrefixFamily, PrefixMode, SI_PREFIXES, all_prefixes};
 pub use quantity::Quantity;
 pub use ratio::Ratio;

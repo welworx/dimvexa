@@ -7,6 +7,19 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+### Added
+
+- CLI: a mixed target splits a value over several units, largest first: `dimvexa convert 1.94 m
+  ft+in --round 0` prints `6 ft 4 in`; `yd+ft+in`, `lb+oz_av` and `h+min+s` work the same way
+  (ADR-016, proposed). Refused with the existing codes: other dimensions, non-linear units
+  (`degC`), a list not in decreasing order (`in+ft`), an ambiguous unit.
+- CLI: `--round N` (0 to 30 places, halves away from zero) for every conversion. With a mixed
+  target the rounding is done on the last unit, so `5 ft 11.7 in` becomes `6 ft 0 in`.
+- JSON `dimvexa.convert/2`: the fields `round` and `parts` (both null when unused), added at
+  the end of the object.
+- Library: `Mixed` (parse, validate and split a list of units), `Ratio::checked_floor` and
+  `Ratio::checked_round`.
+
 ## [0.2.1] - 2026-11-09
 
 ### Added

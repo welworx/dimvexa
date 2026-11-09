@@ -253,6 +253,61 @@ impl Ratio {
         Ok(l.cmp(&r))
     }
 
+    /// The greatest integer not above this value (rounds toward negative infinity).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Overflow`] on internal overflow.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_core::Ratio;
+    /// assert_eq!(Ratio::new(13, 4)?.checked_floor()?, 3);
+    /// assert_eq!(Ratio::new(-13, 4)?.checked_floor()?, -4);
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn checked_floor(self) -> Result<i128> {
+        self.num
+            .checked_div_euclid(self.den)
+            .ok_or_else(|| overflow("ratio floor"))
+    }
+
+    /// Rounds to `digits` decimal places, halves away from zero (`2.5` is `3`, `-2.5` is `-3`).
+    /// The result is exact: a ratio whose denominator divides `10^digits`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Overflow`] if `10^digits` or the scaled value does not fit in `i128`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_core::Ratio;
+    /// assert_eq!(Ratio::new(76_378, 1000)?.checked_round(1)?, Ratio::new(764, 10)?);
+    /// assert_eq!(Ratio::new(5, 2)?.checked_round(0)?, Ratio::from_int(3));
+    /// assert_eq!(Ratio::new(-5, 2)?.checked_round(0)?, Ratio::from_int(-3));
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn checked_round(self, digits: u32) -> Result<Self> {
+        let exp = i32::try_from(digits).map_err(|_| overflow("ratio round"))?;
+        let scale = Self::from_int(10).checked_pow(exp)?;
+        let half = Self::new(1, 2)?;
+        let scaled = self.checked_mul(scale)?;
+        let magnitude = if scaled.num < 0 {
+            scaled.checked_neg()?
+        } else {
+            scaled
+        };
+        let rounded = Self::from_int(magnitude.checked_add(half)?.checked_floor()?);
+        let signed = if scaled.num < 0 {
+            rounded.checked_neg()?
+        } else {
+            rounded
+        };
+        signed.checked_div(scale)
+    }
+
     /// The correctly rounded (round-half-to-even) `f64` nearest to this value.
     ///
     /// Every `i128` ratio lies inside the normal `f64` range, so the result is never
