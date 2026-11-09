@@ -18,13 +18,22 @@ add-in never shapes the core).
   an Excel error with the stable code in the message (`dimvexa unknown_unit: ...`).
 * The wasm-bindgen `no-modules` glue and the `.wasm` as base64 are loaded as classic scripts, so
   no bundler and no fetch of the binary.
+* The first manifest (no icons, no requirement set) was silently refused by Excel on the web;
+  the one in `bindings/excel` follows Microsoft's task pane template and is accepted there.
+  A functions-only add-in has no ribbon entry, so it does not appear in the add-ins list;
+  its functions appear in cells.
 * XML add-in-only manifest first; the unified manifest only once its custom functions support is
   confirmed ready for production.
 
 ## OPEN (to be settled by running the spike in Excel)
 
 1. Does WASM run in the JavaScript-only custom functions runtime on Windows desktop, Mac and the
-   web, or does it need the shared runtime (and so a task pane page)?
+   web, or does it need the shared runtime (and so a task pane page)? **Answered for Excel on the
+   web (2026-11-09, owner's test, Mac browser): yes.** `DIMVEXA.VERSION()`,
+   `DIMVEXA.CONVERT(1,"km","m")` = 1000 and `DIMVEXA.CONVERT(100,"degC","K")` = 373.15 worked,
+   and a dimension mismatch showed `#VALUE!` (in German `#WERT!`). Still open: Windows desktop
+   and Mac desktop. The first call after sideloading took a while; the cause (registration or
+   WASM compile) is not measured.
 2. Does Excel on Mac support custom functions (Microsoft pages disagree)?
 3. Startup cost of compiling the 224 KB module on first call, and the cost of the call itself.
 4. Array functions (`applyBatch`) and exact decimal input.
