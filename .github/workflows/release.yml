@@ -9,8 +9,8 @@
 #
 # Safety:
 #   * `cargo xtask ci` and scripts/check-versions.sh must pass first.
-#   * Nothing is published before every artifact (crates package check, wheels, sdist, npm
-#     package) has been built and the wheels have passed the Python tests.
+#   * Nothing is published before every artifact (crates package check, wheels, CLI binaries,
+#     sdist, npm package) has been built and the wheels have passed the Python tests.
 #   * Publishing jobs run in the GitHub environment `release`; give it required reviewers and
 #     the owner approves each release (AGENTS.md: publishing is an owner decision).
 #   * No long-lived tokens: crates.io, PyPI and npm trusted publishing (OIDC). One-time setup
@@ -134,6 +134,72 @@ jobs:
           path: bindings/python/dist/*.whl
           if-no-files-found: error
 
+  cli-binaries:
+    name: CLI binary (${{ matrix.name }})
+    needs: [plan, verify]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { name: macos-arm64, os: macos-latest, target: aarch64-apple-darwin }
+          - { name: macos-x86_64, os: macos-latest, target: x86_64-apple-darwin }
+          - { name: linux-x86_64, os: ubuntu-latest, target: x86_64-unknown-linux-musl }
+          - { name: linux-aarch64, os: ubuntu-24.04-arm, target: aarch64-unknown-linux-musl }
+          - { name: windows-x86_64, os: windows-latest, target: x86_64-pc-windows-msvc }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Rust
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --target "${{ matrix.target }}" --no-self-update
+          rustup default "$v"
+          echo "RUSTUP_TOOLCHAIN=$v" >> "$GITHUB_ENV"
+          if [[ "$TARGET" == *-musl ]]; then sudo apt-get update && sudo apt-get install -y musl-tools; fi
+      - name: Build and package the `dimvexa` binary
+        shell: bash
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+          TARGET: ${{ matrix.target }}
+          # Smaller binaries: the release profile keeps line tables for profiling; the shipped
+          # binary does not need them. Function names stay, so panics are still readable.
+          CARGO_PROFILE_RELEASE_STRIP: debuginfo
+        run: |
+          cargo build --release --locked -p dimvexa-cli --target "${{ matrix.target }}"
+          d="dimvexa-$VERSION-${{ matrix.target }}"
+          mkdir "$d"
+          exe=dimvexa
+          [[ "$TARGET" == *-windows-* ]] && exe=dimvexa.exe
+          cp "target/${{ matrix.target }}/release/$exe" LICENSE-MIT LICENSE-APACHE README.md "$d/"
+          if [[ "$exe" == *.exe ]]; then
+            # A loose copy for a direct download, next to the zip.
+            cp "target/${{ matrix.target }}/release/$exe" dimvexa.exe
+            sha256sum dimvexa.exe > dimvexa.exe.sha256
+          fi
+          if [[ "$exe" == *.exe ]]; then archive="$d.zip"; tar -a -cf "$archive" "$d"; else archive="$d.tar.gz"; tar -czf "$archive" "$d"; fi
+          if command -v sha256sum >/dev/null; then sha256sum "$archive" > "$archive.sha256"; else shasum -a 256 "$archive" > "$archive.sha256"; fi
+      - name: Smoke test (native targets only)
+        if: matrix.name != 'macos-x86_64'
+        shell: bash
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: target/${{ matrix.target }}/release/dimvexa --version | grep -F "dimvexa $VERSION "
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cli-${{ matrix.name }}
+          path: |
+            dimvexa-*.tar.gz
+            dimvexa-*.zip
+            dimvexa.exe
+            dimvexa*.sha256
+          if-no-files-found: error
+
   sdist:
     name: sdist
     needs: [plan, verify]
@@ -212,7 +278,7 @@ jobs:
 
   publish-crates:
     name: publish to crates.io
-    needs: [plan, wheels, sdist, npm-package, crates-check]
+    needs: [plan, wheels, cli-binaries, sdist, npm-package, crates-check]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: release
@@ -296,7 +362,7 @@ jobs:
 
   tag:
     name: tag and GitHub release
-    needs: [plan, publish-crates, publish-pypi, publish-npm]
+    needs: [plan, cli-binaries, publish-crates, publish-pypi, publish-npm]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -305,10 +371,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: cli-*
+          path: cli
+          merge-multiple: true
+      - name: Generate the Homebrew formula (copy it to the tap repo)
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: scripts/make-homebrew-formula.sh "$VERSION" cli > cli/dimvexa.rb
       - name: Create the tag and the release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.plan.outputs.version }}
         run: |
           gh release create "v$VERSION" --repo "${{ github.repository }}" --target "${{ github.sha }}" \
-            --title "v$VERSION" --generate-notes
+            --title "v$VERSION" --generate-notes cli/*.tar.gz cli/*.zip cli/dimvexa.exe cli/*.sha256 cli/dimvexa.rb

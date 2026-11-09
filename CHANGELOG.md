@@ -7,6 +7,12 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-09
+
+### Added
+
+- Releases attach prebuilt `dimvexa` binaries (macOS arm64/x86_64, Linux musl x86_64/aarch64, Windows x86_64 as a zip and as a loose `dimvexa.exe`) and a generated Homebrew formula (`dimvexa.rb`). Homebrew install (`brew install welworx/tap/dimvexa`) works from the first release that includes them.
+
 ### Added (docs)
 
 - ADR-013 (proposed): named, exact reference states for `psig`, `barg`, `Nm3` and `scf`. Known limitations KL-22 (standard volumes and gauge pressure are not in the table) and KL-23 (gauge to absolute needs the ambient pressure), pinned by tests.
@@ -21,7 +27,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Changed
 
-- Workspace version bumped to 0.1.1.
+- Workspace version bumped to 0.1.2.
 - Python binding: a contiguous `float64` array is converted through the core slice loop instead
   of an element-by-element `ndarray` iterator (the output keeps the input's C or Fortran order),
   and the release profile uses LTO. Results are bit-identical to the scalar path.

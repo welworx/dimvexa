@@ -63,6 +63,7 @@ Status: pre-1.0 (0.1.x). Every release is published to all registries from one v
 ```console
 $ cargo add dimvexa                 # Rust library (crates.io; API docs on docs.rs)
 $ cargo install dimvexa-cli         # the `dimvexa` command-line tool
+$ brew install welworx/tap/dimvexa  # prebuilt, no Rust needed (Homebrew)
 $ pip install dimvexa               # Python (PyPI, NumPy arrays, abi3 wheels)
 $ npm install @dimvexa/wasm         # JavaScript / WASM (npm)
 ```
@@ -443,7 +444,7 @@ BibTeX:
 ```
 
 GitHub's "Cite this repository" button reads [`CITATION.cff`](CITATION.cff). The current
-release is 0.1.1 (2026-11-08). There is no DOI; for unreleased work please also give the commit you used.
+release is 0.1.2 (2026-11-09). There is no DOI; for unreleased work please also give the commit you used.
 
 ## Licence
 
