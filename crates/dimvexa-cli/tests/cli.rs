@@ -508,7 +508,21 @@ fn readme_supported_units_table_is_exactly_the_cli_table() {
     }
     let mut expected = vec!["| Group | Unit symbols |".to_string()];
     for (g, syms) in &groups {
-        let cells: Vec<String> = syms.iter().map(|s| format!("`{s}`")).collect();
+        // Powers of a length that the README lists first in their group (not table symbols).
+        let powers: &[&str] = match g.as_str() {
+            "area" => &["m2", "cm2", "mm2", "km2"],
+            "volume" => &["m3", "cm3", "mm3"],
+            _ => &[],
+        };
+        for p in powers {
+            assert_eq!(dimvexa(&["units", p]).code, 0, "{p}");
+        }
+        let cells: Vec<String> = powers
+            .iter()
+            .copied()
+            .chain(syms.iter().map(String::as_str))
+            .map(|s| format!("`{s}`"))
+            .collect();
         expected.push(format!("| {g} | {} |", cells.join(", ")));
     }
     assert_eq!(actual, expected);

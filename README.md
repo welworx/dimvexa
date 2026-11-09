@@ -102,8 +102,8 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | magnetic_flux | `Wb` |
 | magnetic_flux_density | `T` |
 | inductance | `H` |
-| volume | `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp` |
-| area | `ha`, `acre_int`, `acre_us_survey` |
+| volume | `m3`, `cm3`, `mm3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp` |
+| area | `m2`, `cm2`, `mm2`, `km2`, `ha`, `acre_int`, `acre_us_survey` |
 | absorbed_dose | `Gy`, `Sv` |
 | illuminance | `lx` |
 | catalytic_activity | `kat` |
@@ -113,9 +113,8 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | dynamic_viscosity | `P` |
 | kinematic_viscosity | `St` |
 
-Squares, cubes and other powers are not separate symbols: write them as powers of a unit above
-(`m2`, `mm2`, `cm3`, `m^3`, `ft2`), see [Combining units](#combining-units).
-`dimvexa convert 1 m2 mm2` gives `1000000 mm^2`.
+`m2`, `cm2`, `mm2`, `km2`, `m3`, `cm3` and `mm3` are powers of a length, not table symbols; any
+other power works the same way (`ft2`, `m^3`), see [Combining units](#combining-units).
 
 ## Combining units
 
