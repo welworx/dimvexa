@@ -127,16 +127,16 @@ fn applying_twice_is_refused_so_overrides_stay_explicit() {
     assert!(err.to_string().contains("already means a unit"), "{err}");
 }
 
-const WATER: &str = "[[bridge]]\nname = \"water_20C\"\nkind = \"density\"\n\
+const WATER: &str = "[[density]]\nname = \"water_20C\"\n\
 value = \"9982067/10000\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\n\
 source = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
 
-fn water() -> dimvexa_config::Bridge {
-    cfg(WATER, "water.toml").bridges()[0].clone()
+fn water() -> dimvexa_config::Constant {
+    cfg(WATER, "water.toml").constants()[0].clone()
 }
 
 #[test]
-fn a_density_bridge_turns_volume_into_mass_and_back_exactly() {
+fn a_density_turns_volume_into_mass_and_back_exactly() {
     let (reg, b) = (registry().unwrap(), water());
     let density = Ratio::new(9_982_067, 10_000).unwrap(); // kg/m3
     let (litre, kg) = (reg.parse("L").unwrap(), reg.parse("kg").unwrap());
@@ -167,7 +167,7 @@ fn a_density_bridge_turns_volume_into_mass_and_back_exactly() {
 }
 
 #[test]
-fn a_bridge_does_nothing_for_anything_but_a_density() {
+fn a_density_does_nothing_for_anything_but_a_density() {
     let (reg, b) = (registry().unwrap(), water());
     // Not mass <-> volume: refused with the ordinary mismatch error, not guessed.
     for (from, to) in [
@@ -181,14 +181,14 @@ fn a_bridge_does_nothing_for_anything_but_a_density() {
         let err = b.conversion(&f, &t).unwrap_err();
         assert_eq!(err.code(), "dimension_mismatch", "{from} -> {to}");
     }
-    // A temperature is neither a mass nor a volume, so a bridge cannot touch it.
+    // A temperature is neither a mass nor a volume, so a density cannot touch it.
     let (degc, kg) = (reg.parse("degC").unwrap(), reg.parse("kg").unwrap());
     assert!(b.conversion(&degc, &kg).is_err());
-    assert!(dimvexa_config::Bridge::density_needed(
+    assert!(dimvexa_config::Constant::density_needed(
         reg.parse("L").unwrap().dim(),
         kg.dim()
     ));
-    assert!(!dimvexa_config::Bridge::density_needed(kg.dim(), kg.dim()));
+    assert!(!dimvexa_config::Constant::density_needed(kg.dim(), kg.dim()));
 }
 
 const BARREL: &str = "[[unit]]\nsymbol = \"bbl_oil\"\nbase = \"gal_us\"\nfactor = \"42\"\n\
@@ -345,7 +345,7 @@ fn a_refused_unit_leaves_the_registry_untouched() {
 }
 
 #[test]
-fn a_bridge_only_turns_mass_into_volume_not_other_dimensions_that_differ_by_a_density() {
+fn a_density_only_turns_mass_into_volume_not_other_dimensions_that_differ_by_a_density() {
     let (reg, b) = (registry().unwrap(), water());
     let dim = |s: &str| reg.parse(s).unwrap().dim();
     // These differ by exactly kg/m3 but are not mass <-> volume.
@@ -358,7 +358,7 @@ fn a_bridge_only_turns_mass_into_volume_not_other_dimensions_that_differ_by_a_de
         ("kg", "m3/s"),
     ] {
         assert!(
-            !dimvexa_config::Bridge::density_needed(dim(from), dim(to)),
+            !dimvexa_config::Constant::density_needed(dim(from), dim(to)),
             "{from} -> {to}"
         );
         let (f, t) = (reg.parse(from).unwrap(), reg.parse(to).unwrap());
@@ -367,12 +367,12 @@ fn a_bridge_only_turns_mass_into_volume_not_other_dimensions_that_differ_by_a_de
     // Mass <-> volume with the same power of time still works.
     for (from, to) in [("kg", "L"), ("L", "kg"), ("kg/h", "m3/h"), ("m3/s", "kg/s")] {
         assert!(
-            dimvexa_config::Bridge::density_needed(dim(from), dim(to)),
+            dimvexa_config::Constant::density_needed(dim(from), dim(to)),
             "{from} -> {to}"
         );
     }
     // A different power of time on the two sides does not.
-    assert!(!dimvexa_config::Bridge::density_needed(
+    assert!(!dimvexa_config::Constant::density_needed(
         dim("kg/h"),
         dim("m3")
     ));
@@ -520,5 +520,113 @@ fn a_config_cannot_turn_an_ambiguous_prefixed_name_into_a_quiet_reading() {
         );
         // The new name itself works.
         assert!(reg.conversion("iton", "kg").is_ok());
+    }
+}
+
+// ---- bundled configs (ADR-014) ----
+
+fn bundled_registry(names: &[&str]) -> Registry {
+    let mut reg = registry().unwrap();
+    let parsed: Vec<Config> = names
+        .iter()
+        .map(|n| dimvexa_config::bundled(n).unwrap().config().unwrap())
+        .collect();
+    apply(&mut reg, &parsed).unwrap();
+    reg
+}
+
+#[test]
+fn every_bundled_config_applies_on_its_own_and_all_together() {
+    for b in dimvexa_config::BUNDLED {
+        bundled_registry(&[b.name]);
+    }
+    let all: Vec<&str> = dimvexa_config::BUNDLED.iter().map(|b| b.name).collect();
+    bundled_registry(&all);
+}
+
+#[test]
+fn us_and_gb_resolve_the_regional_names() {
+    let us = bundled_registry(&["us"]);
+    assert_eq!(
+        factor(&us, "ton", "kg"),
+        factor(&us, "ton_short", "kg"),
+        "us ton"
+    );
+    assert_eq!(factor(&us, "mile", "m"), factor(&us, "mi", "m"));
+    assert_eq!(factor(&us, "gal", "L"), factor(&us, "gal_us", "L"));
+    assert_eq!(factor(&us, "pt", "L"), factor(&us, "pt_us", "L"));
+    assert_eq!(factor(&us, "qt", "L"), factor(&us, "qt_us", "L"));
+    let gb = bundled_registry(&["gb"]);
+    assert_eq!(factor(&gb, "ton", "kg"), factor(&gb, "ton_long", "kg"));
+    assert_eq!(factor(&gb, "gal", "L"), factor(&gb, "gal_imp", "L"));
+    // The US and the UK gallon differ, so the same name gives different answers per config.
+    assert_ne!(factor(&us, "gal", "L"), factor(&gb, "gal", "L"));
+    // oz stays refused: mass or volume, in both countries
+    for reg in [&us, &gb] {
+        assert_eq!(
+            reg.conversion("oz", "g").unwrap_err().code(),
+            "ambiguous_symbol"
+        );
+    }
+    // later wins: us then gb gives the British ton
+    let both = bundled_registry(&["us", "gb"]);
+    assert_eq!(factor(&both, "ton", "kg"), factor(&both, "ton_long", "kg"));
+}
+
+#[test]
+fn metric_trade_and_the_year_configs_resolve_their_names() {
+    let mt = bundled_registry(&["metric-trade"]);
+    assert_eq!(factor(&mt, "mt", "kg"), Ratio::from_int(1000));
+    assert_eq!(factor(&mt, "ton", "kg"), Ratio::from_int(1000));
+    let julian = bundled_registry(&["year-julian"]);
+    let civil = bundled_registry(&["year-civil"]);
+    for name in ["yr", "year"] {
+        assert_eq!(factor(&julian, name, "d"), Ratio::new(1461, 4).unwrap());
+        assert_eq!(factor(&civil, name, "d"), Ratio::from_int(365));
+    }
+}
+
+#[test]
+fn bundled_densities_are_identical_in_every_config_that_carries_them() {
+    let water = dimvexa_config::bundled("water").unwrap().config().unwrap();
+    assert!(!water.constants().is_empty());
+    for c in water.constants() {
+        assert!(!c.conditions.trim().is_empty() && !c.source.trim().is_empty());
+    }
+    for name in ["us", "gb", "metric-trade"] {
+        let cfg = dimvexa_config::bundled(name).unwrap().config().unwrap();
+        let theirs: Vec<_> = cfg
+            .constants()
+            .iter()
+            .map(|c| (&c.name, c.value, &c.conditions, &c.source))
+            .collect();
+        let ours: Vec<_> = water
+            .constants()
+            .iter()
+            .map(|c| (&c.name, c.value, &c.conditions, &c.source))
+            .collect();
+        assert_eq!(theirs, ours, "{name} carries the water densities");
+    }
+    // 25 degC: 997.04702 kg/m3; maximum density: 999.97495 kg/m3
+    let get = |n: &str| water.constants().iter().find(|c| c.name == n).unwrap().value;
+    assert_eq!(get("water_25C"), Ratio::new(99_704_702, 100_000).unwrap());
+    assert_eq!(
+        get("water_max_density"),
+        Ratio::new(99_997_495, 100_000).unwrap()
+    );
+}
+
+#[test]
+fn a_density_literal_is_converted_to_kg_per_m3_exactly() {
+    use dimvexa_config::Constant;
+    let reg = registry().unwrap();
+    let d = Constant::density_from_text(&reg, "998.2067kg/m3").unwrap();
+    assert_eq!(d.value, Ratio::new(9_982_067, 10_000).unwrap());
+    let g = Constant::density_from_text(&reg, "0.7 g/cm3").unwrap();
+    assert_eq!(g.value, Ratio::from_int(700));
+    let l = Constant::density_from_text(&reg, "1 kg/L").unwrap();
+    assert_eq!(l.value, Ratio::from_int(1000));
+    for bad in ["998", "kg/m3", "0 kg/m3", "-1 kg/m3", "5 m", "5 degC", "x kg/m3"] {
+        assert!(Constant::density_from_text(&reg, bad).is_err(), "{bad}");
     }
 }

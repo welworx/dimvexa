@@ -16,13 +16,13 @@
 //! an existing one, with a source. Neither can redefine an existing symbol, alias or prefixed
 //! form.
 //!
-//! A config can also hold **bridges**: constants the caller supplies for a conversion the core
-//! refuses (ADR-001), such as the density of water for litres to kilograms. A bridge is an
+//! A config can also hold **densities**: constants the caller supplies for a conversion the core
+//! refuses (ADR-001), such as the density of water for litres to kilograms. A density is an
 //! exact number with mandatory `conditions` and `source`; the library multiplies by it and
 //! never derives it from temperature or pressure.
 //!
 //! ```text
-//! [[bridge]]
+//! [[density]]
 //! name = "water_20C"
 //! kind = "density"                        # kg/m3
 //! value = "9982067/10000"
@@ -45,7 +45,7 @@ use dimvexa_core::{
 };
 
 /// A parsed config file: its origin, a content hash and its `[map]`, `[[unit]]` and
-/// `[[bridge]]` entries in file order.
+/// `[[density]]` entries in file order.
 ///
 /// # Examples
 ///
@@ -63,7 +63,7 @@ pub struct Config {
     origin: String,
     hash: String,
     mappings: Vec<Mapping>,
-    bridges: Vec<Bridge>,
+    constants: Vec<Constant>,
     units: Vec<ConfigUnit>,
 }
 
@@ -93,15 +93,15 @@ pub struct ConfigUnit {
     pub line: usize,
 }
 
-/// What a [`Bridge`] connects. Only densities exist in this version.
+/// What a [`Constant`] connects. Only densities exist in this version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
-pub enum BridgeKind {
+pub enum ConstantKind {
     /// A density in kg/m^3: mass to volume and back (water, an oil, a brine).
     Density,
 }
 
-impl BridgeKind {
+impl ConstantKind {
     /// The stable lower-case name used in config files and JSON output.
     #[must_use]
     pub const fn name(self) -> &'static str {
@@ -110,7 +110,7 @@ impl BridgeKind {
         }
     }
 
-    /// The unit of a bridge value of this kind, for display.
+    /// The unit of a constant of this kind, for display.
     #[must_use]
     pub const fn unit(self) -> &'static str {
         match self {
@@ -124,12 +124,12 @@ impl BridgeKind {
 /// The value is exact and positive. `conditions` and `source` are mandatory, so a number never
 /// travels without the assumption behind it.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Bridge {
-    /// The name selected with `--bridge`, for example `water_20C`.
+pub struct Constant {
+    /// The name selected with `--density`, for example `water_20C`.
     pub name: String,
     /// What the value means.
-    pub kind: BridgeKind,
-    /// The exact value, in [`BridgeKind::unit`].
+    pub kind: ConstantKind,
+    /// The exact value, in [`ConstantKind::unit`].
     pub value: Ratio,
     /// The physical conditions the value holds for, for example `air-free water, 20 degC`.
     pub conditions: String,
@@ -137,7 +137,7 @@ pub struct Bridge {
     pub source: String,
     /// The config file it came from.
     pub origin: String,
-    /// One-based line of its `[[bridge]]` header.
+    /// One-based line of its `[[density]]` header.
     pub line: usize,
 }
 
@@ -158,7 +158,7 @@ impl Config {
     /// Parses config text. `origin` names the source (a file name) in errors and listings.
     ///
     /// Supported: comments (`#`), blank lines, an optional UTF-8 BOM, one `[map]` section of
-    /// `name = "unit"` entries, and `[[unit]]` and `[[bridge]]` tables of `key = "value"`
+    /// `name = "unit"` entries, and `[[unit]]` and `[[density]]` tables of `key = "value"`
     /// entries (bare or quoted keys, basic strings with `\"` and `\\`). Anything else,
     /// including sections this version does not read, is an error with a line number, so a
     /// config can never be half-read.
@@ -169,7 +169,7 @@ impl Config {
     /// section, a key outside `[map]` or a repeated name.
     pub fn parse(text: &str, origin: &str) -> Result<Self> {
         let mut mappings: Vec<Mapping> = Vec::new();
-        let mut bridges: Vec<Bridge> = Vec::new();
+        let mut constants: Vec<Constant> = Vec::new();
         let mut units: Vec<ConfigUnit> = Vec::new();
         let mut section = Section::None;
         let mut pending: Option<Pending> = None;
@@ -186,7 +186,7 @@ impl Config {
                 continue;
             }
             if content.starts_with('[') {
-                finish_table(&mut pending, &mut bridges, &mut units, origin)?;
+                finish_table(&mut pending, &mut constants, &mut units, origin)?;
                 let header = section_header(content)
                     .ok_or_else(|| bad("malformed section header".to_string()))?;
                 match header {
@@ -198,8 +198,14 @@ impl Config {
                         section = Section::Map;
                     }
                     Header::Double("bridge") => {
+                        return Err(bad(
+                            "the [[bridge]] table was renamed [[density]] and has no 'kind' key (ADR-014)"
+                                .to_string(),
+                        ));
+                    }
+                    Header::Double("density") => {
                         section = Section::Table;
-                        pending = Some(Pending::new(TableKind::Bridge, line));
+                        pending = Some(Pending::new(TableKind::Density, line));
                     }
                     Header::Double("unit") => {
                         section = Section::Table;
@@ -207,7 +213,7 @@ impl Config {
                     }
                     Header::Single(_) | Header::Double(_) => {
                         return Err(bad(format!(
-                            "unknown section '{content}': this version reads [map], [[unit]] and [[bridge]]"
+                            "unknown section '{content}': this version reads [map], [[unit]] and [[density]]"
                         )));
                     }
                 }
@@ -220,7 +226,7 @@ impl Config {
             match section {
                 Section::None => {
                     return Err(bad(
-                        "an entry must be inside a [map], [[unit]] or [[bridge]] section"
+                        "an entry must be inside a [map], [[unit]] or [[density]] section"
                             .to_string(),
                     ));
                 }
@@ -242,12 +248,12 @@ impl Config {
                 }
             }
         }
-        finish_table(&mut pending, &mut bridges, &mut units, origin)?;
+        finish_table(&mut pending, &mut constants, &mut units, origin)?;
         Ok(Self {
             origin: origin.to_string(),
             hash: format!("fnv1a64:{:016x}", fnv1a64(text.as_bytes())),
             mappings,
-            bridges,
+            constants,
             units,
         })
     }
@@ -270,10 +276,10 @@ impl Config {
         &self.mappings
     }
 
-    /// The `[[bridge]]` entries in file order.
+    /// The `[[density]]` entries in file order.
     #[must_use]
-    pub fn bridges(&self) -> &[Bridge] {
-        &self.bridges
+    pub fn constants(&self) -> &[Constant] {
+        &self.constants
     }
 
     /// The `[[unit]]` entries in file order.
@@ -292,14 +298,14 @@ enum Section {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum TableKind {
-    Bridge,
+    Density,
     Unit,
 }
 
 impl TableKind {
     const fn keys(self) -> &'static [&'static str] {
         match self {
-            Self::Bridge => &["name", "kind", "value", "conditions", "source"],
+            Self::Density => &["name", "value", "conditions", "source"],
             Self::Unit => &[
                 "symbol",
                 "base",
@@ -313,7 +319,7 @@ impl TableKind {
     }
 }
 
-/// A `[[bridge]]` or `[[unit]]` table while it is being read.
+/// A `[[density]]` or `[[unit]]` table while it is being read.
 struct Pending {
     kind: TableKind,
     line: usize,
@@ -332,7 +338,7 @@ impl Pending {
     fn set(&mut self, key: &str, value: String) -> core::result::Result<(), String> {
         if !self.kind.keys().contains(&key) {
             let table = match self.kind {
-                TableKind::Bridge => "bridge",
+                TableKind::Density => "density",
                 TableKind::Unit => "unit",
             };
             return Err(format!(
@@ -377,7 +383,7 @@ fn number_problem(what: &str, text: &str, e: &Error) -> String {
 /// Validates the table read so far and stores it.
 fn finish_table(
     pending: &mut Option<Pending>,
-    bridges: &mut Vec<Bridge>,
+    constants: &mut Vec<Constant>,
     units: &mut Vec<ConfigUnit>,
     origin: &str,
 ) -> Result<()> {
@@ -385,7 +391,7 @@ fn finish_table(
         return Ok(());
     };
     let (what, result) = match p.kind {
-        TableKind::Bridge => ("bridge", finish_bridge(&p, bridges, origin)),
+        TableKind::Density => ("density", finish_density(&p, constants, origin)),
         TableKind::Unit => ("unit", finish_unit(&p, units, origin)),
     };
     result.map_err(|message| Error::InvalidDefinition {
@@ -394,20 +400,18 @@ fn finish_table(
     })
 }
 
-fn finish_bridge(
+fn finish_density(
     p: &Pending,
-    bridges: &mut Vec<Bridge>,
+    constants: &mut Vec<Constant>,
     origin: &str,
 ) -> core::result::Result<(), String> {
     let name = p.need("name")?;
-    let kind = match p.need("kind")?.as_str() {
-        "density" => BridgeKind::Density,
-        other => {
-            return Err(format!(
-                "kind '{other}' is not supported (only 'density' in this version)"
-            ));
-        }
-    };
+    let kind = ConstantKind::Density;
+    if !name.starts_with(|c: char| c.is_ascii_alphabetic()) {
+        return Err(format!(
+            "name '{name}' must start with a letter (a --density value that starts with a digit is a number)"
+        ));
+    }
     let text = p.need("value")?;
     let value: Ratio = text
         .parse()
@@ -417,10 +421,10 @@ fn finish_bridge(
     }
     let conditions = p.need("conditions")?;
     let source = p.need("source")?;
-    if bridges.iter().any(|b| b.name == name) {
+    if constants.iter().any(|b| b.name == name) {
         return Err(format!("'{name}' is defined twice"));
     }
-    bridges.push(Bridge {
+    constants.push(Constant {
         name,
         kind,
         value,
@@ -481,40 +485,40 @@ fn finish_unit(
     Ok(())
 }
 
-/// The bridges in effect for a list of configs: one per name, a later config overriding an
+/// The constants in effect for a list of configs: one per name, a later config overriding an
 /// earlier one, in application order.
 ///
 /// # Examples
 ///
 /// ```
-/// use dimvexa_config::{Config, bridges};
-/// let a = Config::parse("[[bridge]]\nname = \"w\"\nkind = \"density\"\nvalue = \"1000\"\nconditions = \"c\"\nsource = \"s\"\n", "a.toml")?;
-/// let b = Config::parse("[[bridge]]\nname = \"w\"\nkind = \"density\"\nvalue = \"998\"\nconditions = \"c\"\nsource = \"s\"\n", "b.toml")?;
-/// let effective = bridges(&[a, b]);
+/// use dimvexa_config::{Config, constants};
+/// let a = Config::parse("[[density]]\nname = \"w\"\nvalue = \"1000\"\nconditions = \"c\"\nsource = \"s\"\n", "a.toml")?;
+/// let b = Config::parse("[[density]]\nname = \"w\"\nvalue = \"998\"\nconditions = \"c\"\nsource = \"s\"\n", "b.toml")?;
+/// let effective = constants(&[a, b]);
 /// assert_eq!(effective.len(), 1);
 /// assert_eq!(effective[0].origin, "b.toml");
 /// # Ok::<(), dimvexa_core::Error>(())
 /// ```
 #[must_use]
-pub fn bridges(configs: &[Config]) -> Vec<Bridge> {
-    let mut effective: Vec<Bridge> = Vec::new();
-    for b in configs.iter().flat_map(Config::bridges) {
+pub fn constants(configs: &[Config]) -> Vec<Constant> {
+    let mut effective: Vec<Constant> = Vec::new();
+    for b in configs.iter().flat_map(Config::constants) {
         upsert(&mut effective, b.clone(), |e| e.name == b.name);
     }
     effective
 }
 
-impl Bridge {
+impl Constant {
     /// Whether converting `from` to `to` needs a density: mass to volume or back, with the same
     /// power of time on both sides (`kg/h` to `m3/h`). Nothing else does (`kg/L` does not).
     ///
     /// # Examples
     ///
     /// ```
-    /// use dimvexa_config::Bridge;
+    /// use dimvexa_config::Constant;
     /// use dimvexa_core::Dim;
-    /// assert!(Bridge::density_needed(Dim::KG, Dim::M.checked_scale(3)?));
-    /// assert!(!Bridge::density_needed(Dim::KG, Dim::M));
+    /// assert!(Constant::density_needed(Dim::KG, Dim::M.checked_scale(3)?));
+    /// assert!(!Constant::density_needed(Dim::KG, Dim::M));
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     #[must_use]
@@ -522,10 +526,10 @@ impl Bridge {
         density_direction(from, to).is_some()
     }
 
-    /// The conversion from `from` to `to` through this bridge: the ordinary linear factor
+    /// The conversion from `from` to `to` through this constant: the ordinary linear factor
     /// times (or divided by) the density. Only plain linear units qualify.
     ///
-    /// The bridge's exactness is `measured`: the number is the caller's, not a definition,
+    /// The constant's exactness is `measured`: the number is the caller's, not a definition,
     /// so the result must not be read as exact in the sense of a defined factor.
     ///
     /// # Errors
@@ -542,7 +546,7 @@ impl Bridge {
         if !from.offset().is_zero() || !to.offset().is_zero() {
             return Err(Error::Refused {
                 reason:
-                    "a density bridge applies to linear units only, not to a unit with an offset"
+                    "a density applies to linear units only, not to a unit with an offset"
                         .to_string(),
                 suggestions: Vec::new(),
             });
@@ -555,7 +559,76 @@ impl Bridge {
         Conversion::linear(factor)
     }
 
-    /// The exactness of a result that went through a bridge.
+    /// A density the caller writes on the command line instead of in a config, for example
+    /// `998.2067kg/m3` or `0.7 g/cm3`. Any unit of mass per volume the registry knows works; the
+    /// number is exact (a decimal or a fraction) and is converted to kg/m3 exactly.
+    ///
+    /// The constant is named `--density`, and its `conditions` and `source` say that the caller
+    /// supplied it and that nothing backs it, so a result never hides where the number came from.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidDefinition`] (symbol `--density`) if the text has no number or no unit,
+    /// the number is not exact or not positive, or the unit is not a density (mass per volume,
+    /// linear). Unit errors of the registry (unknown or ambiguous unit) pass through.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_config::Constant;
+    /// use dimvexa_core::{Dim, PrefixMode, Ratio, Registry, Unit};
+    ///
+    /// let mut reg = Registry::new();
+    /// reg.register(Unit::linear("m", Dim::M, Ratio::ONE)?)?;
+    /// reg.register(Unit::linear("g", Dim::KG, Ratio::new(1, 1000)?)?.with_prefixes(PrefixMode::Si))?;
+    /// let d = Constant::density_from_text(&reg, "0.7 g/m3")?;
+    /// assert_eq!(d.value, Ratio::new(7, 10_000)?);
+    /// assert_eq!(d.name, "--density");
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn density_from_text(reg: &Registry, text: &str) -> Result<Self> {
+        let bad = |message: String| Error::InvalidDefinition {
+            symbol: "--density".to_string(),
+            message,
+        };
+        let t = text.trim();
+        let split = t
+            .find(|c: char| !(c.is_ascii_digit() || matches!(c, '.' | '+' | '-' | '/')))
+            .unwrap_or(t.len());
+        let (number, unit_text) = t.split_at(split);
+        let unit_text = unit_text.trim();
+        if number.is_empty() || unit_text.is_empty() {
+            return Err(bad(format!(
+                "'{text}' is not a density: write a number and a unit, for example 998.2067kg/m3"
+            )));
+        }
+        let n: Ratio = number
+            .parse()
+            .map_err(|e| bad(number_problem("number", number, &e)))?;
+        let unit = reg.parse(unit_text)?;
+        let density = Dim::KG.checked_sub(Dim::M.checked_scale(3)?)?;
+        if unit.dim() != density || !unit.offset().is_zero() || unit.kind() != Kind::Plain {
+            return Err(bad(format!(
+                "'{unit_text}' is not a unit of density (mass per volume), for example kg/m3, g/cm3 or lb/ft3"
+            )));
+        }
+        let value = n.checked_mul(unit.factor())?;
+        if value.num() <= 0 {
+            return Err(bad("the density must be positive".to_string()));
+        }
+        Ok(Self {
+            name: "--density".to_string(),
+            kind: ConstantKind::Density,
+            value,
+            conditions: "supplied by the caller on the command line; the conditions are not known"
+                .to_string(),
+            source: "none: supplied by the caller".to_string(),
+            origin: "--density".to_string(),
+            line: 0,
+        })
+    }
+
+    /// The exactness of a result that went through a constant.
     #[must_use]
     pub const fn exactness(&self) -> Exactness {
         Exactness::Measured
@@ -583,6 +656,80 @@ fn density_direction(from: Dim, to: Dim) -> Option<Direction> {
         ([1, 0], [0, 3]) => Some(Direction::MassToVolume),
         _ => None,
     }
+}
+
+/// A config that ships inside the binary (ADR-014): same format, same checks as a user file.
+///
+/// # Examples
+///
+/// ```
+/// use dimvexa_config::{bundled, is_path};
+/// let us = bundled("us").expect("shipped");
+/// let cfg = us.config()?;
+/// assert_eq!(cfg.origin(), "bundled:us");
+/// assert!(cfg.mappings().iter().any(|m| m.name == "ton" && m.target == "ton_short"));
+/// assert!(!is_path("us") && is_path("./us") && is_path("mine.toml"));
+/// # Ok::<(), dimvexa_core::Error>(())
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Bundled {
+    /// The name given to `--config`, for example `us`.
+    pub name: &'static str,
+    /// The config text, as it is in `crates/dimvexa-config/configs/`.
+    pub text: &'static str,
+}
+
+impl Bundled {
+    /// The parsed config; its origin is `bundled:NAME`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidDefinition`] if the shipped text is malformed (a test keeps this from
+    /// happening).
+    pub fn config(&self) -> Result<Config> {
+        Config::parse(self.text, &format!("bundled:{}", self.name))
+    }
+}
+
+/// The configs that ship with dimvexa, in listing order.
+pub const BUNDLED: &[Bundled] = &[
+    Bundled {
+        name: "us",
+        text: include_str!("../configs/us.toml"),
+    },
+    Bundled {
+        name: "gb",
+        text: include_str!("../configs/gb.toml"),
+    },
+    Bundled {
+        name: "metric-trade",
+        text: include_str!("../configs/metric-trade.toml"),
+    },
+    Bundled {
+        name: "year-julian",
+        text: include_str!("../configs/year-julian.toml"),
+    },
+    Bundled {
+        name: "year-civil",
+        text: include_str!("../configs/year-civil.toml"),
+    },
+    Bundled {
+        name: "water",
+        text: include_str!("../configs/water.toml"),
+    },
+];
+
+/// The shipped config called `name`, if there is one.
+#[must_use]
+pub fn bundled(name: &str) -> Option<&'static Bundled> {
+    BUNDLED.iter().find(|b| b.name == name)
+}
+
+/// Whether a `--config` value is a file path (it contains `/` or `\`, or ends in `.toml`).
+/// Any other value is the name of a shipped config; a local file called `us` is written `./us`.
+#[must_use]
+pub fn is_path(spec: &str) -> bool {
+    spec.contains('/') || spec.contains('\\') || spec.ends_with(".toml")
 }
 
 /// Replaces the entry that `same` selects, keeping its position, or appends. An override must
@@ -863,6 +1010,16 @@ mod tests {
     }
 
     #[test]
+    fn bundled_names_are_names_and_parse() {
+        for b in BUNDLED {
+            let cfg = b.config().unwrap();
+            assert_eq!(cfg.origin(), format!("bundled:{}", b.name));
+            assert!(!is_path(b.name), "{}", b.name);
+        }
+        assert!(bundled("nope").is_none());
+    }
+
+    #[test]
     fn hash_changes_with_the_content() {
         let a = Config::parse("[map]\nmt = \"tonne\"\n", "a").unwrap();
         let b = Config::parse("[map]\nmt = \"tonne\" \n", "b").unwrap();
@@ -880,14 +1037,14 @@ mod tests {
         for (text, needle) in [
             (
                 "mt = \"tonne\"\n",
-                "inside a [map], [[unit]] or [[bridge]] section",
+                "inside a [map], [[unit]] or [[density]] section",
             ),
             ("[map]\nmt = tonne\n", "quoted string"),
             ("[map]\nmt = \"a\" \"b\"\n", "unescaped quote"),
             ("[map]\nmt\n", "expected name"),
             ("[map]\nmt = \"t\"\nmt = \"u\"\n", "mapped twice"),
-            ("[unit]\n", "reads [map], [[unit]] and [[bridge]]"),
-            ("[[map]]\n", "reads [map], [[unit]] and [[bridge]]"),
+            ("[unit]\n", "reads [map], [[unit]] and [[density]]"),
+            ("[[map]]\n", "reads [map], [[unit]] and [[density]]"),
             ("[map\n", "malformed section header"),
             ("[map]\nm t = \"tonne\"\n", "not a bare name"),
             ("[map]\nmt = \"a\\nb\"\n", "unsupported escape"),
@@ -900,26 +1057,26 @@ mod tests {
         }
     }
 
-    const WATER: &str = "[[bridge]]\nname = \"water_20C\"\nkind = \"density\"\nvalue = \"9982067/10000\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\nsource = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
+    const WATER: &str = "[[density]]\nname = \"water_20C\"\nvalue = \"9982067/10000\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\nsource = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
 
     #[test]
-    fn parses_a_bridge_with_its_conditions_and_source() {
+    fn parses_a_density_with_its_conditions_and_source() {
         let cfg = Config::parse(&format!("[map]\nmt = \"tonne\"\n\n{WATER}"), "w.toml").unwrap();
         assert_eq!(cfg.mappings().len(), 1);
-        let b = &cfg.bridges()[0];
+        let b = &cfg.constants()[0];
         assert_eq!(b.name, "water_20C");
-        assert_eq!(b.kind, BridgeKind::Density);
+        assert_eq!(b.kind, ConstantKind::Density);
         assert_eq!(b.value, Ratio::new(9_982_067, 10_000).unwrap());
         assert_eq!(b.conditions, "air-free water, 20 degC, 101.325 kPa");
         assert!(b.source.contains("Tanaka"));
         assert_eq!((b.origin.as_str(), b.line), ("w.toml", 4));
         // A decimal value is the same exact number.
         let d = Config::parse(&WATER.replace("9982067/10000", "998.2067"), "w").unwrap();
-        assert_eq!(d.bridges()[0].value, b.value);
+        assert_eq!(d.constants()[0].value, b.value);
     }
 
     #[test]
-    fn a_bridge_without_its_assumptions_is_refused() {
+    fn a_density_without_its_assumptions_is_refused() {
         let field = |name: &str| {
             WATER
                 .lines()
@@ -927,7 +1084,7 @@ mod tests {
                 .collect::<Vec<_>>()
                 .join("\n")
         };
-        for key in ["name", "kind", "value", "conditions", "source"] {
+        for key in ["name", "value", "conditions", "source"] {
             let err = Config::parse(&field(key), "w.toml").unwrap_err();
             let msg = err.to_string();
             assert!(
@@ -937,8 +1094,13 @@ mod tests {
         }
         for (text, needle) in [
             (
-                WATER.replace("\"density\"", "\"molar_mass\""),
-                "only 'density'",
+                WATER.replace("source =", "kind = \"density\"\nsource ="),
+                "unknown density key 'kind'",
+            ),
+            (WATER.replace("water_20C", "20C"), "must start with a letter"),
+            (
+                WATER.replace("[[density]]", "[[bridge]]"),
+                "renamed [[density]]",
             ),
             (WATER.replace("9982067/10000", "0"), "must be positive"),
             (WATER.replace("9982067/10000", "-5"), "must be positive"),
@@ -956,7 +1118,7 @@ mod tests {
             (format!("{WATER}{WATER}"), "defined twice"),
             (
                 WATER.replace("source =", "colour = \"blue\"\nsource ="),
-                "unknown bridge key 'colour'",
+                "unknown density key 'colour'",
             ),
             (format!("{WATER}name = \"x\"\n"), "given twice"),
         ] {
@@ -966,10 +1128,10 @@ mod tests {
     }
 
     #[test]
-    fn a_later_config_overrides_a_bridge_of_the_same_name() {
+    fn a_later_config_overrides_a_density_of_the_same_name() {
         let a = Config::parse(WATER, "a.toml").unwrap();
         let b = Config::parse(&WATER.replace("9982067/10000", "1000"), "b.toml").unwrap();
-        let effective = bridges(&[a, b]);
+        let effective = constants(&[a, b]);
         assert_eq!(effective.len(), 1);
         assert_eq!(effective[0].value, Ratio::from_int(1000));
         assert_eq!(effective[0].origin, "b.toml");
@@ -1054,15 +1216,15 @@ mod tests {
         let cfg = Config::parse("[map]\n\"a=b\" = \"t\"\n\"q\\\"=\" = \"u\"\n", "q").unwrap();
         let names: Vec<&str> = cfg.mappings().iter().map(|m| m.name.as_str()).collect();
         assert_eq!(names, ["a=b", "q\"="]);
-        let cfg = Config::parse(&WATER.replace("[[bridge]]", "[[ bridge ]]"), "w").unwrap();
-        assert_eq!(cfg.bridges().len(), 1);
+        let cfg = Config::parse(&WATER.replace("[[density]]", "[[ density ]]"), "w").unwrap();
+        assert_eq!(cfg.constants().len(), 1);
     }
 
     #[test]
     fn malformed_headers_and_repeated_sections_are_refused() {
         for (text, needle) in [
-            ("[[bridge]] trailing\n", "malformed section header"),
-            ("[[bridge]\n", "malformed section header"),
+            ("[[density]] trailing\n", "malformed section header"),
+            ("[[density]\n", "malformed section header"),
             ("[map\n", "malformed section header"),
             ("[map]\n[map]\n", "appears twice"),
             ("[[map]]\n", "unknown section"),
