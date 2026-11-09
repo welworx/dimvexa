@@ -9,7 +9,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Added
 
-- `docs/brand`: the Dimvexa logo, app icons (16 to 512 px), lockups, GitHub social preview and design guidelines; the README header and the Excel add-in icons use them.
+- `docs/brand`: the Dimvexa logo, app icons (16 to 512 px), lockups, GitHub social preview and design guidelines; the README header, the Excel add-in icons, every crate and binding README (so the crates.io, PyPI and npm pages) and the docs.rs logo and favicon use them.
 - `bindings/excel`: spike of an Office.js custom functions add-in (`DIMVEXA.CONVERT`, `DIMVEXA.CONVERTRANGE`, `DIMVEXA.VERSION`) over the WASM build, ADR-016 (proposed). `DIMVEXA.CONVERT` and `DIMVEXA.CONVERTRANGE` take an optional `density` and an optional shipped `config` (ADR-014); the WASM binding gains `convertWith` and `DimvexaConversion.withOptions`. Tested with a mocked Excel runtime and by hand in Excel on the web and on Mac; Windows is untested.
 
 ## [0.2.1] - 2026-11-09

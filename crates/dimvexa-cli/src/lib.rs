@@ -19,6 +19,10 @@
 //! `docs/schemas/`; `units --json` uses `dimvexa.units/2`, `configs --json` `dimvexa.configs/1`) and the exit code stays non-zero. The error `code` is one of the
 //! library's stable codes ([`dimvexa::Error::ALL_CODES`]) or `usage`.
 #![forbid(unsafe_code)]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/welworx/dimvexa/main/docs/brand/icon-256.png",
+    html_favicon_url = "https://raw.githubusercontent.com/welworx/dimvexa/main/docs/brand/icon-32.png"
+)]
 
 use std::fmt::Write as _;
 use std::io::Write;

@@ -1,3 +1,5 @@
+<p align="center"><img src="https://raw.githubusercontent.com/welworx/dimvexa/main/docs/brand/icon-256.png" alt="Dimvexa" width="96" height="96"></p>
+
 # dimvexa-wasm
 
 WebAssembly binding for Dimvexa (ADR-011: `docs/adr/011-wasm-binding.md`). Thin: every call goes
