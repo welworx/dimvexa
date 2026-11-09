@@ -34,7 +34,8 @@ All functions live in the `DIMVEXA` namespace. Excel ignores letter case, so
   are text, so quote them or point at cells that hold them.
 * **`density`** (optional): only used when the plain conversion needs one, that is mass to volume or
   back. Either your own number with a unit (`998.2067kg/m3`, `0.7 g/cm3`) or the name of a density
-  in a loaded config. A name without its config is an error with a hint. A density is never
+  in a loaded config. A name without its config is an error with a hint. A density you give is
+  checked even when the conversion does not need it, so a typo is never ignored. A density is never
   assumed and never computed.
 * **`config`** (optional): a shipped config that resolves names that are otherwise refused as
   ambiguous (ADR-006, ADR-014): `us`, `gb`, `metric-trade`, `year-julian`, `year-civil`, `water`.
@@ -49,7 +50,7 @@ All functions live in the `DIMVEXA` namespace. Excel ignores letter case, so
 ### Errors
 
 A refusal is an Excel error, never a guess. In an English Excel it is `#VALUE!` (in a German one
-`#WERT!`), or `#NUM!` for an overflow. Hover over the cell's error indicator to read the message,
+`#WERT!`), or `#NUM!` for an overflow (`dimvexa overflow: …`). Hover over the cell's error indicator to read the message,
 which starts with the stable error code:
 
 ```

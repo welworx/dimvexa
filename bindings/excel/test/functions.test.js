@@ -76,7 +76,22 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
   near(await associated.CONVERT(1, "L", "kg", "998.2067kg/m3"), 0.9982067);
   near(await associated.CONVERT(1, "L", "kg", "water_25C", "water"), 0.99704702);
   near(await associated.CONVERT(1, "kg", "L", "water_25C", "water"), 1 / 0.99704702);
-  assert.strictEqual(await associated.CONVERT(1, "km", "m", "water_25C"), 1000);
+  assert.strictEqual(await associated.CONVERT(1, "km", "m", "water_25C", "water"), 1000);
+  // A density that was given is checked even when it is not needed (as in the CLI).
+  await assert.rejects(async () => associated.CONVERT(1, "km", "m", "water_25C"), /add the config 'water'/);
+  await assert.rejects(async () => associated.CONVERT(1, "kg", "g", "nonsense"), /no density named 'nonsense'/);
+  await assert.rejects(async () => associated.CONVERT(1, "kg", "g", "5 m"), /not a unit of density/);
+  assert.strictEqual(await associated.CONVERT(1, "kg", "g", "998.2067kg/m3"), 1000);
+  // A result that does not fit a number is an overflow error, not Infinity.
+  await assert.rejects(async () => associated.CONVERT(1e308, "km", "mm"), (e) => {
+    assert.strictEqual(e.code, "#NUM!");
+    assert.match(e.message, /^dimvexa overflow: the result is too large for a number/);
+    return true;
+  });
+  await assert.rejects(async () => associated.CONVERTRANGE([[1, 1e308]], "km", "mm"), (e) => {
+    assert.match(e.message, /^dimvexa overflow: the result in row 1, column 2 is too large/);
+    return true;
+  });
   assert.strictEqual(await associated.CONVERT(1, "km", "m", null), 1000);
   await assert.rejects(async () => associated.CONVERT(1, "L", "kg"), (e) => {
     assert.match(e.message, /^dimvexa dimension_mismatch:/);

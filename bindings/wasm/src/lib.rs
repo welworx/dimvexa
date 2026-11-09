@@ -146,8 +146,8 @@ fn resolve_density(loaded: &Loaded, spec: &str) -> Result<Constant, JsValue> {
         })
 }
 
-/// The ordinary conversion if one exists. A density is used only when the plain conversion is
-/// refused for lack of one (mass to volume or back) and a density was given. `config` and
+/// The ordinary conversion if one exists. A density that was given is always checked; it is used
+/// only when the plain conversion is refused for lack of one (mass to volume or back). `config` and
 /// `density` are empty for "none".
 fn conversion_with_options(
     from: &str,
@@ -157,15 +157,22 @@ fn conversion_with_options(
 ) -> Result<Conversion, JsValue> {
     let loaded = load_config(config)?;
     let reg = &loaded.reg;
+    // A density that was given must be a valid one even when this conversion does not need it,
+    // as in the CLI: a typo in a density cell must not stay invisible until a row needs it.
+    let density = density.trim();
+    let resolved = if density.is_empty() {
+        None
+    } else {
+        Some(resolve_density(&loaded, density)?)
+    };
     let f: UnitExpr = reg.parse(from).map_err(|e| fail(&e))?;
     let t: UnitExpr = reg.parse(to).map_err(|e| fail(&e))?;
     match Conversion::between(&f, &t) {
         Ok(conv) => Ok(conv),
-        Err(Error::DimensionMismatch { .. }) if !density.trim().is_empty() => {
-            resolve_density(&loaded, density)?
-                .conversion(&f, &t)
-                .map_err(|e| fail(&e))
-        }
+        Err(e @ Error::DimensionMismatch { .. }) => match resolved {
+            Some(d) => d.conversion(&f, &t).map_err(|e| fail(&e)),
+            None => Err(fail(&e)),
+        },
         Err(e) => Err(fail(&e)),
     }
 }

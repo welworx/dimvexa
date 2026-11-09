@@ -70,9 +70,11 @@ function text(arg) {
 function convert(value, from, to, density, config) {
   return whenReady(() => {
     try {
-      return given(density) || given(config)
+      const result = given(density) || given(config)
         ? wasm_bindgen.convertWith(value, from, to, text(density), text(config))
         : wasm_bindgen.convert(value, from, to);
+      if (!Number.isFinite(result)) throw overflowError();
+      return result;
     } catch (e) {
       throw toExcelError(e);
     }
@@ -83,6 +85,15 @@ function convert(value, from, to, density, config) {
 // pass blanks as 0 and refuse text itself). A cell of only spaces counts as blank.
 function isBlank(v) {
   return v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+}
+
+// The fast path returns Infinity when the result does not fit a number; the library's rule is an
+// error with a code (rule 4), never a silent value.
+function overflowError(where) {
+  return new CustomFunctions.Error(
+    CustomFunctions.ErrorCode.invalidNumber,
+    "dimvexa overflow: the result" + (where ? " in " + where : "") + " is too large for a number",
+  );
 }
 
 function rangeError(message) {
@@ -129,7 +140,11 @@ function convertRangeNow(values, from, to, density, config) {
     for (let r = 0; r < rows; r++) {
       const line = [];
       for (let c = 0; c < cols; c++) {
-        line.push(blank[r * cols + c] ? "" : out[r * cols + c]);
+        const i = r * cols + c;
+        if (!blank[i] && !Number.isFinite(out[i])) {
+          throw overflowError("row " + (r + 1) + ", column " + (c + 1));
+        }
+        line.push(blank[i] ? "" : out[i]);
       }
       result.push(line);
     }
