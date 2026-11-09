@@ -7,9 +7,11 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-09
+
 ### Added
 
-- Releases attach prebuilt `dimvexa` binaries (macOS arm64/x86_64, Linux musl x86_64/aarch64) and a generated Homebrew formula (`dimvexa.rb`). Homebrew install (`brew install welworx/tap/dimvexa`) works from the first release that includes them.
+- Releases attach prebuilt `dimvexa` binaries (macOS arm64/x86_64, Linux musl x86_64/aarch64, Windows x86_64 as a zip) and a generated Homebrew formula (`dimvexa.rb`). Homebrew install (`brew install welworx/tap/dimvexa`) works from the first release that includes them.
 
 ### Added (docs)
 
@@ -25,7 +27,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Changed
 
-- Workspace version bumped to 0.1.1.
+- Workspace version bumped to 0.1.2.
 - Python binding: a contiguous `float64` array is converted through the core slice loop instead
   of an element-by-element `ndarray` iterator (the output keeps the input's C or Fortran order),
   and the release profile uses LTO. Results are bit-identical to the scalar path.

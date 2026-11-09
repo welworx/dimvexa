@@ -147,6 +147,7 @@ jobs:
           - { name: macos-x86_64, os: macos-latest, target: x86_64-apple-darwin }
           - { name: linux-x86_64, os: ubuntu-latest, target: x86_64-unknown-linux-musl }
           - { name: linux-aarch64, os: ubuntu-24.04-arm, target: aarch64-unknown-linux-musl }
+          - { name: windows-x86_64, os: windows-latest, target: x86_64-pc-windows-msvc }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -163,13 +164,18 @@ jobs:
         shell: bash
         env:
           VERSION: ${{ needs.plan.outputs.version }}
+          # Smaller binaries: the release profile keeps line tables for profiling; the shipped
+          # binary does not need them. Function names stay, so panics are still readable.
+          CARGO_PROFILE_RELEASE_STRIP: debuginfo
         run: |
           cargo build --release --locked -p dimvexa-cli --target "${{ matrix.target }}"
           d="dimvexa-$VERSION-${{ matrix.target }}"
           mkdir "$d"
-          cp "target/${{ matrix.target }}/release/dimvexa" LICENSE-MIT LICENSE-APACHE README.md "$d/"
-          tar -czf "$d.tar.gz" "$d"
-          if command -v sha256sum >/dev/null; then sha256sum "$d.tar.gz" > "$d.tar.gz.sha256"; else shasum -a 256 "$d.tar.gz" > "$d.tar.gz.sha256"; fi
+          exe=dimvexa
+          [[ "${{ matrix.target }}" == *-windows-* ]] && exe=dimvexa.exe
+          cp "target/${{ matrix.target }}/release/$exe" LICENSE-MIT LICENSE-APACHE README.md "$d/"
+          if [[ "$exe" == *.exe ]]; then archive="$d.zip"; tar -a -cf "$archive" "$d"; else archive="$d.tar.gz"; tar -czf "$archive" "$d"; fi
+          if command -v sha256sum >/dev/null; then sha256sum "$archive" > "$archive.sha256"; else shasum -a 256 "$archive" > "$archive.sha256"; fi
       - name: Smoke test (native targets only)
         if: matrix.name != 'macos-x86_64'
         shell: bash
@@ -181,7 +187,8 @@ jobs:
           name: cli-${{ matrix.name }}
           path: |
             dimvexa-*.tar.gz
-            dimvexa-*.tar.gz.sha256
+            dimvexa-*.zip
+            dimvexa-*.sha256
           if-no-files-found: error
 
   sdist:
@@ -370,4 +377,4 @@ jobs:
           VERSION: ${{ needs.plan.outputs.version }}
         run: |
           gh release create "v$VERSION" --repo "${{ github.repository }}" --target "${{ github.sha }}" \
-            --title "v$VERSION" --generate-notes cli/*.tar.gz cli/*.sha256 cli/dimvexa.rb
+            --title "v$VERSION" --generate-notes cli/*.tar.gz cli/*.zip cli/*.sha256 cli/dimvexa.rb
