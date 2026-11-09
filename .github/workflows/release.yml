@@ -154,16 +154,19 @@ jobs:
           persist-credentials: false
       - name: Install Rust
         shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
           v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
           rustup toolchain install "$v" --profile minimal --target "${{ matrix.target }}" --no-self-update
           rustup default "$v"
           echo "RUSTUP_TOOLCHAIN=$v" >> "$GITHUB_ENV"
-          if [[ "${{ matrix.target }}" == *-musl ]]; then sudo apt-get update && sudo apt-get install -y musl-tools; fi
+          if [[ "$TARGET" == *-musl ]]; then sudo apt-get update && sudo apt-get install -y musl-tools; fi
       - name: Build and package the `dimvexa` binary
         shell: bash
         env:
           VERSION: ${{ needs.plan.outputs.version }}
+          TARGET: ${{ matrix.target }}
           # Smaller binaries: the release profile keeps line tables for profiling; the shipped
           # binary does not need them. Function names stay, so panics are still readable.
           CARGO_PROFILE_RELEASE_STRIP: debuginfo
@@ -172,7 +175,7 @@ jobs:
           d="dimvexa-$VERSION-${{ matrix.target }}"
           mkdir "$d"
           exe=dimvexa
-          [[ "${{ matrix.target }}" == *-windows-* ]] && exe=dimvexa.exe
+          [[ "$TARGET" == *-windows-* ]] && exe=dimvexa.exe
           cp "target/${{ matrix.target }}/release/$exe" LICENSE-MIT LICENSE-APACHE README.md "$d/"
           if [[ "$exe" == *.exe ]]; then
             # A loose copy for a direct download, next to the zip.
