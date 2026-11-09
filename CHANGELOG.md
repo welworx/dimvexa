@@ -7,6 +7,8 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-09
+
 ### Breaking
 
 - Temperature arithmetic is removed (ADR-014): `Quantity::checked_add`, `Quantity::checked_sub`,
@@ -43,6 +45,10 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
   one contains: names, units and densities with their conditions and sources.
 - `dimvexa-config`: `BUNDLED`, `bundled`, `is_path`, `Bundled` and `Constant::density_from_text`.
 - ADR-014 (one `--config` mechanism, shipped densities, conversion only).
+
+### Changed
+
+- Workspace version bumped to 0.2.0 (the API and JSON changes above are breaking, so the minor version moves while the crate is 0.x).
 
 ### Fixed
 
