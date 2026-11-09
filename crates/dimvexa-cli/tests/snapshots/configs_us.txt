@@ -1,4 +1,4 @@
-bundled:us (hash fnv1a64:97959ec9fc3cfaa3)
+bundled:us (hash fnv1a64:<hash>)
 
 ## names (what they mean once the config is loaded)
 # columns: name, unit

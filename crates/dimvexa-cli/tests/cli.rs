@@ -53,27 +53,33 @@ fn snapshot(name: &str, actual: &str) {
     );
 }
 
-/// Normalises the data version and hash so snapshots survive a table update (the version
-/// and hash have their own tests).
+/// Normalises the data version and every content hash so snapshots survive a table or config
+/// update (the version and the hashes have their own tests, and a hex digest can contain
+/// letters that the spell checker takes for typos).
 fn stable(s: &str) -> String {
-    let Some(i) = s.find("fnv1a64:") else {
-        return s.to_string();
-    };
-    let tail = &s[i..];
-    let len = tail.find(['"', ')', '\n']).unwrap_or(tail.len());
-    let mut head = s[..i].to_string();
-    // Mask "v<digits>+" in front of the hash as well.
-    if head.ends_with('+') {
-        head.pop();
-        while head.ends_with(|c: char| c.is_ascii_digit()) {
+    let mut out = String::new();
+    let mut rest = s;
+    while let Some(i) = rest.find("fnv1a64:") {
+        let tail = &rest[i..];
+        let len = tail.find(['"', ')', '\n', '\t']).unwrap_or(tail.len());
+        let mut head = rest[..i].to_string();
+        // Mask "v<digits>+" in front of the hash as well.
+        if head.ends_with('+') {
             head.pop();
+            while head.ends_with(|c: char| c.is_ascii_digit()) {
+                head.pop();
+            }
+            if head.ends_with('v') {
+                head.pop();
+            }
+            head.push_str("v<N>+");
         }
-        if head.ends_with('v') {
-            head.pop();
-        }
-        head.push_str("v<N>+");
+        out.push_str(&head);
+        out.push_str("fnv1a64:<hash>");
+        rest = &tail[len..];
     }
-    format!("{head}fnv1a64:<hash>{}", &tail[len..])
+    out.push_str(rest);
+    out
 }
 
 #[test]
@@ -2050,10 +2056,10 @@ fn the_old_bridge_and_profile_options_are_refused_with_the_new_name() {
 fn configs_lists_and_shows_what_is_included() {
     let r = dimvexa(&["configs"]);
     assert_eq!(r.code, 0);
-    snapshot("configs.txt", &r.stdout);
+    snapshot("configs.txt", &stable(&r.stdout));
     let r = dimvexa(&["configs", "us"]);
     assert_eq!(r.code, 0);
-    snapshot("configs_us.txt", &r.stdout);
+    snapshot("configs_us.txt", &stable(&r.stdout));
     assert!(r.stdout.contains("ton\tton_short"));
     assert!(
         !r.stdout.contains("## densities"),
@@ -2061,7 +2067,7 @@ fn configs_lists_and_shows_what_is_included() {
     );
     let r = dimvexa(&["configs", "water"]);
     assert!(r.stdout.contains("water_25C\t49852351/50000\tkg/m3\t"));
-    snapshot("configs_water.txt", &r.stdout);
+    snapshot("configs_water.txt", &stable(&r.stdout));
     let r = dimvexa(&["configs", "year-julian"]);
     assert!(!r.stdout.contains("## densities"));
     // A path shows your own file, validated like any config.

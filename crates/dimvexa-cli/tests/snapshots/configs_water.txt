@@ -1,4 +1,4 @@
-bundled:water (hash fnv1a64:779c11677f35850e)
+bundled:water (hash fnv1a64:<hash>)
 
 ## densities (use with --density NAME)
 # columns: name, value, unit, conditions, source
