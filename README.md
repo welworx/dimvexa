@@ -444,8 +444,8 @@ BibTeX:
 }
 ```
 
-GitHub's "Cite this repository" button reads [`CITATION.cff`](CITATION.cff). There is no
-release, version number or DOI yet; please also give the commit you used.
+GitHub's "Cite this repository" button reads [`CITATION.cff`](CITATION.cff). The current
+release is 0.1.1 (2026-11-08). There is no DOI; for unreleased work please also give the commit you used.
 
 ## Disclaimer
 

@@ -20,5 +20,6 @@ keywords:
   - unit conversion
   - dimensional analysis
   - rust
-# No version or date-released yet: Dimvexa has not been released. Add `version` and
-# `date-released` (YYYY-MM-DD) in the commit that tags the first release.
+version: "0.1.1"
+date-released: "2026-11-08"
+# Keep version and date-released in step with each release (the `release` skill). No DOI is invented.
