@@ -45,7 +45,7 @@ The npm tools are development aids only; nothing here is a dependency of the lib
     the config `ton` is refused as ambiguous. File paths cannot be used from a worksheet.
   * `density` is only used when the plain conversion needs one (mass to volume or back): your
     own number, `=DIMVEXA.CONVERT(1,"L","kg","998.2067kg/m3")`, or the name of a density in a
-    loaded config, `=DIMVEXA.CONVERT(1,"L","kg","water_25C",,"water")`. A name without its
+    loaded config, `=DIMVEXA.CONVERT(1,"L","kg","water_25C","water")`. A name without its
     config is an error with a hint; a density is never assumed. The result is `measured`, but a
     cell has no place to say so: the number is only as good as the density you gave.
 * Not built yet: exact decimal input.

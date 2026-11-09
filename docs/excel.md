@@ -25,7 +25,7 @@ All functions live in the `DIMVEXA` namespace. Excel ignores letter case, so
 =DIMVEXA.CONVERT(1,"ton","kg")                     error: ton is ambiguous
 =DIMVEXA.CONVERT(1,"ton","kg",,"us")               907.18474 (the config us picks the short ton)
 =DIMVEXA.CONVERT(1,"L","kg","998.2067kg/m3")       0.9982067 (your own density)
-=DIMVEXA.CONVERT(1,"L","kg","water_25C",,"water")  0.99704702 (a density from a loaded config)
+=DIMVEXA.CONVERT(1,"L","kg","water_25C","water")  0.99704702 (a density from a loaded config)
 ```
 
 ### Arguments
