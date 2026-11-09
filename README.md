@@ -451,3 +451,9 @@ release is 0.1.1 (2026-11-08). There is no DOI; for unreleased work please also 
 [`LICENSE-APACHE`](LICENSE-APACHE). Provided as is, without warranty: verify results you depend
 on against the primary source. Independent project, not affiliated with the libraries it is
 benchmarked against. Details: [`docs/licensing.md`](docs/licensing.md).
+
+Benchmarked against ([method](docs/benchmarking.md)): [Astropy](https://github.com/astropy/astropy),
+[convert-units](https://github.com/convert-units/convert-units),
+[js-quantities](https://github.com/gentooboontoo/js-quantities),
+[math.js](https://github.com/josdejong/mathjs), [Pint](https://github.com/hgrecco/pint),
+[unyt](https://github.com/yt-project/unyt) and [uom](https://github.com/iliekturtles/uom).
