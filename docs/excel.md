@@ -59,55 +59,134 @@ and a cell has no place to say so.
 
 ## How to add it to Excel
 
-The add-in is loaded from web addresses named in a manifest file. For development that is a small
-HTTPS server on your own machine; for everyone else it will be a hosted site (see
-[Hosting](#hosting-on-cloudflare-pages-planned)).
+Excel loads the add-in from web addresses written in a manifest file (`manifest.xml`). Until the add-in
+is hosted somewhere, you serve the files from your own computer and give Excel the manifest. Do
+**Part 1** once, then follow the part for the Excel you use: **Part 2** for Excel on the web,
+**Part 3** for Excel for Mac, **Part 4** for Excel on Windows.
 
-### 1. Build and serve it (development)
+The add-in has no ribbon button or task pane, so it will **not** appear in the add-ins list. After
+loading it, look for the functions in a cell by typing `=DIMVEXA.`.
 
-```console
-git clone https://github.com/welworx/dimvexa.git && cd dimvexa/bindings/excel
-cargo install wasm-bindgen-cli --version 0.2.130 --locked   # once
-./build.sh                                                  # writes dist/
-node test/functions.test.js                                 # optional: tests with a mocked Excel
-npx office-addin-dev-certs install                          # once: a trusted localhost certificate
-npx http-server dist -S -p 3000 --cors -c-1 \
-  -C ~/.office-addin-dev-certs/localhost.crt \
-  -K ~/.office-addin-dev-certs/localhost.key
-```
+### Part 1: Build and serve the files (every platform)
 
-Check that `https://localhost:3000/functions.json` and `https://localhost:3000/assets/icon-32.png`
-open in a browser without a certificate warning. Excel refuses an untrusted certificate, and it
-usually says nothing. The `npx` tools are development aids only; nothing in the library depends on
-them.
+You need Rust, Node.js and git.
 
-### 2. Load the manifest
+1. Get the code and go to the add-in folder:
+   ```console
+   git clone https://github.com/welworx/dimvexa.git
+   cd dimvexa/bindings/excel
+   ```
+2. Install the WASM tool once (the version must match the one pinned in `bindings/wasm/Cargo.toml`):
+   ```console
+   cargo install wasm-bindgen-cli --version 0.2.130 --locked
+   ```
+3. Build the add-in files into `dist/`:
+   ```console
+   ./build.sh
+   ```
+4. Optional: run the tests (they use the real WASM and a mocked Excel):
+   ```console
+   node test/functions.test.js
+   ```
+   It should print `excel functions: ok`.
+5. Create and trust a local HTTPS certificate once. Excel only loads add-ins over HTTPS, and it
+   refuses an untrusted certificate without saying why:
+   ```console
+   npx office-addin-dev-certs install
+   ```
+   Your computer may ask for your password to trust the certificate. The files go to
+   `~/.office-addin-dev-certs/` (on Windows `%USERPROFILE%\.office-addin-dev-certs\`).
+6. Start the server and leave it running while you use the add-in:
+   ```console
+   npx http-server dist -S -p 3000 --cors -c-1 \
+     -C ~/.office-addin-dev-certs/localhost.crt \
+     -K ~/.office-addin-dev-certs/localhost.key
+   ```
+   (On Windows PowerShell write it on one line and use `$env:USERPROFILE\.office-addin-dev-certs\`
+   for the two paths.)
+7. Check it in your browser. Both addresses must open **without a certificate warning**:
+   * `https://localhost:3000/functions.json` shows the function list.
+   * `https://localhost:3000/assets/icon-32.png` shows a small blue square.
 
-The same `manifest.xml` is used everywhere. A functions-only add-in has no ribbon button or task
-pane, so it does **not** appear in the add-ins list: look for the functions in a cell, by typing
-`=DIMVEXA.`.
+The `npx` tools are development aids only; nothing in the library depends on them. After you
+rebuild with `./build.sh`, the server serves the new files at once (`-c-1` turns caching off).
 
-**Excel on the web** (tested): open a workbook, Home → Add-ins → More Add-ins → My Add-ins →
-Upload My Add-in, and choose `manifest.xml`. The dialog closes without a message, and it can take a
-moment before the functions work.
+### Part 2: Excel on the web (tested)
 
-**Excel for Mac** (tested): quit Excel, then
+Works in any browser on Mac or Windows, and needs no changes to Excel itself.
 
-```console
-mkdir -p ~/Library/Containers/com.microsoft.Excel/Data/Documents/wef
-cp manifest.xml ~/Library/Containers/com.microsoft.Excel/Data/Documents/wef/
-```
+1. Do Part 1 and keep the server running.
+2. Open Excel for the web at office.com and open or create a workbook.
+3. Open the add-in dialog: **Home → Add-ins → More Add-ins** (the exact menu names change between
+   releases; you want **My Add-ins**).
+4. In the dialog choose **My Add-ins** (or **Manage My Add-ins**) and then **Upload My Add-in**.
+5. Choose the file `bindings/excel/manifest.xml` and confirm.
+6. The dialog closes and nothing else happens. That is normal: there is no message and no list
+   entry. If you see the message "Your administrator has not installed any web add-ins" the add-ins
+   list is simply empty; keep going.
+7. Wait a moment (it can take a minute the first time), click a cell and type `=DIMVEXA.`. The
+   autocomplete should list `DIMVEXA.CONVERT`, `DIMVEXA.CONVERTRANGE` and `DIMVEXA.VERSION`.
+8. Go to [Check that it works](#check-that-it-works).
 
-and start Excel. After a change, delete the manifest from `wef/`, restart Excel and copy it again;
-Excel caches the function list.
+The upload lasts for the browser session. After you close the workbook or sign out, repeat steps 3
+to 5. If the upload is silently refused, make sure the two addresses from Part 1, step 7 open
+without a warning in the same browser, and that the server was started with `--cors`.
 
-**Excel on Windows** (not tested): the usual way is a shared folder. Put `manifest.xml` in a folder
-and share it, add the share under File → Options → Trust Center → Trust Center Settings → Trusted
-Add-in Catalogs (tick "Show in Menu"), restart Excel, then Insert → My Add-ins → Shared Folder.
+### Part 3: Excel for Mac (tested)
+
+1. Do Part 1 and keep the server running.
+2. Quit Excel completely (Excel menu → Quit Excel).
+3. Open Terminal, go to the add-in folder, and copy the manifest into Excel's add-in folder. The
+   folder may not exist yet, so create it:
+   ```console
+   mkdir -p ~/Library/Containers/com.microsoft.Excel/Data/Documents/wef
+   cp manifest.xml ~/Library/Containers/com.microsoft.Excel/Data/Documents/wef/
+   ```
+4. Start Excel and open a workbook.
+5. Wait a moment, click a cell and type `=DIMVEXA.`. The autocomplete should list the three
+   functions. You can also look under **Insert → My Add-ins**, but a functions-only add-in may not
+   be shown there.
+6. Go to [Check that it works](#check-that-it-works).
+
+To pick up a change: quit Excel, delete `manifest.xml` from the `wef` folder, copy the new one in
+and start Excel again. Excel caches the function list, so this is needed after any change to
+`functions.json`. To remove the add-in, delete the file from `wef` and restart Excel.
+
+On a Mac every custom function call takes about two seconds (see [Status](#status)); use
+`DIMVEXA.CONVERTRANGE` for columns.
+
+### Part 4: Excel on Windows (not tested yet)
+
+This follows Microsoft's documentation for a shared-folder catalog and has **not** been run by us.
+If a step does not match your Excel, tell us what you see; the other option that works the same
+way on Windows is Part 2 (Excel for the web in your browser).
+
+You need Microsoft 365 or Office 2021 or later. Volume-licensed Office 2019 and older does not
+offer custom functions.
+
+1. Do Part 1 and keep the server running. On Windows the certificate step installs the certificate
+   into the Windows certificate store; accept the prompt.
+2. Create a folder for the manifest, for example `C:\dimvexa-addin`, and copy `manifest.xml` into
+   it.
+3. Share the folder: right-click it → **Properties → Sharing → Share…**, add yourself and finish.
+   Note the **network path** it shows, which looks like `\\YOUR-PC\dimvexa-addin`. Excel needs this
+   network path, not `C:\...`.
+4. Open Excel and a blank workbook, then **File → Options → Trust Center → Trust Center
+   Settings… → Trusted Add-in Catalogs**.
+5. In **Catalog Url** enter the network path from step 3, choose **Add catalog**, and tick **Show
+   in Menu**. Confirm with OK twice.
+6. Close and restart Excel completely.
+7. Open a workbook, then **Insert → My Add-ins → Shared Folder** (or **SHARED FOLDER** at the top
+   of the My Add-ins dialog). Select **Dimvexa unit conversion** and choose **Add**.
+8. Click a cell and type `=DIMVEXA.`. The autocomplete should list the three functions.
+9. Go to [Check that it works](#check-that-it-works).
+
+To pick up a change, remove the add-in from the Shared Folder list or restart Excel; the function
+list is cached. To remove it, delete the catalog entry in the Trust Center and restart Excel.
 Microsoft's [sideloading guide](https://learn.microsoft.com/en-us/office/dev/add-ins/testing/test-debug-office-add-ins)
-has the current steps.
+has the current steps for each platform.
 
-### 3. Check that it works
+### Check that it works
 
 Enter these in a blank sheet:
 
@@ -115,17 +194,22 @@ Enter these in a blank sheet:
 |---|---|
 | `=DIMVEXA.VERSION()` | text like `dimvexa data …, 98 units` |
 | `=DIMVEXA.CONVERT(1,"km","m")` | `1000` |
-| `=DIMVEXA.CONVERT(100,"degC","K")` | `373.15` |
+| `=DIMVEXA.CONVERT(100,"degC","K")` | `373.15` (`373,15` with a decimal comma) |
 | `=DIMVEXA.CONVERT(1,"kg","m")` | an error; the hover text starts `dimvexa dimension_mismatch:` |
-| `=DIMVEXA.CONVERTRANGE(A1:B3,"km","m")` | a spilled range; `#SPILL!` (`#ÜBERLAUF!`) means a cell in the way |
+| `=DIMVEXA.CONVERTRANGE(A1:B3,"km","m")` with numbers in A1:B3 | a spilled range of results |
+
+If a spilled result shows `#SPILL!` (German `#ÜBERLAUF!`), a cell in the way is not empty.
 
 ### If nothing shows up
 
-* No `DIMVEXA` functions: the manifest was probably refused. Excel gives no message. Check the
-  certificate and the two URLs above, and that the server sends CORS headers (`--cors`).
-* `#NAME?` that does not go away: reload the Excel tab or restart Excel, and re-add the manifest.
-* Old behaviour after a rebuild: remove the add-in and add it again; the function list is cached.
+* No `DIMVEXA` functions in autocomplete: the manifest was probably refused, and Excel gives no
+  message. Check the two addresses from Part 1 step 7, and that the server is still running and was
+  started with `--cors`.
+* `#NAME?` that does not go away: reload the Excel tab (web) or restart Excel, and add the
+  manifest again.
+* Old behaviour after a rebuild: remove the add-in and add it again (Part 3 and 4 say how).
 * `#BUSY!` for a moment: the WASM module is still compiling; it clears by itself.
+* Slow on a Mac: expected, see [Status](#status).
 
 ## How it works
 
@@ -158,54 +242,7 @@ benchmark ([`benchmarking.md`](benchmarking.md)).
 
 Not supported: Excel on iPad, and volume-licensed Office 2019 or older on Windows (Excel itself does
 not offer custom functions there). Not built yet: exact decimal input, user config files, Windows
-testing, a hosted version.
-
-## Hosting on Cloudflare Pages (planned)
-
-Nothing is hosted yet. This section is the plan, not a record of something that works; the points
-marked "to verify" have not been tested.
-
-**Why it fits.** The add-in is only static files (HTML, JavaScript, JSON, PNG). Cloudflare Pages
-serves static files over HTTPS from its CDN, with a free `*.pages.dev` address and a custom domain
-later (the domain for the project is not confirmed, see `ROADMAP.md`). A production manifest then
-points at that address instead of `https://localhost:3000`.
-
-**What the site must do**
-
-1. **Serve over HTTPS** with a certificate Excel trusts. Pages does this itself.
-2. **Send CORS headers** for the files Excel reads from another origin
-   (`Access-Control-Allow-Origin: *` is enough for public static files; to verify with Excel for the
-   web). Pages can set headers with a `_headers` file in the published folder.
-3. **Never serve a half-updated add-in.** The files belong together (the glue, the embedded
-   `.wasm` and `functions.json` must match), so publish them under a versioned path such as
-   `/excel/0.2.0/…` and keep old versions online as long as a workbook or a manifest may still use
-   them. The manifest of a release points at its own version.
-4. **Cache by version.** Files under a version path never change, so they can be cached for a long
-   time (`Cache-Control: public, max-age=31536000, immutable`). Only the manifest, which people
-   download, is short-lived.
-5. **Compress.** `dimvexa-wasm-b64.js` is about 390 KB of base64. Brotli or gzip on the CDN should
-   bring it well down (to verify the sizes actually served).
-
-**Why a CDN helps here.** Every new Excel session loads these files again. A nearby cached copy
-shortens that load, and the long cache time means a returning user downloads nothing. Whether it
-changes the startup delay people feel is **not measured**; the per-call delay on Mac is inside
-Excel and a CDN will not remove it. Measure first (a hosted copy against the localhost server) and
-write the numbers into ADR-015 before claiming anything.
-
-**Offline.** Excel on the web needs the site to be reachable. Desktop Excel probably keeps working
-from its cache after the first load, but this is not promised by Microsoft and not tested. Do not
-say the add-in works offline until it has been tested.
-
-**To do before it can be hosted**
-
-* A build step (or script) that writes a manifest with production URLs and a version, next to the
-  development one.
-* The `_headers` file and a versioned folder layout in `dist/`.
-* A deployment workflow (Pages from this repository, with pinned actions, `docs/ci-pinning.md`).
-* Decide the distribution route: users sideload the manifest, an administrator rolls it out with
-  Centralized Deployment, or a listing in Microsoft AppSource (which asks for test instructions for
-  each function and has its own policy checks; read the current rules in Partner Center first).
-* Decide how long old versions stay online.
+testing, a hosted version (so for now you serve the files yourself, as above).
 
 ## Related
 

@@ -53,6 +53,17 @@ add-in never shapes the core).
 4. Exact decimal input (array functions exist: `DIMVEXA.CONVERTRANGE`).
 5. Distribution: sideload only, centralized deployment, or AppSource (needs test instructions
    for each function). Current policy numbers differ between sources; check Partner Center.
+   Hosting plan (nothing hosted yet; points marked "verify" are untested): static files on
+   Cloudflare Pages over HTTPS; CORS headers (verify with Excel for the web) through a `_headers`
+   file; versioned paths such as `/excel/0.2.0/` so the glue, the embedded `.wasm` and
+   `functions.json` always match, with old versions kept online; long immutable caching for
+   versioned files and a short one for the manifest; compression of the roughly 390 KB base64
+   script (verify the served size). A CDN should shorten the file load; whether it changes the
+   startup delay is unmeasured and it cannot remove Excel's per-call delay on Mac. Offline use
+   is not promised by Microsoft and not tested. Needs before hosting: a production manifest
+   with a version and real URLs, the `_headers` file and layout in `dist/`, a deployment
+   workflow with pinned actions, and the choice between sideloading, Centralized Deployment and
+   AppSource.
 
 ## Consequences
 
