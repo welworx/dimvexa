@@ -105,3 +105,34 @@ fn known_limitation_kl_9_prefix_mode_is_not_checked_against_the_unit() {
         "KL-9 fixed? then Kipallet is refused"
     );
 }
+
+/// KL-22: standard volumes and gauge pressures are not in the table, so even a conversion within
+/// one reference state is refused as an unknown unit (ADR-013 proposes the fix).
+#[test]
+fn known_limitation_kl_22_reference_state_units_are_unknown() {
+    let reg = registry().unwrap();
+    for (from, to) in [
+        ("Nm3", "m3"),
+        ("Nm3/h", "Nm3/min"),
+        ("scf", "Nm3"),
+        ("psig", "barg"),
+    ] {
+        let err = reg.conversion(from, to).unwrap_err();
+        assert_eq!(
+            err.code(),
+            "unknown_unit",
+            "KL-22 fixed? `{from}` to `{to}` now gives `{}`: update the test and delete the entry",
+            err.code()
+        );
+    }
+}
+
+/// KL-23: gauge to absolute pressure is refused (today because `psig` does not exist).
+#[test]
+fn known_limitation_kl_23_gauge_to_absolute_is_refused() {
+    let reg = registry().unwrap();
+    assert!(
+        reg.conversion("psig", "bar").is_err(),
+        "KL-23 fixed? then the caller must supply the ambient pressure"
+    );
+}

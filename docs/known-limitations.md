@@ -34,6 +34,13 @@ Fixing one: remove or change the pinning test, update the entry (or delete it), 
 | KL-20 | A value is a plain number: `2*pi`, `2pi` and `pi/2` are `invalid_number`. A decimal such as `6.283185307179586` is not exactly 2 pi. | Typing an angle in multiples of pi. | The parser reads numbers, not expressions; pi is not a constant (ADR-010). | Define `pi` and `turn` with `examples/configs/angle.toml`, or give the angle in degrees. |
 | KL-21 | Angle is dimensionless, so `rad/s` and `Hz` convert 1:1, and a unit such as `turn` would give `1 turn/s = 6.28 Hz`. Because of that `rev`, `turn` and `rpm` are not shipped. | `convert 1 rad/s Hz`. | ADR-007. | A separate cycle/angle distinction, decided by the owner. |
 
+## Gauge pressure and standard volumes (ADR-013, proposed)
+
+| ID | Limitation | When you see it | Why it is not fixed yet | Idea for the fix |
+|---|---|---|---|---|
+| KL-22 | Units that are only meaningful at a stated reference state are not in the table: standard and normal volumes (`Nm3`, `scf`, `Sm3`) and gauge pressures (`psig`, `barg`). They fail with `unknown_unit`, so not even a conversion within one reference (`Nm3/h` to `Nm3/min`, `psig` to `barg`) works. Converting between two reference states (`Nm3` to `scf`) or to an actual volume (`Nm3` to `m3`) needs a gas model and is out of scope. | `convert 1 Nm3 m3`, `convert 1 psig barg`. | A reference state is not part of a unit today (ADR-013 proposes how). The ratio between two states assumes an ideal gas (compressibility factor 1), a physical approximation that ADR-001 keeps out of the core. | Accept ADR-013 (same-reference conversion with a named, exact reference). A cross-reference ratio belongs in a separate crate with its model named, its assumption and error bound stated, and its own ADR. |
+| KL-23 | Gauge to absolute pressure is refused (`psig` to `bar`). Assuming 101.325 kPa would silently be wrong at any real site. | `convert 5 psig bar`. | This is missing data (the ambient pressure), not a gas model. | Let the caller supply the ambient pressure (part of ADR-013 item 4); a relaxed mode that assumes it needs its own ADR. |
+
 ## Not built yet (decisions, not limitations)
 
 Shipped profiles (`us-customary`, `imperial`, ...) and the molar-mass bridge are planned in

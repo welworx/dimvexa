@@ -7,6 +7,10 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+### Added (docs)
+
+- ADR-013 (proposed): named, exact reference states for `psig`, `barg`, `Nm3` and `scf`. Known limitations KL-22 (standard volumes and gauge pressure are not in the table) and KL-23 (gauge to absolute needs the ambient pressure), pinned by tests.
+
 ### Added (data version 11)
 
 - Units: poise `P` and stokes `St` (CGS viscosity; NIST SP 811 Appendix B.8), with the SI prefixes (`cP`, `cSt`). New groups `dynamic_viscosity` and `kinematic_viscosity`. Converting between them is refused: it needs a density.
