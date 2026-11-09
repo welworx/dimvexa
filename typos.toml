@@ -3,6 +3,8 @@ extend-ignore-re = [
     # Unit symbols that look like typos.
     "\\bBtu\\b",
     "\\bPa\\b",
+    # The image format, also in the plural (the brand guidelines say "PNGs").
+    "\\bPNGs?\\b",
     # Hex digests of f64 bit patterns in the benchmark corpus (letters like `ba` are not words).
     "\"expect_f64_bits\": \"[0-9a-f]+\"",
 ]
