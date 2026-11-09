@@ -23,7 +23,7 @@ node test/functions.test.js                                 # mocked-runtime tes
 ```
 
 Excel needs HTTPS. Serve `dist/` on https://localhost:3000 (for example with a certificate from
-`npx office-addin-dev-certs install` and `npx http-server dist -S -C ... -K ... -p 3000`), copy
+`npx office-addin-dev-certs install` and `npx http-server dist -S -p 3000 --cors -c-1 -C ... -K ...`; Excel on the web needs the CORS header), copy
 `manifest.xml` next to it and sideload it ([sideloading](https://learn.microsoft.com/en-us/office/dev/add-ins/testing/test-debug-office-add-ins)).
 The npm tools are development aids only; nothing here is a dependency of the library.
 
