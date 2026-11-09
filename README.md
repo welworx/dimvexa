@@ -1,6 +1,13 @@
 # Dimvexa: exact, fast unit conversion
 
 <p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/dimvexa-lockup-dark.svg">
+    <img alt="Dimvexa" src="docs/brand/dimvexa-lockup-light.svg" width="360">
+  </picture>
+</p>
+
+<p align="center">
   <a href="https://github.com/welworx/dimvexa/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/welworx/dimvexa/ci.yml?branch=main&label=CI&logo=github"></a>
   <a href="https://crates.io/crates/dimvexa"><img alt="crates.io" src="https://img.shields.io/crates/v/dimvexa?logo=rust&color=orange"></a>
   <a href="https://docs.rs/dimvexa"><img alt="docs.rs" src="https://img.shields.io/docsrs/dimvexa?logo=docs.rs"></a>

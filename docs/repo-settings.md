@@ -52,6 +52,13 @@ deploy workflow are planned for M1. Select the source when that workflow lands.)
   `engineering`
 - Website: leave empty until docs are published.
 
+## Social preview
+
+Settings → General → Social preview → Edit → Upload an image: `docs/brand/github-social-preview.png`
+(1280 x 640). GitHub has no way to set it from the repository, so it is a manual step. For the
+npm organisation and the PyPI project avatar use `docs/brand/icon-256.png` or `icon-512.png`; the
+brand rules are in `docs/brand/DESIGN_GUIDELINES.md`.
+
 ## Labels
 
 Create the labels the issue forms apply: `bug`, `enhancement`, `unit-request`, `needs-source`.
