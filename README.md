@@ -113,6 +113,10 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | dynamic_viscosity | `P` |
 | kinematic_viscosity | `St` |
 
+Squares, cubes and other powers are not separate symbols: write them as powers of a unit above
+(`m2`, `mm2`, `cm3`, `m^3`, `ft2`), see [Combining units](#combining-units).
+`dimvexa convert 1 m2 mm2` gives `1000000 mm^2`.
+
 ## Combining units
 
 Units combine with `*`, `/`, `.` and powers (`m3`, `m^3`), so you never need a separate symbol for a
