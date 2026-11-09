@@ -18,29 +18,26 @@ the pages and PDFs named below (not from memory). It replaces the earlier note i
 | Arithmetic | 75 kgf m/s = 735.49875 W; conventional mmHg = 13 595.1 kg/m^3 x 9.80665 m/s^2 x 1 mm = 133.322387415 Pa; water density from the Tanaka formula (see below) = 998.2067 kg/m^3 at 20 degC | Reproduced. |
 | Registries | crates.io `dimvexa*` 0.1.1, PyPI `dimvexa` 0.1.1, npm `@dimvexa/wasm` 0.1.0 | Read from the registry APIs. |
 
-## Wording that does not match the source exactly
+## Corrected in data version 10
 
-The factors are right; these citation strings should be tightened the next time the data table
-changes (a data change bumps the data version and the binding version strings, so it is done
-together with a release):
+The factors were right; these citation strings were tightened (data v9 to v10):
 
-* `ch. 2, Table 4 (coherent derived units with special names)`: Table 4 is titled "The 22 SI
-  units with special names and symbols".
-* `ch. 4 (non-SI units accepted for use with the SI)`: in the 9th edition the table is
-  "Table 8. Non-SI units" in chapter 4; the old title is from the 8th edition. Prefixes are
-  Table 7 in chapter 3.
-* `Table 4 (radian = 1 m/m, dimensionless)`: Table 4 gives the radian as "1"; footnote (b) says
-  that rad = m/m is suggested but "not intrinsic and may be misleading".
-* UK Act: the gallon and quart are in Part VI, the pint in Part IV; the Act says
-  "fluid ounce = 1/20 pint" (1/160 gallon is derived). The Act's Schedule 1 is marked for
-  omission by 2025 c. 20 s. 11(3); the commencement was not checked.
-* "1 gal = 128 fl oz", "231 in^3", "1 tablespoon = 1/2 fl oz" and "UK pint and quart" are not in
-  SP 811 Appendix B.8 as statements (the printed factors agree numerically); the first two
-  belong to NIST Handbook 44, Appendix C.
-* Long digit strings (psi, lbf, mmHg, oz_troy, Btu_IT, hp) are exact derivations from the
-  defining relations, not digits NIST prints (NIST prints 6 or 7 significant figures).
-* `NIST SP 811 (2008)`: the text read is the online version (updated 2025); the 2008 print
-  edition was not available to compare.
+* BIPM: `Table 4` is now named "the 22 SI units with special names and symbols"; non-SI units
+  cite `ch. 4, Table 8 (Non-SI units)` (the old title was the 8th edition's); prefixes cite
+  `ch. 3, Table 7`; base units `ch. 2, Table 2`; the radian cites Table 4 note (b) instead of
+  "1 m/m"; the au, nautical mile and knot cite notes (j) and (k).
+* UK Weights and Measures Act 1985: gallon and quart cite Part VI, pint Part IV, fluid ounce
+  "1/20 pint" (Part VI).
+* Relations that SP 811 does not state (1 gal = 128 fl oz, 231 in^3) now cite NIST Handbook 44,
+  Appendix C (no edition year, see below); cup, quart and tablespoon relations are now stated as
+  ratios of the SP 811 factors; acres cite SP 811 Appendix B.6.
+* Citations whose text could not be read and that a verified source already covers were dropped:
+  DIN 66036, the Mendenhall Order, the 4th CGPM (1907) carat. The metric horsepower now cites
+  SP 811 and 75 kgf m/s; the carat and the survey foot cite SP 811.
+* Still true: the long digit strings in notes (psi, lbf, mmHg, oz_troy, Btu_IT, hp) are exact
+  derivations from the defining relations, not digits NIST prints (NIST prints 6 or 7
+  significant figures). `NIST SP 811 (2008)` means the 2008 edition's values; the text read here
+  is the online version (updated 2025), the print edition was not available to compare.
 
 ## Not verified against a primary text
 
@@ -53,18 +50,12 @@ of being presented as verified:
 * IAU Style Manual (1989): Julian year = 365.25 d and the light year as c x Julian year.
   Consistent with the BIPM 2012 au text and NIST's 9.460 73E+15 m. The IAU page was not
   retrievable.
-* DIN 66036 (metric horsepower, PS): the standard text is not public. The value is backed by
-  NIST's "horsepower (metric)" 7.354 988E+02 W and by 75 kgf m/s.
 * ISO 8601-1:2019 (week = 7 days), ISO 80000-3:2019 (gon), ISO 80000-4:2019 (mmHg): paywalled.
   The gon and mmHg values are backed by NIST SP 811.
-* NIST Handbook 44 (2023), Appendix C: the 2023 edition could not be retrieved; older editions
-  (2008, 2019) show acre = 160 rd^2 = 43 560 ft^2, gallon = 231 in^3 and carat = 200 mg.
-* 4th CGPM (1907) metric carat: no readable text; NIST B.8 confirms 200 mg ("carat, metric").
-* Mendenhall Order (1893) and the 1959 yard and pound agreement: the Federal Register notice was
-  not retrieved; the yard and pound values are confirmed by the UK Act, the survey foot by
-  SP 811 B.6.
-* 5th International Conference on the Properties of Steam (1956): only secondary sources; the
-  value 4.1868 J is confirmed by SP 811.
+* NIST Handbook 44, Appendix C: no edition could be read in full here, so no year is cited;
+  search excerpts of the 2008 and 2019 editions show acre = 160 rd^2 = 43 560 ft^2, gallon = 231 in^3 and carat = 200 mg.
+* The 1959 yard and pound agreement: the Federal Register notice was not retrieved; the yard
+  and pound values are confirmed by the UK Act (Part VI).
 * Tanaka et al., Metrologia 38 (2001) 301-309 (DOI 10.1088/0026-1394/38/4/3): citation and the
   SMOW, 101 325 Pa, 0 to 40 degC scope confirmed from the publisher page. The paper is
   paywalled, so its Table 1 was not read; 998.2067 kg/m^3 is the published formula

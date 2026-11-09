@@ -7,6 +7,10 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+### Changed (data version 10)
+
+- Unit table: citation strings corrected against the primary texts (BIPM table and chapter numbers, UK Weights and Measures Act parts, NIST Handbook 44 for relations SP 811 does not state); unverifiable secondary citations (DIN 66036, Mendenhall Order, 4th CGPM) dropped. No factor changed. See `docs/source-verification.md`.
+
 ### Changed
 
 - Workspace version bumped to 0.1.1.

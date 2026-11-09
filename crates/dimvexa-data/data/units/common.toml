@@ -42,7 +42,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "NIST SP 811 (2008), Appendix B (standard acceleration of gravity); 3rd CGPM (1901)"
+source = "NIST SP 811 (2008), Appendix B (standard acceleration of gravity); 3rd CGPM (1901), Declaration (980.665 cm/s^2)"
 note = "standard acceleration of gravity 9.80665 m/s^2 exactly"
 
 [[unit]]
@@ -84,7 +84,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "NIST SP 811 (2008), Appendix B (conventional millimeter of mercury); ISO 80000-4:2019"
+source = "NIST SP 811 (2008), Appendix B (conventional millimeter of mercury); NIST SP 811, Chapter 5, Table 9 (1 mmHg ~ 133.322 Pa)"
 note = "conventional mercury density 13595.1 kg/m^3 * g_n * 1 mm = 133.322387415 Pa; distinct from torr"
 
 [[unit]]
@@ -182,7 +182,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "DIN 66036 (metric horsepower, PS); NIST SP 811 (2008), Appendix B"
+source = "NIST SP 811 (2008), Appendix B (horsepower, metric = 7.354 988 E+02 W; 75 kgf m/s with kgf = 9.806 65 N)"
 note = "metric horsepower = 75 kgf m/s = 75 * 9.80665 W = 735.49875 W"
 
 [[unit]]
@@ -252,7 +252,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "NIST SP 811 (2008), Appendix B (nautical mile); International Hydrographic Conference (1929)"
+source = "NIST SP 811 (2008), Appendix B (nautical mile); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 and note (k) (1st Extraordinary International Hydrographic Conference, 1929)"
 note = "international nautical mile = 1852 m exactly"
 
 [[unit]]
@@ -266,7 +266,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "NIST SP 811 (2008), Appendix B (foot, U.S. survey); Mendenhall Order (1893)"
+source = "NIST SP 811 (2008), Appendix B (foot, U.S. survey); NIST SP 811 (2008), Appendix B.6 (1200/3937 m)"
 note = "US survey foot = 1200/3937 m; deprecated by NIST and NGS from 2023-01-01, kept for legacy data"
 
 [[unit]]
@@ -364,7 +364,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "NIST SP 811 (2008), Appendix B (gallon, U.S. liquid = 231 in^3)"
+source = "NIST SP 811 (2008), Appendix B (gallon, U.S. = 3.785 412 E-03 m^3); NIST Handbook 44, Appendix C (231 in^3)"
 note = "US liquid gallon = 231 in^3 = 3.785411784 L exactly"
 
 [[unit]]
@@ -378,7 +378,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "UK Weights and Measures Act 1985, Schedule 1 (4.54609 L); NIST SP 811 (2008), Appendix B"
+source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (4.54609 dm^3); NIST SP 811 (2008), Appendix B (gallon, Canadian and U.K.)"
 note = "imperial gallon = 4.54609 L exactly"
 
 [[unit]]
@@ -406,7 +406,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "UK Weights and Measures Act 1985, Schedule 1"
+source = "UK Weights and Measures Act 1985, Schedule 1, Part IV (pint = 0.568 261 25 dm^3)"
 note = "imperial pint = gal_imp/8"
 
 [[unit]]
@@ -490,7 +490,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "ISO 8601-1:2019 (week of 7 days); BIPM SI Brochure, 9th ed. (2019), ch. 4 (day = 86 400 s)"
+source = "ISO 8601-1:2019 (week of 7 days); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (day = 86 400 s)"
 note = "week = 7 d"
 
 [[unit]]
@@ -518,7 +518,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "IAU Style Manual (1989), Julian year a = 365.25 d; BIPM SI Brochure, 9th ed. (2019), ch. 4 (day = 86 400 s)"
+source = "IAU Style Manual (1989), Julian year a = 365.25 d; BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (day = 86 400 s)"
 note = "Julian year = 365.25 d, the astronomical year; the bare words yr and year are ambiguous and rejected"
 
 [[unit]]
@@ -546,7 +546,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "NIST Handbook 44 (2023), Appendix C (acre = 43 560 square feet); International yard and pound agreement (1959)"
+source = "NIST SP 811 (2008), Appendix B.6 (160 rd^2 = 1 acre = 43 560 ft^2); International yard and pound agreement (1959)"
 note = "acre = 43 560 ft^2 with the international foot (4046.8564224 m^2); acre_us_survey differs by about 2 ppm; the bare word acre is ambiguous and rejected"
 
 [[unit]]
@@ -560,7 +560,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "NIST SP 811 (2008), Appendix B (acre, based on U.S. survey foot); NIST Handbook 44 (2023), Appendix C"
+source = "NIST SP 811 (2008), Appendix B (acre, based on U.S. survey foot); NIST SP 811 (2008), Appendix B.6"
 note = "acre = 43 560 ft_us_survey^2 (about 4046.8726 m^2)"
 
 [[unit]]
@@ -574,7 +574,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "NIST SP 811 (2008), Appendix B (knot = nautical mile per hour); International Hydrographic Conference (1929)"
+source = "NIST SP 811 (2008), Appendix B (knot = nautical mile per hour); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 and note (k)"
 note = "knot = 1 nmi/h = 1852/3600 m/s"
 
 [[unit]]
@@ -588,7 +588,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "NIST SP 811 (2008), Appendix B (U.S. liquid measure: 1 gal = 128 fl oz); NIST Handbook 44 (2023), Appendix C"
+source = "NIST SP 811 (2008), Appendix B (fluid ounce, U.S. = 2.957 353 E-05 m^3); NIST Handbook 44, Appendix C (1 gallon = 128 fluid ounces)"
 note = "US fluid ounce = gal_us/128 = 29.5735295625 mL"
 
 [[unit]]
@@ -658,7 +658,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "UK Weights and Measures Act 1985, Schedule 1 (fluid ounce = 1/160 gallon)"
+source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (fluid ounce = 1/20 pint)"
 note = "imperial fluid ounce = gal_imp/160 = 28.4130625 mL"
 
 [[unit]]
@@ -672,7 +672,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "UK Weights and Measures Act 1985, Schedule 1 (quart = 1/4 gallon)"
+source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (quart = 1/4 gallon)"
 note = "imperial quart = gal_imp/4 = 1.1365225 L"
 
 [[unit]]
@@ -700,7 +700,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "4th CGPM (1907) (metric carat = 200 mg); NIST Handbook 44 (2023), Appendix C"
+source = "NIST SP 811 (2008), Appendix B (carat, metric = 2.0 E-04 kg)"
 note = "metric carat = 200 mg"
 
 [[unit]]

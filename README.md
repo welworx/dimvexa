@@ -332,7 +332,7 @@ bbl_oil
   factor to SI  9936705933/62500000000
   offset to SI  0/1
   source        NIST SP 811 (2008), Appendix B (barrel, petroleum: 42 gallons)
-  note          petroleum barrel = 42 US gallons (base gal_us: NIST SP 811 (2008), Appendix B (gallon, U.S. liquid = 231 in^3))
+  note          petroleum barrel = 42 US gallons (base gal_us: NIST SP 811 (2008), Appendix B (gallon, U.S. = 3.785 412 E-03 m^3); NIST Handbook 44, Appendix C (231 in^3))
   defined in    examples/configs/oil.toml:10 (your config, not the shipped table)
 ```
 
