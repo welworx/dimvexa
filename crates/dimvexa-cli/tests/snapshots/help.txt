@@ -1,3 +1,5 @@
+dimvexa VERSION - Exact factors. Loud failures. Zero guessing.
+
 Usage:
   dimvexa convert VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
   dimvexa VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
@@ -47,3 +49,7 @@ rounded once to the nearest f64 (0 ulp). The library's fast f64 path is within 1
 units) or 2 ulp (temperature scales such as degC and degF) of it; see docs/precision.md.
 
 Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
+
+License:    MIT OR Apache-2.0
+Authors:    The Dimvexa contributors
+Repository: https://github.com/welworx/dimvexa

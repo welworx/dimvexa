@@ -9,6 +9,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Added
 
+- CLI: `--help` starts with name, version and tagline and ends with licence, authors and repository; `--version` lists the same facts.
 - CLI: `--pretty` prints the `--json` output indented (same fields and order; implies `--json`).
 - CLI: colour for the result and for `error`, `hint` and `note` labels, only on a terminal and
   never with `NO_COLOR` set or `TERM=dumb`. JSON is never coloured.

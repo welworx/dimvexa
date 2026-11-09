@@ -78,6 +78,25 @@ units) or 2 ulp (temperature scales such as degC and degF) of it; see docs/preci
 Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
 ";
 
+/// Name, version, tagline and where the project lives, from the package metadata.
+fn about() -> String {
+    format!(
+        "License:    {}\nAuthors:    {}\nRepository: {}\n",
+        env!("CARGO_PKG_LICENSE"),
+        env!("CARGO_PKG_AUTHORS"),
+        env!("CARGO_PKG_REPOSITORY")
+    )
+}
+
+/// The text of `--help`: a title line, the usage, and the project facts.
+fn help_text() -> String {
+    format!(
+        "dimvexa {} - Exact factors. Loud failures. Zero guessing.\n\n{USAGE}\n{}",
+        env!("CARGO_PKG_VERSION"),
+        about()
+    )
+}
+
 /// Whether each output stream may carry ANSI colour. Off unless the caller turns it on
 /// (the binary does so for a terminal, honouring `NO_COLOR`).
 #[derive(Clone, Copy, Debug, Default)]
@@ -1722,7 +1741,7 @@ where
     };
     let args = match parsed {
         Parsed::Help => {
-            let _ = write!(out, "{USAGE}");
+            let _ = write!(out, "{}", help_text());
             return 0;
         }
         Parsed::Version => {
@@ -1733,6 +1752,7 @@ where
                 env!("CARGO_PKG_VERSION"),
                 dimvexa::data_version()
             );
+            let _ = write!(out, "{}", about());
             return 0;
         }
         Parsed::Units { target, json } => {
