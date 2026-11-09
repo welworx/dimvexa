@@ -174,6 +174,11 @@ jobs:
           exe=dimvexa
           [[ "${{ matrix.target }}" == *-windows-* ]] && exe=dimvexa.exe
           cp "target/${{ matrix.target }}/release/$exe" LICENSE-MIT LICENSE-APACHE README.md "$d/"
+          if [[ "$exe" == *.exe ]]; then
+            # A loose copy for a direct download, next to the zip.
+            cp "target/${{ matrix.target }}/release/$exe" "dimvexa-${{ matrix.target }}.exe"
+            sha256sum "dimvexa-${{ matrix.target }}.exe" > "dimvexa-${{ matrix.target }}.exe.sha256"
+          fi
           if [[ "$exe" == *.exe ]]; then archive="$d.zip"; tar -a -cf "$archive" "$d"; else archive="$d.tar.gz"; tar -czf "$archive" "$d"; fi
           if command -v sha256sum >/dev/null; then sha256sum "$archive" > "$archive.sha256"; else shasum -a 256 "$archive" > "$archive.sha256"; fi
       - name: Smoke test (native targets only)
@@ -188,6 +193,7 @@ jobs:
           path: |
             dimvexa-*.tar.gz
             dimvexa-*.zip
+            dimvexa-*.exe
             dimvexa-*.sha256
           if-no-files-found: error
 
@@ -377,4 +383,4 @@ jobs:
           VERSION: ${{ needs.plan.outputs.version }}
         run: |
           gh release create "v$VERSION" --repo "${{ github.repository }}" --target "${{ github.sha }}" \
-            --title "v$VERSION" --generate-notes cli/*.tar.gz cli/*.zip cli/*.sha256 cli/dimvexa.rb
+            --title "v$VERSION" --generate-notes cli/*.tar.gz cli/*.zip cli/*.exe cli/*.sha256 cli/dimvexa.rb

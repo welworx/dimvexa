@@ -11,7 +11,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Added
 
-- Releases attach prebuilt `dimvexa` binaries (macOS arm64/x86_64, Linux musl x86_64/aarch64, Windows x86_64 as a zip) and a generated Homebrew formula (`dimvexa.rb`). Homebrew install (`brew install welworx/tap/dimvexa`) works from the first release that includes them.
+- Releases attach prebuilt `dimvexa` binaries (macOS arm64/x86_64, Linux musl x86_64/aarch64, Windows x86_64 as a zip and as a loose `.exe`) and a generated Homebrew formula (`dimvexa.rb`). Homebrew install (`brew install welworx/tap/dimvexa`) works from the first release that includes them.
 
 ### Added (docs)
 
