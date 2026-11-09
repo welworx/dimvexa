@@ -34,10 +34,16 @@ client, no TLS, no gzip and no SHA-256.
    Unix, `tar`. Both ship with macOS, Windows 10+ and mainstream Linux. A missing tool is an error
    that says so. No dependency is added.
 5. **Replace:** copy next to the running binary, rename the running binary to `.old`, rename the
-   copy into place, remove `.old`; on failure put the old binary back.
-6. **Package-managed installs are refused:** a path under Homebrew's Cellar or `.cargo/bin` gets
+   copy into place, remove `.old`; on failure put the old binary back. On Windows the running
+   `.exe` cannot be deleted, so `dimvexa.exe.old` stays until the next update removes it.
+6. **Package-managed installs are refused:** a path under Homebrew's Cellar, `/opt/homebrew`, `/home/linuxbrew`, `.cargo/bin` or
+   `$CARGO_HOME/bin` gets
    the right command (`brew upgrade dimvexa`, `cargo install dimvexa-cli --force`) instead of an
-   in-place overwrite that the package manager would undo or trip over. `--check` still works.
+   in-place overwrite that the package manager would undo or trip over. The detection is by path,
+   so other installers (Scoop, winget, `cargo install --root`, distro packages) are not recognised;
+   the user is expected to use their tool.
+   No answer on stdin (end of input without `-y`) is an error, not an abort, so a cron job or CI
+   step cannot report success without updating. `--check` still works.
 7. **Nothing implicit:** no background check, no update notice on other commands, no environment
    variable that changes the source. The command only runs when asked.
 

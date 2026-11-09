@@ -10,10 +10,12 @@
 // the two visibility lints disagree about `pub(crate)` here.
 #![allow(unreachable_pub, clippy::redundant_pub_crate)]
 
+use std::ffi::{OsStr, OsString};
 use std::fmt::Write as _;
 use std::io::{BufRead, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// The GitHub releases page of the project.
 const RELEASES: &str = "https://github.com/welworx/dimvexa/releases";
@@ -67,15 +69,23 @@ fn parse_release_tag(url: &str) -> Option<String> {
 
 /// Why an installation must not be replaced by this command, as the advice to print; `None`
 /// when it may be.
-fn managed_elsewhere(exe: &Path) -> Option<&'static str> {
+fn managed_elsewhere(exe: &Path, cargo_home: Option<&Path>) -> Option<&'static str> {
     let text = exe.to_string_lossy().replace('\\', "/");
-    if text.contains("/Cellar/") || text.contains("/homebrew/") || text.contains("/Homebrew/") {
-        Some("this dimvexa was installed with Homebrew; run: brew upgrade dimvexa")
-    } else if text.contains("/.cargo/bin/") {
-        Some("this dimvexa was installed with cargo; run: cargo install dimvexa-cli --force")
-    } else {
-        None
+    let brew = text.contains("/Cellar/")
+        || text.starts_with("/opt/homebrew/")
+        || text.starts_with("/usr/local/Homebrew/")
+        || text.starts_with("/home/linuxbrew/");
+    if brew {
+        return Some("this dimvexa was installed with Homebrew; run: brew upgrade dimvexa");
     }
+    let in_cargo_home =
+        cargo_home.is_some_and(|home| exe.parent() == Some(home.join("bin").as_path()));
+    if in_cargo_home || text.contains("/.cargo/bin/") {
+        return Some(
+            "this dimvexa was installed with cargo; run: cargo install dimvexa-cli --force",
+        );
+    }
+    None
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -232,7 +242,7 @@ pub trait Net {
 pub struct Curl;
 
 impl Curl {
-    fn run(args: &[&str]) -> Result<Vec<u8>, String> {
+    fn run(args: &[&OsStr]) -> Result<Vec<u8>, String> {
         let out = Command::new("curl")
             .args(["--proto", "=https", "--proto-redir", "=https", "--tlsv1.2"])
             .args(["--fail", "--silent", "--show-error", "--location"])
@@ -260,12 +270,12 @@ impl Net for Curl {
         let null = if cfg!(windows) { "NUL" } else { "/dev/null" };
         let url = format!("{RELEASES}/latest");
         let out = Self::run(&[
-            "--head",
-            "--output",
-            null,
-            "--write-out",
-            "%{url_effective}",
-            &url,
+            OsStr::new("--head"),
+            OsStr::new("--output"),
+            OsStr::new(null),
+            OsStr::new("--write-out"),
+            OsStr::new("%{url_effective}"),
+            OsStr::new(&url),
         ])?;
         let landed = String::from_utf8_lossy(&out).into_owned();
         parse_release_tag(&landed)
@@ -274,8 +284,7 @@ impl Net for Curl {
 
     fn download(&self, tag: &str, name: &str, dest: &Path) -> Result<(), String> {
         let url = format!("{RELEASES}/download/{tag}/{name}");
-        let dest = dest.to_string_lossy();
-        Self::run(&["--output", &dest, &url]).map(|_| ())
+        Self::run(&[OsStr::new("--output"), dest.as_os_str(), OsStr::new(&url)]).map(|_| ())
     }
 }
 
@@ -284,13 +293,23 @@ struct TempDir(PathBuf);
 
 impl TempDir {
     fn new() -> Result<Self, String> {
+        static COUNTER: AtomicUsize = AtomicUsize::new(0);
         let nanos = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.subsec_nanos());
-        let path =
-            std::env::temp_dir().join(format!("dimvexa-update-{}-{nanos}", std::process::id()));
-        std::fs::create_dir(&path).map_err(|e| format!("cannot create {}: {e}", path.display()))?;
-        Ok(Self(path))
+        // `create_dir` (not `create_dir_all`) refuses a folder someone else planted; the counter
+        // keeps names apart within one process, a clash with another process is retried.
+        for _ in 0..16 {
+            let n = COUNTER.fetch_add(1, Ordering::Relaxed);
+            let path = std::env::temp_dir()
+                .join(format!("dimvexa-update-{}-{nanos}-{n}", std::process::id()));
+            match std::fs::create_dir(&path) {
+                Ok(()) => return Ok(Self(path)),
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
+                Err(e) => return Err(format!("cannot create {}: {e}", path.display())),
+            }
+        }
+        Err("cannot create a scratch folder".to_string())
     }
 }
 
@@ -338,7 +357,10 @@ fn replace_binary(new: &Path, target: &Path) -> Result<(), String> {
             format!("cannot install into {}: {e}", dir.display())
         }
     };
-    std::fs::copy(new, &staged).map_err(denied)?;
+    if let Err(e) = std::fs::copy(new, &staged) {
+        let _ = std::fs::remove_file(&staged);
+        return Err(denied(e));
+    }
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt as _;
@@ -347,7 +369,9 @@ fn replace_binary(new: &Path, target: &Path) -> Result<(), String> {
             return Err(format!("cannot make the new binary executable: {e}"));
         }
     }
-    let old = PathBuf::from(format!("{}.old", target.display()));
+    let mut old_name = OsString::from(target);
+    old_name.push(".old");
+    let old = PathBuf::from(old_name);
     let _ = std::fs::remove_file(&old);
     if let Err(e) = std::fs::rename(target, &old) {
         let _ = std::fs::remove_file(&staged);
@@ -398,7 +422,12 @@ pub fn run(check: bool, yes: bool, out: &mut dyn Write, err: &mut dyn Write) -> 
             return 1;
         }
     };
-    if !check && let Some(advice) = managed_elsewhere(&exe) {
+    if !check
+        && let Some(advice) = managed_elsewhere(
+            &exe,
+            std::env::var_os("CARGO_HOME").map(PathBuf::from).as_deref(),
+        )
+    {
         let _ = writeln!(err, "error: {advice}");
         return 1;
     }
@@ -459,9 +488,14 @@ fn flow(
         let _ = write!(err, "Update to {tag}? [y/N] ");
         let _ = err.flush();
         let mut line = String::new();
-        input
+        let read = input
             .read_line(&mut line)
             .map_err(|e| format!("cannot read the answer: {e}"))?;
+        if read == 0 {
+            return Err(
+                "no answer on stdin; run 'dimvexa update -y' to skip the question".to_string(),
+            );
+        }
         if !matches!(line.trim().to_ascii_lowercase().as_str(), "y" | "yes") {
             let _ = writeln!(out, "aborted");
             return Ok(0);
@@ -568,12 +602,59 @@ mod tests {
 
     #[test]
     fn package_managers_are_left_alone() {
-        assert!(
-            managed_elsewhere(Path::new("/opt/homebrew/Cellar/dimvexa/0.2.0/bin/dimvexa"))
-                .is_some()
-        );
-        assert!(managed_elsewhere(Path::new("/home/u/.cargo/bin/dimvexa")).is_some());
-        assert!(managed_elsewhere(Path::new("/home/u/.local/bin/dimvexa")).is_none());
+        let some = |p: &str, home: Option<&str>| {
+            managed_elsewhere(Path::new(p), home.map(Path::new)).is_some()
+        };
+        assert!(some("/opt/homebrew/Cellar/dimvexa/0.2.0/bin/dimvexa", None));
+        assert!(some("/opt/homebrew/bin/dimvexa", None));
+        assert!(some("/home/linuxbrew/.linuxbrew/bin/dimvexa", None));
+        assert!(some("/home/u/.cargo/bin/dimvexa", None));
+        // A CARGO_HOME elsewhere (the official rust Docker image uses /usr/local/cargo).
+        assert!(some(
+            "/usr/local/cargo/bin/dimvexa",
+            Some("/usr/local/cargo")
+        ));
+        assert!(!some("/usr/local/cargo/bin/dimvexa", None));
+        // A folder that merely has "homebrew" in its name is not Homebrew.
+        assert!(!some("/home/u/src/homebrew/bin/dimvexa", None));
+        assert!(!some("/home/u/.local/bin/dimvexa", None));
+    }
+
+    #[test]
+    fn no_answer_on_stdin_is_an_error_not_an_abort() {
+        let t = scratch("bin");
+        let exe = t.0.join("bin").join("dimvexa");
+        std::fs::write(&exe, b"old").unwrap();
+        let net = windows_release("v0.3.0", b"new", true);
+        let r = drive(&net, &env_for("0.2.0", &exe), false, false, "");
+        assert_eq!(r.code, 1);
+        assert!(r.err.contains("no answer on stdin"), "{}", r.err);
+        assert_eq!(std::fs::read(&exe).unwrap(), b"old");
+    }
+
+    #[test]
+    fn a_checksum_file_for_another_asset_is_refused() {
+        let t = scratch("bin");
+        let exe = t.0.join("bin").join("dimvexa");
+        std::fs::write(&exe, b"old").unwrap();
+        let mut net = windows_release("v0.3.0", b"new", true);
+        net.files[1].1 = format!("{}  other.exe\n", sha256_hex(b"new")).into_bytes();
+        let r = drive(&net, &env_for("0.2.0", &exe), false, true, "");
+        assert_eq!(r.code, 1);
+        assert!(r.err.contains("does not describe"), "{}", r.err);
+        assert_eq!(std::fs::read(&exe).unwrap(), b"old");
+    }
+
+    #[test]
+    fn a_failed_rename_puts_the_old_binary_back() {
+        let t = scratch("bin");
+        let exe = t.0.join("bin").join("dimvexa");
+        std::fs::write(&exe, b"old").unwrap();
+        // The new file is missing, so staging fails before anything is renamed.
+        assert!(replace_binary(&t.0.join("missing"), &exe).is_err());
+        assert_eq!(std::fs::read(&exe).unwrap(), b"old");
+        let leftovers: Vec<_> = std::fs::read_dir(t.0.join("bin")).unwrap().collect();
+        assert_eq!(leftovers.len(), 1, "{leftovers:?}");
     }
 
     #[test]
@@ -735,6 +816,45 @@ mod tests {
         let r = drive(&net, &env_for("0.2.0", &exe), false, true, "");
         assert_eq!(r.code, 1);
         assert!(r.err.contains("404"), "{}", r.err);
+    }
+
+    /// An archive without the binary installs nothing.
+    #[cfg(unix)]
+    #[test]
+    fn an_archive_without_the_binary_is_refused() {
+        let t = scratch("bin");
+        let exe = t.0.join("bin").join("dimvexa");
+        std::fs::write(&exe, b"old").unwrap();
+        let stem = "dimvexa-0.3.0-x86_64-unknown-linux-musl";
+        let pack = t.0.join("pack");
+        std::fs::create_dir_all(pack.join(stem)).unwrap();
+        std::fs::write(pack.join(stem).join("README.md"), b"no binary").unwrap();
+        let made = Command::new("tar")
+            .arg("-czf")
+            .arg(pack.join("a.tar.gz"))
+            .arg("-C")
+            .arg(&pack)
+            .arg(stem)
+            .status()
+            .unwrap();
+        assert!(made.success());
+        let tarball = std::fs::read(pack.join("a.tar.gz")).unwrap();
+        let name = format!("{stem}.tar.gz");
+        let sums = format!("{}  {name}\n", sha256_hex(&tarball)).into_bytes();
+        let net = Fake {
+            tag: "v0.3.0".to_string(),
+            files: vec![(name.clone(), tarball), (format!("{name}.sha256"), sums)],
+        };
+        let env = Env {
+            current: "0.2.0",
+            target: "x86_64-unknown-linux-musl",
+            windows: false,
+            exe: &exe,
+        };
+        let r = drive(&net, &env, false, true, "");
+        assert_eq!(r.code, 1);
+        assert!(r.err.contains("does not contain"), "{}", r.err);
+        assert_eq!(std::fs::read(&exe).unwrap(), b"old");
     }
 
     /// The Unix path: a real `.tar.gz` in the layout the release workflow builds.
