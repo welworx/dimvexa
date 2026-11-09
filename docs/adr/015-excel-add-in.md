@@ -39,8 +39,9 @@ add-in never shapes the core).
    Excel: every call takes about 2 seconds, also for a diagnostic function that only returned
    `x + 1` in JavaScript, and also after making the functions synchronous. The delay is Excel for
    Mac's per-call cost, not the add-in's or WASM's; it makes many single-cell formulas slow there
-   and is the reason to prefer `DIMVEXA.CONVERTRANGE` for bulk work. Not yet compared: Windows,
-   the web (felt fast, not timed) and a real host instead of the dev server. Still open:
+   and is the reason to prefer `DIMVEXA.CONVERTRANGE` for bulk work. Excel on the web (owner, 2026-11-09): not instant
+   but much faster than Mac; not timed. Not yet compared: Windows and a real host instead of the
+   dev server. Still open:
    Windows desktop. The first call after sideloading took a while; the cause (registration or
    WASM compile) is not measured.
 2. Does Excel on Mac support custom functions (Microsoft pages disagree)?
