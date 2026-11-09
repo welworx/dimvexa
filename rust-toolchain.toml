@@ -3,6 +3,6 @@
 # workflow builds and lints on the latest stable so drift shows up without turning main red.
 # The minimum supported version (1.85) is tested separately in CI and is not set here.
 [toolchain]
-channel = "1.97.0"
+channel = "1.99.1"
 components = ["rustfmt", "clippy"]
 profile = "minimal"
