@@ -30,5 +30,6 @@ coding agents working for the owner do not add `Signed-off-by` lines on their be
 
 ## Releases
 
-Releases are cut with `release-plz` from Conventional Commits (planned for M1). The owner
-approves release pull requests.
+A release is a version bump merged to `main` (`docs/releasing.md`). `release.yml` builds
+everything and then waits for the owner to approve the `release` environment before it
+publishes to crates.io, PyPI and npm. Nothing is published without that approval.

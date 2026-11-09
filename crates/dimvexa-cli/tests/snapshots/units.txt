@@ -1,126 +1,126 @@
 # columns: symbol, quantity_kind, exactness, prefixes, aliases, source
 
 ## length
-m	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+m	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## mass
-g	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+g	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## time
-s	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+s	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## electric_current
-A	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+A	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## temperature
-K	absolute_temperature	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+K	absolute_temperature	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## amount_of_substance
-mol	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+mol	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## luminous_intensity
-cd	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)
+cd	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## frequency
-Hz	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+Hz	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## force
-N	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+N	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## pressure
-Pa	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+Pa	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## energy
-J	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+J	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## power
-W	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+W	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## electric_charge
-C	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+C	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## voltage
-V	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+V	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## resistance
-ohm	plain	defined	si	Ω, Ω	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+ohm	plain	defined	si	Ω, Ω	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## capacitance
-F	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+F	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## conductance
-S	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+S	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## magnetic_flux
-Wb	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+Wb	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## magnetic_flux_density
-T	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+T	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## inductance
-H	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+H	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## time
-min	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)
-h	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)
-d	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)
+min	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
+h	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
+d	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
 
 ## volume
-L	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)
+L	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
 
 ## mass
-tonne	plain	defined	si	t	BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)
+tonne	plain	defined	si	t	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
 
 ## energy
 Wh	plain	defined	si	-	definition: watt (SI Brochure 9th ed., Table 4) times hour (SI Brochure 9th ed., ch. 4); NIST SP 811 (2008), Appendix B lists kW h = 3.6E+06 J
 
 ## temperature
 degC	absolute_temperature	defined	none	°C	BIPM SI Brochure, 9th ed. (2019), ch. 2 (degree Celsius, t/degC = T/K - 273.15)
-delta_K	temperature_difference	defined	none	ΔK	BIPM SI Brochure, 9th ed. (2019), ch. 2 (kelvin, temperature intervals)
-delta_degC	temperature_difference	defined	none	Δ°C	BIPM SI Brochure, 9th ed. (2019), ch. 2 (degree Celsius, temperature intervals)
+delta_K	temperature_difference	defined	none	ΔK	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (kelvin); section 2.3.4 (a temperature difference of 1 K equals that of 1 degC)
+delta_degC	temperature_difference	defined	none	Δ°C	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4, note (f) (degree Celsius, temperature intervals)
 
 ## area
-ha	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (hectare = 1 hm^2 = 10^4 m^2)
+ha	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (hectare = 1 hm^2 = 10^4 m^2)
 
 ## length
-au	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (astronomical unit = 149 597 870 700 m); IAU 2012 Resolution B2
-angstrom	plain	defined	none	Å, Å	BIPM SI Brochure, 9th ed. (2019), ch. 4 (other non-SI units: angstrom = 0.1 nm = 10^-10 m)
+au	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 and note (j) (astronomical unit = 149 597 870 700 m; IAU 2012 Resolution B2)
+angstrom	plain	defined	none	Å, Å	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (other non-SI units: angstrom = 0.1 nm = 10^-10 m)
 
 ## frequency
-Bq	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+Bq	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## absorbed_dose
-Gy	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
-Sv	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+Gy	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+Sv	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## luminous_intensity
-lm	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+lm	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## illuminance
-lx	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+lx	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## catalytic_activity
-kat	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
+kat	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## angle
-rad	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)
-deg	plain	measured	none	°	BIPM SI Brochure, 9th ed. (2019), ch. 4 (degree = (pi/180) rad)
-arcmin	plain	measured	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (arcminute = (1/60) degree)
-arcsec	plain	measured	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (arcsecond = (1/60) arcminute)
+rad	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+deg	plain	measured	none	°	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (degree = (pi/180) rad)
+arcmin	plain	measured	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcminute = (1/60) degree)
+arcsec	plain	measured	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcsecond = (1/60) arcminute)
 
 ## pressure
 bar	plain	defined	si	-	NIST SP 811 (2008), Appendix B (bar = 100 kPa)
 atm	plain	defined	none	-	NIST SP 811 (2008), Appendix B (standard atmosphere); 10th CGPM (1954), Resolution 4
 
 ## acceleration
-g_n	plain	defined	none	-	NIST SP 811 (2008), Appendix B (standard acceleration of gravity); 3rd CGPM (1901)
+g_n	plain	defined	none	-	NIST SP 811 (2008), Appendix B (standard acceleration of gravity); 3rd CGPM (1901), Declaration (980.665 cm/s^2)
 
 ## force
 lbf	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pound-force)
 
 ## pressure
 psi	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pound-force per square inch)
-mmHg	plain	defined	none	-	NIST SP 811 (2008), Appendix B (conventional millimeter of mercury); ISO 80000-4:2019
+mmHg	plain	defined	none	-	NIST SP 811 (2008), Appendix B (conventional millimeter of mercury); NIST SP 811, Chapter 5, Table 9 (1 mmHg ~ 133.322 Pa)
 torr	plain	defined	none	-	NIST SP 811 (2008), Appendix B (torr = 101325/760 Pa)
 
 ## energy
@@ -131,15 +131,15 @@ Btu_th	plain	defined	si	-	NIST SP 811 (2008), Appendix B (Btu_th)
 
 ## power
 hp_mech	plain	defined	none	-	NIST SP 811 (2008), Appendix B (horsepower, 550 ft lbf/s)
-hp_metric	plain	defined	none	-	DIN 66036 (metric horsepower, PS); NIST SP 811 (2008), Appendix B
+hp_metric	plain	defined	none	-	NIST SP 811 (2008), Appendix B (horsepower, metric = 7.354 988 E+02 W; 75 kgf m/s with kgf = 9.806 65 N)
 
 ## length
 in	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
 ft	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
 yd	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
 mi	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
-nmi	plain	defined	none	-	NIST SP 811 (2008), Appendix B (nautical mile); International Hydrographic Conference (1929)
-ft_us_survey	plain	defined	none	-	NIST SP 811 (2008), Appendix B (foot, U.S. survey); Mendenhall Order (1893)
+nmi	plain	defined	none	-	NIST SP 811 (2008), Appendix B (nautical mile); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 and note (k) (1st Extraordinary International Hydrographic Conference, 1929)
+ft_us_survey	plain	defined	none	-	NIST SP 811 (2008), Appendix B (foot, U.S. survey); NIST SP 811 (2008), Appendix B.6 (1200/3937 m)
 mi_us_survey	plain	defined	none	-	NIST SP 811 (2008), Appendix B (mile, U.S. statute)
 
 ## mass
@@ -150,10 +150,10 @@ ton_short	plain	defined	none	-	NIST SP 811 (2008), Appendix B (ton, short, 2000 
 ton_long	plain	defined	none	-	NIST SP 811 (2008), Appendix B (ton, long, 2240 lb)
 
 ## volume
-gal_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gallon, U.S. liquid = 231 in^3)
-gal_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1 (4.54609 L); NIST SP 811 (2008), Appendix B
+gal_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gallon, U.S. = 3.785 412 E-03 m^3); NIST Handbook 44, Appendix C (231 in^3)
+gal_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (4.54609 dm^3); NIST SP 811 (2008), Appendix B (gallon, Canadian and U.K.)
 pt_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pint, U.S. liquid)
-pt_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1
+pt_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part IV (pint = 0.568 261 25 dm^3)
 
 ## amount_of_substance
 lbmol	plain	defined	none	-	derived from the pound definition (International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B); standard process-engineering convention
@@ -165,32 +165,32 @@ delta_degF	temperature_difference	defined	none	Δ°F	NIST SP 811 (2008), Appendi
 delta_degR	temperature_difference	defined	none	Δ°R	NIST SP 811 (2008), Appendix B (degree Rankine, temperature interval)
 
 ## time
-week	plain	defined	none	-	ISO 8601-1:2019 (week of 7 days); BIPM SI Brochure, 9th ed. (2019), ch. 4 (day = 86 400 s)
+week	plain	defined	none	-	ISO 8601-1:2019 (week of 7 days); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (day = 86 400 s)
 yr_common	plain	defined	none	-	NIST SP 811 (2008), Appendix B (year, 365 days)
-yr_julian	plain	defined	none	-	IAU Style Manual (1989), Julian year a = 365.25 d; BIPM SI Brochure, 9th ed. (2019), ch. 4 (day = 86 400 s)
+yr_julian	plain	defined	none	-	IAU Style Manual (1989), Julian year a = 365.25 d; BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (day = 86 400 s)
 
 ## length
 ly	plain	defined	none	-	IAU Style Manual (1989) (light year = c x Julian year); BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (c = 299 792 458 m/s)
 
 ## area
-acre_int	plain	defined	none	-	NIST Handbook 44 (2023), Appendix C (acre = 43 560 square feet); International yard and pound agreement (1959)
-acre_us_survey	plain	defined	none	-	NIST SP 811 (2008), Appendix B (acre, based on U.S. survey foot); NIST Handbook 44 (2023), Appendix C
+acre_int	plain	defined	none	-	NIST SP 811 (2008), Appendix B.6 (160 rd^2 = 1 acre = 43 560 ft^2); International yard and pound agreement (1959)
+acre_us_survey	plain	defined	none	-	NIST SP 811 (2008), Appendix B (acre, based on U.S. survey foot); NIST SP 811 (2008), Appendix B.6
 
 ## speed
-kn	plain	defined	none	-	NIST SP 811 (2008), Appendix B (knot = nautical mile per hour); International Hydrographic Conference (1929)
+kn	plain	defined	none	-	NIST SP 811 (2008), Appendix B (knot = nautical mile per hour); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 and note (k)
 
 ## volume
-fl_oz_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (U.S. liquid measure: 1 gal = 128 fl oz); NIST Handbook 44 (2023), Appendix C
+fl_oz_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (fluid ounce, U.S. = 2.957 353 E-05 m^3); NIST Handbook 44, Appendix C (1 gallon = 128 fluid ounces)
 cup_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (cup, U.S. liquid measure)
 qt_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (quart, U.S. liquid)
 tbsp_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (tablespoon, U.S.)
 tsp_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (teaspoon, U.S.)
-fl_oz_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1 (fluid ounce = 1/160 gallon)
-qt_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1 (quart = 1/4 gallon)
+fl_oz_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (fluid ounce = 1/20 pint)
+qt_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (quart = 1/4 gallon)
 
 ## mass
 grain	plain	defined	none	-	NIST SP 811 (2008), Appendix B (grain, 1/7000 pound avoirdupois)
-carat	plain	defined	none	-	4th CGPM (1907) (metric carat = 200 mg); NIST Handbook 44 (2023), Appendix C
+carat	plain	defined	none	-	NIST SP 811 (2008), Appendix B (carat, metric = 2.0 E-04 kg)
 
 ## energy
 erg	plain	defined	none	-	NIST SP 811 (2008), Appendix B (erg)
@@ -201,6 +201,12 @@ kgf	plain	defined	none	-	NIST SP 811 (2008), Appendix B (kilogram-force)
 
 ## angle
 grad	plain	measured	none	gon	NIST SP 811 (2008), Appendix B (grade); ISO 80000-3:2019 (gon)
+
+## dynamic_viscosity
+P	plain	defined	si	poise	NIST SP 811 (2008), Appendix B.8 (poise = 1.0 E-01 Pa s)
+
+## kinematic_viscosity
+St	plain	defined	si	stokes	NIST SP 811 (2008), Appendix B.8 (stokes = 1.0 E-04 m^2/s)
 
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note

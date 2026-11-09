@@ -123,7 +123,7 @@ value = "1"
 from = "hp_metric"
 to = "W"
 expect = "735.49875"
-source = "DIN 66036 (75 kgf m/s with kgf = 9.80665 N)"
+source = "NIST SP 811 (2008), Appendix B (horsepower, metric; 75 kgf m/s with kgf = 9.806 65 N)"
 
 [[vector]]
 unit = "in"
@@ -235,7 +235,7 @@ value = "1"
 from = "gal_imp"
 to = "L"
 expect = "4.54609"
-source = "UK Weights and Measures Act 1985 (4.546 09 L)"
+source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (4.54609 dm^3)"
 
 [[vector]]
 unit = "pt_us"
@@ -243,7 +243,7 @@ value = "8"
 from = "pt_us"
 to = "gal_us"
 expect = "1"
-source = "US liquid measure: 8 pints = 1 gallon"
+source = "NIST Handbook 44, Appendix C (1 gallon = 4 quarts = 8 pints)"
 
 [[vector]]
 unit = "pt_imp"
@@ -251,7 +251,7 @@ value = "8"
 from = "pt_imp"
 to = "gal_imp"
 expect = "1"
-source = "imperial measure: 8 pints = 1 gallon"
+source = "UK Weights and Measures Act 1985, Schedule 1, Parts IV and VI (8 x 0.568 261 25 dm^3 = 4.54609 dm^3)"
 
 [[vector]]
 unit = "lbmol"
@@ -380,7 +380,7 @@ value = "1"
 from = "acre_int"
 to = "m^2"
 expect = "316160658/78125"
-source = "NIST Handbook 44 (2023), Appendix C (acre = 43 560 ft^2) with ft = 0.3048 m"
+source = "NIST SP 811 (2008), Appendix B.6 (160 rd^2 = 1 acre = 43 560 ft^2) with ft = 0.3048 m"
 
 [[vector]]
 unit = "acre_us_survey"
@@ -405,7 +405,7 @@ value = "128"
 from = "fl_oz_us"
 to = "gal_us"
 expect = "1"
-source = "NIST Handbook 44 (2023), Appendix C (1 gallon = 128 fluid ounces)"
+source = "NIST Handbook 44, Appendix C (1 gallon = 128 fluid ounces)"
 
 [[vector]]
 unit = "cup_us"
@@ -413,7 +413,7 @@ value = "1"
 from = "cup_us"
 to = "fl_oz_us"
 expect = "8"
-source = "NIST SP 811 (2008), Appendix B (1 cup = 8 fluid ounces)"
+source = "NIST SP 811 (2008), Appendix B (cup = 2.365 882 E-04 m^3 and fluid ounce = 2.957 353 E-05 m^3: ratio 8)"
 
 [[vector]]
 unit = "qt_us"
@@ -421,7 +421,7 @@ value = "1"
 from = "qt_us"
 to = "pt_us"
 expect = "2"
-source = "NIST SP 811 (2008), Appendix B (1 quart = 2 pints)"
+source = "NIST SP 811 (2008), Appendix B (quart = 9.463 529 E-04 m^3 and pint = 4.731 765 E-04 m^3: ratio 2)"
 
 [[vector]]
 unit = "tbsp_us"
@@ -429,7 +429,7 @@ value = "1"
 from = "tbsp_us"
 to = "mL"
 expect = "473176473/32000000"
-source = "NIST SP 811 (2008), Appendix B (tablespoon = 1/2 fluid ounce = 1.478 676 E-05 m^3, rounded)"
+source = "NIST SP 811 (2008), Appendix B (tablespoon = 1.478 676 E-05 m^3, rounded; half of a U.S. fluid ounce within the rounding)"
 
 [[vector]]
 unit = "tsp_us"
@@ -437,7 +437,7 @@ value = "3"
 from = "tsp_us"
 to = "tbsp_us"
 expect = "1"
-source = "NIST SP 811 (2008), Appendix B (1 tablespoon = 3 teaspoons)"
+source = "NIST SP 811 (2008), Appendix B (tablespoon = 1.478 676 E-05 m^3 and teaspoon = 4.928 922 E-06 m^3: ratio 3)"
 
 [[vector]]
 unit = "fl_oz_imp"
@@ -445,7 +445,7 @@ value = "160"
 from = "fl_oz_imp"
 to = "gal_imp"
 expect = "1"
-source = "UK Weights and Measures Act 1985, Schedule 1 (20 fluid ounces = 1 pint, 8 pints = 1 gallon)"
+source = "UK Weights and Measures Act 1985, Schedule 1, Parts IV and VI (pint = 0.568 261 25 dm^3; fluid ounce = 1/20 pint)"
 
 [[vector]]
 unit = "qt_imp"
@@ -453,7 +453,7 @@ value = "1"
 from = "qt_imp"
 to = "L"
 expect = "454609/400000"
-source = "UK Weights and Measures Act 1985, Schedule 1 (gallon = 4.54609 L, quart = 1/4 gallon)"
+source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3, quart = 1/4 gallon)"
 
 [[vector]]
 unit = "grain"
@@ -469,7 +469,7 @@ value = "1"
 from = "carat"
 to = "mg"
 expect = "200"
-source = "4th CGPM (1907) (metric carat = 200 mg)"
+source = "NIST SP 811 (2008), Appendix B (carat, metric = 2.0 E-04 kg)"
 
 [[vector]]
 unit = "erg"
@@ -502,3 +502,19 @@ from = "grad"
 to = "deg"
 expect = "90"
 source = "NIST SP 811 (2008), Appendix B (grade = (pi/200) rad, so 100 grad = 90 degrees)"
+
+[[vector]]
+unit = "P"
+value = "1"
+from = "cP"
+to = "Pa.s"
+expect = "0.001"
+source = "NIST SP 811 (2008), Appendix B.8 (poise = 1.0 E-01 Pa s; centipoise = 1.0 E-03 Pa s)"
+
+[[vector]]
+unit = "St"
+value = "1"
+from = "cSt"
+to = "m2/s"
+expect = "0.000001"
+source = "NIST SP 811 (2008), Appendix B.8 (stokes = 1.0 E-04 m^2/s; centistokes = 1.0 E-06 m^2/s)"

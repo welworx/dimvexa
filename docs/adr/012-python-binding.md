@@ -27,5 +27,5 @@ dependencies, while the main workspace is std-only and must build offline (ADR-0
 
 ## Consequences
 
-CI for the binding (`python` job, `wheels.yml`) and a PyPI release are separate follow-ups, planned in `docs/python-binding.md`. No
+Wheels, the sdist and the PyPI release are built by `.github/workflows/release.yml` (`docs/releasing.md`); a `python` job in `ci.yml` is still a follow-up, planned in `docs/python-binding.md`. No
 performance claim is made until a dated benchmark run exists.

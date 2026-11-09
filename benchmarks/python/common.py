@@ -389,6 +389,11 @@ def classify_must_convert(ad, mode, cases, log):
     return recs
 
 
+def refuse_group(c):
+    """"ambiguous_name" (a documented default may be a policy choice) or "other" (a defect)."""
+    return c.get("group") or ("ambiguous_name" if c["category"] == "ambiguous_name" else "other")
+
+
 def classify_must_refuse(ad, mode, cases, log):
     recs = []
     for c in cases:
@@ -397,12 +402,12 @@ def classify_must_refuse(ad, mode, cases, log):
                 got = ad.convert_case(mode, c["value"], c["from"], c["to"])
             else:
                 got = ad.add_case(mode, c["a"], c["b"])
-            recs.append({"id": c["id"], "category": c["category"], "outcome": "silently_accepted",
+            recs.append({"id": c["id"], "category": c["category"], "group": refuse_group(c), "outcome": "silently_accepted",
                          "got": repr(got)[:80], "why_it_should_refuse": c["why"]})
         except NotApplicable:
-            recs.append({"id": c["id"], "category": c["category"], "outcome": "not_applicable"})
+            recs.append({"id": c["id"], "category": c["category"], "group": refuse_group(c), "outcome": "not_applicable"})
         except Exception as e:
-            recs.append({"id": c["id"], "category": c["category"], "outcome": "refused",
+            recs.append({"id": c["id"], "category": c["category"], "group": refuse_group(c), "outcome": "refused",
                          "detail": f"{type(e).__name__}: {e}"[:160]})
     return recs
 
@@ -432,6 +437,15 @@ def by_category(recs, outcomes):
     return cats
 
 
+def by_group(recs):
+    out = {}
+    for r in recs:
+        g = out.setdefault(r["group"], {"total": 0, "refused": 0, "silently_accepted": 0, "not_applicable": 0})
+        g["total"] += 1
+        g[r["outcome"]] += 1
+    return out
+
+
 def measure_semantics(ad, corpus, log):
     out = {}
     for mode in ad.semantic_modes:
@@ -458,7 +472,8 @@ def measure_semantics(ad, corpus, log):
             "must_refuse": {"total": len(mr), "refused": tot(mr, "refused"),
                             "silently_accepted": tot(mr, "silently_accepted"),
                             "not_applicable": tot(mr, "not_applicable"),
-                            "by_category": by_category(mr, ["refused", "silently_accepted", "not_applicable"])},
+                            "by_category": by_category(mr, ["refused", "silently_accepted", "not_applicable"]),
+                            "by_group": by_group(mr)},
             "coverage": cov,
             "cases": {"must_convert": mc, "must_refuse": mr},
             "accuracy": accuracy_summary(mc),

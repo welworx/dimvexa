@@ -593,6 +593,8 @@ fn group_name(dim: Dim) -> String {
         [0, 0, -1, 0, 0, 0, 0] => "frequency",
         [1, 1, -2, 0, 0, 0, 0] => "force",
         [1, -1, -2, 0, 0, 0, 0] => "pressure",
+        [1, -1, -1, 0, 0, 0, 0] => "dynamic_viscosity",
+        [0, 2, -1, 0, 0, 0, 0] => "kinematic_viscosity",
         [1, 2, -2, 0, 0, 0, 0] => "energy",
         [1, 2, -3, 0, 0, 0, 0] => "power",
         [0, 0, 1, 1, 0, 0, 0] => "electric_charge",

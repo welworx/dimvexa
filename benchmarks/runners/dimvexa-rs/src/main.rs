@@ -230,9 +230,14 @@ fn count(recs: &[Json], k: &str) -> f64 {
 }
 
 fn by_category(recs: &[Json], outcomes: &[&str]) -> Json {
+    by_key(recs, "category", outcomes)
+}
+
+/// Counts per value of the record field `key` ("category" or "group").
+fn by_key(recs: &[Json], key: &str, outcomes: &[&str]) -> Json {
     let mut cats: BTreeMap<String, Json> = BTreeMap::new();
     for r in recs {
-        let c = cats.entry(r.get("category").str().to_string()).or_insert_with(|| {
+        let c = cats.entry(r.get(key).str().to_string()).or_insert_with(|| {
             let mut o = Json::obj();
             o.set("total", Json::Num(0.0));
             for k in outcomes {
@@ -290,6 +295,12 @@ fn semantics(reg: &Registry, corpus: &BTreeMap<String, Json>) -> Json {
         let mut mr = Vec::new();
         for c in corpus["must_refuse"].get("cases").arr() {
             let (id, cat) = (c.get("id").str(), c.get("category").str());
+            let group = match c.get("group").str() {
+                "" if cat == "ambiguous_name" => "ambiguous_name",
+                "" => "other",
+                g => g,
+            }
+            .to_string();
             let result: Result<String, (String, String)> = if c.get("op").str() == "convert" {
                 convert_case(mode, reg, c.get("value").str(), c.get("from").str(), c.get("to").str()).map(|v| format!("{v:?}"))
             } else {
@@ -300,7 +311,7 @@ fn semantics(reg: &Registry, corpus: &BTreeMap<String, Json>) -> Json {
                     (Err(e), _) | (_, Err(e)) => Err((e.code().to_string(), e.to_string())),
                 }
             };
-            mr.push(match result {
+            let mut rec_mr = match result {
                 Ok(v) => {
                     let mut r = rec(id, cat, "silently_accepted");
                     r.set("got", Json::Str(v));
@@ -315,7 +326,9 @@ fn semantics(reg: &Registry, corpus: &BTreeMap<String, Json>) -> Json {
                     r.set("intended_reason", Json::Bool(intended));
                     r
                 }
-            });
+            };
+            rec_mr.set("group", Json::Str(group));
+            mr.push(rec_mr);
         }
         let mut cov = Json::obj();
         for l in corpus["coverage"].get("lists").arr() {
@@ -353,6 +366,7 @@ fn semantics(reg: &Registry, corpus: &BTreeMap<String, Json>) -> Json {
         mrj.set("not_applicable", Json::Num(0.0));
         mrj.set("refused_for_intended_reason", Json::Num(mr.iter().filter(|r| matches!(r.get("intended_reason"), Json::Bool(true))).count() as f64));
         mrj.set("by_category", by_category(&mr, &["refused", "silently_accepted", "not_applicable"]));
+        mrj.set("by_group", by_key(&mr, "group", &["refused", "silently_accepted", "not_applicable"]));
         let mut cases = Json::obj();
         cases.set("must_convert", Json::Arr(mc));
         cases.set("must_refuse", Json::Arr(mr));

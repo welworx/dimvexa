@@ -1,9 +1,20 @@
 # Dimvexa: exact unit conversion
 
+<p align="center">
+  <a href="https://github.com/welworx/dimvexa/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/welworx/dimvexa/ci.yml?branch=main&label=CI&logo=github"></a>
+  <a href="https://crates.io/crates/dimvexa"><img alt="crates.io" src="https://img.shields.io/crates/v/dimvexa?logo=rust&color=orange"></a>
+  <a href="https://docs.rs/dimvexa"><img alt="docs.rs" src="https://img.shields.io/docsrs/dimvexa?logo=docs.rs"></a>
+  <a href="https://pypi.org/project/dimvexa/"><img alt="PyPI" src="https://img.shields.io/pypi/v/dimvexa?logo=pypi&logoColor=white"></a>
+  <a href="https://www.npmjs.com/package/@dimvexa/wasm"><img alt="npm" src="https://img.shields.io/npm/v/%40dimvexa%2Fwasm?logo=npm"></a>
+  <a href="#licence-independence-and-benchmarked-projects"><img alt="Licence: MIT OR Apache-2.0" src="https://img.shields.io/badge/licence-MIT%20OR%20Apache--2.0-blue"></a>
+  <a href="Cargo.toml"><img alt="MSRV 1.85" src="https://img.shields.io/badge/MSRV-1.85-informational?logo=rust"></a>
+  <a href="https://github.com/welworx/dimvexa/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/welworx/dimvexa"></a>
+</p>
+
 **Exact factors. Loud failures. Zero guessing.**
 
-Dimvexa is a unit conversion library with a Rust core and a command-line tool (Python, WASM,
-MCP and Excel interfaces are planned, not available yet). Every factor is an exact fraction
+Dimvexa is a unit conversion library with a Rust core, a command-line tool and Python and
+WASM bindings (MCP and Excel interfaces are planned, not available yet). Every factor is an exact fraction
 with a cited source, and anything ambiguous is an error instead of a guess.
 
 ```rust
@@ -21,9 +32,25 @@ error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne,
 $ dimvexa units volume      # which volume units exist? (see "Finding a unit" below)
 ```
 
-**Status:** pre-release 0.1.0; the crates are on crates.io (`dimvexa`); to track the latest changes use git (`dimvexa = { git = "https://github.com/welworx/dimvexa" }`).
+> Provided as is, without warranty or liability; see the [Disclaimer](#disclaimer). Independent
+> project, not affiliated with the libraries it is benchmarked against (see [Licence](#licence-independence-and-benchmarked-projects)).
 
-## Why
+## Contents
+
+- [Why Dimvexa](#why-dimvexa)
+- [Install and status](#install-and-status)
+- [Supported units](#supported-units)
+- [Combining units](#combining-units)
+- [Finding a unit](#finding-a-unit)
+- [Your own names: `--config`](#your-own-names---config)
+- [Angles and pi: limitations](#angles-and-pi-limitations)
+- [Repository layout](#repository-layout) and [Development](#development)
+- [Roadmap](#roadmap)
+- [How to cite](#how-to-cite)
+- [Disclaimer](#disclaimer)
+- [Licence, independence and benchmarked projects](#licence-independence-and-benchmarked-projects)
+
+## Why Dimvexa
 
 - **Exact.** Factors are rational numbers with a source and an exact/measured flag.
 - **Loud.** Ambiguous names (`ton`, `gal`, `oz`), overflow and unsupported requests are errors with stable codes.
@@ -31,6 +58,22 @@ $ dimvexa units volume      # which volume units exist? (see "Finding a unit" be
 - **Fast and honest.** About 0.5 ns per prepared conversion; within 1 ulp (linear) or 2 ulp (temperature scales) of the exact answer, and `apply_exact_f64` gives the correctly rounded value ([`docs/precision.md`](docs/precision.md), [`docs/benchmarks/M0.md`](docs/benchmarks/M0.md)).
 - **Covers the everyday units.** SI and prefixes, US customary and imperial, pressure, energy, power and temperature (about 100 units, more by request).
 - **Extensible by data.** Units live in cited TOML tables; missing one? Open a *Unit request* issue.
+
+## Install and status
+
+Status: pre-1.0 (0.1.x). Every release is published to all registries from one version number
+(see [`docs/releasing.md`](docs/releasing.md)):
+
+```console
+$ cargo add dimvexa                 # Rust library (crates.io; API docs on docs.rs)
+$ cargo install dimvexa-cli         # the `dimvexa` command-line tool
+$ pip install dimvexa               # Python (PyPI, NumPy arrays, abi3 wheels)
+$ npm install @dimvexa/wasm         # JavaScript / WASM (npm)
+```
+
+To track unreleased changes use git (`dimvexa = { git = "https://github.com/welworx/dimvexa" }`).
+Before 1.0 the API and the data table may change between minor versions; see
+[`CHANGELOG.md`](CHANGELOG.md).
 
 A worked example (pool pump electricity: 1.1 kW for 8 h a day for 30 days is 264 kWh,
 950.4 MJ, 79.20 EUR at 0.30 EUR/kWh) is in [`examples/pool_pump.rs`](examples/pool_pump.rs)
@@ -71,6 +114,8 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | angle | `rad`, `deg`, `arcmin`, `arcsec`, `grad` |
 | acceleration | `g_n` |
 | speed | `kn` |
+| dynamic_viscosity | `P` |
+| kinematic_viscosity | `St` |
 
 ## Combining units
 
@@ -98,49 +143,6 @@ Not in the table on purpose:
   ADR-010), `rev` and `rpm`, information (`bit`, `B`), percent and ppm, logarithmic units
   (`dB`, `Np`), the parsec, months and oil barrels (see the `--config` example). Open a *Unit
   request* issue.
-
-## Angles and pi: limitations
-
-`rad`, `deg`, `arcmin`, `arcsec` and `grad` (alias `gon`) work, with these limits. Read them before
-you rely on an angle result.
-
-1. **Pi is a fraction, not pi.** Pi is irrational and every factor here is an exact fraction.
-   `deg`, `arcmin`, `arcsec` and `grad` use pi = 245850922/78256779, a continued-fraction
-   approximation (3.14159265358979324 against the true 3.14159265358979323846..., relative error
-   2.5e-17). That is below half an `f64` ulp (1.1e-16), so ordinary `f64` results equal the true
-   value except possibly in the last bit. Longer approximations overflow the exact `i128`
-   arithmetic (ADR-010).
-2. **`--exact` is exact for the fraction, not for pi.** `convert 180 deg rad --exact` prints
-   `245850922/78256779 rad`. Do not read that as a proof about pi. These units are marked
-   `measured` in `dimvexa units deg` for that reason.
-3. **Only `rad` links are affected.** `deg`, `arcmin`, `arcsec` and `grad` share the one fraction,
-   so `60 arcmin` to `deg` or `100 grad` to `deg` are exact. Only a conversion to or from `rad`
-   (or a compound that contains it) carries the tiny error.
-4. **You cannot type `2*pi` or `2pi`.** A value is a plain number (`6.283185307179586`) or a
-   fraction (`1/3`). Typing the decimal works for `f64` (`6.283185307179586 rad` to `deg` gives
-   `360 deg`), but the decimal is not exactly 2 pi, so `--exact` shows a tiny difference
-   (about 1.8e-14 deg). Use degrees (`360 deg`) when you can. To write multiples of pi, define
-   `pi` and `turn` yourself with the shipped example config, which uses the same fraction, so
-   `2 pi` is exactly 360 deg:
-
-   ```console
-   $ dimvexa convert 2 pi deg --config examples/configs/angle.toml
-   360 deg
-   $ dimvexa convert 1 turn rad --config examples/configs/angle.toml
-   6.283185307179586 rad
-   ```
-
-5. **Angle is dimensionless** (ADR-007), so `rad/s` and `Hz` are the same dimension and
-   `1 rad/s` converts to `1 Hz`, and `1 deg` converts to a plain number (`dimvexa convert 1 deg 1`
-   gives 0.017453292519943295). Dimvexa does not know that a hertz counts cycles and a radian
-   per second counts radians. Because of this there is no `rev`, `turn` or `rpm`: `1 turn/s`
-   would convert to `6.28 Hz`, which is wrong for a frequency. The example config defines `turn`
-   with that caveat, on your own responsibility.
-6. **Missing:** `sr` (steradian), the parsec and angular `mil`. `eV` and `Da` are also missing
-   because of the same arithmetic limit (ADR-010).
-
-The decision and the options for an exact pi are in [`docs/adr/010-units-that-do-not-fit-i128.md`](docs/adr/010-units-that-do-not-fit-i128.md);
-the pinned limitation is KL-19 in [`docs/known-limitations.md`](docs/known-limitations.md).
 
 ## Finding a unit
 
@@ -332,7 +334,7 @@ bbl_oil
   factor to SI  9936705933/62500000000
   offset to SI  0/1
   source        NIST SP 811 (2008), Appendix B (barrel, petroleum: 42 gallons)
-  note          petroleum barrel = 42 US gallons (base gal_us: NIST SP 811 (2008), Appendix B (gallon, U.S. liquid = 231 in^3))
+  note          petroleum barrel = 42 US gallons (base gal_us: NIST SP 811 (2008), Appendix B (gallon, U.S. = 3.785 412 E-03 m^3); NIST Handbook 44, Appendix C (231 in^3))
   defined in    examples/configs/oil.toml:10 (your config, not the shipped table)
 ```
 
@@ -345,6 +347,49 @@ Rules for your units:
 - The base must be linear: no temperature points and no units with an offset.
 - If the base is `measured`, so is the new unit, whatever you state.
 - `dimvexa units` marks them (`[yours: file:line]`) and the JSON has an `origin` for each.
+
+## Angles and pi: limitations
+
+`rad`, `deg`, `arcmin`, `arcsec` and `grad` (alias `gon`) work, with these limits. Read them before
+you rely on an angle result.
+
+1. **Pi is a fraction, not pi.** Pi is irrational and every factor here is an exact fraction.
+   `deg`, `arcmin`, `arcsec` and `grad` use pi = 245850922/78256779, a continued-fraction
+   approximation (3.14159265358979324 against the true 3.14159265358979323846..., relative error
+   2.5e-17). That is below half an `f64` ulp (1.1e-16), so ordinary `f64` results equal the true
+   value except possibly in the last bit. Longer approximations overflow the exact `i128`
+   arithmetic (ADR-010).
+2. **`--exact` is exact for the fraction, not for pi.** `convert 180 deg rad --exact` prints
+   `245850922/78256779 rad`. Do not read that as a proof about pi. These units are marked
+   `measured` in `dimvexa units deg` for that reason.
+3. **Only `rad` links are affected.** `deg`, `arcmin`, `arcsec` and `grad` share the one fraction,
+   so `60 arcmin` to `deg` or `100 grad` to `deg` are exact. Only a conversion to or from `rad`
+   (or a compound that contains it) carries the tiny error.
+4. **You cannot type `2*pi` or `2pi`.** A value is a plain number (`6.283185307179586`) or a
+   fraction (`1/3`). Typing the decimal works for `f64` (`6.283185307179586 rad` to `deg` gives
+   `360 deg`), but the decimal is not exactly 2 pi, so `--exact` shows a tiny difference
+   (about 1.8e-14 deg). Use degrees (`360 deg`) when you can. To write multiples of pi, define
+   `pi` and `turn` yourself with the shipped example config, which uses the same fraction, so
+   `2 pi` is exactly 360 deg:
+
+   ```console
+   $ dimvexa convert 2 pi deg --config examples/configs/angle.toml
+   360 deg
+   $ dimvexa convert 1 turn rad --config examples/configs/angle.toml
+   6.283185307179586 rad
+   ```
+
+5. **Angle is dimensionless** (ADR-007), so `rad/s` and `Hz` are the same dimension and
+   `1 rad/s` converts to `1 Hz`, and `1 deg` converts to a plain number (`dimvexa convert 1 deg 1`
+   gives 0.017453292519943295). Dimvexa does not know that a hertz counts cycles and a radian
+   per second counts radians. Because of this there is no `rev`, `turn` or `rpm`: `1 turn/s`
+   would convert to `6.28 Hz`, which is wrong for a frequency. The example config defines `turn`
+   with that caveat, on your own responsibility.
+6. **Missing:** `sr` (steradian), the parsec and angular `mil`. `eV` and `Da` are also missing
+   because of the same arithmetic limit (ADR-010).
+
+The decision and the options for an exact pi are in [`docs/adr/010-units-that-do-not-fit-i128.md`](docs/adr/010-units-that-do-not-fit-i128.md);
+the pinned limitation is KL-19 in [`docs/known-limitations.md`](docs/known-limitations.md).
 
 ## Repository layout
 
@@ -373,6 +418,15 @@ warnings as errors, tests, doc tests, rustdoc, unit table validation, the packag
 the pool pump example). See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the rules and for how to
 request a missing unit, and [`SECURITY.md`](SECURITY.md) to report a vulnerability privately.
 
+## Roadmap
+
+See [`ROADMAP.md`](ROADMAP.md).
+
+- Process-engineering and common packs, water head conventions, more CLI commands
+- MCP server
+- Excel add-in (optional)
+- Published benchmarks against other unit libraries ([`docs/benchmarking.md`](docs/benchmarking.md))
+
 ## How to cite
 
 Plain text:
@@ -392,21 +446,52 @@ BibTeX:
 }
 ```
 
-GitHub's "Cite this repository" button reads [`CITATION.cff`](CITATION.cff). There is no
-release, version number or DOI yet; please also give the commit you used.
+GitHub's "Cite this repository" button reads [`CITATION.cff`](CITATION.cff). The current
+release is 0.1.1 (2026-11-08). There is no DOI; for unreleased work please also give the commit you used.
 
-## Licence
+## Disclaimer
 
-`MIT OR Apache-2.0`. Commercial use is allowed. Please keep the copyright notice and the
-`NOTICE` file with copies, and cite the project when you use it in research (see
-`CITATION.cff`). Contributions are licensed under the same terms (see `CONTRIBUTING.md`).
+The files in this repository are provided **"as is"**, without warranty of any kind, express or
+implied, including but not limited to merchantability, fitness for a particular purpose,
+accuracy, completeness and non-infringement. The author and contributors accept no liability
+for any claim, damage, loss or other consequence arising from the use of, or inability to use,
+this software, its unit tables or its documentation, and give no indemnity.
 
-## Planned
+Unit factors, sources and benchmark figures can contain errors; verify any result you depend on
+against the primary source. Do not use this software as the only safeguard in safety-critical,
+medical, legal, financial, custody-transfer or similar settings.
 
-See [`ROADMAP.md`](ROADMAP.md).
+I do not accept any responsibility for any harmful, unlawful or otherwise improper use of the
+material in this repository. You alone are responsible for complying with the laws and
+regulations that apply to you. The licence texts ([`LICENSE-MIT`](LICENSE-MIT),
+[`LICENSE-APACHE`](LICENSE-APACHE)) contain the binding terms and prevail over this summary.
 
-- Process-engineering and common packs, water head conventions, more CLI commands
-- First crates.io release
-- Python binding, WASM and npm package, MCP server
-- Excel add-in (optional)
-- Published benchmarks against other unit libraries ([`docs/benchmarking.md`](docs/benchmarking.md))
+## Licence, independence and benchmarked projects
+
+**Licence.** `MIT OR Apache-2.0`, at your option. Commercial use is allowed. Please keep the
+copyright notice and the [`NOTICE`](NOTICE) file with copies, and cite the project when you use
+it in research (see [`CITATION.cff`](CITATION.cff)). Contributions are licensed under the same
+terms (see [`CONTRIBUTING.md`](CONTRIBUTING.md)). Data provenance and policy:
+[`docs/licensing.md`](docs/licensing.md).
+
+**Independence.** Dimvexa is an independent project. It is not affiliated with, associated
+with, sponsored by or endorsed by any of the projects, companies or organisations named in this
+repository. All product and project names are the property of their respective owners and are
+used for identification only. The benchmark results describe the versions, inputs and machine
+recorded in [`docs/benchmarks/comparison.md`](docs/benchmarks/comparison.md) and are not a
+statement about those projects in general. Maintainers can ask for a runner correction through
+the *Benchmark runner review* issue form.
+
+**Libraries benchmarked** (method in [`docs/benchmarking.md`](docs/benchmarking.md)):
+
+- [Astropy (`astropy.units`)](https://github.com/astropy/astropy)
+- [convert-units](https://github.com/convert-units/convert-units)
+- [js-quantities](https://github.com/gentooboontoo/js-quantities)
+- [math.js](https://github.com/josdejong/mathjs)
+- [Pint](https://github.com/hgrecco/pint)
+- [unyt](https://github.com/yt-project/unyt)
+- [uom (Rust, units of measurement)](https://github.com/iliekturtles/uom)
+
+Plain-loop and NumPy "ceilings" are included as reference lines only. The unit table is built
+from primary definitions (BIPM SI Brochure, NIST SP 811 and similar); no data is copied from
+GNU units or rink.

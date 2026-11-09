@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""Runner for Dimvexa's own Python binding (bindings/python, ADR-010), run like the competitor
+"""Runner for Dimvexa's own Python binding (bindings/python, ADR-012), run like the competitor
 libraries so the same corpus, tolerance and timers apply. Build and install it first
 (`maturin develop --release` in bindings/python, inside the benchmark venv).
 

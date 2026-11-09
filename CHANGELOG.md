@@ -3,9 +3,17 @@
 All notable changes are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to
 [Semantic Versioning](https://semver.org/). Release notes are generated from Conventional
-Commits by `release-plz` once releases start (planned for M1).
+Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
 ## [Unreleased]
+
+### Added (data version 11)
+
+- Units: poise `P` and stokes `St` (CGS viscosity; NIST SP 811 Appendix B.8), with the SI prefixes (`cP`, `cSt`). New groups `dynamic_viscosity` and `kinematic_viscosity`. Converting between them is refused: it needs a density.
+
+### Changed (data version 10)
+
+- Unit table: citation strings corrected against the primary texts (BIPM table and chapter numbers, UK Weights and Measures Act parts, NIST Handbook 44 for relations SP 811 does not state); unverifiable secondary citations (DIN 66036, Mendenhall Order, 4th CGPM) dropped. No factor changed. See `docs/source-verification.md`.
 
 ### Changed
 
@@ -49,6 +57,8 @@ Commits by `release-plz` once releases start (planned for M1).
   factor and offset. All with `--json` (schema `dimvexa.units/1` in `docs/schemas/`, errors
   included).
 - `xtask validate-data`.
+- `xtask bench-check`: regression guard for the hot-path benchmark rows (scalar apply,
+  `apply_slice`, `apply_in_place`, `apply_exact_f64`) against `docs/benchmarks/baseline-m0.tsv`.
 - ADR-001 to ADR-008, benchmark report for M0.
 - The config layer (`--config`, `dimvexa-config`) is marked beta in the README, the crate docs,
   the CLI help and ADR-009. A property test (`config_invariant`) checks that applying a config

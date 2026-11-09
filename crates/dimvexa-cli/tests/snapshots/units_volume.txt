@@ -1,18 +1,18 @@
 # columns: symbol, quantity_kind, exactness, prefixes, aliases, source
 
 ## volume
-L	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)
-gal_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gallon, U.S. liquid = 231 in^3)
-gal_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1 (4.54609 L); NIST SP 811 (2008), Appendix B
+L	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
+gal_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gallon, U.S. = 3.785 412 E-03 m^3); NIST Handbook 44, Appendix C (231 in^3)
+gal_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (4.54609 dm^3); NIST SP 811 (2008), Appendix B (gallon, Canadian and U.K.)
 pt_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pint, U.S. liquid)
-pt_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1
-fl_oz_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (U.S. liquid measure: 1 gal = 128 fl oz); NIST Handbook 44 (2023), Appendix C
+pt_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part IV (pint = 0.568 261 25 dm^3)
+fl_oz_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (fluid ounce, U.S. = 2.957 353 E-05 m^3); NIST Handbook 44, Appendix C (1 gallon = 128 fluid ounces)
 cup_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (cup, U.S. liquid measure)
 qt_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (quart, U.S. liquid)
 tbsp_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (tablespoon, U.S.)
 tsp_us	plain	defined	none	-	NIST SP 811 (2008), Appendix B (teaspoon, U.S.)
-fl_oz_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1 (fluid ounce = 1/160 gallon)
-qt_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1 (quart = 1/4 gallon)
+fl_oz_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (fluid ounce = 1/20 pint)
+qt_imp	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (quart = 1/4 gallon)
 
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note

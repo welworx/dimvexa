@@ -394,6 +394,9 @@ impl Conversion {
         if x == 0.0 && self.shape == Shape::Linear {
             return Ok(x * self.factor_f64);
         }
+        if let Some(y) = self.exact_f64_unreduced(x) {
+            return Ok(if y == 0.0 { 0.0 } else { y });
+        }
         match Ratio::from_f64(x).and_then(|xr| self.apply_exact(xr)) {
             Ok(y) => {
                 let y = y.to_f64()?;
@@ -403,6 +406,72 @@ impl Conversion {
             Err(Error::Overflow { .. }) if self.shape == Shape::Linear => self.scaled_linear_f64(x),
             Err(e) => Err(e),
         }
+    }
+
+    /// The correctly rounded result computed from an unreduced fraction, or `None` when any
+    /// step would overflow `i128` or the result is not a normal `f64`.
+    ///
+    /// Rounding depends only on the value of the rational, so the gcd reductions of
+    /// `Ratio::from_f64`, `checked_mul`, `checked_add` and `new` can be skipped: with
+    /// `x = m * 2^e` (`m` an integer, `|m| < 2^53`), `a = fn/fd` and `b = bn/bd`,
+    ///
+    /// * linear: `y = fn * m * 2^e / fd`,
+    /// * affine: `y = (fn * m * 2^e * bd + bn * fd) / (fd * bd)`.
+    ///
+    /// The power of two moves to the numerator (`e >= 0`) or to the denominator (`e < 0`).
+    /// Every operation is checked. `None` makes the caller run the reduced path, which owns
+    /// all error reporting, so the observable result is identical to that path.
+    fn exact_f64_unreduced(&self, x: f64) -> Option<f64> {
+        let bits = x.to_bits();
+        let biased = i32::try_from((bits >> 52) & 0x7ff).ok()?;
+        let frac = bits & ((1_u64 << 52) - 1);
+        let (mut mant, mut exp) = if biased == 0 {
+            (frac, -1074_i32)
+        } else {
+            (frac | (1_u64 << 52), biased.checked_sub(1075)?)
+        };
+        if mant == 0 {
+            exp = 0;
+        } else {
+            // strip trailing zero bits so the power of two stays small
+            let tz = mant.trailing_zeros();
+            mant = mant.checked_shr(tz)?;
+            exp = exp.checked_add(i32::try_from(tz).ok()?)?;
+        }
+        let mut smant = i128::from(mant);
+        if bits >> 63 == 1 {
+            smant = smant.checked_neg()?;
+        }
+        let pow = |scale: i32| -> Option<i128> {
+            if (0..=126).contains(&scale) {
+                1_i128.checked_shl(u32::try_from(scale).ok()?)
+            } else {
+                None
+            }
+        };
+        let (fnum, fden) = (self.factor.num(), self.factor.den());
+        let prod = fnum.checked_mul(smant)?;
+        let (num, den) = match (self.shape, exp >= 0) {
+            (Shape::Linear, true) => (prod.checked_mul(pow(exp)?)?, fden),
+            (Shape::Linear, false) => (prod, fden.checked_mul(pow(exp.checked_neg()?)?)?),
+            (Shape::Affine, true) => {
+                let (bn, bd) = (self.offset.num(), self.offset.den());
+                let total = prod
+                    .checked_mul(pow(exp)?)?
+                    .checked_mul(bd)?
+                    .checked_add(bn.checked_mul(fden)?)?;
+                (total, fden.checked_mul(bd)?)
+            }
+            (Shape::Affine, false) => {
+                let (bn, bd) = (self.offset.num(), self.offset.den());
+                let scale = pow(exp.checked_neg()?)?;
+                let total = prod
+                    .checked_mul(bd)?
+                    .checked_add(bn.checked_mul(fden)?.checked_mul(scale)?)?;
+                (total, fden.checked_mul(bd)?.checked_mul(scale)?)
+            }
+        };
+        Ratio::frac_to_f64(num, den).ok()
     }
 
     /// Linear conversion of an `f64` whose exact fraction does not fit `i128`: split
@@ -454,6 +523,87 @@ mod tests {
 
     fn r(n: i128, d: i128) -> Ratio {
         Ratio::new(n, d).unwrap()
+    }
+
+    /// The reduced path as it was before `exact_f64_unreduced`: the reference for it.
+    fn exact_f64_reference(c: &Conversion, x: f64) -> Result<f64> {
+        if !x.is_finite() {
+            return Err(Error::InvalidNumber {
+                input: x.to_string(),
+            });
+        }
+        if x == 0.0 && c.shape == Shape::Linear {
+            return Ok(x * c.factor_f64);
+        }
+        match Ratio::from_f64(x).and_then(|xr| c.apply_exact(xr)) {
+            Ok(y) => {
+                let y = y.to_f64()?;
+                Ok(if y == 0.0 { 0.0 } else { y })
+            }
+            Err(Error::Overflow { .. }) if c.shape == Shape::Linear => c.scaled_linear_f64(x),
+            Err(e) => Err(e),
+        }
+    }
+
+    #[test]
+    fn unreduced_exact_f64_is_identical_to_the_reduced_path() {
+        let convs = [
+            Conversion::linear(r(18, 5)).unwrap(),
+            Conversion::linear(r(381, 1250)).unwrap(),
+            Conversion::linear(r(1, 1_000_000_007)).unwrap(),
+            Conversion::linear(r(3_048, 10_000)).unwrap(),
+            Conversion::linear(r(1_000_000_000_000_000_000_000, 7)).unwrap(),
+            Conversion::affine(r(5, 9), r(-160, 9)).unwrap(),
+            Conversion::affine(r(9, 5), r(32, 1)).unwrap(),
+            Conversion::affine(r(1, 1), r(-546_300, 2_000)).unwrap(),
+            Conversion::affine(
+                r(1_000_000_000_000_000_000, 3),
+                r(1, 1_000_000_000_000_000_000),
+            )
+            .unwrap(),
+        ];
+        let mut state = 0x2545_f491_4f6c_dd1d_u64;
+        let mut next = move || {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            state
+        };
+        let mut xs = vec![
+            0.0,
+            -0.0,
+            1.0,
+            -1.0,
+            32.0,
+            98.6,
+            273.15,
+            f64::MIN_POSITIVE,
+            5e-324,
+            1e300,
+            -1e300,
+            1e-30,
+            1e30,
+            1e-310,
+        ];
+        for _ in 0..20_000 {
+            // random bit patterns restricted to a wide but finite exponent range
+            let bits = next();
+            let exp = 1023 - 80 + (next() % 200);
+            let x = f64::from_bits((bits & 0x800f_ffff_ffff_ffff) | (exp << 52));
+            xs.push(x);
+            xs.push(f64::from(i32::try_from(next() % 2_000_000).unwrap() - 1_000_000) * 0.25);
+        }
+        for c in &convs {
+            for &x in &xs {
+                let got = c.apply_exact_f64(x);
+                let want = exact_f64_reference(c, x);
+                match (got, want) {
+                    (Ok(g), Ok(w)) => assert_eq!(g.to_bits(), w.to_bits(), "{c:?} x={x:e}"),
+                    (Err(g), Err(w)) => assert_eq!(g.code(), w.code(), "{c:?} x={x:e}"),
+                    (g, w) => panic!("{c:?} x={x:e}: {g:?} vs {w:?}"),
+                }
+            }
+        }
     }
 
     #[test]

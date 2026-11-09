@@ -34,9 +34,21 @@ Merges to `main` that do not change the version publish nothing.
   works through OIDC the package must exist.
 * Branch protection stays on `ci-success`; this workflow is not part of it.
 
+## Status
+
+`0.1.0` is out on all three registries (run for PR 11). The crates were published by hand
+beforehand, so the workflow's crates.io step skipped them: crates.io publishing from the
+workflow is untested. If trusted publishing cannot be set up there, store a
+`CARGO_REGISTRY_TOKEN` secret on the `release` environment and pass it as
+`CARGO_REGISTRY_TOKEN` in `publish-crates` instead of the auth action's token.
+
 ## Notes
 
 * Wheels are `abi3` (one per platform for Python >= 3.9). They are built against the workspace
-  sources (`bindings/python/.cargo/config.toml`) because the crates are not on crates.io yet at
-  that point; the sdist builds against the published crates.
+  sources (`bindings/python/.cargo/config.toml`) because the version being released is not on
+  crates.io yet at that point; the sdist builds against the published crates.
+* Published so far: crates.io `dimvexa`, `dimvexa-core`, `dimvexa-data`, `dimvexa-config`,
+  `dimvexa-cli` and PyPI `dimvexa` at 0.1.1, npm `@dimvexa/wasm` at 0.1.0 (checked 2026-11-09).
+  The one-time setup above is already done for the registries that carry these versions; check
+  the registry settings before relying on it for a new package.
 * The Python and npm packages do not wait for each other, only for crates.io.

@@ -9,7 +9,7 @@ value = "1"
 from = "km"
 to = "m"
 expect = "1000"
-source = "BIPM SI Brochure, 9th ed. (2019), SI prefixes (kilo = 10^3)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 3, Table 7 (SI prefixes: kilo = 10^3)"
 
 [[vector]]
 unit = "g"
@@ -17,7 +17,7 @@ value = "1"
 from = "kg"
 to = "g"
 expect = "1000"
-source = "BIPM SI Brochure, 9th ed. (2019), SI prefixes (kilo = 10^3); kg is the SI base unit"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 3, Table 7 (SI prefixes: kilo = 10^3); ch. 2, Table 2 (kg is the SI base unit)"
 
 [[vector]]
 unit = "s"
@@ -25,7 +25,7 @@ value = "1"
 from = "ms"
 to = "s"
 expect = "1/1000"
-source = "BIPM SI Brochure, 9th ed. (2019), SI prefixes (milli = 10^-3)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 3, Table 7 (SI prefixes: milli = 10^-3)"
 
 [[vector]]
 unit = "A"
@@ -33,7 +33,7 @@ value = "1"
 from = "mA"
 to = "A"
 expect = "1/1000"
-source = "BIPM SI Brochure, 9th ed. (2019), SI prefixes (milli = 10^-3)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 3, Table 7 (SI prefixes: milli = 10^-3)"
 
 [[vector]]
 unit = "K"
@@ -49,7 +49,7 @@ value = "1"
 from = "kmol"
 to = "mol"
 expect = "1000"
-source = "BIPM SI Brochure, 9th ed. (2019), SI prefixes (kilo = 10^3)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 3, Table 7 (SI prefixes: kilo = 10^3)"
 
 [[vector]]
 unit = "cd"
@@ -57,7 +57,7 @@ value = "1"
 from = "mcd"
 to = "cd"
 expect = "1/1000"
-source = "BIPM SI Brochure, 9th ed. (2019), SI prefixes (milli = 10^-3)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 3, Table 7 (SI prefixes: milli = 10^-3)"
 
 [[vector]]
 unit = "Hz"
@@ -177,7 +177,7 @@ value = "1"
 from = "min"
 to = "s"
 expect = "60"
-source = "BIPM SI Brochure, 9th ed. (2019), non-SI units accepted for use with the SI"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
 
 [[vector]]
 unit = "h"
@@ -185,7 +185,7 @@ value = "1"
 from = "h"
 to = "min"
 expect = "60"
-source = "BIPM SI Brochure, 9th ed. (2019), non-SI units accepted for use with the SI"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
 
 [[vector]]
 unit = "d"
@@ -193,7 +193,7 @@ value = "1"
 from = "d"
 to = "h"
 expect = "24"
-source = "BIPM SI Brochure, 9th ed. (2019), non-SI units accepted for use with the SI"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
 
 [[vector]]
 unit = "L"
@@ -321,7 +321,7 @@ value = "1"
 from = "ha"
 to = "m^2"
 expect = "10000"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (hectare = 10^4 m^2)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (hectare = 10^4 m^2)"
 
 [[vector]]
 unit = "au"
@@ -329,7 +329,7 @@ value = "1"
 from = "au"
 to = "km"
 expect = "1495978707/10"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (au = 149 597 870 700 m)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (au = 149 597 870 700 m)"
 
 [[vector]]
 unit = "angstrom"
@@ -337,7 +337,7 @@ value = "1"
 from = "angstrom"
 to = "nm"
 expect = "1/10"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (angstrom = 0.1 nm)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (angstrom = 0.1 nm)"
 
 [[vector]]
 unit = "Bq"
@@ -393,7 +393,7 @@ value = "1"
 from = "rad"
 to = "1"
 expect = "1"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (radian = 1 m/m, dimensionless)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (radian: 1 in terms of other SI units; note (b))"
 
 [[vector]]
 unit = "deg"
@@ -402,7 +402,7 @@ from = "deg"
 to = "rad"
 expect = "3.14159265"
 rel_tol = "1e-8"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (180 degrees = pi rad, pi = 3.14159265358979...)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (180 degrees = pi rad, pi = 3.14159265358979...)"
 
 [[vector]]
 unit = "arcmin"
@@ -410,7 +410,7 @@ value = "60"
 from = "arcmin"
 to = "deg"
 expect = "1"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (1 degree = 60 arcminutes)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (1 degree = 60 arcminutes)"
 
 [[vector]]
 unit = "arcsec"
@@ -418,4 +418,4 @@ value = "3600"
 from = "arcsec"
 to = "deg"
 expect = "1"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (1 degree = 3600 arcseconds)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (1 degree = 3600 arcseconds)"

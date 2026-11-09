@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
-# Base pack: SI base and derived units, non-SI units accepted for use with the SI, temperature kinds.
+# Base pack: SI base and derived units, non-SI units (BIPM Table 8), temperature kinds.
 # Factors are exact fractions num/den of the coherent SI unit: si = factor * x + offset.
 
 [[unit]]
@@ -13,7 +13,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "metre, defined by the fixed value of the speed of light"
 
 [[unit]]
@@ -27,7 +27,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "gram = 1/1000 of the SI base unit kilogram; kg is resolved as k + g"
 
 [[unit]]
@@ -41,7 +41,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "second, defined by the caesium hyperfine frequency"
 
 [[unit]]
@@ -55,7 +55,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "ampere, defined by the fixed value of the elementary charge"
 
 [[unit]]
@@ -69,7 +69,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "kelvin, defined by the fixed value of the Boltzmann constant; absolute temperature kind"
 
 [[unit]]
@@ -83,7 +83,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "mole, defined by the fixed value of the Avogadro constant"
 
 [[unit]]
@@ -97,7 +97,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (SI base units)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "candela, defined by the luminous efficacy of 540 THz radiation"
 
 [[unit]]
@@ -111,7 +111,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "hertz = 1/s"
 
 [[unit]]
@@ -125,7 +125,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "newton = kg m/s^2"
 
 [[unit]]
@@ -139,7 +139,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "pascal = N/m^2"
 
 [[unit]]
@@ -153,7 +153,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "joule = N m"
 
 [[unit]]
@@ -167,7 +167,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "watt = J/s"
 
 [[unit]]
@@ -181,7 +181,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "coulomb = A s"
 
 [[unit]]
@@ -195,7 +195,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "volt = W/A"
 
 [[unit]]
@@ -209,7 +209,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "ohm = V/A; Greek capital omega and the ohm sign are aliases"
 
 [[unit]]
@@ -223,7 +223,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "farad = C/V"
 
 [[unit]]
@@ -237,7 +237,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "siemens = A/V"
 
 [[unit]]
@@ -251,7 +251,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "weber = V s"
 
 [[unit]]
@@ -265,7 +265,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "tesla = Wb/m^2"
 
 [[unit]]
@@ -279,7 +279,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "henry = Wb/A"
 
 [[unit]]
@@ -293,7 +293,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
 note = "minute = 60 s"
 
 [[unit]]
@@ -307,7 +307,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
 note = "hour = 60 min = 3600 s"
 
 [[unit]]
@@ -321,7 +321,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
 note = "day = 24 h = 86400 s (not a sidereal or calendar day)"
 
 [[unit]]
@@ -335,7 +335,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
 note = "litre = 1 dm^3 = 1/1000 m^3"
 
 [[unit]]
@@ -349,7 +349,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (non-SI units accepted for use with the SI)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
 note = "tonne (metric ton) = 1000 kg; t is an alias; the bare word ton is ambiguous and rejected"
 
 [[unit]]
@@ -391,7 +391,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (kelvin, temperature intervals)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (kelvin); section 2.3.4 (a temperature difference of 1 K equals that of 1 degC)"
 note = "temperature difference of 1 K"
 
 [[unit]]
@@ -405,7 +405,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (degree Celsius, temperature intervals)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4, note (f) (degree Celsius, temperature intervals)"
 note = "temperature difference of 1 degC = 1 K"
 
 [[unit]]
@@ -419,7 +419,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (hectare = 1 hm^2 = 10^4 m^2)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (hectare = 1 hm^2 = 10^4 m^2)"
 note = "hectare = 10 000 m^2"
 
 [[unit]]
@@ -433,7 +433,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (astronomical unit = 149 597 870 700 m); IAU 2012 Resolution B2"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 and note (j) (astronomical unit = 149 597 870 700 m; IAU 2012 Resolution B2)"
 note = "astronomical unit fixed by the IAU in 2012"
 
 [[unit]]
@@ -447,7 +447,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (other non-SI units: angstrom = 0.1 nm = 10^-10 m)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (other non-SI units: angstrom = 0.1 nm = 10^-10 m)"
 note = "angstrom = 1e-10 m; the capital A with ring (U+00C5) and the angstrom sign (U+212B) are aliases"
 
 [[unit]]
@@ -461,7 +461,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "becquerel = 1/s (same dimension as the hertz)"
 
 [[unit]]
@@ -475,7 +475,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "gray = J/kg (same dimension as the sievert)"
 
 [[unit]]
@@ -489,7 +489,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "sievert = J/kg (same dimension as the gray)"
 
 [[unit]]
@@ -503,7 +503,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "lumen = cd sr, and the steradian is dimensionless (ADR-007)"
 
 [[unit]]
@@ -517,7 +517,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "lux = lm/m^2"
 
 [[unit]]
@@ -531,7 +531,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "katal = mol/s"
 
 [[unit]]
@@ -545,7 +545,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "si"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (coherent derived units with special names)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)"
 note = "radian = m/m, dimensionless (ADR-007)"
 
 [[unit]]
@@ -559,7 +559,7 @@ offset = "0/1"
 exactness = "measured"
 prefixes = "none"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (degree = (pi/180) rad)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (degree = (pi/180) rad)"
 note = "degree = pi/180 rad. Factor uses pi ~ 245850922/78256779 (a continued-fraction convergent, relative error 2.5e-17, below half an f64 ulp), so the unit is marked measured; all angle units share it, so deg/arcmin/arcsec/grad convert among themselves exactly (ADR-010)"
 
 [[unit]]
@@ -573,7 +573,7 @@ offset = "0/1"
 exactness = "measured"
 prefixes = "none"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (arcminute = (1/60) degree)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcminute = (1/60) degree)"
 note = "arcminute = deg/60. Factor uses pi ~ 245850922/78256779 (a continued-fraction convergent, relative error 2.5e-17, below half an f64 ulp), so the unit is marked measured; all angle units share it, so deg/arcmin/arcsec/grad convert among themselves exactly (ADR-010)"
 
 [[unit]]
@@ -587,5 +587,5 @@ offset = "0/1"
 exactness = "measured"
 prefixes = "none"
 namespace = "si"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4 (arcsecond = (1/60) arcminute)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcsecond = (1/60) arcminute)"
 note = "arcsecond = arcmin/60. Factor uses pi ~ 245850922/78256779 (a continued-fraction convergent, relative error 2.5e-17, below half an f64 ulp), so the unit is marked measured; all angle units share it, so deg/arcmin/arcsec/grad convert among themselves exactly (ADR-010)"
