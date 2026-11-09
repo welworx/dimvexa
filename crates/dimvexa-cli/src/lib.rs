@@ -49,6 +49,7 @@ Options:
   --exact      print the exact rational result (num/den) instead of a decimal
   --json       machine-readable output (schema dimvexa.convert/2; dimvexa.units/2 for units,
                dimvexa.configs/1 for configs)
+  --pretty     --json, indented for reading (same fields, same order)
   --config NAME_OR_PATH  (beta) apply a config (repeatable, later ones win; see
                docs/adr/014-one-config-mechanism.md). A shipped one is named (us, gb,
                metric-trade, year-julian, year-civil, water); a file has a path (./mine.toml,
@@ -63,6 +64,7 @@ Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
+  dimvexa convert 100 degC degF --pretty
   dimvexa convert 1 ton kg --config us
   dimvexa convert 1 mt kg --config metric-trade
   dimvexa convert 1 L kg --config water --density water_25C
@@ -75,6 +77,187 @@ units) or 2 ulp (temperature scales such as degC and degF) of it; see docs/preci
 
 Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
 ";
+
+/// Whether each output stream may carry ANSI colour. Off unless the caller turns it on
+/// (the binary does so for a terminal, honouring `NO_COLOR`).
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Color {
+    /// Colour the result on stdout.
+    pub out: bool,
+    /// Colour `error`, `hint` and `note` lines on stderr.
+    pub err: bool,
+}
+
+const BOLD_GREEN: &str = "\x1b[1;32m";
+const CYAN: &str = "\x1b[36m";
+const BOLD_RED: &str = "\x1b[1;31m";
+const YELLOW: &str = "\x1b[33m";
+const RESET: &str = "\x1b[0m";
+
+/// Colours the leading label of `error[..]:`, `hint:` and `note:` lines.
+fn colorize_diagnostics(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    for line in text.split_inclusive('\n') {
+        let split = if line.starts_with("error[") {
+            line.find("]:").map(|i| (i.saturating_add(1), BOLD_RED))
+        } else if line.starts_with("hint:") {
+            Some((5, CYAN))
+        } else if line.starts_with("note:") {
+            Some((5, YELLOW))
+        } else {
+            None
+        };
+        match split.and_then(|(n, c)| Some((line.get(..n)?, line.get(n..)?, c))) {
+            Some((label, rest, c)) => {
+                let _ = write!(out, "{c}{label}{RESET}{rest}");
+            }
+            None => out.push_str(line),
+        }
+    }
+    out
+}
+
+/// A JSON value for re-indenting: scalars are kept as their source text.
+enum Node {
+    Scalar(String),
+    Array(Vec<Self>),
+    Object(Vec<(String, Self)>),
+}
+
+/// Reads one value of the compact JSON that this crate writes. `None` if it is not JSON.
+fn read_node(chars: &[char], i: &mut usize) -> Option<Node> {
+    fn string(chars: &[char], i: &mut usize) -> Option<String> {
+        let start = *i;
+        *i = i.checked_add(1)?;
+        while let Some(&c) = chars.get(*i) {
+            *i = i.checked_add(1)?;
+            match c {
+                '\\' => *i = i.checked_add(1)?,
+                '"' => return Some(chars.get(start..*i)?.iter().collect()),
+                _ => {}
+            }
+        }
+        None
+    }
+    match *chars.get(*i)? {
+        '"' => string(chars, i).map(Node::Scalar),
+        open @ ('[' | '{') => {
+            *i = i.checked_add(1)?;
+            let close = if open == '[' { ']' } else { '}' };
+            let (mut items, mut fields) = (Vec::new(), Vec::new());
+            if chars.get(*i) == Some(&close) {
+                *i = i.checked_add(1)?;
+            } else {
+                loop {
+                    if open == '{' {
+                        let key = string(chars, i)?;
+                        if chars.get(*i) != Some(&':') {
+                            return None;
+                        }
+                        *i = i.checked_add(1)?;
+                        fields.push((key, read_node(chars, i)?));
+                    } else {
+                        items.push(read_node(chars, i)?);
+                    }
+                    let c = *chars.get(*i)?;
+                    *i = i.checked_add(1)?;
+                    if c == close {
+                        break;
+                    }
+                    if c != ',' {
+                        return None;
+                    }
+                }
+            }
+            Some(if open == '[' {
+                Node::Array(items)
+            } else {
+                Node::Object(fields)
+            })
+        }
+        _ => {
+            let start = *i;
+            while chars.get(*i).is_some_and(|c| !matches!(c, ',' | ']' | '}')) {
+                *i = i.checked_add(1)?;
+            }
+            Some(Node::Scalar(chars.get(start..*i)?.iter().collect()))
+        }
+    }
+}
+
+/// An array of scalars stays on one line while it is short.
+fn fits_on_a_line(items: &[Node]) -> bool {
+    let mut width = 0usize;
+    for n in items {
+        match n {
+            Node::Scalar(s) => width = width.saturating_add(s.chars().count()).saturating_add(2),
+            _ => return false,
+        }
+    }
+    width <= 60
+}
+
+/// Writes `node` indented by two spaces per level. Short arrays of scalars stay on one line.
+fn write_node(node: &Node, depth: usize, out: &mut String) {
+    let pad = |n: usize| "  ".repeat(n);
+    match node {
+        Node::Scalar(s) => out.push_str(s),
+        Node::Array(items) if fits_on_a_line(items) => {
+            out.push('[');
+            for (k, n) in items.iter().enumerate() {
+                if k > 0 {
+                    out.push_str(", ");
+                }
+                write_node(n, depth, out);
+            }
+            out.push(']');
+        }
+        Node::Array(items) => {
+            out.push_str("[\n");
+            for (k, n) in items.iter().enumerate() {
+                out.push_str(&pad(depth.saturating_add(1)));
+                write_node(n, depth.saturating_add(1), out);
+                out.push_str(if k.saturating_add(1) < items.len() {
+                    ",\n"
+                } else {
+                    "\n"
+                });
+            }
+            out.push_str(&pad(depth));
+            out.push(']');
+        }
+        Node::Object(fields) if fields.is_empty() => out.push_str("{}"),
+        Node::Object(fields) => {
+            out.push_str("{\n");
+            for (k, (key, n)) in fields.iter().enumerate() {
+                out.push_str(&pad(depth.saturating_add(1)));
+                let _ = write!(out, "{key}: ");
+                write_node(n, depth.saturating_add(1), out);
+                out.push_str(if k.saturating_add(1) < fields.len() {
+                    ",\n"
+                } else {
+                    "\n"
+                });
+            }
+            out.push_str(&pad(depth));
+            out.push('}');
+        }
+    }
+}
+
+/// Re-indents one line of compact JSON (`--pretty`); anything that is not JSON is returned as is.
+fn pretty_json(line: &str) -> String {
+    let chars: Vec<char> = line.chars().collect();
+    let mut i = 0;
+    match read_node(&chars, &mut i) {
+        Some(node) if i == chars.len() => {
+            let mut out = String::new();
+            write_node(&node, 0, &mut out);
+            out
+        }
+        _ => line.to_string(),
+    }
+}
 
 /// Parsed command line.
 struct Args {
@@ -257,6 +440,28 @@ fn parse_configs(
     }
 }
 
+/// Forgives how people write a conversion: a degree sign set apart from its scale
+/// (`° F` is `°F`) and a filler `to` (`0 °C to °F` is `0 °C °F`).
+fn normalize_convert(words: &[&str]) -> Vec<String> {
+    let mut out: Vec<String> = Vec::with_capacity(words.len());
+    let mut i = 0;
+    while let Some(&w) = words.get(i) {
+        i = i.saturating_add(1);
+        if matches!(w, "°" | "º") {
+            if let Some(&scale) = words.get(i).filter(|n| matches!(**n, "C" | "F" | "R")) {
+                out.push(format!("°{scale}"));
+                i = i.saturating_add(1);
+                continue;
+            }
+        }
+        out.push(w.to_string());
+    }
+    if out.len() == 4 && out.get(2).is_some_and(|w| w == "to") {
+        out.remove(2);
+    }
+    out
+}
+
 fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     let (opts, args) = split_options(all)?;
     let configs = opts.configs;
@@ -314,13 +519,14 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     if positional.first() == Some(&"convert") {
         positional.remove(0);
     }
+    let positional = normalize_convert(&positional);
     match positional.as_slice() {
         [value, from, to] => Ok((
             Parsed::Convert(Args {
                 density,
-                value: (*value).to_string(),
-                from: (*from).to_string(),
-                to: (*to).to_string(),
+                value: value.clone(),
+                from: from.clone(),
+                to: to.clone(),
                 exact,
                 json: want_json,
             }),
@@ -603,11 +809,16 @@ fn resolve_density(spec: &str, loaded: &Loaded) -> Result<Constant, DensityError
         })
 }
 
-fn render_text(o: &Outcome<'_>) -> String {
-    if o.args.exact {
-        format!("{} {}", o.exact.to_fraction_string(), o.to)
+fn render_text(o: &Outcome<'_>, color: bool) -> String {
+    let value = if o.args.exact {
+        o.exact.to_fraction_string()
     } else {
-        format!("{} {}", f64_text(o.approx), o.to)
+        f64_text(o.approx)
+    };
+    if color {
+        format!("{BOLD_GREEN}{value}{RESET} {CYAN}{}{RESET}", o.to)
+    } else {
+        format!("{value} {}", o.to)
     }
 }
 
@@ -1456,6 +1667,43 @@ pub fn run<I>(args: I, out: &mut dyn Write, err: &mut dyn Write) -> u8
 where
     I: IntoIterator<Item = String>,
 {
+    run_with(args, out, err, Color::default())
+}
+
+/// Like [`run`], with ANSI colour on the streams `color` names. JSON output is never coloured.
+pub fn run_with<I>(args: I, out: &mut dyn Write, err: &mut dyn Write, color: Color) -> u8
+where
+    I: IntoIterator<Item = String>,
+{
+    let mut args: Vec<String> = args.into_iter().collect();
+    if args.iter().any(|a| a == "--pretty") {
+        // `--pretty` is `--json` with indentation.
+        args.retain(|a| a != "--pretty");
+        if !args.iter().any(|a| a == "--json") {
+            args.push("--json".to_string());
+        }
+        let mut buffered = Vec::new();
+        let code = run_with(args, &mut buffered, err, color);
+        let text = String::from_utf8_lossy(&buffered);
+        for line in text.lines() {
+            let _ = writeln!(out, "{}", pretty_json(line));
+        }
+        return code;
+    }
+    if !color.err {
+        return run_inner(args, out, err, color);
+    }
+    let mut buffered = Vec::new();
+    let code = run_inner(args, out, &mut buffered, color);
+    let text = String::from_utf8_lossy(&buffered);
+    let _ = write!(err, "{}", colorize_diagnostics(&text));
+    code
+}
+
+fn run_inner<I>(args: I, out: &mut dyn Write, err: &mut dyn Write, color: Color) -> u8
+where
+    I: IntoIterator<Item = String>,
+{
     let args: Vec<String> = args.into_iter().collect();
     let (parsed, config_files) = match parse_args(&args) {
         Ok(p) => p,
@@ -1534,7 +1782,7 @@ where
                     Err(e) => return fail(&args, &e, out, err),
                 }
             } else {
-                render_text(&outcome)
+                render_text(&outcome, color.out)
             };
             let _ = writeln!(out, "{text}");
             if !args.json {
@@ -1573,6 +1821,22 @@ fn fail(args: &Args, e: &Error, out: &mut dyn Write, err: &mut dyn Write) -> u8 
     } else {
         let _ = writeln!(err, "error[{}]: {e}", e.code());
         if let Error::DimensionMismatch { from, to } = e {
+            for (word, other) in [(&args.to, *from), (&args.from, *to)] {
+                if other.exponents() == [0, 0, 0, 0, 1, 0, 0] {
+                    let scale = match word.as_str() {
+                        "F" => Some(("farad", "degF or °F")),
+                        "C" => Some(("coulomb", "degC or °C")),
+                        "R" => Some(("roentgen", "degR or °R")),
+                        _ => None,
+                    };
+                    if let Some((what, fix)) = scale {
+                        let _ = writeln!(
+                            err,
+                            "hint: '{word}' alone is the {what}, not a temperature scale; for the scale write {fix}"
+                        );
+                    }
+                }
+            }
             if Constant::density_needed(*from, *to) && args.density.is_none() {
                 let _ = writeln!(
                     err,
@@ -1649,6 +1913,74 @@ mod tests {
         assert_eq!(run_str(&["1", "m", "km", "--groups"]).0, 2);
         assert_eq!(run_str(&["units", "length", "mass"]).0, 2);
         assert_eq!(run_str(&["convert", "units"]).0, 2);
+    }
+
+    #[test]
+    fn forgives_degree_spacing_and_to() {
+        for args in [
+            ["0", "°C", "°F"].as_slice(),
+            &["0", "°C", "°", "F"],
+            &["0", "°C", "to", "°F"],
+            &["convert", "0", "°C", "to", "°", "F"],
+        ] {
+            assert_eq!(
+                run_str(args),
+                (0, "32 °F\n".into(), String::new()),
+                "{args:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn bare_f_after_a_temperature_hints_at_degf() {
+        let (code, _, err) = run_str(&["0", "°C", "F"]);
+        assert_eq!(code, 1);
+        assert!(err.contains("'F' alone is the farad"), "{err}");
+        assert!(err.contains("write degF or °F"), "{err}");
+    }
+
+    #[test]
+    fn color_only_where_asked() {
+        let (mut out, mut err) = (Vec::new(), Vec::new());
+        let on = Color {
+            out: true,
+            err: true,
+        };
+        let args = ["0", "°C", "F"].map(String::from);
+        run_with(args, &mut out, &mut err, on);
+        assert!(
+            String::from_utf8(err)
+                .unwrap()
+                .contains("\x1b[1;31merror[dimension_mismatch]\x1b[0m")
+        );
+        let args = ["0", "degC", "degF"].map(String::from);
+        let mut out = Vec::new();
+        run_with(args, &mut out, &mut Vec::new(), on);
+        assert_eq!(
+            String::from_utf8(out).unwrap(),
+            "\x1b[1;32m32\x1b[0m \x1b[36mdegF\x1b[0m\n"
+        );
+        let (_, json, _) = run_str(&["0", "degC", "degF", "--json"]);
+        assert!(!json.contains('\x1b'));
+    }
+
+    #[test]
+    fn pretty_is_json_with_indentation() {
+        let (code, out, _) = run_str(&["100", "degC", "degF", "--pretty"]);
+        assert_eq!(code, 0);
+        assert!(
+            out.contains("\n  \"output\": {\n    \"value\": \"212\""),
+            "{out}"
+        );
+        assert!(
+            out.contains("\"dimension\": [0, 0, 0, 0, 1, 0, 0]"),
+            "{out}"
+        );
+        let compact = run_str(&["100", "degC", "degF", "--json"]).1;
+        assert_eq!(pretty_json(compact.trim()), out.trim_end());
+        let (code, out, _) = run_str(&["1", "m", "--pretty"]);
+        assert_eq!(code, 2);
+        assert!(out.contains("\"code\": \"usage\""));
     }
 
     #[test]

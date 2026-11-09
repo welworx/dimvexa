@@ -86,6 +86,7 @@ Options:
   --exact      print the exact rational result (num/den) instead of a decimal
   --json       machine-readable output (schema dimvexa.convert/2; dimvexa.units/2 for units,
                dimvexa.configs/1 for configs)
+  --pretty     --json, indented for reading (same fields, same order)
   --config NAME_OR_PATH  (beta) apply a config (repeatable, later ones win; see
                docs/adr/014-one-config-mechanism.md). A shipped one is named (us, gb,
                metric-trade, year-julian, year-civil, water); a file has a path (./mine.toml,
@@ -100,6 +101,7 @@ Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
+  dimvexa convert 100 degC degF --pretty
   dimvexa convert 1 ton kg --config us
   dimvexa convert 1 mt kg --config metric-trade
   dimvexa convert 1 L kg --config water --density water_25C
