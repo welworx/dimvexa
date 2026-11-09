@@ -44,7 +44,7 @@ dependency without an issue and an ADR. Edition 2024, MSRV 1.85 (do not change i
 | `crates/dimvexa-data` | `data/units/*.toml`, `data/vectors/*.toml`, `data/data_version.toml`; `build.rs` compiles the tables |
 | `crates/dimvexa-config` | user config files (ADR-009): `Config`, `apply`; the core only offers `Registry::add_alias` and the helpers `name_is_free`, `prefix_clash` |
 | `crates/dimvexa` | facade crate (re-exports core + data) |
-| `crates/dimvexa-cli` | `dimvexa convert`, `dimvexa units`; no conversion logic of its own; snapshots in `tests/snapshots` |
+| `crates/dimvexa-cli` | `dimvexa convert`, `units`, `configs`, `update` (self-update, ADR-015); no conversion logic of its own; snapshots in `tests/snapshots` |
 | `crates/dimvexa-testkit` | test helpers; differential, exact-path, property, overflow and zero-allocation tests |
 | `xtask` | `ci`, `validate-data`, `update-data-hash`, `bench-check` |
 | `docs/` | `PLAN.md`, `DESIGN.md`, `adr/`, `precision.md`, `benchmarks/`, `ci-pinning.md`, `schemas/` |

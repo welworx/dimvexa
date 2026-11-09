@@ -2170,3 +2170,41 @@ fn units_lists_the_names_and_densities_of_a_shipped_config() {
     assert!(r.stdout.contains("## config densities"));
     assert!(r.stdout.contains("water_25C\tdensity\t"));
 }
+
+/// `update` needs the network, so only its command line is tested here; the flow is tested
+/// against a fake release in `src/update.rs`.
+#[test]
+fn update_command_line_is_checked_before_any_network_use() {
+    for args in [
+        &["update", "now"][..],
+        &["update", "--json"],
+        &["update", "--exact"],
+        &["update", "--config", "us"],
+        &["update", "--density", "1kg/m3"],
+        &["update", "--bogus"],
+    ] {
+        let r = dimvexa(args);
+        assert_eq!(r.code, 2, "{args:?}: {}", r.stderr);
+        assert!(
+            r.stderr.starts_with("error[usage]:"),
+            "{args:?}: {}",
+            r.stderr
+        );
+        assert!(r.stdout.is_empty(), "{args:?}: {}", r.stdout);
+    }
+    // --check and -y mean nothing outside `update`.
+    for args in [
+        &["--check", "1", "m", "km"][..],
+        &["convert", "1", "m", "km", "-y"],
+    ] {
+        let r = dimvexa(args);
+        assert_eq!(r.code, 2, "{args:?}");
+        assert!(
+            r.stderr.contains("only apply to 'update'"),
+            "{args:?}: {}",
+            r.stderr
+        );
+    }
+    let r = dimvexa(&["--help"]);
+    assert!(r.stdout.contains("dimvexa update [--check] [-y]"));
+}

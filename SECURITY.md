@@ -35,7 +35,8 @@ Please report privately:
 - A **silent wrong result** caused by the code, for example a kind or dimension check that
   lets an invalid conversion through, an ambiguous symbol that is resolved without being
   asked, or a fast path that exceeds its documented error bound (`docs/precision.md`).
-- Any use of `unsafe` or an undeclared network or file access (neither should exist).
+- Any use of `unsafe` or an undeclared network or file access. The only network access is
+  `dimvexa update`, run on request, HTTPS to github.com (ADR-015); nothing else may use the network.
 - A **supply-chain or release problem**: a tampered or unexpected published artifact, a
   dependency with a known advisory that affects users, a workflow that could be abused to run
   untrusted code with write access, or leaked credentials.

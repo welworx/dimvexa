@@ -7,8 +7,15 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-09
+
 ### Added
 
+- `dimvexa update [--check] [-y]`: replaces the running binary with the latest GitHub release
+  (ADR-015, modelled on `flatex-pdf-cli upgrade`). It verifies the published SHA-256 before it
+  installs, asks first unless `-y`, never downgrades, and leaves Homebrew and `cargo install`
+  copies to their own tools. `--check` only reports: exit 0 up to date, 3 newer release available,
+  1 error. It uses the system `curl` and `tar`; the workspace stays free of dependencies.
 - CLI: `--help` starts with name, version and tagline and ends with licence, authors, repository and a short disclaimer; `--version` lists the same facts.
 - CLI: `--color auto|always|never` and `CLICOLOR_FORCE=1` control colour; `NO_COLOR` still wins over
   the environment, and `--color` wins over everything.

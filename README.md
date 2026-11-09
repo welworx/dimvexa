@@ -76,6 +76,22 @@ A worked example (pool pump electricity: 1.1 kW for 8 h a day for 30 days is 264
 950.4 MJ, 79.20 EUR at 0.30 EUR/kWh) is in [`examples/pool_pump.rs`](examples/pool_pump.rs)
 and runs as a test.
 
+### Updating
+
+A binary from the GitHub release page (or the Windows `dimvexa.exe`) updates itself:
+
+```console
+$ dimvexa update --check   # exit 0 up to date, 3 newer release available, 1 error
+$ dimvexa update           # asks "Update to vX.Y.Z? [y/N]", then installs
+$ dimvexa update -y        # no question
+```
+
+It downloads the asset for your platform from the release, checks it against the published
+`.sha256` file and replaces the running binary. It needs `curl` and `tar` (both ship with
+macOS, Windows 10+ and most Linux). Homebrew and cargo installs update with
+`brew upgrade dimvexa` and `cargo install dimvexa-cli --force`; `dimvexa update` refuses to touch
+those and says so. See [ADR-015](docs/adr/015-update-command.md).
+
 ## Supported units
 
 The table below lists every unit symbol by quantity group (the SI units also accept the SI
@@ -486,7 +502,7 @@ BibTeX:
 ```
 
 GitHub's "Cite this repository" button reads [`CITATION.cff`](CITATION.cff). The current
-release is 0.2.0 (2026-11-09). There is no DOI; for unreleased work please also give the commit you used.
+release is 0.2.1 (2026-11-09). There is no DOI; for unreleased work please also give the commit you used.
 
 ## Licence
 
