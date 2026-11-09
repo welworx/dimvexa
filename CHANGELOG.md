@@ -14,8 +14,8 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 - CLI: colour for the result and for `error`, `hint` and `note` labels, only on a terminal and
   never with `NO_COLOR` set or `TERM=dumb`. JSON is never coloured.
 - CLI: `° F` is read as `°F`, and a filler `to` is ignored (`dimvexa convert 0 °C to °F`).
-- CLI: a bare `F`, `C` or `R` next to a
-  temperature hints at `degF`/`°F` (`F` is the farad).
+- CLI: a bare `F` or `C` next to a
+  temperature (or to each other, as in `0 C F`) hints at `degF`/`°F` (`F` is the farad).
 
 ## [0.2.0] - 2026-11-09
 

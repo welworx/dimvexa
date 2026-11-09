@@ -482,8 +482,10 @@ fn normalize_convert(words: &[&str]) -> Vec<String> {
         }
         out.push(w.to_string());
     }
-    if out.len() == 4 && out.get(2).is_some_and(|w| w == "to") {
-        out.remove(2);
+    if let [value, from, to, dest] = out.as_slice() {
+        if to == "to" {
+            return vec![value.clone(), from.clone(), dest.clone()];
+        }
     }
     out
 }
@@ -1848,20 +1850,22 @@ fn fail(args: &Args, e: &Error, out: &mut dyn Write, err: &mut dyn Write) -> u8 
     } else {
         let _ = writeln!(err, "error[{}]: {e}", e.code());
         if let Error::DimensionMismatch { from, to } = e {
-            for (word, other) in [(&args.to, *from), (&args.from, *to)] {
-                if other.exponents() == [0, 0, 0, 0, 1, 0, 0] {
-                    let scale = match word.as_str() {
-                        "F" => Some(("farad", "degF or °F")),
-                        "C" => Some(("coulomb", "degC or °C")),
-                        "R" => Some(("roentgen", "degR or °R")),
-                        _ => None,
+            let bare = |w: &str| matches!(w, "F" | "C");
+            for (word, other, other_word) in
+                [(&args.to, *from, &args.from), (&args.from, *to, &args.to)]
+            {
+                // A bare F or C beside a temperature, or beside another bare F or C
+                // (`0 C F`), is almost always a temperature scale.
+                if bare(word) && (other == Dim::K || bare(other_word)) {
+                    let (what, fix) = if word == "F" {
+                        ("farad", "degF or °F")
+                    } else {
+                        ("coulomb", "degC or °C")
                     };
-                    if let Some((what, fix)) = scale {
-                        let _ = writeln!(
-                            err,
-                            "hint: '{word}' alone is the {what}, not a temperature scale; for the scale write {fix}"
-                        );
-                    }
+                    let _ = writeln!(
+                        err,
+                        "hint: '{word}' alone is the {what}, not a temperature scale; for the scale write {fix}"
+                    );
                 }
             }
             if Constant::density_needed(*from, *to) && args.density.is_none() {
@@ -1964,6 +1968,48 @@ mod tests {
         assert_eq!(code, 1);
         assert!(err.contains("'F' alone is the farad"), "{err}");
         assert!(err.contains("write degF or °F"), "{err}");
+    }
+
+    #[test]
+    fn normalisation_edges() {
+        // º (U+00BA) joins; an angle degree before a real unit does not.
+        assert_eq!(run_str(&["0", "°C", "º", "F"]).1, "32 °F\n");
+        assert_eq!(run_str(&["180", "°", "rad"]).0, 0);
+        assert_eq!(run_str(&["0", "°C", "to"]).0, 1);
+        assert_eq!(run_str(&["units", "°", "F"]).0, 2);
+    }
+
+    #[test]
+    fn scale_hints_cover_both_sides() {
+        let hint = |a: &[&str]| run_str(a).2;
+        assert!(hint(&["32", "F", "°C"]).contains("'F' alone is the farad"));
+        assert!(hint(&["0", "°C", "C"]).contains("'C' alone is the coulomb"));
+        assert!(hint(&["0", "C", "F"]).contains("write degC or °C"));
+        assert!(hint(&["0", "C", "F"]).contains("write degF or °F"));
+        assert!(!hint(&["1", "m", "F"]).contains("hint:"));
+    }
+
+    #[test]
+    fn diagnostics_colour_labels_only() {
+        let text = "error[usage]: x\nhint: y\nnote: z\nerror[ broken\nplain\n";
+        let c = colorize_diagnostics(text);
+        assert!(c.contains("\x1b[1;31merror[usage]\x1b[0m: x"));
+        assert!(c.contains("\x1b[36mhint:\x1b[0m y"));
+        assert!(c.contains("\x1b[33mnote:\x1b[0m z"));
+        assert!(c.contains("error[ broken\nplain\n"));
+    }
+
+    #[test]
+    fn pretty_passes_help_and_version_through() {
+        assert_eq!(run_str(&["--help", "--pretty"]).1, run_str(&["--help"]).1);
+        assert_eq!(
+            run_str(&["--version", "--pretty"]).1,
+            run_str(&["--version"]).1
+        );
+        let both = run_str(&["1", "m", "km", "--pretty", "--json"]).1;
+        assert_eq!(both, run_str(&["1", "m", "km", "--pretty"]).1);
+        let (_, units, _) = run_str(&["units", "gal", "--pretty"]);
+        assert!(units.starts_with("{\n"), "{units}");
     }
 
     #[test]
