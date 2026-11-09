@@ -26,13 +26,24 @@ function base64ToBytes(b64) {
   return out;
 }
 
+// Start compiling the module when the script loads, so the first call usually finds it ready.
+// Once it is ready the functions below return plain values (synchronous custom functions);
+// only a call that arrives before that returns a Promise, which Excel shows as #BUSY!.
 let ready = null;
+let loaded = false;
 function init() {
   if (ready === null) {
-    ready = wasm_bindgen({ module_or_path: base64ToBytes(DIMVEXA_WASM_B64) });
+    ready = wasm_bindgen({ module_or_path: base64ToBytes(DIMVEXA_WASM_B64) }).then((r) => {
+      loaded = true;
+      return r;
+    });
   }
   return ready;
 }
+function whenReady(fn) {
+  return loaded ? fn() : init().then(fn);
+}
+init().catch(() => {});
 
 // A refusal is an Excel error with the stable Dimvexa code in the message, never a guess.
 function toExcelError(e) {
@@ -47,18 +58,22 @@ function toExcelError(e) {
 }
 
 /** @customfunction CONVERT */
-async function convert(value, from, to) {
-  await init();
-  try {
-    return wasm_bindgen.convert(value, from, to);
-  } catch (e) {
-    throw toExcelError(e);
-  }
+function convert(value, from, to) {
+  return whenReady(() => {
+    try {
+      return wasm_bindgen.convert(value, from, to);
+    } catch (e) {
+      throw toExcelError(e);
+    }
+  });
 }
 
 /** @customfunction CONVERTRANGE */
-async function convertRange(values, from, to) {
-  await init();
+function convertRange(values, from, to) {
+  return whenReady(() => convertRangeNow(values, from, to));
+}
+
+function convertRangeNow(values, from, to) {
   let conversion;
   try {
     // One composed conversion and one WASM call for the whole range.
@@ -83,9 +98,10 @@ async function convertRange(values, from, to) {
 }
 
 /** @customfunction VERSION */
-async function version() {
-  await init();
-  return "dimvexa data " + wasm_bindgen.dataVersion() + ", " + wasm_bindgen.unitCount() + " units";
+function version() {
+  return whenReady(
+    () => "dimvexa data " + wasm_bindgen.dataVersion() + ", " + wasm_bindgen.unitCount() + " units",
+  );
 }
 
 CustomFunctions.associate("CONVERT", convert);

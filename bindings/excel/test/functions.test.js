@@ -37,19 +37,24 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
     [[1000, 2000], [3000, 4000], [500, 10000]],
   );
   assert.deepStrictEqual(await associated.CONVERTRANGE([[100]], "degC", "K"), [[373.15]]);
-  await assert.rejects(associated.CONVERTRANGE([[1, 2]], "kg", "m"), (e) => {
+  await assert.rejects(async () => associated.CONVERTRANGE([[1, 2]], "kg", "m"), (e) => {
     assert.match(e.message, /^dimvexa dimension_mismatch:/);
     return true;
   });
 
-  await assert.rejects(associated.CONVERT(1, "kg", "m"), (e) => {
+  await assert.rejects(async () => associated.CONVERT(1, "kg", "m"), (e) => {
     assert.strictEqual(e.code, "#VALUE!");
     assert.match(e.message, /^dimvexa dimension_mismatch:/);
     return true;
   });
-  await assert.rejects(associated.CONVERT(1, "nonsense", "m"), (e) => {
+  await assert.rejects(async () => associated.CONVERT(1, "nonsense", "m"), (e) => {
     assert.match(e.message, /^dimvexa unknown_unit:/);
     return true;
   });
+  // Once the module is loaded the functions are synchronous: plain values, not Promises.
+  assert.strictEqual(associated.CONVERT(2, "km", "m"), 2000);
+  assert.deepStrictEqual(associated.CONVERTRANGE([[1]], "km", "m"), [[1000]]);
+  assert.strictEqual(typeof associated.VERSION(), "string");
+  assert.throws(() => associated.CONVERT(1, "kg", "m"), /^Error: dimvexa dimension_mismatch:/);
   console.log("excel functions: ok");
 })().catch((e) => { console.error(e); process.exit(1); });
