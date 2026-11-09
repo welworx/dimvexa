@@ -1,0 +1,93 @@
+# ADR-014: One `--config` mechanism with bundled configs, shipped densities, and conversion only
+
+Status: Proposed (direction discussed with the owner; not confirmed as Accepted. Nothing is
+implemented, and the OPEN items below are undecided)
+
+Amends ADR-009 (user config files). Where they differ, this ADR wins once Accepted.
+
+## Context
+
+ADR-009 plans two things that look alike: a user-owned config (`--config FILE`) and shipped
+"profiles" (`--profile NAME`, a config bundled in the binary). Both use the same format and the
+same loader, so two options and two words for one mechanism are confusing. Only `--config` is
+implemented.
+
+Today `ton`, `mile`, `yr` and `year` are refused as ambiguous (ADR-006) and the error says "or
+choose a profile", which does not exist. Mass to volume needs a density, and the only way to
+supply one is a `[[bridge]]` in a file the user writes. ADR-009 rule 8 forbids shipped bridges,
+so even water needs a user file.
+
+Separately, the core offers temperature arithmetic (`Quantity` add and subtract with a `Kind`
+algebra: point + difference = point, point - point = difference). A converter does not need it:
+nobody enters `degC + delta_degC` into a unit converter. Converting `degC` to `K` (affine) and a
+difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
+
+## Decision
+
+1. **One option: `--config NAME_OR_PATH`.** Repeatable, loaded left to right, later entries win
+   (as ADR-009 already says for `[map]`).
+   * A value that contains `/` or `\`, or ends in `.toml`, is a **path**: that file is read.
+   * Any other value is a **bundled name** (`us`, `gb`, ...): the config shipped in the binary.
+   * An unknown bundled name is an error that lists the bundled names. It never falls back to a
+     file in the current directory; a local file called `us` is written `./us`.
+   * No config means plain SI and the strict table. Nothing is loaded implicitly: no environment
+     variable and no home-directory file (unchanged from ADR-009).
+2. **"Profile" disappears as a separate concept.** `--profile` is not added. A bundled config is
+   "a config that ships with dimvexa", with the same format and the same validation as a user
+   file. The JSON field `profile` stays and stays `null` (removing a field is breaking).
+3. **Bundled configs may carry densities.** ADR-009 rule 8 ("shipped profiles carry no bridge")
+   is replaced by: a bundled bridge needs `conditions` and a `source` verified against the
+   original, like a shipped unit, and its name states the conditions (`water_20C`, never
+   `water`). A bundled config can include a density so that `--config us` makes `1 L kg` work
+   with a stated water density. A density is still never computed (ADR-001): the library
+   multiplies by the number written in the config.
+4. **A density can also come from the caller.** The `[[bridge]]` table in the user's own config
+   stays. A literal, `--density 998.2067kg/m3`, is accepted too; its result echoes "density
+   supplied by the caller, no source". Every bridged result is `measured`, carries the
+   assumption on stderr in text mode and in the JSON `bridge` object, and adds the source to
+   `sources` (unchanged from ADR-009 rule 4).
+5. **A command to see what is included.** `dimvexa configs` lists the bundled configs;
+   `dimvexa configs NAME` shows what one contains: the names it maps, the units it defines and
+   each density with its value, `conditions` and `source`. `--json` gives a stable schema
+   (`dimvexa.configs/1`), like `units`. `dimvexa units` marks the origin of each name that a
+   given `--config` supplies (ADR-009 rule 7).
+6. **Results stay reproducible.** The JSON `config` array records each config used: a path and
+   content hash for a file, `bundled:NAME` and its content hash for a bundled one.
+7. **Conversion only.** The temperature arithmetic is removed from the public API: `Quantity`
+   addition and subtraction and the add/subtract part of the `Kind` algebra. `Kind` stays,
+   because it is what keeps `degC` and `delta_degC` apart in a conversion. `delta_K`,
+   `delta_degC`, `delta_degF` and `delta_degR` stay as units and convert between each other. A
+   temperature point and a difference still do not convert into each other (`kind_mismatch`).
+   This is a breaking change of the public API, accepted by the owner, and needs a CHANGELOG
+   entry and a version bump per the release policy.
+
+## Open sub-decisions (recommended default first; not implemented before the owner confirms)
+
+* **OPEN 1: names and contents of the bundled configs.** Suggested: `us` (`ton` = `ton_short`,
+  `mile` = `mi`, `gal` = US), `gb` (`ton` = `ton_long`, imperial gallon, stone), `metric-trade`
+  (`mt` = `tonne`), `year-julian` (`yr`, `year` = `yr_julian`) and `year-civil`
+  (`yr`, `year` = `yr_common`). The year choice is not regional, so it is its own config.
+* **OPEN 2: which densities ship and under which conditions.** Suggested start: water at 4 degC
+  and 20 degC, from the original source (the existing example cites Tanaka et al., Metrologia 38
+  (2001) 301, which the repo still marks as unchecked against its Table 1). Others (seawater,
+  ethanol, diesel) only with a primary source that states the conditions; each is verified before
+  it is written down, and none ships on a name alone.
+* **OPEN 3: does a bundled config include a density by default?** Suggested: yes in `us`, `gb`
+  and `metric-trade` (water at a stated temperature), and a separate `water` config for just the
+  density. The alternative is density only in a dedicated config.
+* **OPEN 4: scope of the removal in point 7.** The public items that go, and whether anything
+  else (the `Kind` add/sub rules in the docs, ADR-005 notes) needs a note. Checked against the
+  code before the removal is written.
+* **OPEN 5: the literal `--density`.** Whether it ships with the first change or later.
+
+## Consequences
+
+One mechanism and one word ("config") for users. A bare name works out of the box and a path
+works as before. The refusal rules of ADR-001 and ADR-006 stay the default; the refusal for an
+ambiguous name can point at a real `--config` value. Water to kilograms becomes a one-line
+command with a stated, sourced density.
+
+It costs: bundled data with source verification for every density, a `configs` command and its
+JSON schema, a bundled-name check in the loader, a breaking change for anyone who used the
+temperature arithmetic, and updates to ADR-009 (rule 8, the `--profile` text), the README, the
+CLI help and the `docs/known-limitations.md` entries that mention profiles.
