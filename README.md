@@ -1,4 +1,4 @@
-# Dimvexa: exact unit conversion
+# Dimvexa: exact, fast unit conversion
 
 <p align="center">
   <a href="https://github.com/welworx/dimvexa/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/welworx/dimvexa/ci.yml?branch=main&label=CI&logo=github"></a>
@@ -6,7 +6,7 @@
   <a href="https://docs.rs/dimvexa"><img alt="docs.rs" src="https://img.shields.io/docsrs/dimvexa?logo=docs.rs"></a>
   <a href="https://pypi.org/project/dimvexa/"><img alt="PyPI" src="https://img.shields.io/pypi/v/dimvexa?logo=pypi&logoColor=white"></a>
   <a href="https://www.npmjs.com/package/@dimvexa/wasm"><img alt="npm" src="https://img.shields.io/npm/v/%40dimvexa%2Fwasm?logo=npm"></a>
-  <a href="#licence-independence-and-benchmarked-projects"><img alt="Licence: MIT OR Apache-2.0" src="https://img.shields.io/badge/licence-MIT%20OR%20Apache--2.0-blue"></a>
+  <a href="#licence"><img alt="Licence: MIT OR Apache-2.0" src="https://img.shields.io/badge/licence-MIT%20OR%20Apache--2.0-blue"></a>
   <a href="Cargo.toml"><img alt="MSRV 1.85" src="https://img.shields.io/badge/MSRV-1.85-informational?logo=rust"></a>
   <a href="https://github.com/welworx/dimvexa/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/welworx/dimvexa"></a>
 </p>
@@ -32,9 +32,6 @@ error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne,
 $ dimvexa units volume      # which volume units exist? (see "Finding a unit" below)
 ```
 
-> Provided as is, without warranty or liability; see the [Disclaimer](#disclaimer). Independent
-> project, not affiliated with the libraries it is benchmarked against (see [Licence](#licence-independence-and-benchmarked-projects)).
-
 ## Contents
 
 - [Why Dimvexa](#why-dimvexa)
@@ -47,8 +44,7 @@ $ dimvexa units volume      # which volume units exist? (see "Finding a unit" be
 - [Repository layout](#repository-layout) and [Development](#development)
 - [Roadmap](#roadmap)
 - [How to cite](#how-to-cite)
-- [Disclaimer](#disclaimer)
-- [Licence, independence and benchmarked projects](#licence-independence-and-benchmarked-projects)
+- [Licence](#licence)
 
 ## Why Dimvexa
 
@@ -449,49 +445,9 @@ BibTeX:
 GitHub's "Cite this repository" button reads [`CITATION.cff`](CITATION.cff). The current
 release is 0.1.1 (2026-11-08). There is no DOI; for unreleased work please also give the commit you used.
 
-## Disclaimer
+## Licence
 
-The files in this repository are provided **"as is"**, without warranty of any kind, express or
-implied, including but not limited to merchantability, fitness for a particular purpose,
-accuracy, completeness and non-infringement. The author and contributors accept no liability
-for any claim, damage, loss or other consequence arising from the use of, or inability to use,
-this software, its unit tables or its documentation, and give no indemnity.
-
-Unit factors, sources and benchmark figures can contain errors; verify any result you depend on
-against the primary source. Do not use this software as the only safeguard in safety-critical,
-medical, legal, financial, custody-transfer or similar settings.
-
-I do not accept any responsibility for any harmful, unlawful or otherwise improper use of the
-material in this repository. You alone are responsible for complying with the laws and
-regulations that apply to you. The licence texts ([`LICENSE-MIT`](LICENSE-MIT),
-[`LICENSE-APACHE`](LICENSE-APACHE)) contain the binding terms and prevail over this summary.
-
-## Licence, independence and benchmarked projects
-
-**Licence.** `MIT OR Apache-2.0`, at your option. Commercial use is allowed. Please keep the
-copyright notice and the [`NOTICE`](NOTICE) file with copies, and cite the project when you use
-it in research (see [`CITATION.cff`](CITATION.cff)). Contributions are licensed under the same
-terms (see [`CONTRIBUTING.md`](CONTRIBUTING.md)). Data provenance and policy:
-[`docs/licensing.md`](docs/licensing.md).
-
-**Independence.** Dimvexa is an independent project. It is not affiliated with, associated
-with, sponsored by or endorsed by any of the projects, companies or organisations named in this
-repository. All product and project names are the property of their respective owners and are
-used for identification only. The benchmark results describe the versions, inputs and machine
-recorded in [`docs/benchmarks/comparison.md`](docs/benchmarks/comparison.md) and are not a
-statement about those projects in general. Maintainers can ask for a runner correction through
-the *Benchmark runner review* issue form.
-
-**Libraries benchmarked** (method in [`docs/benchmarking.md`](docs/benchmarking.md)):
-
-- [Astropy (`astropy.units`)](https://github.com/astropy/astropy)
-- [convert-units](https://github.com/convert-units/convert-units)
-- [js-quantities](https://github.com/gentooboontoo/js-quantities)
-- [math.js](https://github.com/josdejong/mathjs)
-- [Pint](https://github.com/hgrecco/pint)
-- [unyt](https://github.com/yt-project/unyt)
-- [uom (Rust, units of measurement)](https://github.com/iliekturtles/uom)
-
-Plain-loop and NumPy "ceilings" are included as reference lines only. The unit table is built
-from primary definitions (BIPM SI Brochure, NIST SP 811 and similar); no data is copied from
-GNU units or rink.
+`MIT OR Apache-2.0`, at your option; see [`LICENSE-MIT`](LICENSE-MIT) and
+[`LICENSE-APACHE`](LICENSE-APACHE). Provided as is, without warranty: verify results you depend
+on against the primary source. Independent project, not affiliated with the libraries it is
+benchmarked against. Details: [`docs/licensing.md`](docs/licensing.md).
