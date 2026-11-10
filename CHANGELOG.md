@@ -7,6 +7,8 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-11-10
+
 ### Changed
 
 - README: shortened to a tour (install, a few examples, links). The full unit list, `--config`, densities, your own units, the angle limitations and `dimvexa update` moved to `docs/guide.md`, still tested against the real CLI output. The GitHub issues badge is gone.
