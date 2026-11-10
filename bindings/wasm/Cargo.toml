@@ -18,6 +18,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 dimvexa = { path = "../../crates/dimvexa" }
+dimvexa-config = { path = "../../crates/dimvexa-config" }
 wasm-bindgen = "=0.2.130"
 js-sys = "0.3"
 

@@ -1,0 +1,41 @@
+Formula	Expected	Note
+# Basics		
+=DIMVEXA.VERSION()	dimvexa data v11+fnv1a64:6d8dbbdeecb1a854, 98 units	
+=DIMVEXA.CONVERT(1,"km","m")	1000	
+=DIMVEXA.CONVERT(1,"mi","km")	1.609344	
+=DIMVEXA.CONVERT(10,"m/s","km/h")	36	
+=DIMVEXA.CONVERT(1,"kWh","MJ")	3.6	
+=DIMVEXA.CONVERT(1,"bar","psi")	14.50377377302092	
+=DIMVEXA.CONVERT(12,"m3/h","gal_us/min")	52.83441047162968	pool pump example (the cookbook rounds it to 52.8); plain gal is ambiguous
+=dimvexa.convert(1,"km","m")	1000	lower case works
+# Temperature		
+=DIMVEXA.CONVERT(100,"degC","K")	373.15	
+=DIMVEXA.CONVERT(212,"degF","degC")	100	
+=DIMVEXA.CONVERT(0,"degC","degF")	32	
+=DIMVEXA.CONVERT(-40,"degC","degF")	-40	
+=DIMVEXA.CONVERT(1,"degC","degF")	33.8	may show 33.800000000000004 (floating point, within 2 ulp)
+# Refusals: hover over the error indicator		
+=DIMVEXA.CONVERT(1,"kg","m")	error: dimvexa dimension_mismatch:	
+=DIMVEXA.CONVERT(1,"nonsense","m")	error: dimvexa unknown_unit:	
+=DIMVEXA.CONVERT(1,"ton","kg")	error: dimvexa ambiguous_symbol:	ton_short, ton_long or tonne
+=DIMVEXA.CONVERT(1,"L","kg")	error: dimvexa dimension_mismatch:	no density, nothing is guessed
+=DIMVEXA.CONVERT(1,"degC","delta_degC")	error: dimvexa kind_mismatch:	a point is not a difference
+=DIMVEXA.CONVERT(1,2,"m")	error: dimvexa parse_error:	a number is not a unit
+=DIMVEXA.CONVERT(1E+308,"km","mm")	error: dimvexa overflow: the result is too large for a number	shows #NUM!
+# Configs (fifth argument; empty fourth argument)		
+=DIMVEXA.CONVERT(1,"ton","kg",,"us")	907.18474	
+=DIMVEXA.CONVERT(1,"ton","kg",,"gb")	1016.0469088	
+=DIMVEXA.CONVERT(1,"ton","kg",,"metric-trade")	1000	
+=DIMVEXA.CONVERT(1,"yr","d",,"year-julian")	365.25	
+=DIMVEXA.CONVERT(1,"yr","d",,"year-civil")	365	
+=DIMVEXA.CONVERT(1,"ton","kg",,"us,water")	907.18474	several configs
+=DIMVEXA.CONVERT(1,"ton","kg",,"nope")	error: no shipped config named nope	lists the shipped names
+# Density (fourth argument)		
+=DIMVEXA.CONVERT(1,"L","kg","998.2067kg/m3")	0.9982067	
+=DIMVEXA.CONVERT(1,"L","kg","water_25C","water")	0.99704702	
+=DIMVEXA.CONVERT(1,"kg","L","water_25C","water")	1.0029617259173995	
+=DIMVEXA.CONVERT(1,"km","m","water_25C","water")	1000	a valid density that is not needed is fine
+=DIMVEXA.CONVERT(1,"L","kg","water_25C")	error: add the config water	name without its config
+=DIMVEXA.CONVERT(1,"L","kg","milk","water")	error: no density named milk	
+=DIMVEXA.CONVERT(1,"L","kg","5 m")	error: not a unit of density	
+=DIMVEXA.CONVERT(1,"kg","g","nonsense")	error: no density named nonsense	a bad density is an error even when none is needed

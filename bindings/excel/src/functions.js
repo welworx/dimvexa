@@ -1,0 +1,172 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Excel custom functions over the Dimvexa WASM build (ADR-016). No conversion logic lives here.
+// Loaded after dimvexa-glue.js (defines `wasm_bindgen`) and dimvexa-wasm-b64.js (defines
+// `DIMVEXA_WASM_B64`) by functions.html.
+/* global wasm_bindgen, DIMVEXA_WASM_B64, CustomFunctions */
+
+function base64ToBytes(b64) {
+  // Own decoder: the custom functions runtime is a bare JavaScript environment, so do not rely
+  // on `atob` being there.
+  const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const lookup = new Uint8Array(128);
+  for (let i = 0; i < abc.length; i++) lookup[abc.charCodeAt(i)] = i;
+  const pad = b64.endsWith("==") ? 2 : b64.endsWith("=") ? 1 : 0;
+  const out = new Uint8Array((b64.length * 3) / 4 - pad);
+  let o = 0;
+  for (let i = 0; i < b64.length; i += 4) {
+    const n =
+      (lookup[b64.charCodeAt(i)] << 18) |
+      (lookup[b64.charCodeAt(i + 1)] << 12) |
+      (lookup[b64.charCodeAt(i + 2)] << 6) |
+      lookup[b64.charCodeAt(i + 3)];
+    if (o < out.length) out[o++] = (n >> 16) & 255;
+    if (o < out.length) out[o++] = (n >> 8) & 255;
+    if (o < out.length) out[o++] = n & 255;
+  }
+  return out;
+}
+
+// Start compiling the module when the script loads, so the first call usually finds it ready.
+// Once it is ready the functions below return plain values (synchronous custom functions);
+// only a call that arrives before that returns a Promise, which Excel shows as #BUSY!.
+let ready = null;
+let loaded = false;
+function init() {
+  if (ready === null) {
+    ready = wasm_bindgen({ module_or_path: base64ToBytes(DIMVEXA_WASM_B64) }).then((r) => {
+      loaded = true;
+      return r;
+    });
+  }
+  return ready;
+}
+function whenReady(fn) {
+  return loaded ? fn() : init().then(fn);
+}
+init().catch(() => {});
+
+// A refusal is an Excel error with the stable Dimvexa code in the message, never a guess.
+function toExcelError(e) {
+  if (e instanceof CustomFunctions.Error) return e;
+  const code = e && e.code ? e.code : "internal";
+  let message = "dimvexa " + code + ": " + (e && e.message ? e.message : String(e));
+  if (e && e.suggestions && e.suggestions.length > 0) {
+    message += " (did you mean " + Array.from(e.suggestions).join(", ") + "?)";
+  }
+  const kind = code === "overflow" ? CustomFunctions.ErrorCode.invalidNumber
+    : CustomFunctions.ErrorCode.invalidValue;
+  return new CustomFunctions.Error(kind, message);
+}
+
+// Excel passes undefined, null or an empty string for an omitted optional argument.
+function given(arg) {
+  return arg !== undefined && arg !== null && arg !== "";
+}
+// Units reach WASM as text whatever Excel passes (a number or an empty cell would trap).
+function unit(arg) {
+  return arg === undefined || arg === null ? "" : String(arg);
+}
+function text(arg) {
+  return given(arg) ? String(arg) : "";
+}
+
+/** @customfunction CONVERT */
+function convert(value, from, to, density, config) {
+  return whenReady(() => {
+    try {
+      const result = given(density) || given(config)
+        ? wasm_bindgen.convertWith(value, unit(from), unit(to), text(density), text(config))
+        : wasm_bindgen.convert(value, unit(from), unit(to));
+      if (!Number.isFinite(result)) throw overflowError();
+      return result;
+    } catch (e) {
+      throw toExcelError(e);
+    }
+  });
+}
+
+// The range is declared `any` so a blank cell can be told from a 0 (a `number` range makes Excel
+// pass blanks as 0 and refuse text itself). A cell of only spaces counts as blank.
+function isBlank(v) {
+  return v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+}
+
+// The fast path returns Infinity when the result does not fit a number; the library's rule is an
+// error with a code (rule 4), never a silent value.
+function overflowError(where) {
+  return new CustomFunctions.Error(
+    CustomFunctions.ErrorCode.invalidNumber,
+    "dimvexa overflow: the result" + (where ? " in " + where : "") + " is too large for a number",
+  );
+}
+
+function rangeError(message) {
+  return new CustomFunctions.Error(
+    CustomFunctions.ErrorCode.invalidValue,
+    "dimvexa invalid_number: " + message,
+  );
+}
+
+/** @customfunction CONVERTRANGE */
+function convertRange(values, from, to, density, config) {
+  return whenReady(() => convertRangeNow(values, from, to, density, config));
+}
+
+function convertRangeNow(values, from, to, density, config) {
+  let conversion;
+  try {
+    // One composed conversion and one WASM call for the whole range.
+    conversion = given(density) || given(config)
+      ? wasm_bindgen.DimvexaConversion.withOptions(unit(from), unit(to), text(density), text(config))
+      : new wasm_bindgen.DimvexaConversion(unit(from), unit(to));
+    const rows = values.length;
+    const cols = rows > 0 ? values[0].length : 0;
+    const flat = new Float64Array(rows * cols);
+    const blank = new Array(rows * cols).fill(false);
+    for (let r = 0; r < rows; r++) {
+      if (!values[r] || values[r].length !== cols) {
+        throw rangeError("the range is not rectangular (row " + (r + 1) + ")");
+      }
+      for (let c = 0; c < cols; c++) {
+        const v = values[r][c];
+        const i = r * cols + c;
+        if (isBlank(v)) {
+          blank[i] = true; // stays empty in the result, never read as 0
+        } else if (typeof v === "number" && Number.isFinite(v)) {
+          flat[i] = v;
+        } else {
+          throw rangeError("row " + (r + 1) + ", column " + (c + 1) + " of the range is not a number");
+        }
+      }
+    }
+    const out = conversion.applyBatch(flat);
+    const result = [];
+    for (let r = 0; r < rows; r++) {
+      const line = [];
+      for (let c = 0; c < cols; c++) {
+        const i = r * cols + c;
+        if (!blank[i] && !Number.isFinite(out[i])) {
+          throw overflowError("row " + (r + 1) + ", column " + (c + 1));
+        }
+        line.push(blank[i] ? "" : out[i]);
+      }
+      result.push(line);
+    }
+    return result;
+  } catch (e) {
+    throw toExcelError(e);
+  } finally {
+    if (conversion) conversion.free();
+  }
+}
+
+/** @customfunction VERSION */
+function version() {
+  return whenReady(
+    () => "dimvexa data " + wasm_bindgen.dataVersion() + ", " + wasm_bindgen.unitCount() + " units",
+  );
+}
+
+CustomFunctions.associate("CONVERT", convert);
+CustomFunctions.associate("CONVERTRANGE", convertRange);
+CustomFunctions.associate("VERSION", version);

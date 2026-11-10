@@ -1,0 +1,24 @@
+1	2		=DIMVEXA.CONVERTRANGE(A1:B3,"km","m")			spills D1:E3 = 1000 2000 / 3000 4000 / 500 10000
+3	4					
+0.5	10					
+						
+1			=DIMVEXA.CONVERTRANGE(A5:A7,"degC","degF")			spills D5:D7 = 33.8 / (empty, NOT 32) / 37.4; floating point may show 33.800000000000004
+						
+3						
+						
+1			=DIMVEXA.CONVERTRANGE(A9:A11,"km","m")			one error: dimvexa invalid_number: row 2, column 1 of the range is not a number
+abc						
+3						
+						
+			=DIMVEXA.CONVERTRANGE(A1:A3,"ton","kg",,"us")			spills D13:D15 = 907.18474 / 2721.55422 / 453.59237
+						
+						
+						
+			=DIMVEXA.CONVERTRANGE(A1:B3,"kg","m")			one error: dimvexa dimension_mismatch:, no spill
+						
+			=DIMVEXA.CONVERTRANGE(A1:A3,"L","kg","water_25C","water")			spills D19:D21 = 0.99704702 / 2.99114106 / 0.49852351
+						
+						
+						
+			=DIMVEXA.CONVERTRANGE(A1:A3,"km","m")			D24 holds an x: the formula in D23 shows #SPILL! (#ÜBERLAUF!); delete the x and it spills
+			x			

@@ -1,24 +1,56 @@
 #!/bin/sh
 # SPDX-License-Identifier: MIT OR Apache-2.0
-# Blocks a commit that adds a secret (API key, token, private key) to the repository.
+# Fast checks before a commit, the same ones CI runs (the real gate):
+#   1. gitleaks:           a secret (API key, token, private key) in the staged changes
+#   2. typos:              spelling in the staged files
+#   3. taplo fmt --check:  formatting of the staged .toml files
 # Enable once per clone:  git config core.hooksPath .githooks
-# Install the scanner:    go install github.com/zricethezav/gitleaks/v8@v8.30.1
-#                         (or your package manager; any recent gitleaks 8.x works)
-# CI scans the full history with the same tool and is the real gate; this hook only catches
-# a leak before it leaves your machine. Bypass once with `git commit --no-verify` (CI still scans).
-set -eu
+# Install the tools:      go install github.com/zricethezav/gitleaks/v8@v8.30.1
+#                         cargo install typos-cli taplo-cli --locked
+# A tool that is not installed is reported and skipped, never a reason to block the commit.
+# The checks read the files in your working tree, which may differ from what is staged.
+# Bypass once with `git commit --no-verify` (CI still runs every check).
+set -u
 
+fail=0
+
+# --- 1. secrets -------------------------------------------------------------------------------
 gl="$(command -v gitleaks 2>/dev/null || true)"
 if [ -z "$gl" ] && command -v go >/dev/null 2>&1; then
   candidate="$(go env GOPATH)/bin/gitleaks"
   [ -x "$candidate" ] && gl="$candidate"
 fi
-
 if [ -z "$gl" ]; then
   echo "pre-commit: gitleaks is not installed, so this commit was NOT scanned for secrets." >&2
   echo "pre-commit: install it:  go install github.com/zricethezav/gitleaks/v8@v8.30.1" >&2
   echo "pre-commit: CI will scan the pushed history either way." >&2
-  exit 0
+else
+  "$gl" git --pre-commit --staged --redact --no-banner || fail=1
 fi
 
-exec "$gl" git --pre-commit --staged --redact --no-banner
+# Staged files that still exist after the commit (added, copied, modified, renamed).
+if git diff --cached --quiet --diff-filter=ACMR; then
+  exit "$fail"
+fi
+
+# --- 2. spelling ------------------------------------------------------------------------------
+if command -v typos >/dev/null 2>&1; then
+  # --force-exclude keeps the exclusions of typos.toml for files that are named explicitly.
+  git diff --cached --name-only --diff-filter=ACMR -z | xargs -0 typos --force-exclude -- || fail=1
+else
+  echo "pre-commit: typos is not installed, so spelling was NOT checked (cargo install typos-cli --locked)." >&2
+fi
+
+# --- 3. TOML format ---------------------------------------------------------------------------
+if git diff --cached --quiet --diff-filter=ACMR -- '*.toml'; then
+  :
+elif command -v taplo >/dev/null 2>&1; then
+  git diff --cached --name-only --diff-filter=ACMR -z -- '*.toml' | xargs -0 taplo fmt --check -- || fail=1
+else
+  echo "pre-commit: taplo is not installed, so TOML format was NOT checked (cargo install taplo-cli --locked)." >&2
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo "pre-commit: a check failed; fix it, or bypass once with --no-verify (CI runs the same checks)." >&2
+fi
+exit "$fail"

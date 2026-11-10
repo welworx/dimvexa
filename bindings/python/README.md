@@ -1,3 +1,5 @@
+<p align="center"><img src="https://raw.githubusercontent.com/welworx/dimvexa/main/docs/brand/icon-256.png" alt="Dimvexa" width="96" height="96"></p>
+
 # dimvexa (Python)
 
 Python binding for [Dimvexa](https://github.com/welworx/dimvexa): *Exact factors. Loud failures.

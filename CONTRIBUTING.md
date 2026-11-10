@@ -85,20 +85,28 @@ change yourself instead:
 - Run `cargo xtask validate-data`, then `cargo xtask update-data-hash` (it bumps the data
   version) and commit `crates/dimvexa-data/data/data_version.toml`.
 
-## Keeping secrets out
+## Keeping secrets out, and quick checks before a commit
 
 CI scans the full git history for passwords, tokens and keys with gitleaks (the `gitleaks` job
 in `.github/workflows/ci.yml`) and fails on any finding. A secret that was committed and later
 deleted still counts, because it stays in the history: rotate it, then ask the owner how to
-handle the history. To catch a leak before it leaves your machine, enable the pre-commit hook
-once per clone and install the scanner:
+handle the history.
+
+To catch a problem before it leaves your machine, enable the pre-commit hook once per clone and
+install the tools it uses:
 
 ```console
 git config core.hooksPath .githooks
 go install github.com/zricethezav/gitleaks/v8@v8.30.1
+cargo install typos-cli taplo-cli --locked
 ```
 
-Without gitleaks installed the hook warns and lets the commit through; CI is the gate.
+On every commit the hook runs `gitleaks` (secrets in the staged changes), `typos` (spelling in
+the staged files) and `taplo fmt --check` (format of staged `.toml` files). These are the same
+checks as the `gitleaks` and `typos and TOML format` jobs in CI. A tool that is not installed is
+reported and skipped, never a reason to block the commit; CI is the gate. Bypass once with
+`git commit --no-verify`. `cargo xtask ci` does not run `typos` or `taplo` (they are separate
+tools and the workspace builds offline), so the hook or CI is where they run.
 
 ## Commit messages and pull requests
 

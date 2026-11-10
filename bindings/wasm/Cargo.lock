@@ -23,6 +23,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dimvexa-config"
+version = "0.2.1"
+dependencies = [
+ "dimvexa-core",
+]
+
+[[package]]
 name = "dimvexa-core"
 version = "0.2.1"
 
@@ -38,6 +45,7 @@ name = "dimvexa-wasm"
 version = "0.2.1"
 dependencies = [
  "dimvexa",
+ "dimvexa-config",
  "js-sys",
  "wasm-bindgen",
 ]

@@ -592,7 +592,7 @@ fn metric_trade_and_the_year_configs_resolve_their_names() {
 #[test]
 fn only_the_water_config_carries_densities() {
     let water = dimvexa_config::bundled("water").unwrap().config().unwrap();
-    assert!(!water.constants().is_empty());
+    assert_ne!(water.constants(), []);
     for c in water.constants() {
         assert!(!c.conditions.trim().is_empty() && !c.source.trim().is_empty());
         assert!(c.conditions.contains("air-free"), "{}", c.name);

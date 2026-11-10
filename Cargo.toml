@@ -18,7 +18,7 @@ default-members = [
     "crates/dimvexa-cli",
 ]
 # extras/ holds the network-only dev tooling (proptest, criterion, iai-callgrind,
-# insta, assert_cmd). It is a separate workspace so the main workspace builds offline.
+# and others). It is a separate workspace so the main workspace builds offline.
 # benchmarks/ holds the cross-library comparison runners; each Rust runner there is its own
 # workspace too, and the competitor libraries are never installed by the main CI.
 exclude = ["extras", "fuzz", "benchmarks", "bindings"]

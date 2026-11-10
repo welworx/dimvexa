@@ -250,7 +250,7 @@ pub fn check_convert_schema(v: &V) {
         V::Null => {}
         b => check_density(b),
     }
-    assert!(!v.get("sources").unwrap().as_array().is_empty());
+    assert_ne!(v.get("sources").unwrap().as_array(), []);
     assert!(
         v.get("exact")
             .unwrap()
@@ -280,9 +280,9 @@ pub fn check_units_schema(v: &V) {
         }
     }
     let groups = v.get("groups").unwrap().as_array();
-    assert!(!groups.is_empty());
+    assert_ne!(groups, []);
     for g in groups {
-        assert!(!g.get("name").unwrap().as_str().is_empty());
+        assert_ne!(g.get("name").unwrap().as_str(), "");
         assert!(g.get("units").unwrap().as_f64() >= 1.0);
     }
     let units = v.get("units").unwrap().as_array();
@@ -301,7 +301,7 @@ pub fn check_units_schema(v: &V) {
         ] {
             assert!(u.get(k).is_some(), "missing units[].{k}");
         }
-        assert!(!u.get("symbol").unwrap().as_str().is_empty());
+        assert_ne!(u.get("symbol").unwrap().as_str(), "");
         assert_eq!(u.get("dimension").unwrap().as_array().len(), 7);
         assert!(
             ["plain", "absolute_temperature", "temperature_difference"]
@@ -309,7 +309,7 @@ pub fn check_units_schema(v: &V) {
         );
         assert!(["defined", "measured"].contains(&u.get("exactness").unwrap().as_str()));
         assert!(["none", "si", "si_binary"].contains(&u.get("prefixes").unwrap().as_str()));
-        assert!(!u.get("source").unwrap().as_str().is_empty());
+        assert_ne!(u.get("source").unwrap().as_str(), "");
         let _ = u.get("aliases").unwrap().as_array();
     }
     for a in v.get("ambiguous").unwrap().as_array() {
@@ -354,7 +354,7 @@ fn check_unit_detail_schema(v: &V) {
 /// The `config` array of `dimvexa.convert/2` and `dimvexa.units/2`: `[{file, hash}]`.
 fn check_config_array(v: &V) {
     for c in v.get("config").expect("missing config").as_array() {
-        assert!(!c.get("file").unwrap().as_str().is_empty());
+        assert_ne!(c.get("file").unwrap().as_str(), "");
         let hash = c.get("hash").unwrap().as_str();
         assert!(
             hash.starts_with("fnv1a64:") && hash.len() == 8 + 16,
@@ -379,8 +379,8 @@ fn check_density(b: &V) {
     }
     assert_eq!(b.get("kind").unwrap().as_str(), "density");
     assert_eq!(b.get("unit").unwrap().as_str(), "kg/m3");
-    assert!(!b.get("conditions").unwrap().as_str().is_empty());
-    assert!(!b.get("source").unwrap().as_str().is_empty());
+    assert_ne!(b.get("conditions").unwrap().as_str(), "");
+    assert_ne!(b.get("source").unwrap().as_str(), "");
 }
 
 /// A small JSON Schema checker for the files in `docs/schemas/`: `type`, `const`, `enum`,
