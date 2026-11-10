@@ -19,7 +19,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 ### Changed
 
 - `UnitDef` (a public struct, `dimvexa-core`) gains the field `conditions`; code that builds a `UnitDef` literal must add it (0.x breaking change). `quantity_kind` in `dimvexa.units/2` and `dimvexa.convert/2` gains three values.
-- `cargo xtask bench-check --against REV`: A/B regression check of REV against the working tree on the same machine, no stored baseline (for shared cloud VMs).
+- `cargo xtask bench-check --against REV`: A/B regression check of REV against the working tree on the same machine, no stored baseline (for shared cloud VMs). A row that stays slow is rebuilt under other `-C metadata` layouts (`--layouts`, default 5) so that a code-layout effect cannot fail the check.
 - Python: `unit_info` also returns `conditions` (the reference state, or `None`).
 - Data version 14.
 
