@@ -2264,3 +2264,44 @@ fn density_does_not_apply_to_reference_state_volumes() {
     let r = dimvexa(&["convert", "1", "m3", "kg", "--density", "1.2kg/m3"]);
     assert_eq!(r.code, 0, "{}", r.stderr);
 }
+
+/// ADR-013: `units NAME` shows the reference state of a user unit built on `scf`.
+#[test]
+fn units_shows_the_conditions_of_a_user_unit_built_on_a_reference_unit() {
+    let cfg = config_file(
+        "mmscf.toml",
+        "[[unit]]\nsymbol = \"MMscf\"\nbase = \"scf\"\nfactor = \"1000000\"\n\
+         exactness = \"defined\"\nsource = \"test\"\n",
+    );
+    let r = dimvexa(&["units", "MMscf", "--config", &cfg]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(
+        r.stdout.contains("quantity kind standard_volume"),
+        "{}",
+        r.stdout
+    );
+    assert!(
+        r.stdout
+            .lines()
+            .any(|l| l.trim_start().starts_with("conditions") && l.contains("14.696 psia")),
+        "{}",
+        r.stdout
+    );
+    let j = dimvexa(&["units", "MMscf", "--json", "--config", &cfg]);
+    let v = json::parse(&j.stdout).unwrap();
+    json::check_units_schema(&v);
+    assert!(
+        j.stdout.contains("\"conditions\":\"60 degF"),
+        "{}",
+        j.stdout
+    );
+    // The conversion itself still works within the reference and is refused across it.
+    assert_eq!(
+        dimvexa(&["convert", "1", "MMscf", "scf", "--config", &cfg]).stdout,
+        "1000000 scf\n"
+    );
+    assert_eq!(
+        dimvexa(&["convert", "1", "MMscf", "m3", "--config", &cfg]).code,
+        1
+    );
+}

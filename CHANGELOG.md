@@ -20,6 +20,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 - `UnitDef` (a public struct, `dimvexa-core`) gains the field `conditions`; code that builds a `UnitDef` literal must add it (0.x breaking change). `quantity_kind` in `dimvexa.units/2` and `dimvexa.convert/2` gains three values.
 - `cargo xtask bench-check --against REV`: A/B regression check of REV against the working tree on the same machine, no stored baseline (for shared cloud VMs). A row that stays slow is rebuilt under other `-C metadata` layouts (`--layouts`, default 5) so that a code-layout effect cannot fail the check.
+- A config unit built on a reference unit (`MMscf` from `scf`, or `Mscfd` from `scf/d`) keeps the reference kind and its `conditions`, so `dimvexa units MMscf` shows the reference state and the unit stays refused against `m3` and `Nm3`. `UnitExpr::conditions()` and `Unit::with_conditions()` are new.
 - Python: `unit_info` also returns `conditions` (the reference state, or `None`).
 - Data version 14.
 

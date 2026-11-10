@@ -212,6 +212,13 @@ impl Unit {
         self
     }
 
+    /// Sets the reference state text (ADR-013), for a unit that is defined from a reference unit.
+    #[must_use]
+    pub fn with_conditions(mut self, conditions: &str) -> Self {
+        self.conditions = conditions.to_string();
+        self
+    }
+
     /// Sets the namespace.
     #[must_use]
     pub fn with_namespace(mut self, namespace: &str) -> Self {
@@ -315,6 +322,8 @@ pub struct UnitExpr {
     kind: Kind,
     /// Signed power of the reference state: 1 for `Nm3`, -1 for `1/Nm3`, 0 without one.
     ref_exp: i32,
+    /// The reference state text of the unit that carries the reference (ADR-013), empty without.
+    conditions: String,
     factor: Ratio,
     offset: Ratio,
     exactness: Exactness,
@@ -333,6 +342,7 @@ impl UnitExpr {
             dim: Dim::NONE,
             kind: Kind::Plain,
             ref_exp: 0,
+            conditions: String::new(),
             factor: Ratio::ONE,
             offset: Ratio::ZERO,
             exactness: Exactness::Defined,
@@ -355,11 +365,37 @@ impl UnitExpr {
             dim,
             kind,
             ref_exp: if kind.is_reference() { 1 } else { 0 },
+            conditions: String::new(),
             factor,
             offset,
             exactness,
             sources,
             difference: None,
+        }
+    }
+
+    pub(crate) fn with_conditions(mut self, conditions: &str) -> Self {
+        if self.kind.is_reference() {
+            self.conditions = conditions.to_string();
+        }
+        self
+    }
+
+    /// The reference state of the unit that gives this expression its reference kind
+    /// (`273.15 K (0 degC), 101 325 Pa` for `Nm3/h`), or an empty string without one.
+    #[must_use]
+    pub fn conditions(&self) -> &str {
+        &self.conditions
+    }
+
+    /// The conditions of whichever operand carries the reference, if the result has one.
+    fn composed_conditions(&self, other: &Self, kind: Kind) -> String {
+        if !kind.is_reference() {
+            String::new()
+        } else if self.kind.is_reference() {
+            self.conditions.clone()
+        } else {
+            other.conditions.clone()
         }
     }
 
@@ -524,11 +560,13 @@ impl UnitExpr {
         }
         self.refuse_affine(rhs)?;
         let (kind, ref_exp) = self.composed_reference(rhs, 1)?;
+        let conditions = self.composed_conditions(rhs, kind);
         Ok(Self {
             expr: Expr::Mul(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_add(rhs.dim)?,
             kind,
             ref_exp,
+            conditions,
             factor: self.factor.checked_mul(rhs.factor)?,
             offset: Ratio::ZERO,
             exactness: self.exactness.combine(rhs.exactness),
@@ -548,11 +586,13 @@ impl UnitExpr {
         }
         self.refuse_affine(rhs)?;
         let (kind, ref_exp) = self.composed_reference(rhs, -1)?;
+        let conditions = self.composed_conditions(rhs, kind);
         Ok(Self {
             expr: Expr::Div(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_sub(rhs.dim)?,
             kind,
             ref_exp,
+            conditions,
             factor: self.factor.checked_div(rhs.factor)?,
             offset: Ratio::ZERO,
             exactness: self.exactness.combine(rhs.exactness),
@@ -584,6 +624,11 @@ impl UnitExpr {
             ref_exp: self.ref_exp.checked_mul(exp).ok_or(Error::Overflow {
                 operation: "reference power",
             })?,
+            conditions: if self.kind.is_reference() {
+                self.conditions.clone()
+            } else {
+                String::new()
+            },
             factor: self.factor.checked_pow(exp)?,
             offset: Ratio::ZERO,
             exactness: self.exactness,
