@@ -313,6 +313,8 @@ pub struct UnitExpr {
     expr: Expr,
     dim: Dim,
     kind: Kind,
+    /// Signed power of the reference state: 1 for `Nm3`, -1 for `1/Nm3`, 0 without one.
+    ref_exp: i32,
     factor: Ratio,
     offset: Ratio,
     exactness: Exactness,
@@ -330,6 +332,7 @@ impl UnitExpr {
             expr: Expr::One,
             dim: Dim::NONE,
             kind: Kind::Plain,
+            ref_exp: 0,
             factor: Ratio::ONE,
             offset: Ratio::ZERO,
             exactness: Exactness::Defined,
@@ -351,6 +354,7 @@ impl UnitExpr {
             expr,
             dim,
             kind,
+            ref_exp: if kind.is_reference() { 1 } else { 0 },
             factor,
             offset,
             exactness,
@@ -399,6 +403,13 @@ impl UnitExpr {
         self.kind
     }
 
+    /// The signed power of the reference state (ADR-013): 1 for `Nm3` or `Nm3/h`, -1 for `h/Nm3`,
+    /// 0 for a unit without a reference. Two units convert only when kind and power agree.
+    #[must_use]
+    pub const fn reference_power(&self) -> i32 {
+        self.ref_exp
+    }
+
     /// Exact factor to the coherent SI unit.
     #[must_use]
     pub const fn factor(&self) -> Ratio {
@@ -433,20 +444,34 @@ impl UnitExpr {
         &self.sources
     }
 
-    /// Kind of a product or quotient. A reference kind survives (`Nm3/h` is still a normal
-    /// volume per time); two different references in one expression are refused.
-    fn composed_kind(&self, other: &Self) -> Result<Kind> {
+    /// Kind and reference power of a product (`sign` 1) or quotient (`sign` -1). A reference
+    /// survives (`Nm3/h` is still a normal volume per time) and its power is tracked, so
+    /// `Nm3/m3` and `m3/Nm3` differ; the same reference cancels; two different references in
+    /// one expression are refused.
+    fn composed_reference(&self, other: &Self, sign: i32) -> Result<(Kind, i32)> {
+        let overflow = || Error::Overflow {
+            operation: "reference power",
+        };
+        let other_exp = other.ref_exp.checked_mul(sign).ok_or_else(overflow)?;
         match (self.kind.is_reference(), other.kind.is_reference()) {
-            (true, true) => Err(Error::Refused {
+            (true, true) if self.kind != other.kind => Err(Error::Refused {
                 reason: format!(
-                    "'{}' ({}) and '{}' ({}) each carry a reference state and cannot be combined",
+                    "'{}' ({}) and '{}' ({}) each carry a different reference state and cannot be combined",
                     self.expr, self.kind, other.expr, other.kind
                 ),
                 suggestions: Vec::new(),
             }),
-            (true, false) => Ok(self.kind),
-            (false, true) => Ok(other.kind),
-            (false, false) => Ok(Kind::Plain),
+            (true, true) => {
+                let exp = self.ref_exp.checked_add(other_exp).ok_or_else(overflow)?;
+                Ok(if exp == 0 {
+                    (Kind::Plain, 0)
+                } else {
+                    (self.kind, exp)
+                })
+            }
+            (true, false) => Ok((self.kind, self.ref_exp)),
+            (false, true) => Ok((other.kind, other_exp)),
+            (false, false) => Ok((Kind::Plain, 0)),
         }
     }
 
@@ -498,10 +523,12 @@ impl UnitExpr {
             return Ok(self.clone());
         }
         self.refuse_affine(rhs)?;
+        let (kind, ref_exp) = self.composed_reference(rhs, 1)?;
         Ok(Self {
             expr: Expr::Mul(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_add(rhs.dim)?,
-            kind: self.composed_kind(rhs)?,
+            kind,
+            ref_exp,
             factor: self.factor.checked_mul(rhs.factor)?,
             offset: Ratio::ZERO,
             exactness: self.exactness.combine(rhs.exactness),
@@ -520,10 +547,12 @@ impl UnitExpr {
             return Ok(self.clone());
         }
         self.refuse_affine(rhs)?;
+        let (kind, ref_exp) = self.composed_reference(rhs, -1)?;
         Ok(Self {
             expr: Expr::Div(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_sub(rhs.dim)?,
-            kind: self.composed_kind(rhs)?,
+            kind,
+            ref_exp,
             factor: self.factor.checked_div(rhs.factor)?,
             offset: Ratio::ZERO,
             exactness: self.exactness.combine(rhs.exactness),
@@ -552,6 +581,9 @@ impl UnitExpr {
             } else {
                 Kind::Plain
             },
+            ref_exp: self.ref_exp.checked_mul(exp).ok_or(Error::Overflow {
+                operation: "reference power",
+            })?,
             factor: self.factor.checked_pow(exp)?,
             offset: Ratio::ZERO,
             exactness: self.exactness,

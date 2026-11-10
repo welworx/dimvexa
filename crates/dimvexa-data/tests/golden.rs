@@ -328,3 +328,52 @@ fn reference_state_units_convert_only_within_their_reference() {
     // A digit-ending symbol exists only for reference units: `m3` is still m^3.
     assert_eq!(reg.parse("m3").unwrap().kind().name(), "plain");
 }
+
+/// Review findings on ADR-013: the power of the reference matters, a density never turns a
+/// reference volume into an actual one, and a digit-ending name never changes meaning.
+#[test]
+fn reference_state_edge_cases_are_refused() {
+    let reg = dimvexa_data::registry().unwrap();
+    // The power of the reference is part of the unit.
+    for (from, to) in [
+        ("Nm3/m3", "m3/Nm3"),
+        ("Nm3/m3", "L/Nm3"),
+        ("psig/Pa", "Pa/psig"),
+        ("psig/Pa^2", "1/psig"),
+    ] {
+        assert_eq!(
+            reg.conversion(from, to).unwrap_err().code(),
+            "refused",
+            "{from} -> {to}"
+        );
+    }
+    // The same reference cancels to a plain number.
+    assert_eq!(reg.parse("Nm3/Nm3").unwrap().kind().name(), "plain");
+    assert!(reg.conversion("Nm3.h/Nm3", "min").is_ok());
+    // A digit-ending reference unit prints in a form that reads back.
+    let squared = reg.parse("(Nm3)^2").unwrap();
+    assert_eq!(squared.reference_power(), 2);
+    assert_eq!(
+        reg.parse(&squared.to_string()).unwrap().reference_power(),
+        2
+    );
+}
+
+/// A unit never changes meaning: if `Nm` is a unit too, `Nm3` is an error.
+#[test]
+fn nm3_is_an_error_when_nm_is_also_a_unit() {
+    use dimvexa_core::{Dim, Ratio, Unit};
+    let mut reg = dimvexa_data::registry().unwrap();
+    assert!(reg.parse("Nm3").is_ok());
+    let nm = Unit::linear("Nm", Dim::new([1, 2, -2, 0, 0, 0, 0]), Ratio::ONE).unwrap();
+    reg.register(nm).unwrap();
+    for text in ["Nm3", "Nm^3"] {
+        assert_eq!(
+            reg.parse(text).unwrap_err().code(),
+            "ambiguous_expression",
+            "{text}"
+        );
+    }
+    // The plain unit itself is untouched.
+    assert!(reg.parse("Nm").is_ok());
+}

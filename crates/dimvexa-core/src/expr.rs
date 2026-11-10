@@ -370,7 +370,10 @@ impl fmt::Display for Expr {
                 r.fmt_operand(f, matches!(**r, Self::Mul(..) | Self::Div(..)))
             }
             Self::Pow(b, n) => {
-                b.fmt_operand(f, !matches!(**b, Self::Unit(_) | Self::One))?;
+                // A symbol that ends in a digit (`Nm3`) is parenthesised so `(Nm3)^2` reads back.
+                let digit_symbol =
+                    matches!(&**b, Self::Unit(s) if s.ends_with(|c: char| c.is_ascii_digit()));
+                b.fmt_operand(f, digit_symbol || !matches!(**b, Self::Unit(_) | Self::One))?;
                 write!(f, "^{n}")
             }
         }

@@ -2243,3 +2243,24 @@ fn update_command_line_is_checked_before_any_network_use() {
     let r = dimvexa(&["--help"]);
     assert!(r.stdout.contains("dimvexa update [--check] [-y]"));
 }
+
+/// ADR-013: a density describes an actual volume, so it never turns a normal or standard
+/// volume into a mass (or back).
+#[test]
+fn density_does_not_apply_to_reference_state_volumes() {
+    for args in [
+        ["convert", "1", "Nm3", "kg", "--density", "1.2kg/m3"],
+        ["convert", "1", "kg", "scf", "--density", "1.2kg/m3"],
+    ] {
+        let r = dimvexa(&args);
+        assert_ne!(r.code, 0, "{args:?}");
+        assert!(
+            r.stderr.contains("error[refused]"),
+            "{args:?}: {}",
+            r.stderr
+        );
+    }
+    // An ordinary volume still works with the same density.
+    let r = dimvexa(&["convert", "1", "m3", "kg", "--density", "1.2kg/m3"]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+}

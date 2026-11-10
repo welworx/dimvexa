@@ -421,6 +421,18 @@ impl Registry {
                 if let Expr::Unit(s) = &**a {
                     let joined = format!("{s}{n}");
                     if self.get(&joined).is_some_and(|u| u.kind().is_reference()) {
+                        // A unit never changes meaning: if the plain reading (`Nm`) is also a
+                        // unit, `Nm3` could be either, so it is an error, not a guess.
+                        if self.resolve_symbol(s).is_ok() {
+                            return Err(Error::AmbiguousExpression {
+                                input: joined.clone(),
+                                message: format!(
+                                    "'{s}' is a unit and '{joined}' is also a unit with a reference \
+                                     state; rename your '{s}' (a config unit) so that '{joined}' \
+                                     has one meaning"
+                                ),
+                            });
+                        }
                         return self.resolve_symbol(&joined);
                     }
                 }

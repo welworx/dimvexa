@@ -76,7 +76,7 @@ implement this ADR with its recommendations. What shipped, and where it differs 
 * **`bbl`** is the petroleum barrel, 42 US gal (158.987294928 L). The US liquid barrel and the dry
   barrel are different units and not shipped.
 
-The source for the `scf` state (GPA Standard 2145 and API MPMS 14.3) was cited from memory of the
+The source for the `scf` state (GPA Standard 2145) was cited from memory of the
 standards and is not checked against the documents; verify it before a release.
 
 ### OPEN (still undecided)

@@ -525,7 +525,7 @@ value = "1"
 from = "bbl"
 to = "L"
 expect = "158.987294928"
-source = "NIST Handbook 44 (2023), Appendix C (42 gallons per petroleum barrel) with NIST SP 811 (2008), Appendix B (gallon, U.S. = 3.785 411 784 L)"
+source = "NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)]) with Appendix B (gallon, U.S. = 3.785 411 784 L)"
 
 [[vector]]
 unit = "psig"

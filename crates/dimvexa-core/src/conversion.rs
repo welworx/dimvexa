@@ -151,13 +151,15 @@ impl Conversion {
                 to: to.dim(),
             });
         }
-        if from.kind() != to.kind() && (from.kind().is_reference() || to.kind().is_reference()) {
+        if (from.kind() != to.kind() || from.reference_power() != to.reference_power())
+            && (from.kind().is_reference() || to.kind().is_reference())
+        {
             // ADR-013: a unit tied to a reference state converts only within that reference.
             // Going elsewhere needs data (ambient pressure, temperature, a gas model) that the
             // library does not guess.
             return Err(Error::Refused {
                 reason: format!(
-                    "'{from}' ({}) and '{to}' ({}) have different reference states; \
+                    "'{from}' ({}) and '{to}' ({}) differ in their reference state or its power; \
                      the conversion needs data the library does not guess (the ambient \
                      pressure, or the temperature, pressure and gas properties); convert \
                      within one reference, or apply your own factor",

@@ -13,7 +13,12 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 - `quantity_kind` gains `gauge_pressure`, `normal_volume` and `standard_volume` in `dimvexa.convert/2` and `dimvexa.units/2` (additive; the field was an enum).
 - A reference unit may end in digits (`Nm3`); `Nm3` and `Nm^3` are the same unit. Every other unit symbol is still letters only, so `m3` stays `m^3`.
 - Units gain an optional `conditions` field: the reference state a unit is defined at (`273.15 K (0 degC), 101 325 Pa` for `Nm3`). It is mandatory for gauge and gas-volume units (`validate-data` checks it), shown by `dimvexa units NAME`, and added as `unit.conditions` (string or null) to `dimvexa.units/2`.
-- Data version 13.
+- A reference unit keeps the power of its reference: `Nm3/m3` and `m3/Nm3` do not convert, and the same reference cancels (`Nm3/Nm3` is a plain number). A density (`--density`) is refused for a gauge or reference volume. `Nm3` and `Nm^3` are an error (`ambiguous_expression`) while a unit `Nm` also exists, so a name never changes meaning. `(Nm3)^2` prints in a form that reads back.
+
+### Changed
+
+- `UnitDef` (a public struct, `dimvexa-core`) gains the field `conditions`; code that builds a `UnitDef` literal must add it (0.x breaking change). `quantity_kind` in `dimvexa.units/2` and `dimvexa.convert/2` gains three values.
+- Data version 14.
 
 ## [0.2.2] - 2026-11-10
 
