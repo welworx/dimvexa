@@ -2,19 +2,19 @@
 <rect width="900" height="426" fill="#ffffff"/>
 <text x="12" y="24" font-family="sans-serif" font-size="16" font-weight="bold" fill="#1a1a1a">Ambiguous names accepted with a default (lower is safer; a default is a policy choice)</text>
 <text x="12" y="44" font-family="sans-serif" font-size="12" fill="#444444">lower is better</text>
-<text x="322" y="74" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.1.0+6f3d437-dirty / exact_f64</text>
+<text x="322" y="74" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.2.2+f16edd5-dirty / exact_f64</text>
 <rect x="330" y="60" width="2.0" height="20" fill="#e8590c"/>
 <text x="338.0" y="74" font-family="sans-serif" font-size="12" fill="#1a1a1a">0 </text>
-<text x="322" y="102" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.1.0+6f3d437-dirty / fast_f64</text>
+<text x="322" y="102" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.2.2+f16edd5-dirty / fast_f64</text>
 <rect x="330" y="88" width="2.0" height="20" fill="#e8590c"/>
 <text x="338.0" y="102" font-family="sans-serif" font-size="12" fill="#1a1a1a">0 </text>
-<text x="322" y="130" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.1.0+6f3d437-dirty / text</text>
+<text x="322" y="130" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.2.2+f16edd5-dirty / text</text>
 <rect x="330" y="116" width="2.0" height="20" fill="#e8590c"/>
 <text x="338.0" y="130" font-family="sans-serif" font-size="12" fill="#1a1a1a">0 </text>
-<text x="322" y="158" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-py 0.1.0+v9+fnv1a64:70613d89e0c2758d / plain</text>
+<text x="322" y="158" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-py 0.2.2+v14+fnv1a64:b74e0757c49b999d / plain</text>
 <rect x="330" y="144" width="2.0" height="20" fill="#e8590c"/>
 <text x="338.0" y="158" font-family="sans-serif" font-size="12" fill="#1a1a1a">0 </text>
-<text x="322" y="186" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-wasm 0.1.0+v9+fnv1a64:70613d89e0c2758d / plain</text>
+<text x="322" y="186" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-wasm 0.2.2+v14+fnv1a64:b74e0757c49b999d / plain</text>
 <rect x="330" y="172" width="2.0" height="20" fill="#e8590c"/>
 <text x="338.0" y="186" font-family="sans-serif" font-size="12" fill="#1a1a1a">0 </text>
 <text x="322" y="214" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">uom 0.36.0 / typed</text>

@@ -249,7 +249,13 @@
     "kgf",
     "grad",
     "P",
-    "St"
+    "St",
+    "bbl",
+    "psig",
+    "barg",
+    "Pag",
+    "Nm3",
+    "scf"
    ]
   }
  ],

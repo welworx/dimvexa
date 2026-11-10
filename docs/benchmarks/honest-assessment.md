@@ -17,6 +17,16 @@ benchmark publication: it does not replace `comparison.md` and does not license 
 > tables below were not rerun on the new code. The text below keeps the original numbers for the
 > record.
 
+> **Update 2026-11-10 (run 3, after ADR-013).** Dimvexa now has `bbl`, `psig`, `barg`, `Pag`,
+> `Nm3` and `scf`. The statements below that these units are missing, that 9 hand-written cases
+> are unsupported, that "24 of 30" refusals carry the intended reason, and the coverage gaps for
+> `psig`, `barg`, `Nm3`, `scf` and `bbl` are **superseded**: see
+> [`comparison-run-3.md`](comparison-run-3.md) (242 of 242 must-convert cases correct, 0 wrong,
+> 25 of 27 refusals with the intended code). Still true: `inHg`, `mH2O`, `wt%` and `cP`-style
+> gaps listed there, the stated limits of the machine, and every competitor number that was not
+> rerun. Gauge to absolute pressure, `Nm3` to `m3` and `Nm3` to `scf` are refused by design
+> (KL-22, KL-23).
+
 ## 0. What was run, and the limits of it
 
 * Code under test: branch `claude/bench-corpus-bias` at commit `c512372` plus the corpus additions

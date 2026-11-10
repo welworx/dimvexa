@@ -120,7 +120,7 @@ on a networked machine.
 
 ## Status of the runners
 
-Latest full run: 2026-11-08, see [`benchmarks/comparison-run-2.md`](benchmarks/comparison-run-2.md) (first run: [`comparison-run-1.md`](benchmarks/comparison-run-1.md)) for
+Latest full run: 2026-11-10, see [`benchmarks/comparison-run-3.md`](benchmarks/comparison-run-3.md) (earlier: [run 2](benchmarks/comparison-run-2.md), [run 1](benchmarks/comparison-run-1.md)) for
 the summary, the caveats and the cases where Dimvexa is slower, and
 [`benchmarks/comparison.md`](benchmarks/comparison.md) for every table. One run on one shared VM:
 indicative, not a basis for a "fastest" claim.

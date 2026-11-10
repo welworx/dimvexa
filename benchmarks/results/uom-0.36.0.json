@@ -1,6 +1,6 @@
 {
- "corpus_id": "60d7ca04ff45cf8d",
- "date_utc": "2026-11-08T22:33:02Z",
+ "corpus_id": "ba7a0ac6c7889f23",
+ "date_utc": "2026-11-10T17:25:42Z",
  "fixture": false,
  "kind": "library",
  "library": {
@@ -10,10 +10,10 @@
  "lockfile": "requirements.lock.txt+package-lock.json+Cargo.lock",
  "machine": {
   "arch": "x86_64",
-  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.30GHz",
+  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
   "governor": null,
   "logical_cores": 4,
-  "os": "Linux 6.18.44-fc-v310"
+  "os": "Linux 6.18.44-fc-v338"
  },
  "modes": {
   "typed": {
@@ -37,48 +37,48 @@
     "batch": {
      "1000": {
       "mad": 0.0010000000000000009,
-      "max": 0.427,
-      "median": 0.161,
-      "min": 0.158,
-      "raw": [0.194, 0.162, 0.161, 0.238, 0.161, 0.159, 0.161, 0.161, 0.158, 0.16, 0.158, 0.427, 0.16, 0.16, 0.16],
+      "max": 0.292,
+      "median": 0.219,
+      "min": 0.218,
+      "raw": [0.292, 0.25, 0.219, 0.219, 0.219, 0.26, 0.218, 0.219, 0.219, 0.219, 0.218, 0.218, 0.218, 0.261, 0.219],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 0.0006199999999999817,
-      "max": 0.19817,
-      "median": 0.19551,
-      "min": 0.19335,
-      "raw": [0.19817, 0.19601, 0.19335, 0.19482, 0.19502, 0.19678, 0.19623, 0.19557, 0.19531, 0.19551, 0.19398, 0.19409, 0.19594, 0.19489, 0.19612],
+      "mad": 0.0004499999999999782,
+      "max": 0.23776,
+      "median": 0.23567,
+      "min": 0.23283,
+      "raw": [0.23776, 0.23572, 0.23559, 0.23567, 0.23435, 0.23283, 0.23522, 0.23355, 0.23565, 0.23591, 0.23623, 0.23579, 0.23593, 0.23442, 0.23613],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 0.02772999999999992,
-      "max": 0.591946,
-      "median": 0.564216,
-      "min": 0.532303,
-      "raw": [0.591946, 0.532637, 0.564216, 0.532303, 0.56587],
+      "mad": 0.018071999999999977,
+      "max": 0.6169,
+      "median": 0.598828,
+      "min": 0.555619,
+      "raw": [0.609803, 0.598828, 0.572589, 0.6169, 0.555619],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.0006015412509441376,
-     "max": 0.2745361067354679,
-     "median": 0.26200326904654503,
-     "min": 0.25908412784338,
-     "raw": [0.25908412784338, 0.2646024078130722, 0.26211508736014366, 0.25927759334445, 0.26211217418313026, 0.2612839862704277, 0.26339607313275337, 0.26241734623908997, 0.26147518306970596, 0.2614913806319237, 0.26155711710453033, 0.2614017277956009, 0.26398221403360367, 0.26200326904654503, 0.2745361067354679],
+     "mad": 0.016180217266082764,
+     "max": 0.47513143718242645,
+     "median": 0.3568100556731224,
+     "min": 0.32960206270217896,
+     "raw": [0.3311501517891884, 0.35415126383304596, 0.3459233492612839, 0.34062983840703964, 0.47513143718242645, 0.38240424543619156, 0.3568100556731224, 0.38433054089546204, 0.3712078854441643, 0.37779248505830765, 0.38888679444789886, 0.34329961240291595, 0.3664088845252991, 0.3555207774043083, 0.32960206270217896],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "scalar": {
-     "mad": 0.01222178339958191,
-     "max": 0.4760957583785057,
-     "median": 0.39980146288871765,
-     "min": 0.3724571242928505,
-     "raw": [0.3724571242928505, 0.39639876037836075, 0.390871100127697, 0.39097175747156143, 0.39439163357019424, 0.3888894319534302, 0.40813080221414566, 0.3788038194179535, 0.430392749607563, 0.39980146288871765, 0.43404994159936905, 0.4760957583785057, 0.4129776880145073, 0.41202324628829956, 0.4269421324133873],
+     "mad": 0.019886121153831482,
+     "max": 0.7858923971652985,
+     "median": 0.6570637375116348,
+     "min": 0.5686716735363007,
+     "raw": [0.6538095474243164, 0.6989805102348328, 0.6570637375116348, 0.5686716735363007, 0.624968871474266, 0.6769498586654663, 0.6539648175239563, 0.7858923971652985, 0.6508690267801285, 0.7018081396818161, 0.6709098368883133, 0.661249652504921, 0.6256519854068756, 0.6639358103275299, 0.635468140244484],
      "samples": 15,
      "unit": "ns"
     }
@@ -91,48 +91,48 @@
     "batch": {
      "1000": {
       "mad": 0.0010000000000000009,
-      "max": 0.547,
-      "median": 0.525,
-      "min": 0.523,
-      "raw": [0.547, 0.527, 0.526, 0.525, 0.527, 0.527, 0.526, 0.526, 0.524, 0.524, 0.524, 0.525, 0.524, 0.524, 0.523],
+      "max": 0.744,
+      "median": 0.702,
+      "min": 0.699,
+      "raw": [0.744, 0.714, 0.702, 0.702, 0.703, 0.703, 0.703, 0.702, 0.703, 0.702, 0.702, 0.702, 0.703, 0.7, 0.699],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 0.000020000000000020002,
-      "max": 0.70771,
-      "median": 0.48794,
-      "min": 0.48789,
-      "raw": [0.48821, 0.48797, 0.48796, 0.4879, 0.48794, 0.48794, 0.48794, 0.48793, 0.48789, 0.48793, 0.4879, 0.48792, 0.70771, 0.48829, 0.48796],
+      "mad": 0.00043000000000004146,
+      "max": 0.92103,
+      "median": 0.66739,
+      "min": 0.66695,
+      "raw": [0.66744, 0.66756, 0.66697, 0.66696, 0.66973, 0.66765, 0.66696, 0.66695, 0.66696, 0.66698, 0.66701, 0.88809, 0.73086, 0.66739, 0.92103],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 0.03073400000000004,
-      "max": 0.609505,
-      "median": 0.573379,
-      "min": 0.536579,
-      "raw": [0.604113, 0.609505, 0.543288, 0.573379, 0.536579],
+      "mad": 0.0069670000000000565,
+      "max": 0.642268,
+      "median": 0.615314,
+      "min": 0.596229,
+      "raw": [0.642268, 0.596229, 0.615314, 0.620169, 0.608347],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.003679271787405014,
-     "max": 0.2621602229773998,
-     "median": 0.25627218559384346,
-     "min": 0.25135035440325737,
-     "raw": [0.2611760310828686, 0.26195041462779045, 0.2621602229773998, 0.2614732123911381, 0.2621043734252453, 0.26178035140037537, 0.2572731673717499, 0.25432081520557404, 0.25135035440325737, 0.25289201736450195, 0.25259291380643845, 0.25627218559384346, 0.25522496923804283, 0.2553347125649452, 0.2544635757803917],
+     "mad": 0.03254665434360504,
+     "max": 0.5453510396182537,
+     "median": 0.3745713382959366,
+     "min": 0.3212670050561428,
+     "raw": [0.3475174158811569, 0.34202468395233154, 0.38020989671349525, 0.37728095054626465, 0.3507335036993027, 0.4357478618621826, 0.372339703142643, 0.3399769701063633, 0.38683465868234634, 0.3367801122367382, 0.3745713382959366, 0.45364199578762054, 0.5453510396182537, 0.5113203302025795, 0.3212670050561428],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "scalar": {
-     "mad": 0.004946649074554443,
-     "max": 1.0765243619680405,
-     "median": 1.0441369116306305,
-     "min": 1.0202917456626892,
-     "raw": [1.0222836285829544, 1.0202917456626892, 1.049083560705185, 1.047188937664032, 1.0431076437234879, 1.0376799702644348, 1.0487885028123856, 1.0566752552986145, 1.0765243619680405, 1.0388354659080505, 1.0409261137247086, 1.044179618358612, 1.0352803617715836, 1.0441369116306305, 1.0479844808578491],
+     "mad": 0.029753968119621277,
+     "max": 1.4477691799402237,
+     "median": 1.346184864640236,
+     "min": 1.292892962694168,
+     "raw": [1.325131744146347, 1.351862907409668, 1.292892962694168, 1.3068272918462753, 1.346184864640236, 1.3163027465343475, 1.323256567120552, 1.3506542295217514, 1.3129319250583649, 1.406679928302765, 1.3759388327598572, 1.4477691799402237, 1.3928729146718979, 1.3571460992097855, 1.3430278897285461],
      "samples": 15,
      "unit": "ns"
     }
@@ -141,48 +141,48 @@
     "batch": {
      "1000": {
       "mad": 0.0010000000000000009,
-      "max": 0.24,
-      "median": 0.116,
-      "min": 0.115,
-      "raw": [0.162, 0.117, 0.116, 0.24, 0.115, 0.115, 0.118, 0.115, 0.115, 0.117, 0.117, 0.116, 0.115, 0.117, 0.115],
+      "max": 0.266,
+      "median": 0.195,
+      "min": 0.193,
+      "raw": [0.266, 0.234, 0.193, 0.195, 0.193, 0.256, 0.195, 0.194, 0.195, 0.194, 0.195, 0.194, 0.196, 0.255, 0.194],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 0.0006300000000000194,
-      "max": 0.19205,
-      "median": 0.1889,
-      "min": 0.18762,
-      "raw": [0.19205, 0.19106, 0.18973, 0.18846, 0.18831, 0.18985, 0.18827, 0.18876, 0.19007, 0.18791, 0.18762, 0.18899, 0.1889, 0.18867, 0.18941],
+      "mad": 0.0011499999999999844,
+      "max": 0.27429,
+      "median": 0.22993,
+      "min": 0.22834,
+      "raw": [0.23347, 0.22888, 0.2304, 0.27429, 0.23842, 0.22993, 0.22878, 0.23008, 0.22967, 0.23103, 0.23348, 0.22847, 0.22914, 0.22834, 0.22838],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 0.009394000000000013,
-      "max": 0.574663,
-      "median": 0.565269,
-      "min": 0.527473,
-      "raw": [0.565705, 0.574663, 0.527473, 0.565269, 0.533464],
+      "mad": 0.009758999999999962,
+      "max": 0.586087,
+      "median": 0.567,
+      "min": 0.557241,
+      "raw": [0.586087, 0.567, 0.579708, 0.557241, 0.55763],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.0005946941673755646,
-     "max": 0.28279541060328484,
-     "median": 0.26221829652786255,
-     "min": 0.2611747942864895,
-     "raw": [0.28279541060328484, 0.28239813446998596, 0.2634424902498722, 0.26200051978230476, 0.2617923468351364, 0.2618100009858608, 0.2642054483294487, 0.26378680020570755, 0.2621644325554371, 0.26221829652786255, 0.26243750751018524, 0.2611747942864895, 0.2614782974123955, 0.2628129906952381, 0.2617165632545948],
+     "mad": 0.017671123147010803,
+     "max": 0.4659479856491089,
+     "median": 0.3465529531240463,
+     "min": 0.3235504478216171,
+     "raw": [0.3353162407875061, 0.3288818299770355, 0.33419882506132126, 0.33094192296266556, 0.3271750137209892, 0.3339874595403671, 0.36828723549842834, 0.3815329149365425, 0.3487050086259842, 0.3542674407362938, 0.3235504478216171, 0.3465529531240463, 0.4659479856491089, 0.40787965804338455, 0.410697840154171],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "scalar": {
-     "mad": 0.002890370786190033,
-     "max": 0.5190748311579227,
-     "median": 0.3212740048766136,
-     "min": 0.3161652497947216,
-     "raw": [0.3173529878258705, 0.3161652497947216, 0.3161827251315117, 0.3164955899119377, 0.3240002766251564, 0.42255499213933945, 0.5190748311579227, 0.32381946220993996, 0.3208257593214512, 0.33121466264128685, 0.32416437566280365, 0.31999991089105606, 0.3200213834643364, 0.3212740048766136, 0.32405509427189827],
+     "mad": 0.02271883189678192,
+     "max": 0.4816287234425545,
+     "median": 0.42526330798864365,
+     "min": 0.3898354098200798,
+     "raw": [0.3997524678707123, 0.4025444760918617, 0.4272366687655449, 0.401950404047966, 0.3898354098200798, 0.4167686700820923, 0.47160595655441284, 0.4036668390035629, 0.43764328956604004, 0.42312560230493546, 0.46950890123844147, 0.4638456851243973, 0.4334888905286789, 0.42526330798864365, 0.4816287234425545],
      "samples": 15,
      "unit": "ns"
     }
@@ -192,22 +192,22 @@
  "runtime": {
   "language": "rust",
   "name": "rustc",
-  "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  "version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
  },
  "schema": "dimvexa.bench.result/1",
  "semantics": {
   "typed": {
    "accuracy": {
-    "answered": 20,
-    "bit_identical": 8,
-    "cases": 194,
+    "answered": 33,
+    "bit_identical": 14,
+    "cases": 242,
     "max_ulp": 4409024035195715600,
-    "median_ulp": 5,
-    "over_1_ulp": 11,
+    "median_ulp": 4,
+    "over_1_ulp": 18,
     "tolerance_ulp": 4,
-    "unsupported": 174,
+    "unsupported": 209,
     "worst": [],
-    "wrong": 10
+    "wrong": 15
    },
    "cases": {
     "must_convert": [
@@ -892,6 +892,54 @@
       "outcome": "unsupported"
      },
      {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-063",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-064",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-065",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-066",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-067",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-068",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-069",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-070",
+      "outcome": "unsupported"
+     },
+     {
       "category": "si",
       "got": "1000.0",
       "id": "hw-001",
@@ -1414,6 +1462,272 @@
       "detail": "no typed unit pair compiled for this request",
       "id": "hw-083",
       "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-001",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "0.3048",
+      "id": "ind-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "0.3048"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-003",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "1.609344",
+      "id": "ind-004",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "1.609344"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-005",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "0.4535924",
+      "id": "ind-006",
+      "outcome": "wrong_value",
+      "ulp": 540431955,
+      "want": "0.45359237"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-007",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-008",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-009",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-010",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-011",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-013",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-014",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-015",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-016",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-017",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-018",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-019",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "211.99999999999983",
+      "id": "ind-020",
+      "outcome": "wrong_value",
+      "ulp": 6,
+      "want": "212.0"
+     },
+     {
+      "category": "independent",
+      "got": "5.684341886080802e-14",
+      "id": "ind-021",
+      "outcome": "wrong_value",
+      "ulp": 4409024035195715600,
+      "want": "0.0"
+     },
+     {
+      "category": "independent",
+      "got": "37.0",
+      "id": "ind-022",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "37.0"
+     },
+     {
+      "category": "independent",
+      "got": "-40.000000000000114",
+      "id": "ind-023",
+      "outcome": "wrong_value",
+      "ulp": 16,
+      "want": "-40.0"
+     },
+     {
+      "category": "independent",
+      "got": "-273.15",
+      "id": "ind-024",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "-273.15"
+     },
+     {
+      "category": "independent",
+      "got": "273.15",
+      "id": "ind-025",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "273.15"
+     },
+     {
+      "category": "independent",
+      "got": "67.99999999999994",
+      "id": "ind-026",
+      "outcome": "correct",
+      "ulp": 4,
+      "want": "68.0"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-027",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-028",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-029",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-030",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-031",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-032",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-033",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-034",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-035",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-037",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "ind-038",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "100.00000000000006",
+      "id": "ind-039",
+      "outcome": "correct",
+      "ulp": 4,
+      "want": "100.0"
+     },
+     {
+      "category": "independent",
+      "got": "20.000000000000057",
+      "id": "ind-040",
+      "outcome": "wrong_value",
+      "ulp": 16,
+      "want": "20.0"
+     },
+     {
+      "category": "independent",
+      "got": "283.15",
+      "id": "ind-041",
+      "outcome": "correct",
+      "ulp": 0,
+      "want": "283.15"
      }
     ],
     "must_refuse": [
@@ -1607,8 +1921,8 @@
     },
     "dimvexa_seed_table": {
      "known": 10,
-     "total": 96,
-     "unknown": ["g", "s", "A", "mol", "cd", "Hz", "N", "J", "W", "C", "V", "ohm", "F", "S", "Wb", "T", "H", "min", "h", "d", "L", "tonne", "Wh", "delta_K", "delta_degC", "ha", "au", "angstrom", "Bq", "Gy", "Sv", "lm", "lx", "kat", "rad", "deg", "arcmin", "arcsec", "bar", "atm", "g_n", "lbf", "mmHg", "torr", "cal_th", "cal_IT", "Btu_IT", "Btu_th", "hp_mech", "hp_metric", "yd", "nmi", "ft_us_survey", "mi_us_survey", "oz_av", "oz_troy", "ton_short", "ton_long", "gal_us", "gal_imp", "pt_us", "pt_imp", "lbmol", "degR", "delta_degF", "delta_degR", "week", "yr_common", "yr_julian", "ly", "acre_int", "acre_us_survey", "kn", "fl_oz_us", "cup_us", "qt_us", "tbsp_us", "tsp_us", "fl_oz_imp", "qt_imp", "grain", "carat", "erg", "dyn", "kgf", "grad"]
+     "total": 104,
+     "unknown": ["g", "s", "A", "mol", "cd", "Hz", "N", "J", "W", "C", "V", "ohm", "F", "S", "Wb", "T", "H", "min", "h", "d", "L", "tonne", "Wh", "delta_K", "delta_degC", "ha", "au", "angstrom", "Bq", "Gy", "Sv", "lm", "lx", "kat", "rad", "deg", "arcmin", "arcsec", "bar", "atm", "g_n", "lbf", "mmHg", "torr", "cal_th", "cal_IT", "Btu_IT", "Btu_th", "hp_mech", "hp_metric", "yd", "nmi", "ft_us_survey", "mi_us_survey", "oz_av", "oz_troy", "ton_short", "ton_long", "gal_us", "gal_imp", "pt_us", "pt_imp", "lbmol", "degR", "delta_degF", "delta_degR", "week", "yr_common", "yr_julian", "ly", "acre_int", "acre_us_survey", "kn", "fl_oz_us", "cup_us", "qt_us", "tbsp_us", "tsp_us", "fl_oz_imp", "qt_imp", "grain", "carat", "erg", "dyn", "kgf", "grad", "P", "St", "bbl", "psig", "barg", "Pag", "Nm3", "scf"]
     },
     "imperial_us": {
      "known": 4,
@@ -1644,10 +1958,10 @@
    "must_convert": {
     "by_category": {
     },
-    "correct": 10,
-    "total": 194,
-    "unsupported": 174,
-    "wrong_value": 10
+    "correct": 18,
+    "total": 242,
+    "unsupported": 209,
+    "wrong_value": 15
    },
    "must_refuse": {
     "by_category": {
@@ -1661,7 +1975,7 @@
  },
  "startup": {
   "import_ms": null,
-  "package_bytes": 3875288,
-  "peak_rss_kb": 19340
+  "package_bytes": 3826392,
+  "peak_rss_kb": 19404
  }
 }
