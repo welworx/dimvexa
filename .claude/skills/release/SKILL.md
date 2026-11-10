@@ -20,7 +20,7 @@ PyPI and npm (`docs/releasing.md`).
    locks with `cargo metadata --locked --format-version 1 --manifest-path bindings/<x>/Cargo.toml`.
    Keep `rust-version` at 1.85.
 3. `CHANGELOG.md`: move Unreleased to the version with the date. `CITATION.cff`: add `version`
-   and `date-released` (YYYY-MM-DD) (the README points to it and states no version). No DOI is
+   and `date-released` (YYYY-MM-DD) and keep `README.md` "How to cite" consistent. No DOI is
    invented.
 4. Data: if tables changed, `cargo xtask update-data-hash` has been run.
 5. Packaging: `cargo package --list -p <crate> --locked` for dimvexa-core, dimvexa-data,

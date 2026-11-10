@@ -113,10 +113,14 @@ Missing a unit? Open a *Unit request* issue with a primary source. For code, see
 vulnerabilities privately as described in [`SECURITY.md`](SECURITY.md). Plans are in
 [`ROADMAP.md`](ROADMAP.md).
 
-## Citing
+## How to cite
 
-Use GitHub's "Cite this repository" button (it reads [`CITATION.cff`](CITATION.cff)), and give
-the version or commit you used.
+```text
+Liemberger, W. (2026). Dimvexa: exact, fast unit conversion. https://github.com/welworx/dimvexa
+```
+
+Please add the version or commit you used. BibTeX and other formats: GitHub's "Cite this
+repository" button, which reads [`CITATION.cff`](CITATION.cff).
 
 ## Licence
 
