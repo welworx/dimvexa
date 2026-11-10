@@ -16,6 +16,10 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
   `docs/benchmarks/baseline-m0.tsv` (10 percent threshold, reruns up to 3 times and judges the best
   median, see `xtask/src/bench_check.rs`). Re-record with `--update` only on a new machine or
   toolchain, or when a change is explained and accepted.
+* On a shared cloud VM prefer `cargo xtask bench-check --against REV` (for example the merge base):
+  it builds REV in a temporary worktree and runs REV and the working tree alternately on this
+  machine, so the stored baseline's machine and compiler do not matter. Use the stored baseline
+  only on the machine that recorded it.
 * Compare medians, not minima. Treat a slowdown above about 10 percent on a hot-path row
   (scalar apply, `apply_slice`, `apply_in_place`) as a regression: explain it or fix it. The
   1 ulp and 2 ulp bounds (`docs/precision.md`) are not traded for speed.

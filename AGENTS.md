@@ -16,6 +16,7 @@ cargo test --workspace         # quick loop
 cargo xtask validate-data      # after touching the unit tables
 cargo xtask update-data-hash   # after a data change; commit the new data_version.toml
 cargo xtask bench-check        # after a hot-path change: >10% slowdown on guarded rows fails
+cargo xtask bench-check --against REV   # same, A/B against a revision on this machine (no baseline)
 ```
 
 The workspace has no third-party dependencies and must build offline (std only). Do not add a
