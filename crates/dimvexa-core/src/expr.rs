@@ -88,6 +88,19 @@ pub fn is_valid_symbol(s: &str) -> bool {
     !s.is_empty() && s.chars().all(is_symbol_char)
 }
 
+/// True if `s` is a well-formed symbol for a unit of kind `kind`.
+///
+/// A unit tied to a reference state may end in digits (`Nm3`, ADR-013), because that is how it is written in practice;
+/// every other symbol is letters only, so `m2` always means `m^2`.
+#[must_use]
+pub fn is_valid_symbol_for(s: &str, kind: crate::kind::Kind) -> bool {
+    if is_valid_symbol(s) {
+        return true;
+    }
+    let base = s.trim_end_matches(|c: char| c.is_ascii_digit());
+    kind.is_reference() && base.len() < s.len() && is_valid_symbol(base)
+}
+
 struct Parser<'a> {
     input: &'a str,
     toks: Vec<(usize, Tok)>,

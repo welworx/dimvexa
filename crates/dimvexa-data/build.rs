@@ -59,6 +59,9 @@ fn unit_def(t: &toml_lite::Table) -> Res<String> {
         "plain" => "Kind::Plain",
         "absolute_temperature" => "Kind::AbsoluteTemperature",
         "temperature_difference" => "Kind::TemperatureDifference",
+        "gauge_pressure" => "Kind::GaugePressure",
+        "normal_volume" => "Kind::NormalVolume",
+        "standard_volume" => "Kind::StandardVolume",
         other => return Err(ctx(format!("unknown kind '{other}'"))),
     };
     let shape = match t.str("shape").map_err(ctx)? {

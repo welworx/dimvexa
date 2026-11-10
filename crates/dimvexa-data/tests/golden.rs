@@ -275,3 +275,56 @@ fn kelvin_inside_a_compound_unit_is_the_difference_kind() {
 const fn r_int(n: i128) -> Ratio {
     Ratio::from_int(n)
 }
+
+/// ADR-013: reference-state units convert within their own reference and are refused
+/// everywhere else, including inside compound units.
+#[test]
+fn reference_state_units_convert_only_within_their_reference() {
+    let reg = dimvexa_data::registry().unwrap();
+    // Sizes: scf is the cubic foot, bbl the 42 US gallon barrel, psig the psi.
+    assert_eq!(
+        reg.parse("scf").unwrap().factor(),
+        Ratio::new(55_306_341, 1_953_125_000).unwrap()
+    );
+    assert_eq!(reg.parse("Nm3").unwrap().factor(), Ratio::ONE);
+    assert_eq!(
+        reg.parse("bbl").unwrap().factor(),
+        reg.parse("gal_us")
+            .unwrap()
+            .factor()
+            .checked_mul(Ratio::from_int(42))
+            .unwrap()
+    );
+    assert_eq!(
+        reg.parse("psig").unwrap().factor(),
+        reg.parse("psi").unwrap().factor()
+    );
+    // Same reference, including compounds and prefixes (`Nm^3` is the same unit as `Nm3`).
+    for (from, to) in [
+        ("Nm3/h", "Nm3/min"),
+        ("scf/min", "scf/h"),
+        ("psig", "barg"),
+        ("kPag", "psig"),
+        ("Nm^3/h", "Nm3/s"),
+    ] {
+        assert!(reg.conversion(from, to).is_ok(), "{from} -> {to}");
+    }
+    // Different reference, or an actual (unreferenced) quantity: refused, never guessed.
+    for (from, to) in [
+        ("Nm3", "m3"),
+        ("m3", "Nm3"),
+        ("Nm3/h", "m3/h"),
+        ("scf", "Nm3"),
+        ("scf", "ft3"),
+        ("psig", "bar"),
+        ("Pa", "barg"),
+        ("psig", "psi"),
+    ] {
+        let err = reg.conversion(from, to).unwrap_err();
+        assert_eq!(err.code(), "refused", "{from} -> {to}");
+    }
+    // Two references in one expression are refused.
+    assert_eq!(reg.parse("Nm3.psig").unwrap_err().code(), "refused");
+    // A digit-ending symbol exists only for reference units: `m3` is still m^3.
+    assert_eq!(reg.parse("m3").unwrap().kind().name(), "plain");
+}

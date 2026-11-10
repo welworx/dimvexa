@@ -1,6 +1,6 @@
 # ADR-013: Reference states are named, exact and part of the unit
 
-Status: Proposed (not confirmed by the owner; nothing is implemented, and the OPEN items below are undecided)
+Status: Accepted by the owner on 2026-11-10 with the recommendations below; `bbl` (not part of this ADR) shipped in the same change
 
 ## Context
 
@@ -43,7 +43,40 @@ in the table, and the benchmark corpus counts the same-reference conversions (`p
 6. **Strict only.** No relaxed mode (a gauge unit read as another gauge unit when the target is
    unqualified). It is postponed and needs its own ADR.
 
-### OPEN
+### Implemented (2026-11-10)
+
+The owner asked for `psig`, `Nm3`, `scf` and `bbl`, which the benchmark found missing, and chose to
+implement this ADR with its recommendations. What shipped, and where it differs from the text above:
+
+* **Kind shape: one kind per family, and the kind is the reference.** `Kind` gains `GaugePressure`
+  (`gauge_pressure`), `NormalVolume` (`normal_volume`, 273.15 K and 101 325 Pa, DIN 1343) and
+  `StandardVolume` (`standard_volume`, 60 degF and 14.696 psia). There is no separate reference id
+  or `references.toml`: with one reference per family the kind already says which reference a unit
+  has, and a table with no second entry per family would only add a hash and a build step. Add the
+  table when a second reference of a family ships (see below).
+* **Compounds keep the reference.** A product or quotient of a reference unit and a plain unit
+  keeps the reference kind (`Nm3/h` is still a normal volume per time), so `Nm3/h` to `m3/h` is
+  refused, not silently accepted. Two reference units in one expression are refused.
+* **Refusal code.** A conversion where either side has a reference kind and the kinds differ gives
+  the existing code `refused`, with a message that names both kinds, instead of a new error code.
+  `Error::ALL_CODES` is unchanged. `kind_mismatch` stays for temperature points and differences.
+* **Names.** The bare names are the shipped units: `Nm3` is the DIN 1343 normal cubic metre and
+  `scf` is 60 degF and 14.696 psia. They are not in `ambiguous.toml`: the kind carries the
+  reference, a conversion to another reference is refused anyway, so the bare name cannot yield a
+  wrong number. Users who mean 20 degC or 15 degC for `Nm3`, or 14.73 psia for `scf`, get the
+  same size (the volume factor is the plain m3 or ft3) and must not mix those with other
+  references; those variants are a unit request (`unit-request-triage`). `Nm3` ends in a digit, which
+  the parser reads as a power, so a unit of a reference kind is the only one allowed a trailing
+  digit and `Nm`+`3` resolves to it.
+* **Gauge units shipped:** `psig`, `barg`, and `Pag` (with SI prefixes, so `kPag`, `MPag`). Gauge
+  to absolute stays refused (KL-23); the caller-supplied ambient pressure is still not built.
+* **`bbl`** is the petroleum barrel, 42 US gal (158.987294928 L). The US liquid barrel and the dry
+  barrel are different units and not shipped.
+
+The source for the `scf` state (GPA Standard 2145 and API MPMS 14.3) was cited from memory of the
+standards and is not checked against the documents; verify it before a release.
+
+### OPEN (still undecided)
 
 * **Packaging.** Recommended: the mechanism (kind, reference id, error codes) in
   `dimvexa-core`, the `references.toml` table in `dimvexa-data` so one build step, one hash and

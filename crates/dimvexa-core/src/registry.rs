@@ -415,7 +415,17 @@ impl Registry {
             Expr::Unit(s) => self.resolve_symbol(s),
             Expr::Mul(a, b) => self.resolve(a)?.mul(&self.resolve(b)?),
             Expr::Div(a, b) => self.resolve(a)?.div(&self.resolve(b)?),
-            Expr::Pow(a, n) => self.resolve(a)?.pow(*n),
+            Expr::Pow(a, n) => {
+                // `Nm3` lexes as `Nm` to the power 3; a registered reference unit written with
+                // trailing digits wins (ADR-013).
+                if let Expr::Unit(s) = &**a {
+                    let joined = format!("{s}{n}");
+                    if self.get(&joined).is_some_and(|u| u.kind().is_reference()) {
+                        return self.resolve_symbol(&joined);
+                    }
+                }
+                self.resolve(a)?.pow(*n)
+            }
         }
     }
 

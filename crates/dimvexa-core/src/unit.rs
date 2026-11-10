@@ -5,7 +5,7 @@ use core::fmt;
 
 use crate::dim::Dim;
 use crate::error::{Error, Result};
-use crate::expr::{Expr, is_valid_symbol};
+use crate::expr::{Expr, is_valid_symbol, is_valid_symbol_for};
 use crate::kind::{Exactness, Kind, Shape};
 use crate::prefix::PrefixMode;
 use crate::ratio::Ratio;
@@ -103,7 +103,7 @@ impl Unit {
             symbol: symbol.to_string(),
             message: message.to_string(),
         };
-        if !is_valid_symbol(symbol) {
+        if !is_valid_symbol_for(symbol, kind) {
             return Err(bad(
                 "symbol must be non-empty and contain only letters, '_' or the degree sign",
             ));
@@ -417,6 +417,23 @@ impl UnitExpr {
         &self.sources
     }
 
+    /// Kind of a product or quotient. A reference kind survives (`Nm3/h` is still a normal
+    /// volume per time); two different references in one expression are refused.
+    fn composed_kind(&self, other: &Self) -> Result<Kind> {
+        match (self.kind.is_reference(), other.kind.is_reference()) {
+            (true, true) => Err(Error::Refused {
+                reason: format!(
+                    "'{}' ({}) and '{}' ({}) each carry a reference state and cannot be combined",
+                    self.expr, self.kind, other.expr, other.kind
+                ),
+                suggestions: Vec::new(),
+            }),
+            (true, false) => Ok(self.kind),
+            (false, true) => Ok(other.kind),
+            (false, false) => Ok(Kind::Plain),
+        }
+    }
+
     fn merged_sources(&self, other: &Self) -> Vec<String> {
         let mut out = self.sources.clone();
         for s in &other.sources {
@@ -468,7 +485,7 @@ impl UnitExpr {
         Ok(Self {
             expr: Expr::Mul(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_add(rhs.dim)?,
-            kind: Kind::Plain,
+            kind: self.composed_kind(rhs)?,
             factor: self.factor.checked_mul(rhs.factor)?,
             offset: Ratio::ZERO,
             exactness: self.exactness.combine(rhs.exactness),
@@ -490,7 +507,7 @@ impl UnitExpr {
         Ok(Self {
             expr: Expr::Div(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_sub(rhs.dim)?,
-            kind: Kind::Plain,
+            kind: self.composed_kind(rhs)?,
             factor: self.factor.checked_div(rhs.factor)?,
             offset: Ratio::ZERO,
             exactness: self.exactness.combine(rhs.exactness),
@@ -514,7 +531,11 @@ impl UnitExpr {
         Ok(Self {
             expr: Expr::Pow(Box::new(self.expr.clone()), exp),
             dim: self.dim.checked_scale(exp)?,
-            kind: Kind::Plain,
+            kind: if self.kind.is_reference() {
+                self.kind
+            } else {
+                Kind::Plain
+            },
             factor: self.factor.checked_pow(exp)?,
             offset: Ratio::ZERO,
             exactness: self.exactness,

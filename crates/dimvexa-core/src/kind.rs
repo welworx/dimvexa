@@ -29,9 +29,27 @@ pub enum Kind {
     AbsoluteTemperature,
     /// An interval between two temperatures (`delta_K`, `delta_degC`, ...).
     TemperatureDifference,
+    /// A pressure read relative to the (unspecified) ambient pressure: `psig`, `barg`, `Pag`
+    /// (ADR-013). It converts only to another gauge unit.
+    GaugePressure,
+    /// A gas volume at the normal state of DIN 1343 (273.15 K, 101 325 Pa): `Nm3` (ADR-013).
+    NormalVolume,
+    /// A gas volume at 60 degF and 14.696 psia: `scf` (ADR-013).
+    StandardVolume,
 }
 
 impl Kind {
+    /// True for a kind that is tied to a stated reference state (ADR-013). Such a unit
+    /// converts only to a unit of the same kind, and the kind survives in compound units
+    /// (`Nm3/h` keeps the reference of `Nm3`).
+    #[must_use]
+    pub const fn is_reference(self) -> bool {
+        matches!(
+            self,
+            Self::GaugePressure | Self::NormalVolume | Self::StandardVolume
+        )
+    }
+
     /// The stable lower-case name used in data files and JSON output.
     #[must_use]
     pub const fn name(self) -> &'static str {
@@ -39,6 +57,9 @@ impl Kind {
             Self::Plain => "plain",
             Self::AbsoluteTemperature => "absolute_temperature",
             Self::TemperatureDifference => "temperature_difference",
+            Self::GaugePressure => "gauge_pressure",
+            Self::NormalVolume => "normal_volume",
+            Self::StandardVolume => "standard_volume",
         }
     }
 
@@ -49,6 +70,9 @@ impl Kind {
             "plain" => Some(Self::Plain),
             "absolute_temperature" => Some(Self::AbsoluteTemperature),
             "temperature_difference" => Some(Self::TemperatureDifference),
+            "gauge_pressure" => Some(Self::GaugePressure),
+            "normal_volume" => Some(Self::NormalVolume),
+            "standard_volume" => Some(Self::StandardVolume),
             _ => None,
         }
     }
@@ -150,10 +174,13 @@ impl fmt::Display for Exactness {
 mod tests {
     use super::*;
 
-    const ALL: [Kind; 3] = [
+    const ALL: [Kind; 6] = [
         Kind::Plain,
         Kind::AbsoluteTemperature,
         Kind::TemperatureDifference,
+        Kind::GaugePressure,
+        Kind::NormalVolume,
+        Kind::StandardVolume,
     ];
 
     #[test]

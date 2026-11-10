@@ -444,7 +444,14 @@ fn dimension_mismatches_are_always_errors() {
         } else if ea.dim() != eb.dim() {
             assert_eq!(r.unwrap_err().code(), "dimension_mismatch", "{a} -> {b}");
         } else {
-            assert_eq!(r.unwrap_err().code(), "kind_mismatch", "{a} -> {b}");
+            // A reference state (ADR-013) is refused; a temperature point and difference
+            // are a kind mismatch.
+            let want = if ea.kind().is_reference() || eb.kind().is_reference() {
+                "refused"
+            } else {
+                "kind_mismatch"
+            };
+            assert_eq!(r.unwrap_err().code(), want, "{a} -> {b}");
         }
     }
 }

@@ -83,6 +83,8 @@ fn census() {
                             .max(bits(e.factor().num()))
                             .max(bits(e.factor().den()));
                     }
+                    // Two reference states in one expression are refused by design (ADR-013).
+                    Err(e) if e.code() == "refused" => {}
                     Err(_) => comp_over += 1,
                 }
             }
@@ -93,10 +95,15 @@ fn census() {
     let (mut tri, mut tri_over, mut tri_max) = (0_u64, 0_u64, 0_u32);
     for a in &linear {
         for b in &linear {
-            let Ok(ab) = a.mul(b) else {
-                tri_over += u64::try_from(linear.len()).unwrap();
-                tri += u64::try_from(linear.len()).unwrap();
-                continue;
+            let ab = match a.mul(b) {
+                Ok(ab) => ab,
+                // Two reference states in one expression are refused by design (ADR-013).
+                Err(e) if e.code() == "refused" => continue,
+                Err(_) => {
+                    tri_over += u64::try_from(linear.len()).unwrap();
+                    tri += u64::try_from(linear.len()).unwrap();
+                    continue;
+                }
             };
             for c in &linear {
                 tri += 1;
@@ -106,6 +113,7 @@ fn census() {
                             .max(bits(e.factor().num()))
                             .max(bits(e.factor().den()));
                     }
+                    Err(e) if e.code() == "refused" => {}
                     Err(_) => tri_over += 1,
                 }
             }
