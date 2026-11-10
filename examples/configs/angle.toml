@@ -1,6 +1,6 @@
 # Your own angle names. `pi` is the number pi as a unit, so "2 pi" is an angle of 2*pi radians,
 # and `turn` is a full revolution (2 pi). Both use the same fraction as the shipped angle units,
-# 245850922/78256779 (README, "Angle limitation (pi)"), so `2 pi` is exactly 360 deg.
+# 245850922/78256779 (docs/guide.md, "Angles and pi: limitations"), so `2 pi` is exactly 360 deg.
 #
 #   dimvexa convert 2 pi deg --config examples/configs/angle.toml
 #   dimvexa convert 1 turn rad --config examples/configs/angle.toml

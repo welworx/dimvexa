@@ -480,7 +480,49 @@ fn readme() -> String {
         .unwrap()
 }
 
-/// The text of the README section that starts with `heading`, up to the next `## ` heading.
+/// The user guide, `docs/guide.md`: the detailed CLI documentation moved out of the README.
+fn guide() -> String {
+    std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../docs/guide.md"))
+        .unwrap()
+}
+
+/// Every `$ dimvexa ...` line in the README's console blocks that is followed by output shows
+/// exactly what the CLI prints (stdout, then stderr), and every command there runs.
+#[test]
+fn readme_console_examples_are_real() {
+    let readme = readme();
+    let mut checked = 0;
+    for block in readme.split("```console\n").skip(1) {
+        let block = block.split("```").next().unwrap();
+        let mut lines = block.lines().peekable();
+        while let Some(line) = lines.next() {
+            let Some(cmd) = line.strip_prefix("$ dimvexa ") else {
+                continue;
+            };
+            let cmd = cmd.split(" #").next().unwrap().trim_end();
+            let args: Vec<&str> = cmd.split_whitespace().collect();
+            let r = dimvexa_at_root(&args);
+            let mut shown = String::new();
+            while let Some(out) = lines.next_if(|l| !l.starts_with('$')) {
+                shown.push_str(out);
+                shown.push('\n');
+            }
+            if shown.is_empty() {
+                assert_eq!(r.code, 0, "README command fails: {cmd}\n{}", r.stderr);
+            } else {
+                assert_eq!(
+                    shown,
+                    format!("{}{}", r.stdout, r.stderr),
+                    "README output of {cmd}"
+                );
+            }
+            checked += 1;
+        }
+    }
+    assert!(checked >= 8, "only {checked} README commands found");
+}
+
+/// The text of the README or guide section that starts with `heading`, up to the next `## ` heading.
 fn readme_section(readme: &str, heading: &str) -> String {
     let start = readme
         .find(heading)
@@ -490,7 +532,7 @@ fn readme_section(readme: &str, heading: &str) -> String {
     body[..end].to_string()
 }
 
-/// Asserts that the README shows `dimvexa <args>` with exactly the output the CLI prints
+/// Asserts that the text shows `dimvexa <args>` with exactly the output the CLI prints
 /// (stdout, or stderr when the command fails).
 fn assert_readme_shows(readme: &str, args: &[&str]) {
     let r = dimvexa(args);
@@ -498,15 +540,15 @@ fn assert_readme_shows(readme: &str, args: &[&str]) {
     let shown = format!("$ dimvexa {}\n{output}", args.join(" "));
     assert!(
         readme.contains(&shown),
-        "README.md does not show this exact output:\n{shown}"
+        "the docs do not show this exact output:\n{shown}"
     );
 }
 
-/// The README's "Supported units" table is exactly `dimvexa units`: every group in order,
+/// The guide's "Supported units" table is exactly `dimvexa units`: every group in order,
 /// every symbol in order, no stale or extra row.
 #[test]
-fn readme_supported_units_table_is_exactly_the_cli_table() {
-    let section = readme_section(&readme(), "## Supported units");
+fn guide_supported_units_table_is_exactly_the_cli_table() {
+    let section = readme_section(&guide(), "## Supported units");
     let actual: Vec<&str> = section.lines().filter(|l| l.starts_with("| ")).collect();
 
     let v = json::parse(&dimvexa(&["units", "--json"]).stdout).unwrap();
@@ -523,7 +565,7 @@ fn readme_supported_units_table_is_exactly_the_cli_table() {
     }
     let mut expected = vec!["| Group | Unit symbols |".to_string()];
     for (g, syms) in &groups {
-        // Squares and cubes of a length that the README lists first in their group.
+        // Squares and cubes of a length that the guide lists first in their group.
         let powers: &[&str] = match g.as_str() {
             "area" => &["m2", "dm2", "cm2", "mm2", "km2", "in2", "ft2", "yd2", "mi2"],
             "volume" => &["m3", "dm3", "cm3", "mm3", "km3", "in3", "ft3", "yd3"],
@@ -543,10 +585,10 @@ fn readme_supported_units_table_is_exactly_the_cli_table() {
     assert_eq!(actual, expected);
 }
 
-/// The prefix claim in the README ("`km`, `mg` and `kPa` work") and the group names it uses.
+/// The prefix claim in the guide ("`km`, `mg` and `kPa` work") and the group names it uses.
 #[test]
-fn readme_prefix_examples_and_commands_work() {
-    let readme = readme();
+fn guide_prefix_examples_and_commands_work() {
+    let readme = guide();
     assert!(readme.contains("`km`, `mg` and `kPa` work"));
     for unit in ["km", "mg", "kPa"] {
         assert_eq!(dimvexa(&["units", unit]).code, 0, "{unit}");
@@ -563,10 +605,10 @@ fn readme_prefix_examples_and_commands_work() {
     }
 }
 
-/// The ton example in the README is real output, and its factor table matches the data.
+/// The ton example in the guide is real output, and its factor table matches the data.
 #[test]
-fn readme_ton_example_is_real_output() {
-    let readme = readme();
+fn guide_ton_example_is_real_output() {
+    let readme = guide();
     let section = readme_section(&readme, "### Example: which \"ton\"?");
     assert_readme_shows(&section, &["convert", "1", "ton", "kg"]);
     assert_readme_shows(&section, &["units", "ton_short"]);
@@ -819,10 +861,10 @@ fn units_shows_where_a_mapped_name_comes_from() {
     );
 }
 
-/// The `--config` section of the README: its TOML block and every command it shows are real.
+/// The `--config` section of the guide: its TOML block and every command it shows are real.
 #[test]
-fn readme_config_example_is_real() {
-    let readme = readme();
+fn guide_config_example_is_real() {
+    let readme = guide();
     let section = readme_section(&readme, "## Names and densities: `--config`");
     let toml = section
         .split("```toml\n")
@@ -852,13 +894,13 @@ fn readme_config_example_is_real() {
         let (code, stdout, stderr) = run(args);
         let output = if code == 0 { stdout } else { stderr };
         let shown = format!("$ dimvexa {}\n{output}", args.join(" "));
-        assert!(section.contains(&shown), "README does not show:\n{shown}");
+        assert!(section.contains(&shown), "guide does not show:\n{shown}");
     }
     let (code, stdout, _) = run(&["units", "mass", "--config", "trade.toml"]);
     assert_eq!(code, 0);
     assert!(stdout.contains("## config mappings"));
     assert!(section.contains("$ dimvexa units mass --config trade.toml"));
-    // The rules the README states.
+    // The rules the guide states.
     assert_eq!(
         run(&["convert", "1", "kmt", "t", "--config", "trade.toml"]).1,
         "1000 t\n"
@@ -875,7 +917,7 @@ fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
 
-/// Runs the binary from the repository root, as the README commands do.
+/// Runs the binary from the repository root, as the documented commands do.
 fn dimvexa_at_root(args: &[&str]) -> Run {
     let out = Command::new(env!("CARGO_BIN_EXE_dimvexa"))
         .args(args)
@@ -1080,10 +1122,10 @@ fn units_lists_the_densities_of_a_config() {
     assert_eq!(v.get("densities").unwrap().as_array().len(), 1);
 }
 
-/// The README's shipped-config examples: every command and its output is real.
+/// The guide's shipped-config examples: every command and its output is real.
 #[test]
-fn readme_shipped_configs_are_real() {
-    let readme = readme();
+fn guide_shipped_configs_are_real() {
+    let readme = guide();
     let section = readme_section(&readme, "## Names and densities: `--config`");
     for args in [
         &["convert", "1", "ton", "kg", "--config", "us"][..],
@@ -1097,15 +1139,15 @@ fn readme_shipped_configs_are_real() {
         let expected = format!("$ dimvexa {}\n{output}", args.join(" "));
         assert!(
             section.contains(&expected),
-            "README does not show:\n{expected}"
+            "guide does not show:\n{expected}"
         );
     }
 }
 
-/// The README's water example: the TOML is the example file, and every command is real.
+/// The guide's water example: the TOML is the example file, and every command is real.
 #[test]
-fn readme_water_example_is_real() {
-    let readme = readme();
+fn guide_water_example_is_real() {
+    let readme = guide();
     let section = readme_section(
         &readme,
         "### Example: how much does a litre of water weigh?",
@@ -1120,7 +1162,7 @@ fn readme_water_example_is_real() {
         .lines()
         .filter(|l| !l.trim().is_empty() && !l.starts_with('#'))
     {
-        assert!(shown.contains(line), "README TOML lacks: {line}");
+        assert!(shown.contains(line), "guide TOML lacks: {line}");
     }
     for args in [
         &["convert", "1", "L", "kg", "--density", "998.2067kg/m3"][..],
@@ -1166,7 +1208,7 @@ fn readme_water_example_is_real() {
         let expected = format!("$ dimvexa {}\n{output}", args.join(" "));
         assert!(
             section.contains(&expected),
-            "README does not show:\n{expected}"
+            "guide does not show:\n{expected}"
         );
     }
 }
@@ -1279,10 +1321,10 @@ fn a_config_unit_that_takes_an_existing_name_is_refused() {
     }
 }
 
-/// The README's unit example: the TOML is the example file and the output is real.
+/// The guide's unit example: the TOML is the example file and the output is real.
 #[test]
-fn readme_unit_example_is_real() {
-    let readme = readme();
+fn guide_unit_example_is_real() {
+    let readme = guide();
     let section = readme_section(&readme, "### Example: a unit of your own");
     let shown = section
         .split("```toml\n")
@@ -1294,7 +1336,7 @@ fn readme_unit_example_is_real() {
         .lines()
         .filter(|l| !l.trim().is_empty() && !l.starts_with('#'))
     {
-        assert!(shown.contains(line), "README TOML lacks: {line}");
+        assert!(shown.contains(line), "guide TOML lacks: {line}");
     }
     for args in [
         &["convert", "1", "bbl_oil", "L", "--config", OIL_CFG][..],
@@ -1308,7 +1350,7 @@ fn readme_unit_example_is_real() {
         let expected = format!("$ dimvexa {}\n{}", args.join(" "), r.stdout);
         assert!(
             section.contains(&expected),
-            "README does not show:\n{expected}"
+            "guide does not show:\n{expected}"
         );
     }
 }
@@ -1811,11 +1853,11 @@ fn known_limitation_kl_19_pi_is_a_fraction() {
     );
 }
 
-/// The README's angle examples (`2 pi`, `turn`) run against the shipped example config.
+/// The guide's angle examples (`2 pi`, `turn`) run against the shipped example config.
 #[test]
-fn readme_angle_examples_are_real() {
+fn guide_angle_examples_are_real() {
     const CFG: &str = "examples/configs/angle.toml";
-    let section = readme_section(&readme(), "## Angles and pi: limitations");
+    let section = readme_section(&guide(), "## Angles and pi: limitations");
     for (args, out) in [
         (
             &["convert", "2", "pi", "deg", "--config", CFG][..],
