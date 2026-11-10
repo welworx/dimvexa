@@ -48,3 +48,22 @@ The molar-mass constant is planned in [ADR-009](adr/009-user-config.md) and
 until a primary source is checked. The shipped densities of water (`water_25C`,
 `water_max_density`) cite Tanaka et al. (2001) through a secondary page and still need a check
 against the paper's Table 1; there is no `water_20C` yet for the same reason.
+
+## Open checks: citations written from memory (TODO, verify before relying on them)
+
+These units ship with a source that was written from memory of the document, not checked against
+its text. The factors were recomputed exactly (and the review of 2026-11-10 recomputed them
+again), so the open question is the wording and the edition of the citation, and for `scf` the
+pressure base itself. Each item is done when someone has the document open, confirms or corrects
+the `source` and `note` in `crates/dimvexa-data/data/units/common.toml` and the matching vector in
+`data/vectors/common.toml`, runs `cargo xtask update-data-hash`, and deletes the row here.
+
+| Unit | Claim to verify | Where it is cited | What to look at |
+|---|---|---|---|
+| `scf` | 60 degF and 14.696 psia as the reference state | `source` and `conditions` of `scf` | GPA Standard 2145 (find the edition, and the table that states the base conditions); the review doubted a link to API MPMS 14.3, which is usually quoted with 14.73 psia, so that citation was removed. If the standard gives another base, change `conditions` and the note, not only the source. |
+| `Nm3` | normal condition 273.15 K and 101 325 Pa | `source` and `conditions` of `Nm3` | DIN 1343 (the 1990-01 edition is cited); the standard is paywalled. Check the year and that "normal condition" is the term it uses. |
+| `bbl` | 42 US gallons per petroleum barrel, 1.589 873 E-01 m^3 | `source` of `bbl` and its vector | NIST SP 811 (2008), Appendix B.8, entry "barrel [for petroleum, 42 gallons (U.S.)]"; confirm the exact wording and the printed value. |
+| `psig`, `barg`, `Pag` | gauge pressure is measured from the ambient pressure | `source` of the three units | NIST SP 811 gives `psi` and `bar` only; look for a standard that defines gauge pressure (for example ISO 80000-4 or ISO 80000-1) and cite it, or keep the current wording as a statement of the definition. |
+
+Not shipped, so nothing to check yet: the US liquid barrel (31.5 gal, said to be in NIST
+Handbook 44) and the US dry barrel (7 056 in^3). Check them when they are added.

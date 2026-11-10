@@ -19,6 +19,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 ### Changed
 
 - `UnitDef` (a public struct, `dimvexa-core`) gains the field `conditions`; code that builds a `UnitDef` literal must add it (0.x breaking change). `quantity_kind` in `dimvexa.units/2` and `dimvexa.convert/2` gains three values.
+- Python: `unit_info` also returns `conditions` (the reference state, or `None`).
 - Data version 14.
 
 ## [0.2.2] - 2026-11-10

@@ -271,6 +271,9 @@ fn unit_info<'py>(py: Python<'py>, symbol: &str) -> PyResult<Option<Bound<'py, P
     d.set_item("namespace", u.namespace())?;
     d.set_item("source", u.source())?;
     d.set_item("note", u.note())?;
+    // The reference state of a gauge or gas-volume unit (ADR-013), `None` for other units.
+    let conditions = Some(u.conditions()).filter(|c| !c.is_empty());
+    d.set_item("conditions", conditions)?;
     Ok(Some(d))
 }
 
