@@ -1,0 +1,36 @@
+{
+  "_note": "convert 8.0.2 (jonahsnider): Spellings checked against the installed library (its conversions table). Bare ambiguous names are deliberately not mapped. The library has a fixed list of single units, area and volume powers as unit names (m2, ft3), and no rate or compound syntax, so compound requests stay unmapped and fail as unsupported. No unit exists for: Btu, cal, mmHg, mol, A, V, ohm, knot, bbl, carat, au, angstrom, kgf, Pa.s and the like. Temperature differences are not mapped (the library only has points). Correct via the 'Runner review' issue template.",
+  "ops": {
+    "^": ""
+  },
+  "pow": "",
+  "units": {
+    "acre_int": "acre",
+    "cup_us": "cup",
+    "degC": "celsius",
+    "degF": "fahrenheit",
+    "degR": "rankine",
+    "fl_oz_imp": "imperial fluid ounce",
+    "fl_oz_us": "US fluid ounce",
+    "ft_us_survey": "US survey foot",
+    "gal_imp": "imp gal",
+    "gal_us": "gallon",
+    "hp_mech": "hp",
+    "oz_av": "ounce",
+    "oz_troy": "troy ounce",
+    "pt_imp": "imp pt",
+    "pt_us": "pint",
+    "qt_imp": "imp qt",
+    "qt_us": "quart",
+    "tbsp_us": "tbsp",
+    "ton_long": "long ton",
+    "ton_short": "short ton",
+    "tonne": "tonne",
+    "tsp_us": "tsp",
+    "um": "μm",
+    "week": "wk",
+    "yr_common": "yr",
+    "°C": "celsius",
+    "°F": "fahrenheit"
+  }
+}

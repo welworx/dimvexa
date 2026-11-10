@@ -66,8 +66,8 @@ R=benchmarks/runners
 $R/dimvexa-rs/target/release/dimvexa-bench $quick --out "$out" --cli target/release/dimvexa
 $R/dimvexa-rs/target/release/dimvexa-bench $quick --out "$out" --ceiling
 $R/rust-uom/target/release/dimvexa-bench-uom $quick --out "$out"
-for r in ceiling dimvexa_py pint unyt astropy; do "$venv/bin/python" benchmarks/python/run_$r.py $quick --out "$out"; done
-for r in ceiling mathjs jsquantities convertunits dimvexa_wasm; do node benchmarks/node/run_$r.js $quick --out "$out"; done
+for r in ceiling dimvexa_py pint unyt astropy quantities ucumvert; do "$venv/bin/python" benchmarks/python/run_$r.py $quick --out "$out"; done
+for r in ceiling mathjs jsquantities convertunits ucumlhc convert unitmath dimvexa_wasm; do node benchmarks/node/run_$r.js $quick --out "$out"; done
 
 if [ -n "$quick" ]; then
   python3 -I benchmarks/tools/report.py --results "$out" --out "$out/comparison.md" >/dev/null && echo "smoke report: $out/comparison.md"

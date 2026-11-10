@@ -1,0 +1,36 @@
+{
+  "_note": "unitmath 1.1.1: Spellings checked against the installed library (unit.definitions()) by converting each name to base units and comparing the factor with pint's for the same Dimvexa name. Bare ambiguous names are deliberately not mapped (a bare ton, gal, oz, pt, hp, mile, foot is read by the library as one of its meanings; that is measured, not hidden). The library has no temperature-difference units: K and degR are scale units there, so delta_K and delta_degC map to K, delta_degF and delta_degR to degR. Not mapped because no such unit exists: ton_long, oz_troy, gal_imp, pt_imp, qt_imp, cal_th, cal_IT, kcal_th, Btu_th, hp_metric, ft_us_survey, mi_us_survey, nmi, inHg, mH2O, kgf, cP, cSt, lbmol, knot, carat, au, kat, Bq, Gy, Sv, Nm3, scf, psig, barg. Correct via the 'Runner review' issue template.",
+  "ops": {
+    ".": " "
+  },
+  "pow": "^",
+  "units": {
+    "Btu_IT": "BTU",
+    "acre_int": "acre",
+    "bbl": "oilbarrel",
+    "cup_us": "cup",
+    "d": "day",
+    "delta_K": "K",
+    "delta_degC": "K",
+    "delta_degF": "degR",
+    "delta_degR": "degR",
+    "fl_oz_us": "fluidounce",
+    "gal_us": "gallon",
+    "ha": "hectare",
+    "hp_mech": "hp",
+    "oz_av": "ounce",
+    "pt_us": "pint",
+    "qt_us": "quart",
+    "s-1": "s^-1",
+    "tbsp_us": "tablespoon",
+    "ton_short": "ton",
+    "tsp_us": "teaspoon",
+    "yr_julian": "year",
+    "°C": "degC",
+    "°F": "degF",
+    "ΔK": "K",
+    "Δ°F": "degR",
+    "Δ°R": "degR",
+    "Ω": "ohm"
+  }
+}

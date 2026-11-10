@@ -1,0 +1,3310 @@
+{
+ "corpus_id": "64b746f32cb6d2a6",
+ "date_utc": "2026-11-10T01:36:46Z",
+ "fixture": false,
+ "kind": "library",
+ "library": {
+  "name": "ucum-lhc",
+  "version": "8.0.1"
+ },
+ "lockfile": "requirements.lock.txt+package-lock.json+Cargo.lock",
+ "machine": {
+  "arch": "x64",
+  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "governor": null,
+  "logical_cores": 4,
+  "os": "Linux 6.18.44-fc-v338"
+ },
+ "modes": {
+  "plain": {
+   "description": "utils.convertUnitTo(from, x, to) per value (the only documented API; parses both unit codes every call)",
+   "idiomatic": "plain"
+  }
+ },
+ "parameters": {
+  "batch_sizes": [
+   1000,
+   100000,
+   1000000
+  ],
+  "cold_samples": 5,
+  "min_sample_s": 0.05,
+  "quick": false,
+  "samples": 15,
+  "timer": "process.hrtime.bigint",
+  "tolerance_ulp": 4,
+  "warmup_s": 0.3
+ },
+ "performance": {
+  "plain": {
+   "affine_temperature": {
+    "batch": {
+     "1000": {
+      "mad": 11.15700000000001,
+      "max": 378.887,
+      "median": 255.509,
+      "min": 236.493,
+      "raw": [
+       247.374,
+       259.601,
+       265.948,
+       249.965,
+       236.493,
+       266.666,
+       255.509,
+       378.887,
+       237.216,
+       278.252,
+       242.585,
+       262.906,
+       241.826,
+       270.977,
+       251.341
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 8.836999999999989,
+      "max": 266.49229,
+      "median": 246.45787,
+      "min": 231.4048,
+      "raw": [
+       254.57831,
+       246.45787,
+       257.35736,
+       243.58324,
+       247.0828,
+       251.31144,
+       231.4048,
+       240.26006,
+       240.62589,
+       233.35802,
+       231.8943,
+       232.39311,
+       255.83947,
+       266.49229,
+       255.29487
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 11.614779999999996,
+      "max": 382.921628,
+      "median": 252.974763,
+      "min": 241.248358,
+      "raw": [
+       241.359983,
+       241.248358,
+       252.974763,
+       254.031811,
+       382.921628
+      ],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.06304389238357544,
+     "max": 3.4499547481536865,
+     "median": 3.2418923377990723,
+     "min": 3.0512608885765076,
+     "raw": [
+      3.3125813603401184,
+      3.307996094226837,
+      3.2528876662254333,
+      3.2418923377990723,
+      3.4499547481536865,
+      3.2996679544448853,
+      3.3542452454566956,
+      3.2282318472862244,
+      3.2408417463302612,
+      3.205278217792511,
+      3.0512608885765076,
+      3.240942358970642,
+      3.1632960438728333,
+      3.178848445415497,
+      3.3433661460876465
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 5.705791473388672,
+     "max": 288.32568359375,
+     "median": 279.2197380065918,
+     "min": 263.9492645263672,
+     "raw": [
+      277.55959701538086,
+      266.8562698364258,
+      263.9492645263672,
+      267.8533515930176,
+      279.9468688964844,
+      270.87276458740234,
+      271.43799209594727,
+      284.92552947998047,
+      286.88798904418945,
+      283.7417182922363,
+      276.75016021728516,
+      281.9649314880371,
+      288.32568359375,
+      283.7000045776367,
+      279.2197380065918
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 3175,
+     "max": 24353,
+     "median": 6130,
+     "min": 2088,
+     "raw": [
+      24353,
+      6130,
+      2088,
+      7842,
+      2955
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 6.924552917480469,
+     "max": 584.7507553100586,
+     "median": 384.44650650024414,
+     "min": 356.6633110046387,
+     "raw": [
+      380.1306953430176,
+      356.6633110046387,
+      363.10546493530273,
+      387.27900314331055,
+      584.7507553100586,
+      528.1750526428223,
+      391.0438766479492,
+      377.3166084289551,
+      372.29364013671875,
+      377.6914482116699,
+      373.42273330688477,
+      388.10401916503906,
+      384.44650650024414,
+      386.3138198852539,
+      391.3710594177246
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 7.498607635498047,
+     "max": 312.7683296203613,
+     "median": 272.4523468017578,
+     "min": 261.2766799926758,
+     "raw": [
+      270.07824325561523,
+      272.4523468017578,
+      268.654109954834,
+      312.7683296203613,
+      279.95095443725586,
+      282.0497169494629,
+      286.33544158935547,
+      283.48131942749023,
+      274.0016632080078,
+      266.96639251708984,
+      283.5955696105957,
+      271.7773323059082,
+      261.2766799926758,
+      261.97220611572266,
+      267.34353256225586
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   },
+   "compound_cp": {
+    "batch": {
+     "1000": {
+      "mad": 317.6239999999998,
+      "max": 29598.898,
+      "median": 20475.23,
+      "min": 19457.987,
+      "raw": [
+       29598.898,
+       20971.632,
+       20255.646,
+       21457.014,
+       20666.264,
+       20198.44,
+       20792.854,
+       20043.205,
+       20326.185,
+       19457.987,
+       20137.16,
+       20655.615,
+       21318.806,
+       20475.23,
+       20441.79
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 1142.6166200000007,
+      "max": 29523.58411,
+      "median": 21512.91831,
+      "min": 19756.62617,
+      "raw": [
+       21096.69565,
+       19756.62617,
+       20964.75968,
+       21512.91831,
+       22433.20237,
+       22655.53493,
+       23804.64262,
+       20518.75958,
+       20748.31528,
+       29523.58411,
+       22737.69056,
+       21979.16481,
+       20332.01442,
+       20189.72753,
+       23230.65176
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 1047.848524000001,
+      "max": 25298.072961,
+      "median": 23661.805105,
+      "min": 22613.956581,
+      "raw": [
+       22836.776648,
+       24879.696999,
+       25298.072961,
+       22613.956581,
+       23661.805105
+      ],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.07267898321151733,
+     "max": 4.767782509326935,
+     "median": 3.4439772367477417,
+     "min": 3.340192139148712,
+     "raw": [
+      3.734451949596405,
+      3.833974838256836,
+      4.767782509326935,
+      4.305512011051178,
+      3.340192139148712,
+      3.488300323486328,
+      3.4439772367477417,
+      3.358725905418396,
+      3.3882983922958374,
+      3.4373148679733276,
+      3.3712982535362244,
+      3.478284478187561,
+      3.4683209657669067,
+      3.3610511422157288,
+      3.4145501852035522
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 1046.176513671875,
+     "max": 30588.704833984375,
+     "median": 20907.933349609375,
+     "min": 19025.02783203125,
+     "raw": [
+      21698.002685546875,
+      27845.443115234375,
+      27122.48876953125,
+      27284.29150390625,
+      20907.933349609375,
+      20096.319091796875,
+      20565.444091796875,
+      20292.4296875,
+      21269.670654296875,
+      19751.131591796875,
+      20291.083251953125,
+      19861.7568359375,
+      19025.02783203125,
+      29965.316162109375,
+      30588.704833984375
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 7954,
+     "max": 126909,
+     "median": 44270,
+     "min": 36316,
+     "raw": [
+      126909,
+      44270,
+      36316,
+      123123,
+      36367
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 594.568603515625,
+     "max": 33387.789306640625,
+     "median": 22693.968505859375,
+     "min": 21556.0791015625,
+     "raw": [
+      33387.789306640625,
+      22445.83642578125,
+      21556.0791015625,
+      21743.91845703125,
+      22203.775634765625,
+      22559.461181640625,
+      23148.430419921875,
+      23013.223876953125,
+      23288.537109375,
+      23311.329345703125,
+      22693.968505859375,
+      21781.84423828125,
+      24008.16796875,
+      29421.381103515625,
+      22457.17041015625
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 458.3330078125,
+     "max": 23217.0673828125,
+     "median": 20326.460693359375,
+     "min": 19167.736572265625,
+     "raw": [
+      21211.579345703125,
+      20326.460693359375,
+      20125.7412109375,
+      20363.975830078125,
+      20144.770263671875,
+      19252.949462890625,
+      19342.075927734375,
+      19167.736572265625,
+      19498.391357421875,
+      21448.17822265625,
+      20629.241943359375,
+      20784.793701171875,
+      20691.122314453125,
+      20081.27734375,
+      23217.0673828125
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   },
+   "linear_pressure": {
+    "batch": {
+     "1000": {
+      "mad": 1.1099999999999994,
+      "max": 144.45,
+      "median": 115.074,
+      "min": 113.313,
+      "raw": [
+       115.074,
+       135.695,
+       115.345,
+       119.107,
+       117.006,
+       113.964,
+       113.313,
+       144.45,
+       126.208,
+       140.263,
+       115.044,
+       114.795,
+       114.481,
+       114.205,
+       114.04
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 3.747960000000006,
+      "max": 173.03466,
+      "median": 144.8186,
+      "min": 137.01929,
+      "raw": [
+       160.07235,
+       145.26834,
+       141.07064,
+       137.94869,
+       144.8186,
+       140.73454,
+       152.2169,
+       137.01929,
+       147.77465,
+       143.73017,
+       143.90202,
+       163.14574,
+       146.26526,
+       143.13406,
+       173.03466
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 7.378534000000002,
+      "max": 189.130004,
+      "median": 139.157585,
+      "min": 131.779051,
+      "raw": [
+       139.157585,
+       189.130004,
+       131.779051,
+       134.676913,
+       154.670881
+      ],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.23210233449935913,
+     "max": 5.935857534408569,
+     "median": 3.529789924621582,
+     "min": 3.230164051055908,
+     "raw": [
+      5.935857534408569,
+      5.524198353290558,
+      5.2799431681633,
+      4.736279726028442,
+      3.387021780014038,
+      3.529789924621582,
+      5.354660391807556,
+      3.9854719042778015,
+      3.3989028334617615,
+      3.230164051055908,
+      3.325348734855652,
+      3.4182404279708862,
+      3.4853864908218384,
+      3.5104269981384277,
+      3.761892259120941
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 5.315196990966797,
+     "max": 228.1797866821289,
+     "median": 154.66708755493164,
+     "min": 143.9817600250244,
+     "raw": [
+      153.44669342041016,
+      143.9817600250244,
+      149.35189056396484,
+      147.0921688079834,
+      157.62042808532715,
+      154.66708755493164,
+      160.07468032836914,
+      161.13835906982422,
+      148.40348052978516,
+      158.9132251739502,
+      150.87679481506348,
+      154.5082302093506,
+      158.75370597839355,
+      228.1797866821289,
+      161.33556365966797
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 751,
+     "max": 33612,
+     "median": 3030,
+     "min": 2279,
+     "raw": [
+      21448,
+      33612,
+      3030,
+      2279,
+      2515
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 11.784072875976562,
+     "max": 763.8596649169922,
+     "median": 426.2320785522461,
+     "min": 404.4628677368164,
+     "raw": [
+      427.42562103271484,
+      438.3315963745117,
+      433.3150863647461,
+      471.12261962890625,
+      446.40746307373047,
+      414.44800567626953,
+      415.50659942626953,
+      407.8208236694336,
+      404.4628677368164,
+      424.0599822998047,
+      424.3262481689453,
+      415.75000762939453,
+      426.2320785522461,
+      610.4536743164062,
+      763.8596649169922
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 16.66896629333496,
+     "max": 195.3474464416504,
+     "median": 159.301420211792,
+     "min": 136.78665351867676,
+     "raw": [
+      178.57953262329102,
+      156.03505516052246,
+      145.4943332672119,
+      146.79432487487793,
+      142.63245391845703,
+      142.1901149749756,
+      195.3474464416504,
+      159.301420211792,
+      168.8078441619873,
+      148.80224990844727,
+      177.58624076843262,
+      166.43788146972656,
+      136.78665351867676,
+      185.82710456848145,
+      187.0695457458496
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   },
+   "linear_speed": {
+    "batch": {
+     "1000": {
+      "mad": 90.27300000000014,
+      "max": 4929.238,
+      "median": 4695.407,
+      "min": 4372.575,
+      "raw": [
+       4695.407,
+       4744.015,
+       4785.68,
+       4774.7,
+       4642.516,
+       4795.03,
+       4929.238,
+       4855.412,
+       4607.953,
+       4546.676,
+       4570.485,
+       4372.575,
+       4699.724,
+       4568.163,
+       4660.717
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 509.12967000000026,
+      "max": 7877.18801,
+      "median": 5331.1979,
+      "min": 4629.56051,
+      "raw": [
+       4738.27065,
+       4751.67643,
+       7877.18801,
+       5441.85172,
+       5102.07215,
+       4629.56051,
+       4991.02475,
+       5341.39659,
+       5763.25785,
+       6140.52209,
+       4697.71032,
+       5331.1979,
+       5806.55702,
+       6460.85191,
+       4822.06823
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 197.09252399999968,
+      "max": 5270.302694,
+      "median": 5073.21017,
+      "min": 4724.160163,
+      "raw": [
+       5073.21017,
+       4724.160163,
+       4773.394507,
+       5212.045038,
+       5270.302694
+      ],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.21631300449371338,
+     "max": 5.253956317901611,
+     "median": 3.9979963302612305,
+     "min": 3.52642685174942,
+     "raw": [
+      4.724141359329224,
+      3.52642685174942,
+      3.6473755836486816,
+      3.854334056377411,
+      4.794546961784363,
+      4.349314391613007,
+      4.003665208816528,
+      3.8366119265556335,
+      4.214309334754944,
+      3.986375153064728,
+      3.9979963302612305,
+      3.840641677379608,
+      3.962854325771332,
+      4.438383519649506,
+      5.253956317901611
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": {
+     "mad": 50.18170166015625,
+     "max": 7050.901428222656,
+     "median": 4812.73193359375,
+     "min": 4661.423034667969,
+     "raw": [
+      4818.86328125,
+      4661.423034667969,
+      4785.18701171875,
+      4762.550231933594,
+      7050.901428222656,
+      4876.233703613281,
+      4816.5267333984375,
+      4855.3026123046875,
+      4865.4239501953125,
+      4848.401123046875,
+      4664.047180175781,
+      4812.73193359375,
+      4704.538818359375,
+      4716.910461425781,
+      4771.703552246094
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "prepare_cold": {
+     "mad": 32943,
+     "max": 296109,
+     "median": 77206,
+     "min": 44263,
+     "raw": [
+      159569,
+      69900,
+      44263,
+      296109,
+      77206
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 109.5760498046875,
+     "max": 7752.2568359375,
+     "median": 6336.2603759765625,
+     "min": 6033.415771484375,
+     "raw": [
+      6230.8521728515625,
+      6248.299560546875,
+      6336.2603759765625,
+      6226.684326171875,
+      6125.359375,
+      7752.2568359375,
+      6596.004150390625,
+      6569.665771484375,
+      6608.2193603515625,
+      6033.415771484375,
+      6300.675048828125,
+      6570.2987060546875,
+      6248.716064453125,
+      6359.6610107421875,
+      6364.00830078125
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 252.5006103515625,
+     "max": 9279.267944335938,
+     "median": 5372.36181640625,
+     "min": 5081.1285400390625,
+     "raw": [
+      9279.267944335938,
+      8507.858764648438,
+      7166.8463134765625,
+      5436.320068359375,
+      5250.20166015625,
+      5372.36181640625,
+      6360.283447265625,
+      5632.5443115234375,
+      5348.478759765625,
+      5119.8612060546875,
+      5830.4212646484375,
+      5081.1285400390625,
+      5216.8851318359375,
+      5207.7650146484375,
+      5127.552001953125
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   }
+  }
+ },
+ "runtime": {
+  "language": "javascript",
+  "name": "node",
+  "version": "v22.23.4"
+ },
+ "schema": "dimvexa.bench.result/1",
+ "semantics": {
+  "plain": {
+   "accuracy": {
+    "answered": 219,
+    "bit_identical": 154,
+    "cases": 236,
+    "max_ulp": 4409024035195715600,
+    "median_ulp": 0,
+    "over_1_ulp": 37,
+    "tolerance_ulp": 4,
+    "unsupported": 17,
+    "worst": [
+     {
+      "got": "5.684341886080802e-14",
+      "id": "dv-common-034",
+      "ulp": 4409024035195715600,
+      "want": "0.0"
+     },
+     {
+      "got": "5.684341886080802e-14",
+      "id": "hw-064",
+      "ulp": 4409024035195715600,
+      "want": "0.0"
+     },
+     {
+      "got": "5.684341886080802e-14",
+      "id": "ind-021",
+      "ulp": 4409024035195715600,
+      "want": "0.0"
+     },
+     {
+      "got": "760.0021001785152",
+      "id": "hw-041",
+      "ulp": 19425757178,
+      "want": "759.9998917256113"
+     },
+     {
+      "got": "133.322",
+      "id": "dv-common-003",
+      "ulp": 13630953513,
+      "want": "133.322387415"
+     }
+    ],
+    "wrong": 13
+   },
+   "cases": {
+    "must_convert": [
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km -> m",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kg -> g",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.001",
+      "id": "dv-base-003",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ms -> s",
+      "want": "0.001"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.001",
+      "id": "dv-base-004",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mA -> A",
+      "want": "0.001"
+     },
+     {
+      "category": "temperature",
+      "got": "1.7999999999999998",
+      "id": "dv-base-005",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "K -> [degR]",
+      "want": "1.8"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-006",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kmol -> mol",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.001",
+      "id": "dv-base-007",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mcd -> cd",
+      "want": "0.001"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-008",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kHz -> s-1",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-009",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "N -> kg.m/s2",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-010",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Pa -> kg/(m.s2)",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-011",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kJ -> N.m",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-012",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "W -> J/s",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-013",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "C -> A.s",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-014",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "V -> W/A",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-015",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Ohm -> V/A",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-016",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Ohm -> Ohm",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-017",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "F -> C/V",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-018",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "S -> A/V",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-019",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Wb -> V.s",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-020",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "T -> Wb/m2",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-021",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "H -> Wb/A",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "60",
+      "id": "dv-base-022",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "min -> s",
+      "want": "60.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "60",
+      "id": "dv-base-023",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "h -> min",
+      "want": "60.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "24",
+      "id": "dv-base-024",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "d -> h",
+      "want": "24.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.9999999999999998",
+      "id": "dv-base-025",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "mL -> cm3",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.001",
+      "id": "dv-base-026",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "L -> m3",
+      "want": "0.001"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-027",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "t -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-028",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "t -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "3.6",
+      "id": "dv-base-029",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kW.h -> MJ",
+      "want": "3.6"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "dv-base-030",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Cel -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "211.99999999999994",
+      "id": "dv-base-031",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "Cel -> [degF]",
+      "want": "212.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "25",
+      "id": "dv-base-032",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Cel -> Cel",
+      "want": "25.0"
+     },
+     {
+      "category": "temperature",
+      "got": "1.7999999999999998",
+      "id": "dv-base-033",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "K -> [degR]",
+      "want": "1.8"
+     },
+     {
+      "category": "temperature",
+      "got": "1",
+      "id": "dv-base-034",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "K -> K",
+      "want": "1.0"
+     },
+     {
+      "category": "compound",
+      "got": "10",
+      "id": "dv-base-035",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km/h -> m/s",
+      "want": "10.0"
+     },
+     {
+      "category": "compound",
+      "got": "0.2777777777777778",
+      "id": "dv-base-036",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kmol/h -> mol/s",
+      "want": "0.2777777777777778"
+     },
+     {
+      "category": "temperature",
+      "got": "18",
+      "id": "dv-base-037",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "K -> [degR]",
+      "want": "18.0"
+     },
+     {
+      "category": "compound",
+      "got": "1",
+      "id": "dv-base-038",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "W/(m.K) -> W/(m.K)",
+      "want": "1.0"
+     },
+     {
+      "category": "compound",
+      "got": "1",
+      "id": "dv-base-039",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kJ/(kg.K) -> kJ/(kg.K)",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "10000",
+      "id": "dv-base-040",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "har -> m2",
+      "want": "10000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "149597870.691",
+      "id": "dv-base-041",
+      "outcome": "wrong_value",
+      "ulp": 301989,
+      "used": "AU -> km",
+      "want": "149597870.7"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.1",
+      "id": "dv-base-042",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Ao -> nm",
+      "want": "0.1"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-043",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Bq -> 1/s",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-044",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Gy -> J/kg",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-045",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Sv -> J/kg",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: failed incommensurable: Sorry.  lm cannot be converted to cd.",
+      "id": "dv-base-046",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-047",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "lx -> lm/m2",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-048",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kat -> mol/s",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: failed incommensurable: Sorry.  rad cannot be converted to 1.",
+      "id": "dv-base-049",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-051",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "' -> deg",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-052",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "'' -> deg",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "100",
+      "id": "dv-common-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "bar -> kPa",
+      "want": "100.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "101325",
+      "id": "dv-common-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "atm -> Pa",
+      "want": "101325.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "133.322",
+      "id": "dv-common-003",
+      "outcome": "wrong_value",
+      "ulp": 13630953513,
+      "used": "mm[Hg] -> Pa",
+      "want": "133.322387415"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: failed unknown-unit: torr is not a valid UCUM code. Unable to find a unit for torr, so no conversion could be performed.",
+      "id": "dv-common-004",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: failed unknown-unit: torr is not a valid UCUM code. Unable to find a unit for torr, so no conversion could be performed.",
+      "id": "dv-common-005",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "9.80665",
+      "id": "dv-common-006",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[g] -> m/s2",
+      "want": "9.80665"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "4.4482216152605",
+      "id": "dv-common-007",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[lbf_av] -> N",
+      "want": "4.4482216152605"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "6894.75729316836",
+      "id": "dv-common-008",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "[psi] -> Pa",
+      "want": "6894.757293168362"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-009",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[psi] -> [lbf_av]/[in_i]2",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "4.184",
+      "id": "dv-common-010",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "cal_th -> J",
+      "want": "4.184"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "4.1868",
+      "id": "dv-common-011",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "cal_IT -> J",
+      "want": "4.1868"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1055.05585262",
+      "id": "dv-common-012",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[Btu_IT] -> J",
+      "want": "1055.05585262"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1054.35",
+      "id": "dv-common-013",
+      "outcome": "wrong_value",
+      "ulp": 1163234435,
+      "used": "[Btu_th] -> J",
+      "want": "1054.3502644888888"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "745.6998715822702",
+      "id": "dv-common-014",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[HP] -> W",
+      "want": "745.6998715822702"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: failed unknown-unit: hp_metric is not a valid UCUM code. Unable to find a unit for hp_metric, so no conversion could be performed.",
+      "id": "dv-common-015",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "25.400000000000002",
+      "id": "dv-common-016",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[in_i] -> mm",
+      "want": "25.4"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "12",
+      "id": "dv-common-017",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[ft_i] -> [in_i]",
+      "want": "12.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "3",
+      "id": "dv-common-018",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[yd_i] -> [ft_i]",
+      "want": "3.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1609.344",
+      "id": "dv-common-019",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[mi_i] -> m",
+      "want": "1609.344"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1852",
+      "id": "dv-common-020",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[nmi_i] -> m",
+      "want": "1852.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.3048006096012192",
+      "id": "dv-common-021",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[ft_us] -> m",
+      "want": "0.3048006096012192"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "5280",
+      "id": "dv-common-022",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[mi_us] -> [ft_us]",
+      "want": "5280.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "453.59237",
+      "id": "dv-common-023",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[lb_av] -> g",
+      "want": "453.59237"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-024",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[oz_av] -> [lb_av]",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "31.103476800000003",
+      "id": "dv-common-025",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[oz_tr] -> g",
+      "want": "31.1034768"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "2000",
+      "id": "dv-common-026",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[ston_av] -> [lb_av]",
+      "want": "2000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "2240",
+      "id": "dv-common-027",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[lton_av] -> [lb_av]",
+      "want": "2240.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "3.7854117840000012",
+      "id": "dv-common-028",
+      "outcome": "correct",
+      "ulp": 3,
+      "used": "[gal_us] -> L",
+      "want": "3.785411784"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "4.54609",
+      "id": "dv-common-029",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[gal_br] -> L",
+      "want": "4.54609"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-030",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[pt_us] -> [gal_us]",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-031",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[pt_br] -> [gal_br]",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: failed unknown-unit: lbmol is not a valid UCUM code. Unable to find a unit for lbmol, so no conversion could be performed.",
+      "id": "dv-common-032",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: failed unknown-unit: lbmol is not a valid UCUM code. Unable to find a unit for lbmol, so no conversion could be performed.",
+      "id": "dv-common-033",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "got": "5.684341886080802e-14",
+      "id": "dv-common-034",
+      "outcome": "wrong_value",
+      "ulp": 4409024035195715600,
+      "used": "[degF] -> Cel",
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "-39.99999999999997",
+      "id": "dv-common-035",
+      "outcome": "correct",
+      "ulp": 4,
+      "used": "[degF] -> Cel",
+      "want": "-40.0"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15000000000003",
+      "id": "dv-common-036",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[degR] -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "0.5555555555555556",
+      "id": "dv-common-037",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[degR] -> K",
+      "want": "0.5555555555555556"
+     },
+     {
+      "category": "temperature",
+      "got": "1",
+      "id": "dv-common-038",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[degR] -> [degR]",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "4184",
+      "id": "dv-common-039",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kcal_th -> J",
+      "want": "4184.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "5",
+      "id": "dv-common-040",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[degR] -> K",
+      "want": "5.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "5",
+      "id": "dv-common-041",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[degR] -> K",
+      "want": "5.0"
+     },
+     {
+      "category": "compound",
+      "got": "4.186799999999999",
+      "id": "dv-common-042",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[Btu_IT]/([lb_av].[degR]) -> kJ/(kg.K)",
+      "want": "4.1868"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "7",
+      "id": "dv-common-043",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "wk -> d",
+      "want": "7.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: failed unknown-unit: yr_common is not a valid UCUM code. Unable to find a unit for yr_common, so no conversion could be performed.",
+      "id": "dv-common-044",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "365.25",
+      "id": "dv-common-045",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "a_j -> d",
+      "want": "365.25"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: failed unknown-unit: acre_int is not a valid UCUM code. Unable to find a unit for acre_int, so no conversion could be performed.",
+      "id": "dv-common-047",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1.852",
+      "id": "dv-common-049",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[kn_i] -> km/h",
+      "want": "1.852"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-050",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[foz_us] -> [gal_us]",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "8",
+      "id": "dv-common-051",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[cup_us] -> [foz_us]",
+      "want": "8.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "2",
+      "id": "dv-common-052",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[qt_us] -> [pt_us]",
+      "want": "2.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "14.786764781250007",
+      "id": "dv-common-053",
+      "outcome": "correct",
+      "ulp": 4,
+      "used": "[tbs_us] -> mL",
+      "want": "14.78676478125"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1.0000000000000002",
+      "id": "dv-common-054",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[tsp_us] -> [tbs_us]",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-055",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[foz_br] -> [gal_br]",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1.1365225",
+      "id": "dv-common-056",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[qt_br] -> L",
+      "want": "1.1365225"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "64.79891",
+      "id": "dv-common-057",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[gr] -> mg",
+      "want": "64.79891"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "200",
+      "id": "dv-common-058",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[car_m] -> mg",
+      "want": "200.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1.0000000000000001e-7",
+      "id": "dv-common-059",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "erg -> J",
+      "want": "1e-07"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.00001",
+      "id": "dv-common-060",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "dyn -> N",
+      "want": "1e-05"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "9.80665",
+      "id": "dv-common-061",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kgf -> N",
+      "want": "9.80665"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "90.00000000000001",
+      "id": "dv-common-062",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "gon -> deg",
+      "want": "90.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.0010000000000000002",
+      "id": "dv-common-063",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "cP -> Pa.s",
+      "want": "0.001"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.000001",
+      "id": "dv-common-064",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "cSt -> m2/s",
+      "want": "1e-06"
+     },
+     {
+      "category": "si",
+      "got": "1000",
+      "id": "hw-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km -> m",
+      "want": "1000.0"
+     },
+     {
+      "category": "si",
+      "got": "10",
+      "id": "hw-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km/h -> m/s",
+      "want": "10.0"
+     },
+     {
+      "category": "si",
+      "got": "3.6",
+      "id": "hw-003",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kW.h -> MJ",
+      "want": "3.6"
+     },
+     {
+      "category": "si",
+      "got": "10",
+      "id": "hw-004",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "MPa -> bar",
+      "want": "10.0"
+     },
+     {
+      "category": "si",
+      "got": "1",
+      "id": "hw-005",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Pa -> atm",
+      "want": "1.0"
+     },
+     {
+      "category": "si",
+      "got": "0.001",
+      "id": "hw-006",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "L -> m3",
+      "want": "0.001"
+     },
+     {
+      "category": "si",
+      "got": "9000",
+      "id": "hw-007",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "h -> s",
+      "want": "9000.0"
+     },
+     {
+      "category": "si",
+      "got": "1440",
+      "id": "hw-008",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "d -> min",
+      "want": "1440.0"
+     },
+     {
+      "category": "si",
+      "got": "1000",
+      "id": "hw-009",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "t -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "si",
+      "got": "39.370078740157474",
+      "id": "hw-010",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "mm -> [in_i]",
+      "want": "39.37007874015748"
+     },
+     {
+      "category": "si",
+      "got": "1",
+      "id": "hw-011",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "m3 -> L",
+      "want": "1.0"
+     },
+     {
+      "category": "si",
+      "got": "1",
+      "id": "hw-012",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "N -> kg.m/s2",
+      "want": "1.0"
+     },
+     {
+      "category": "imperial_us",
+      "got": "25.400000000000002",
+      "id": "hw-013",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[in_i] -> mm",
+      "want": "25.4"
+     },
+     {
+      "category": "imperial_us",
+      "got": "0.3048",
+      "id": "hw-014",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[ft_i] -> m",
+      "want": "0.3048"
+     },
+     {
+      "category": "imperial_us",
+      "got": "1.609344",
+      "id": "hw-015",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[mi_i] -> km",
+      "want": "1.609344"
+     },
+     {
+      "category": "imperial_us",
+      "got": "1852",
+      "id": "hw-016",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[nmi_i] -> m",
+      "want": "1852.0"
+     },
+     {
+      "category": "imperial_us",
+      "got": "45.359237",
+      "id": "hw-017",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[lb_av] -> kg",
+      "want": "45.359237"
+     },
+     {
+      "category": "imperial_us",
+      "got": "28.349523125",
+      "id": "hw-018",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[oz_av] -> g",
+      "want": "28.349523125"
+     },
+     {
+      "category": "imperial_us",
+      "got": "31.103476800000003",
+      "id": "hw-019",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[oz_tr] -> g",
+      "want": "31.1034768"
+     },
+     {
+      "category": "imperial_us",
+      "got": "907.18474",
+      "id": "hw-020",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[ston_av] -> kg",
+      "want": "907.18474"
+     },
+     {
+      "category": "imperial_us",
+      "got": "1016.0469088000001",
+      "id": "hw-021",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[lton_av] -> kg",
+      "want": "1016.0469088"
+     },
+     {
+      "category": "imperial_us",
+      "got": "3.7854117840000012",
+      "id": "hw-022",
+      "outcome": "correct",
+      "ulp": 3,
+      "used": "[gal_us] -> L",
+      "want": "3.785411784"
+     },
+     {
+      "category": "imperial_us",
+      "got": "4.54609",
+      "id": "hw-023",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[gal_br] -> L",
+      "want": "4.54609"
+     },
+     {
+      "category": "imperial_us",
+      "got": "0.832674184628989",
+      "id": "hw-024",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[gal_us] -> [gal_br]",
+      "want": "0.8326741846289889"
+     },
+     {
+      "category": "imperial_us",
+      "got": "473.1764730000002",
+      "id": "hw-025",
+      "outcome": "correct",
+      "ulp": 4,
+      "used": "[pt_us] -> mL",
+      "want": "473.176473"
+     },
+     {
+      "category": "imperial_us",
+      "got": "568.2612500000001",
+      "id": "hw-026",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[pt_br] -> mL",
+      "want": "568.26125"
+     },
+     {
+      "category": "imperial_us",
+      "got": "0.3048006096012192",
+      "id": "hw-027",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[ft_us] -> m",
+      "want": "0.3048006096012192"
+     },
+     {
+      "category": "imperial_us",
+      "got": "1609.3472186944373",
+      "id": "hw-028",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[mi_us] -> m",
+      "want": "1609.3472186944373"
+     },
+     {
+      "category": "imperial_us",
+      "got": "4.184",
+      "id": "hw-029",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "cal_th -> J",
+      "want": "4.184"
+     },
+     {
+      "category": "imperial_us",
+      "got": "4.1868",
+      "id": "hw-030",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "cal_IT -> J",
+      "want": "4.1868"
+     },
+     {
+      "category": "imperial_us",
+      "got": "1055.05585262",
+      "id": "hw-031",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[Btu_IT] -> J",
+      "want": "1055.05585262"
+     },
+     {
+      "category": "imperial_us",
+      "got": "1054.35",
+      "id": "hw-032",
+      "outcome": "wrong_value",
+      "ulp": 1163234435,
+      "used": "[Btu_th] -> J",
+      "want": "1054.3502644888888"
+     },
+     {
+      "category": "imperial_us",
+      "got": "745.6998715822702",
+      "id": "hw-033",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[HP] -> W",
+      "want": "745.6998715822702"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "Error: failed unknown-unit: hp_metric is not a valid UCUM code. Unable to find a unit for hp_metric, so no conversion could be performed.",
+      "id": "hw-034",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "4.4482216152605",
+      "id": "hw-035",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[lbf_av] -> N",
+      "want": "4.4482216152605"
+     },
+     {
+      "category": "pressure",
+      "got": "6894.75729316836",
+      "id": "hw-036",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "[psi] -> Pa",
+      "want": "6894.757293168362"
+     },
+     {
+      "category": "pressure",
+      "got": "0.9997398075094122",
+      "id": "hw-037",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "[psi] -> bar",
+      "want": "0.9997398075094124"
+     },
+     {
+      "category": "pressure",
+      "got": "14.503773773020926",
+      "id": "hw-038",
+      "outcome": "correct",
+      "ulp": 3,
+      "used": "bar -> [psi]",
+      "want": "14.50377377302092"
+     },
+     {
+      "category": "pressure",
+      "got": "133.322",
+      "id": "hw-039",
+      "outcome": "wrong_value",
+      "ulp": 13630953513,
+      "used": "mm[Hg] -> Pa",
+      "want": "133.322387415"
+     },
+     {
+      "category": "pressure",
+      "detail": "Error: failed unknown-unit: torr is not a valid UCUM code. Unable to find a unit for torr, so no conversion could be performed.",
+      "id": "hw-040",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "pressure",
+      "got": "760.0021001785152",
+      "id": "hw-041",
+      "outcome": "wrong_value",
+      "ulp": 19425757178,
+      "used": "atm -> mm[Hg]",
+      "want": "759.9998917256113"
+     },
+     {
+      "category": "pressure",
+      "got": "14.695948775513452",
+      "id": "hw-042",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "atm -> [psi]",
+      "want": "14.695948775513449"
+     },
+     {
+      "category": "process",
+      "detail": "Error: failed unknown-unit: psig is not a valid UCUM code. Unable to find a unit for psig, so no conversion could be performed. barg is not a valid UCUM code. U",
+      "id": "hw-043",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "got": "0.2777777777777778",
+      "id": "hw-044",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kmol/h -> mol/s",
+      "want": "0.2777777777777778"
+     },
+     {
+      "category": "process",
+      "detail": "Error: failed unknown-unit: lbmol is not a valid UCUM code. Unable to find a unit for lbmol/h, so no conversion could be performed.",
+      "id": "hw-045",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: failed unknown-unit: lbmol is not a valid UCUM code. Unable to find a unit for lbmol/h, so no conversion could be performed.",
+      "id": "hw-046",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "got": "0.0010000000000000002",
+      "id": "hw-047",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "cP -> Pa.s",
+      "want": "0.001"
+     },
+     {
+      "category": "process",
+      "got": "0.000001",
+      "id": "hw-048",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "cSt -> m2/s",
+      "want": "1e-06"
+     },
+     {
+      "category": "process",
+      "got": "1",
+      "id": "hw-049",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "cSt -> mm2/s",
+      "want": "1.0"
+     },
+     {
+      "category": "process",
+      "got": "1",
+      "id": "hw-050",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "W/(m.K) -> W/(m.K)",
+      "want": "1.0"
+     },
+     {
+      "category": "process",
+      "got": "1",
+      "id": "hw-051",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kJ/(kg.K) -> J/(g.K)",
+      "want": "1.0"
+     },
+     {
+      "category": "process",
+      "got": "0.23884589662749597",
+      "id": "hw-052",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "kJ/(kg.K) -> [Btu_IT]/([lb_av].[degR])",
+      "want": "0.23884589662749595"
+     },
+     {
+      "category": "process",
+      "got": "4.186799999999999",
+      "id": "hw-053",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[Btu_IT]/([lb_av].[degR]) -> kJ/(kg.K)",
+      "want": "4.1868"
+     },
+     {
+      "category": "process",
+      "got": "0.5777893165429981",
+      "id": "hw-054",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "W/(m.K) -> [Btu_IT]/(h.[ft_i].[degR])",
+      "want": "0.5777893165429981"
+     },
+     {
+      "category": "process",
+      "got": "0.17611018368230588",
+      "id": "hw-055",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "W/(m2.K) -> [Btu_IT]/(h.[ft_i]2.[degR])",
+      "want": "0.17611018368230585"
+     },
+     {
+      "category": "process",
+      "detail": "Error: failed unknown-unit: Nm3 is not a valid UCUM code. Unable to find a unit for Nm3/h, so no conversion could be performed. Nm3 is not a valid UCUM code. Un",
+      "id": "hw-056",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: failed unknown-unit: Nm3 is not a valid UCUM code. Unable to find a unit for Nm3/h, so no conversion could be performed. Nm3 is not a valid UCUM code. Un",
+      "id": "hw-057",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "Error: failed unknown-unit: scf is not a valid UCUM code. Unable to find a unit for scf/min, so no conversion could be performed. scf is not a valid UCUM code. ",
+      "id": "hw-058",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "got": "158.98729492800007",
+      "id": "hw-059",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "[bbl_us] -> L",
+      "want": "158.987294928"
+     },
+     {
+      "category": "process",
+      "got": "158.98729492800007",
+      "id": "hw-060",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "[bbl_us] -> m3",
+      "want": "158.987294928"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "hw-061",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Cel -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "211.99999999999994",
+      "id": "hw-062",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "Cel -> [degF]",
+      "want": "212.0"
+     },
+     {
+      "category": "temperature",
+      "got": "-40.00000000000006",
+      "id": "hw-063",
+      "outcome": "wrong_value",
+      "ulp": 8,
+      "used": "Cel -> [degF]",
+      "want": "-40.0"
+     },
+     {
+      "category": "temperature",
+      "got": "5.684341886080802e-14",
+      "id": "hw-064",
+      "outcome": "wrong_value",
+      "ulp": 4409024035195715600,
+      "used": "[degF] -> Cel",
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "98.59999999999997",
+      "id": "hw-065",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "Cel -> [degF]",
+      "want": "98.6"
+     },
+     {
+      "category": "temperature",
+      "got": "26.850000000000023",
+      "id": "hw-066",
+      "outcome": "wrong_value",
+      "ulp": 6,
+      "used": "K -> Cel",
+      "want": "26.85"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15000000000003",
+      "id": "hw-067",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[degR] -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "0",
+      "id": "hw-068",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "K -> [degR]",
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "293.15000000000003",
+      "id": "hw-069",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[degF] -> K",
+      "want": "293.15"
+     },
+     {
+      "category": "temperature",
+      "got": "18",
+      "id": "hw-070",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "K -> [degR]",
+      "want": "18.0"
+     },
+     {
+      "category": "temperature",
+      "got": "10",
+      "id": "hw-071",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[degR] -> K",
+      "want": "10.0"
+     },
+     {
+      "category": "temperature",
+      "got": "1",
+      "id": "hw-072",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "K -> K",
+      "want": "1.0"
+     },
+     {
+      "category": "compound",
+      "got": "3.5999999999999996",
+      "id": "hw-073",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "m/s -> km/h",
+      "want": "3.6"
+     },
+     {
+      "category": "compound",
+      "got": "1",
+      "id": "hw-074",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kg/m3 -> g/L",
+      "want": "1.0"
+     },
+     {
+      "category": "compound",
+      "got": "999.9999999999999",
+      "id": "hw-075",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "g/cm3 -> kg/m3",
+      "want": "1000.0"
+     },
+     {
+      "category": "compound",
+      "got": "16.018463373960138",
+      "id": "hw-076",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[lb_av]/[ft_i]3 -> kg/m3",
+      "want": "16.018463373960138"
+     },
+     {
+      "category": "compound",
+      "got": "3.6",
+      "id": "hw-077",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kW.h -> MJ",
+      "want": "3.6"
+     },
+     {
+      "category": "compound",
+      "got": "0.9999999999999999",
+      "id": "hw-078",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "J/(mol.K) -> kJ/(kmol.K)",
+      "want": "1.0"
+     },
+     {
+      "category": "compound",
+      "got": "0.00014503773773020927",
+      "id": "hw-079",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "N/m2 -> [psi]",
+      "want": "0.0001450377377302092"
+     },
+     {
+      "category": "compound",
+      "got": "3.1545098200000017",
+      "id": "hw-080",
+      "outcome": "correct",
+      "ulp": 4,
+      "used": "[gal_us]/min -> L/s",
+      "want": "3.15450982"
+     },
+     {
+      "category": "compound",
+      "got": "52.83441047162965",
+      "id": "hw-081",
+      "outcome": "correct",
+      "ulp": 4,
+      "used": "m3/h -> [gal_us]/min",
+      "want": "52.83441047162968"
+     },
+     {
+      "category": "compound",
+      "got": "0.00012599788055555556",
+      "id": "hw-082",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[lb_av]/h -> kg/s",
+      "want": "0.00012599788055555556"
+     },
+     {
+      "category": "compound",
+      "got": "1",
+      "id": "hw-083",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[psi].[in_i]2 -> [lbf_av]",
+      "want": "1.0"
+     },
+     {
+      "category": "independent",
+      "got": "25.400000000000002",
+      "id": "ind-001",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[in_i] -> mm",
+      "want": "25.4"
+     },
+     {
+      "category": "independent",
+      "got": "0.3048",
+      "id": "ind-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[ft_i] -> m",
+      "want": "0.3048"
+     },
+     {
+      "category": "independent",
+      "got": "0.9144000000000001",
+      "id": "ind-003",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[yd_i] -> m",
+      "want": "0.9144"
+     },
+     {
+      "category": "independent",
+      "got": "1.609344",
+      "id": "ind-004",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[mi_i] -> km",
+      "want": "1.609344"
+     },
+     {
+      "category": "independent",
+      "got": "1852",
+      "id": "ind-005",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[nmi_i] -> m",
+      "want": "1852.0"
+     },
+     {
+      "category": "independent",
+      "got": "0.45359237",
+      "id": "ind-006",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[lb_av] -> kg",
+      "want": "0.45359237"
+     },
+     {
+      "category": "independent",
+      "got": "28.349523125",
+      "id": "ind-007",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[oz_av] -> g",
+      "want": "28.349523125"
+     },
+     {
+      "category": "independent",
+      "got": "4.4482216152605",
+      "id": "ind-008",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[lbf_av] -> N",
+      "want": "4.4482216152605"
+     },
+     {
+      "category": "independent",
+      "got": "101325",
+      "id": "ind-009",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "atm -> Pa",
+      "want": "101325.0"
+     },
+     {
+      "category": "independent",
+      "got": "100000",
+      "id": "ind-010",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "bar -> Pa",
+      "want": "100000.0"
+     },
+     {
+      "category": "independent",
+      "got": "4.184",
+      "id": "ind-011",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "cal_th -> J",
+      "want": "4.184"
+     },
+     {
+      "category": "independent",
+      "got": "4.1868",
+      "id": "ind-012",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "cal_IT -> J",
+      "want": "4.1868"
+     },
+     {
+      "category": "independent",
+      "got": "3.7854117840000012",
+      "id": "ind-013",
+      "outcome": "correct",
+      "ulp": 3,
+      "used": "[gal_us] -> L",
+      "want": "3.785411784"
+     },
+     {
+      "category": "independent",
+      "got": "0.47317647300000015",
+      "id": "ind-014",
+      "outcome": "correct",
+      "ulp": 3,
+      "used": "[pt_us] -> L",
+      "want": "0.473176473"
+     },
+     {
+      "category": "independent",
+      "got": "3600000",
+      "id": "ind-015",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kW.h -> J",
+      "want": "3600000.0"
+     },
+     {
+      "category": "independent",
+      "got": "86400",
+      "id": "ind-016",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "d -> s",
+      "want": "86400.0"
+     },
+     {
+      "category": "independent",
+      "got": "1000",
+      "id": "ind-017",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "t -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "independent",
+      "got": "26.8224",
+      "id": "ind-018",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[mi_i]/h -> m/s",
+      "want": "26.8224"
+     },
+     {
+      "category": "independent",
+      "got": "0.028316846592000004",
+      "id": "ind-019",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "[ft_i]3 -> m3",
+      "want": "0.028316846592"
+     },
+     {
+      "category": "independent",
+      "got": "211.99999999999994",
+      "id": "ind-020",
+      "outcome": "correct",
+      "ulp": 2,
+      "used": "Cel -> [degF]",
+      "want": "212.0"
+     },
+     {
+      "category": "independent",
+      "got": "5.684341886080802e-14",
+      "id": "ind-021",
+      "outcome": "wrong_value",
+      "ulp": 4409024035195715600,
+      "used": "[degF] -> Cel",
+      "want": "0.0"
+     },
+     {
+      "category": "independent",
+      "got": "37",
+      "id": "ind-022",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[degF] -> Cel",
+      "want": "37.0"
+     },
+     {
+      "category": "independent",
+      "got": "-40.00000000000006",
+      "id": "ind-023",
+      "outcome": "wrong_value",
+      "ulp": 8,
+      "used": "Cel -> [degF]",
+      "want": "-40.0"
+     },
+     {
+      "category": "independent",
+      "got": "-273.15",
+      "id": "ind-024",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "K -> Cel",
+      "want": "-273.15"
+     },
+     {
+      "category": "independent",
+      "got": "273.15",
+      "id": "ind-025",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Cel -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "independent",
+      "got": "67.99999999999994",
+      "id": "ind-026",
+      "outcome": "correct",
+      "ulp": 4,
+      "used": "Cel -> [degF]",
+      "want": "68.0"
+     },
+     {
+      "category": "independent",
+      "got": "9",
+      "id": "ind-027",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "K -> [degR]",
+      "want": "9.0"
+     },
+     {
+      "category": "independent",
+      "got": "0.5555555555555556",
+      "id": "ind-028",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[degR] -> K",
+      "want": "0.5555555555555556"
+     },
+     {
+      "category": "independent",
+      "got": "231",
+      "id": "ind-029",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[gal_us] -> [in_i]3",
+      "want": "231.0"
+     },
+     {
+      "category": "independent",
+      "got": "4.54609",
+      "id": "ind-030",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[gal_br] -> L",
+      "want": "4.54609"
+     },
+     {
+      "category": "independent",
+      "got": "0.3048006096012192",
+      "id": "ind-031",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[ft_us] -> m",
+      "want": "0.3048006096012192"
+     },
+     {
+      "category": "independent",
+      "got": "5280",
+      "id": "ind-032",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[mi_i] -> [ft_i]",
+      "want": "5280.0"
+     },
+     {
+      "category": "independent",
+      "got": "12",
+      "id": "ind-033",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[ft_i] -> [in_i]",
+      "want": "12.0"
+     },
+     {
+      "category": "independent",
+      "got": "16",
+      "id": "ind-034",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[lb_av] -> [oz_av]",
+      "want": "16.0"
+     },
+     {
+      "category": "independent",
+      "got": "1.05505585262",
+      "id": "ind-035",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[Btu_IT] -> kJ",
+      "want": "1.05505585262"
+     },
+     {
+      "category": "independent",
+      "got": "0.56826125",
+      "id": "ind-037",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[pt_br] -> L",
+      "want": "0.56826125"
+     },
+     {
+      "category": "independent",
+      "got": "5280",
+      "id": "ind-038",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "[mi_us] -> [ft_us]",
+      "want": "5280.0"
+     },
+     {
+      "category": "independent",
+      "got": "100.00000000000006",
+      "id": "ind-039",
+      "outcome": "correct",
+      "ulp": 4,
+      "used": "[degF] -> Cel",
+      "want": "100.0"
+     },
+     {
+      "category": "independent",
+      "got": "20.000000000000057",
+      "id": "ind-040",
+      "outcome": "wrong_value",
+      "ulp": 16,
+      "used": "[degF] -> Cel",
+      "want": "20.0"
+     },
+     {
+      "category": "independent",
+      "got": "283.15",
+      "id": "ind-041",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Cel -> K",
+      "want": "283.15"
+     }
+    ],
+    "must_refuse": [
+     {
+      "category": "ambiguous_name",
+      "detail": "Error: failed unknown-unit: ton is not a valid UCUM code. Unable to find a unit for ton, so no conversion could be performed.",
+      "group": "ambiguous_name",
+      "id": "ref-001",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "Error: failed unknown-unit: gal is not a valid UCUM code. Unable to find a unit for gal, so no conversion could be performed.",
+      "group": "ambiguous_name",
+      "id": "ref-002",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "Error: failed unknown-unit: oz is not a valid UCUM code. Unable to find a unit for oz, so no conversion could be performed.",
+      "group": "ambiguous_name",
+      "id": "ref-003",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "Error: failed incommensurable: Sorry.  pt cannot be converted to L.",
+      "group": "ambiguous_name",
+      "id": "ref-004",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "4.184",
+      "group": "ambiguous_name",
+      "id": "ref-005",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "thermochemical 4.184 J versus International Table 4.1868 J"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "1054.35",
+      "group": "ambiguous_name",
+      "id": "ref-006",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "Btu_IT 1055.056 J versus Btu_th 1054.350 J (and others)"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "Error: failed unknown-unit: hp is not a valid UCUM code. Unable to find a unit for hp, so no conversion could be performed.",
+      "group": "ambiguous_name",
+      "id": "ref-007",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "1.609344",
+      "group": "ambiguous_name",
+      "id": "ref-008",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "international mile versus US survey mile (about 3.2 mm per mile apart)"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "0.3048",
+      "group": "ambiguous_name",
+      "id": "ref-009",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "international foot versus US survey foot (2 ppm apart); only matters for geodetic work, listed because the request does not say which"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "0.00009999999999999999",
+      "group": "ambiguous_name",
+      "id": "ref-010",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "ppm may be by mass, by mole or by volume; the factor 1e-6 hides the basis"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: failed unknown-unit: Nm3 is not a valid UCUM code. Unable to find a unit for Nm3, so no conversion could be performed.",
+      "group": "other",
+      "id": "ref-011",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: failed unknown-unit: Nm3 is not a valid UCUM code. Unable to find a unit for Nm3, so no conversion could be performed.",
+      "group": "other",
+      "id": "ref-012",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: failed unknown-unit: scf is not a valid UCUM code. Unable to find a unit for scf, so no conversion could be performed.",
+      "group": "other",
+      "id": "ref-013",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: failed unknown-unit: Nm3 is not a valid UCUM code. Unable to find a unit for Nm3, so no conversion could be performed. scf is not a valid UCUM code. Unab",
+      "group": "other",
+      "id": "ref-014",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: failed unknown-unit: wt% is not a valid UCUM code. Unable to find a unit for wt%, so no conversion could be performed. mol% is not a valid UCUM code. Una",
+      "group": "other",
+      "id": "ref-015",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: failed incommensurable: Sorry.  kg cannot be converted to L.",
+      "group": "other",
+      "id": "ref-016",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: failed missing-molecular-weight: Did you wish to convert between mass and moles?  The molecular weight of the substance represented by the units is requi",
+      "group": "other",
+      "id": "ref-017",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: failed unknown-unit: psig is not a valid UCUM code. Unable to find a unit for psig, so no conversion could be performed.",
+      "group": "other",
+      "id": "ref-018",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "Error: failed unknown-unit: barg is not a valid UCUM code. Unable to find a unit for barg, so no conversion could be performed.",
+      "group": "other",
+      "id": "ref-019",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "got": "0.980665",
+      "group": "other",
+      "id": "ref-020",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "metres of water column depend on a stated water density/temperature or a conventional definition"
+     },
+     {
+      "category": "kind",
+      "group": "other",
+      "id": "ref-021",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "group": "other",
+      "id": "ref-022",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "group": "other",
+      "id": "ref-023",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "got": "283.15",
+      "group": "other",
+      "id": "ref-024",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "an absolute temperature is not an interval"
+     },
+     {
+      "category": "kind",
+      "got": "-263.15",
+      "group": "other",
+      "id": "ref-025",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "an interval is not an absolute temperature"
+     },
+     {
+      "category": "dimension",
+      "detail": "Error: failed incommensurable: Sorry.  m cannot be converted to s.",
+      "group": "other",
+      "id": "ref-026",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "Error: failed incommensurable: Sorry.  kg cannot be converted to N.",
+      "group": "other",
+      "id": "ref-027",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "Error: failed incommensurable: Sorry.  [psi] cannot be converted to N.",
+      "group": "other",
+      "id": "ref-028",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "Error: failed incommensurable: Sorry.  W cannot be converted to J.",
+      "group": "other",
+      "id": "ref-029",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "Error: failed incommensurable: Sorry.  bar cannot be converted to W.",
+      "group": "other",
+      "id": "ref-030",
+      "outcome": "refused"
+     }
+    ]
+   },
+   "coverage": {
+    "compound": {
+     "known": 11,
+     "total": 11,
+     "unknown": []
+    },
+    "dimvexa_seed_table": {
+     "known": 90,
+     "total": 98,
+     "unknown": [
+      "Wh",
+      "torr",
+      "hp_metric",
+      "lbmol",
+      "yr_common",
+      "ly",
+      "acre_int",
+      "acre_us_survey"
+     ]
+    },
+    "imperial_us": {
+     "known": 23,
+     "total": 24,
+     "unknown": [
+      "hp_metric"
+     ]
+    },
+    "pressure": {
+     "known": 7,
+     "total": 10,
+     "unknown": [
+      "torr",
+      "barg",
+      "psig"
+     ]
+    },
+    "process": {
+     "known": 14,
+     "total": 19,
+     "unknown": [
+      "lbmol/h",
+      "Nm3",
+      "Nm3/h",
+      "scf",
+      "scf/min"
+     ]
+    },
+    "si": {
+     "known": 25,
+     "total": 25,
+     "unknown": []
+    },
+    "si_prefixed": {
+     "known": 17,
+     "total": 17,
+     "unknown": []
+    },
+    "temperature": {
+     "known": 8,
+     "total": 8,
+     "unknown": []
+    }
+   },
+   "must_convert": {
+    "by_category": {
+     "compound": {
+      "correct": 16,
+      "total": 16,
+      "unsupported": 0,
+      "wrong_value": 0
+     },
+     "dimvexa_vector": {
+      "correct": 85,
+      "total": 97,
+      "unsupported": 9,
+      "wrong_value": 3
+     },
+     "imperial_us": {
+      "correct": 21,
+      "total": 23,
+      "unsupported": 1,
+      "wrong_value": 1
+     },
+     "independent": {
+      "correct": 37,
+      "total": 40,
+      "unsupported": 0,
+      "wrong_value": 3
+     },
+     "pressure": {
+      "correct": 4,
+      "total": 7,
+      "unsupported": 1,
+      "wrong_value": 2
+     },
+     "process": {
+      "correct": 12,
+      "total": 18,
+      "unsupported": 6,
+      "wrong_value": 0
+     },
+     "si": {
+      "correct": 12,
+      "total": 12,
+      "unsupported": 0,
+      "wrong_value": 0
+     },
+     "temperature": {
+      "correct": 19,
+      "total": 23,
+      "unsupported": 0,
+      "wrong_value": 4
+     }
+    },
+    "correct": 206,
+    "total": 236,
+    "unsupported": 17,
+    "wrong_value": 13
+   },
+   "must_refuse": {
+    "by_category": {
+     "ambiguous_name": {
+      "not_applicable": 0,
+      "refused": 5,
+      "silently_accepted": 5,
+      "total": 10
+     },
+     "dimension": {
+      "not_applicable": 0,
+      "refused": 5,
+      "silently_accepted": 0,
+      "total": 5
+     },
+     "kind": {
+      "not_applicable": 3,
+      "refused": 0,
+      "silently_accepted": 2,
+      "total": 5
+     },
+     "missing_context": {
+      "not_applicable": 0,
+      "refused": 9,
+      "silently_accepted": 1,
+      "total": 10
+     }
+    },
+    "by_group": {
+     "ambiguous_name": {
+      "not_applicable": 0,
+      "refused": 5,
+      "silently_accepted": 5,
+      "total": 10
+     },
+     "other": {
+      "not_applicable": 3,
+      "refused": 14,
+      "silently_accepted": 3,
+      "total": 20
+     }
+    },
+    "not_applicable": 3,
+    "refused": 19,
+    "silently_accepted": 8,
+    "total": 30
+   }
+  }
+ },
+ "startup": {
+  "import_ms": {
+   "interpreter_baseline_ms": 29.964186,
+   "mad": 2.1485210000000023,
+   "max": 16.673351,
+   "median": 14.524829999999998,
+   "min": 5.536557999999996,
+   "raw": [
+    5.536557999999996,
+    15.142934,
+    16.673351,
+    14.524829999999998,
+    7.372730000000001
+   ],
+   "samples": 5,
+   "unit": "ms"
+  },
+  "package_bytes": 1729658,
+  "peak_rss_kb": 131588
+ }
+}

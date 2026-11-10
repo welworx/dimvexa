@@ -136,7 +136,7 @@ _TOKEN = re.compile(r"[A-Za-z_°µ%][A-Za-z_0-9°µ%]*|\d+|[./*()^ ]")
 def translate_expr(expr, cfg):
     """Rewrites a neutral (Dimvexa spelling) unit expression into a library's syntax.
 
-    cfg = {"units": {neutral: lib}, "ops": {".": "*"}, "pow": "**"}; unknown tokens pass through
+    cfg = {"units": {neutral: lib}, "ops": {".": "*"}, "pow": "**", "flatten_parens": false}; unknown tokens pass through
     unchanged. Only Dimvexa-specific explicit names (ton_short, Btu_IT, ...) are mapped; bare
     ambiguous names like `ton` are never rewritten.
     """
@@ -156,7 +156,11 @@ def translate_expr(expr, cfg):
             out.append(units.get(base, base) + power + n)
         else:
             out.append(tok)
-    return "".join(out)
+    s = "".join(out)
+    if cfg.get("flatten_parens"):
+        # a/(b*c) -> a/b/c  (one level only; for libraries that cannot parse parentheses)
+        s = re.sub(r"/\(([^()]*)\)", lambda m: "/" + "/".join(re.split(r"(?<!\*)\*(?!\*)", m.group(1))), s)
+    return s
 
 
 def load_translation(lib):

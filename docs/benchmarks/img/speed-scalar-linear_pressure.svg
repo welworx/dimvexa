@@ -1,77 +1,107 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="762" viewBox="0 0 900 762" role="img" aria-label="Scalar conversion, linear_pressure">
-<rect width="900" height="762" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1042" viewBox="0 0 900 1042" role="img" aria-label="Scalar conversion, linear_pressure">
+<rect width="900" height="1042" fill="#ffffff"/>
 <text x="12" y="24" font-family="sans-serif" font-size="16" font-weight="bold" fill="#1a1a1a">Scalar conversion, linear_pressure</text>
 <text x="12" y="44" font-family="sans-serif" font-size="12" fill="#444444">lower is better, logarithmic axis</text>
-<text x="322" y="74" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">rust-ceiling 1.97.0 [ceiling] / plain_loop</text>
-<rect x="330" y="60" width="26.1" height="20" fill="#7a8b99"/>
-<text x="362.1" y="74" font-family="sans-serif" font-size="12" fill="#1a1a1a">0.344 ns</text>
-<text x="322" y="102" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.1.0+6f3d437-dirty / prepared</text>
-<rect x="330" y="88" width="38.1" height="20" fill="#e8590c"/>
-<text x="374.1" y="102" font-family="sans-serif" font-size="12" fill="#1a1a1a">0.474 ns</text>
+<text x="322" y="74" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">rust-ceiling 1.99.1 [ceiling] / plain_loop</text>
+<rect x="330" y="60" width="19.3" height="20" fill="#7a8b99"/>
+<text x="355.3" y="74" font-family="sans-serif" font-size="12" fill="#1a1a1a">0.455 ns</text>
+<text x="322" y="102" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.2.2+3e59c3b-dirty / prepared</text>
+<rect x="330" y="88" width="38.4" height="20" fill="#e8590c"/>
+<text x="374.4" y="102" font-family="sans-serif" font-size="12" fill="#1a1a1a">0.901 ns</text>
 <text x="322" y="130" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">uom 0.36.0 / typed</text>
-<rect x="330" y="116" width="67.9" height="20" fill="#7a8b99"/>
-<text x="403.9" y="130" font-family="sans-serif" font-size="12" fill="#1a1a1a">1.04 ns</text>
-<text x="322" y="158" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">mathjs 13.2.0 / factor</text>
-<rect x="330" y="144" width="132.9" height="20" fill="#7a8b99"/>
-<text x="468.9" y="158" font-family="sans-serif" font-size="12" fill="#1a1a1a">5.85 ns</text>
-<text x="322" y="186" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-wasm 0.1.0+v9+fnv1a64:70613d89e0c2758d / conv</text>
-<rect x="330" y="172" width="141.6" height="20" fill="#e8590c"/>
-<text x="477.6" y="186" font-family="sans-serif" font-size="12" fill="#1a1a1a">7.36 ns</text>
-<text x="322" y="214" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">js-quantities 1.8.0 / swift</text>
-<rect x="330" y="200" width="145.6" height="20" fill="#7a8b99"/>
-<text x="481.6" y="214" font-family="sans-serif" font-size="12" fill="#1a1a1a">8.17 ns</text>
-<text x="322" y="242" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-wasm 0.1.0+v9+fnv1a64:70613d89e0c2758d / batch</text>
-<rect x="330" y="228" width="147.6" height="20" fill="#e8590c"/>
-<text x="483.6" y="242" font-family="sans-serif" font-size="12" fill="#1a1a1a">8.63 ns</text>
+<rect x="330" y="116" width="48.5" height="20" fill="#7a8b99"/>
+<text x="384.5" y="130" font-family="sans-serif" font-size="12" fill="#1a1a1a">1.3 ns</text>
+<text x="322" y="158" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">js-quantities 1.8.0 / swift</text>
+<rect x="330" y="144" width="108.3" height="20" fill="#7a8b99"/>
+<text x="444.3" y="158" font-family="sans-serif" font-size="12" fill="#1a1a1a">11 ns</text>
+<text x="322" y="186" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-wasm 0.2.2+v11+fnv1a64:6d8dbbdeecb1a854 / batch</text>
+<rect x="330" y="172" width="109.2" height="20" fill="#e8590c"/>
+<text x="445.2" y="186" font-family="sans-serif" font-size="12" fill="#1a1a1a">11.4 ns</text>
+<text x="322" y="214" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-wasm 0.2.2+v11+fnv1a64:6d8dbbdeecb1a854 / inplace</text>
+<rect x="330" y="200" width="110.9" height="20" fill="#e8590c"/>
+<text x="446.9" y="214" font-family="sans-serif" font-size="12" fill="#1a1a1a">12.1 ns</text>
+<text x="322" y="242" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">mathjs 13.2.0 / factor</text>
+<rect x="330" y="228" width="111.1" height="20" fill="#7a8b99"/>
+<text x="447.1" y="242" font-family="sans-serif" font-size="12" fill="#1a1a1a">12.1 ns</text>
 <text x="322" y="270" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">js-float-ceiling 22.23.4 [ceiling] / loop</text>
-<rect x="330" y="256" width="151.6" height="20" fill="#7a8b99"/>
-<text x="487.6" y="270" font-family="sans-serif" font-size="12" fill="#1a1a1a">9.6 ns</text>
-<text x="322" y="298" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">unyt 3.2.0 / factor</text>
-<rect x="330" y="284" width="194.7" height="20" fill="#7a8b99"/>
-<text x="530.7" y="298" font-family="sans-serif" font-size="12" fill="#1a1a1a">30.1 ns</text>
-<text x="322" y="326" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">pint 0.26.2 / factor</text>
-<rect x="330" y="312" width="199.7" height="20" fill="#7a8b99"/>
-<text x="535.7" y="326" font-family="sans-serif" font-size="12" fill="#1a1a1a">34.3 ns</text>
-<text x="322" y="354" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-py 0.1.0+v9+fnv1a64:70613d89e0c2758d / conv</text>
-<rect x="330" y="340" width="221.4" height="20" fill="#e8590c"/>
-<text x="557.4" y="354" font-family="sans-serif" font-size="12" fill="#1a1a1a">61 ns</text>
-<text x="322" y="382" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">numpy-ceiling 2.5.4 [ceiling] / multiply</text>
-<rect x="330" y="368" width="233.9" height="20" fill="#7a8b99"/>
-<text x="569.9" y="382" font-family="sans-serif" font-size="12" fill="#1a1a1a">85 ns</text>
-<text x="322" y="410" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.1.0+6f3d437-dirty / exact</text>
-<rect x="330" y="396" width="294.5" height="20" fill="#e8590c"/>
-<text x="630.5" y="410" font-family="sans-serif" font-size="12" fill="#1a1a1a">424 ns</text>
-<text x="322" y="438" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">astropy 8.0.2 / unit_to</text>
-<rect x="330" y="424" width="326.5" height="20" fill="#7a8b99"/>
-<text x="662.5" y="438" font-family="sans-serif" font-size="12" fill="#1a1a1a">989 ns</text>
-<text x="322" y="466" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-py 0.1.0+v9+fnv1a64:70613d89e0c2758d / plain</text>
-<rect x="330" y="452" width="339.1" height="20" fill="#e8590c"/>
-<text x="675.1" y="466" font-family="sans-serif" font-size="12" fill="#1a1a1a">1.38 us</text>
-<text x="322" y="494" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-wasm 0.1.0+v9+fnv1a64:70613d89e0c2758d / plain</text>
-<rect x="330" y="480" width="357.3" height="20" fill="#e8590c"/>
-<text x="693.3" y="494" font-family="sans-serif" font-size="12" fill="#1a1a1a">2.24 us</text>
-<text x="322" y="522" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">mathjs 13.2.0 / plain</text>
-<rect x="330" y="508" width="358.1" height="20" fill="#7a8b99"/>
-<text x="694.1" y="522" font-family="sans-serif" font-size="12" fill="#1a1a1a">2.28 us</text>
-<text x="322" y="550" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">js-quantities 1.8.0 / plain</text>
-<rect x="330" y="536" width="384.1" height="20" fill="#7a8b99"/>
-<text x="720.1" y="550" font-family="sans-serif" font-size="12" fill="#1a1a1a">4.55 us</text>
-<text x="322" y="578" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">convert-units 2.3.4 / plain</text>
-<rect x="330" y="564" width="384.8" height="20" fill="#7a8b99"/>
-<text x="720.8" y="578" font-family="sans-serif" font-size="12" fill="#1a1a1a">4.64 us</text>
-<text x="322" y="606" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">astropy 8.0.2 / plain</text>
-<rect x="330" y="592" width="390.2" height="20" fill="#7a8b99"/>
-<text x="726.2" y="606" font-family="sans-serif" font-size="12" fill="#1a1a1a">5.35 us</text>
-<text x="322" y="634" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">unyt 3.2.0 / to_value</text>
-<rect x="330" y="620" width="393.8" height="20" fill="#7a8b99"/>
-<text x="729.8" y="634" font-family="sans-serif" font-size="12" fill="#1a1a1a">5.88 us</text>
-<text x="322" y="662" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">unyt 3.2.0 / plain</text>
-<rect x="330" y="648" width="395.3" height="20" fill="#7a8b99"/>
-<text x="731.3" y="662" font-family="sans-serif" font-size="12" fill="#1a1a1a">6.12 us</text>
-<text x="322" y="690" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">pint 0.26.2 / plain</text>
-<rect x="330" y="676" width="415.4" height="20" fill="#7a8b99"/>
-<text x="751.4" y="690" font-family="sans-serif" font-size="12" fill="#1a1a1a">10.4 us</text>
-<text x="322" y="718" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">pint 0.26.2 / wraps</text>
-<rect x="330" y="704" width="420.0" height="20" fill="#7a8b99"/>
-<text x="756.0" y="718" font-family="sans-serif" font-size="12" fill="#1a1a1a">11.8 us</text>
+<rect x="330" y="256" width="112.6" height="20" fill="#7a8b99"/>
+<text x="448.6" y="270" font-family="sans-serif" font-size="12" fill="#1a1a1a">12.8 ns</text>
+<text x="322" y="298" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-wasm 0.2.2+v11+fnv1a64:6d8dbbdeecb1a854 / conv</text>
+<rect x="330" y="284" width="116.4" height="20" fill="#e8590c"/>
+<text x="452.4" y="298" font-family="sans-serif" font-size="12" fill="#1a1a1a">14.7 ns</text>
+<text x="322" y="326" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">convert 8.0.2 / plain</text>
+<rect x="330" y="312" width="145.3" height="20" fill="#7a8b99"/>
+<text x="481.3" y="326" font-family="sans-serif" font-size="12" fill="#1a1a1a">41.3 ns</text>
+<text x="322" y="354" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.2.2+3e59c3b-dirty / exact</text>
+<rect x="330" y="340" width="146.6" height="20" fill="#e8590c"/>
+<text x="482.6" y="354" font-family="sans-serif" font-size="12" fill="#1a1a1a">43.4 ns</text>
+<text x="322" y="382" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">unyt 3.2.0 / factor</text>
+<rect x="330" y="368" width="148.2" height="20" fill="#7a8b99"/>
+<text x="484.2" y="382" font-family="sans-serif" font-size="12" fill="#1a1a1a">45.9 ns</text>
+<text x="322" y="410" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">pint 0.26.2 / factor</text>
+<rect x="330" y="396" width="156.1" height="20" fill="#7a8b99"/>
+<text x="492.1" y="410" font-family="sans-serif" font-size="12" fill="#1a1a1a">60.9 ns</text>
+<text x="322" y="438" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-py 0.2.2+v11+fnv1a64:6d8dbbdeecb1a854 / conv</text>
+<rect x="330" y="424" width="169.1" height="20" fill="#e8590c"/>
+<text x="505.1" y="438" font-family="sans-serif" font-size="12" fill="#1a1a1a">96.9 ns</text>
+<text x="322" y="466" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">numpy-ceiling 2.5.4 [ceiling] / multiply</text>
+<rect x="330" y="452" width="176.4" height="20" fill="#7a8b99"/>
+<text x="512.4" y="466" font-family="sans-serif" font-size="12" fill="#1a1a1a">126 ns</text>
+<text x="322" y="494" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">ucum-lhc 8.0.1 / plain</text>
+<rect x="330" y="480" width="183.0" height="20" fill="#7a8b99"/>
+<text x="519.0" y="494" font-family="sans-serif" font-size="12" fill="#1a1a1a">159 ns</text>
+<text x="322" y="522" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">unitmath 1.1.1 / reuse</text>
+<rect x="330" y="508" width="230.4" height="20" fill="#7a8b99"/>
+<text x="566.4" y="522" font-family="sans-serif" font-size="12" fill="#1a1a1a">871 ns</text>
+<text x="322" y="550" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">astropy 8.0.2 / unit_to</text>
+<rect x="330" y="536" width="242.5" height="20" fill="#7a8b99"/>
+<text x="578.5" y="550" font-family="sans-serif" font-size="12" fill="#1a1a1a">1.34 us</text>
+<text x="322" y="578" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-py 0.2.2+v11+fnv1a64:6d8dbbdeecb1a854 / plain</text>
+<rect x="330" y="564" width="244.4" height="20" fill="#e8590c"/>
+<text x="580.4" y="578" font-family="sans-serif" font-size="12" fill="#1a1a1a">1.44 us</text>
+<text x="322" y="606" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-wasm 0.2.2+v11+fnv1a64:6d8dbbdeecb1a854 / plain</text>
+<rect x="330" y="592" width="260.7" height="20" fill="#e8590c"/>
+<text x="596.7" y="606" font-family="sans-serif" font-size="12" fill="#1a1a1a">2.58 us</text>
+<text x="322" y="634" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">mathjs 13.2.0 / plain</text>
+<rect x="330" y="620" width="268.8" height="20" fill="#7a8b99"/>
+<text x="604.8" y="634" font-family="sans-serif" font-size="12" fill="#1a1a1a">3.43 us</text>
+<text x="322" y="662" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">convert-units 2.3.4 / plain</text>
+<rect x="330" y="648" width="285.1" height="20" fill="#7a8b99"/>
+<text x="621.1" y="662" font-family="sans-serif" font-size="12" fill="#1a1a1a">6.16 us</text>
+<text x="322" y="690" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">js-quantities 1.8.0 / plain</text>
+<rect x="330" y="676" width="285.2" height="20" fill="#7a8b99"/>
+<text x="621.2" y="690" font-family="sans-serif" font-size="12" fill="#1a1a1a">6.17 us</text>
+<text x="322" y="718" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">unyt 3.2.0 / to_value</text>
+<rect x="330" y="704" width="290.4" height="20" fill="#7a8b99"/>
+<text x="626.4" y="718" font-family="sans-serif" font-size="12" fill="#1a1a1a">7.45 us</text>
+<text x="322" y="746" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">unyt 3.2.0 / plain</text>
+<rect x="330" y="732" width="290.5" height="20" fill="#7a8b99"/>
+<text x="626.5" y="746" font-family="sans-serif" font-size="12" fill="#1a1a1a">7.47 us</text>
+<text x="322" y="774" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">astropy 8.0.2 / plain</text>
+<rect x="330" y="760" width="300.8" height="20" fill="#7a8b99"/>
+<text x="636.8" y="774" font-family="sans-serif" font-size="12" fill="#1a1a1a">10.8 us</text>
+<text x="322" y="802" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">unitmath 1.1.1 / plain</text>
+<rect x="330" y="788" width="302.2" height="20" fill="#7a8b99"/>
+<text x="638.2" y="802" font-family="sans-serif" font-size="12" fill="#1a1a1a">11.4 us</text>
+<text x="322" y="830" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">pint 0.26.2 / plain</text>
+<rect x="330" y="816" width="306.2" height="20" fill="#7a8b99"/>
+<text x="642.2" y="830" font-family="sans-serif" font-size="12" fill="#1a1a1a">13.1 us</text>
+<text x="322" y="858" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">unitmath 1.1.1 / fraction</text>
+<rect x="330" y="844" width="306.2" height="20" fill="#7a8b99"/>
+<text x="642.2" y="858" font-family="sans-serif" font-size="12" fill="#1a1a1a">13.1 us</text>
+<text x="322" y="886" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">ucumvert 0.3.3 / prepared</text>
+<rect x="330" y="872" width="307.0" height="20" fill="#7a8b99"/>
+<text x="643.0" y="886" font-family="sans-serif" font-size="12" fill="#1a1a1a">13.5 us</text>
+<text x="322" y="914" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">pint 0.26.2 / wraps</text>
+<rect x="330" y="900" width="315.3" height="20" fill="#7a8b99"/>
+<text x="651.3" y="914" font-family="sans-serif" font-size="12" fill="#1a1a1a">18.1 us</text>
+<text x="322" y="942" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">quantities 0.16.4 / units</text>
+<rect x="330" y="928" width="374.8" height="20" fill="#7a8b99"/>
+<text x="710.8" y="942" font-family="sans-serif" font-size="12" fill="#1a1a1a">152 us</text>
+<text x="322" y="970" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">quantities 0.16.4 / plain</text>
+<rect x="330" y="956" width="378.6" height="20" fill="#7a8b99"/>
+<text x="714.6" y="970" font-family="sans-serif" font-size="12" fill="#1a1a1a">175 us</text>
+<text x="322" y="998" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">ucumvert 0.3.3 / plain</text>
+<rect x="330" y="984" width="420.0" height="20" fill="#7a8b99"/>
+<text x="756.0" y="998" font-family="sans-serif" font-size="12" fill="#1a1a1a">770 us</text>
 </svg>

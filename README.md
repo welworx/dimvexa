@@ -102,7 +102,10 @@ READMEs in [`bindings/`](bindings); an Excel add-in is an early spike ([docs](do
 (Python), [math.js](https://github.com/josdejong/mathjs),
 [convert-units](https://github.com/convert-units/convert-units) and
 [js-quantities](https://github.com/gentooboontoo/js-quantities) (JavaScript), on speed,
-accuracy and how each handles ambiguous input. Method and results:
+accuracy and how each handles ambiguous input; Rust `uom`, Python `quantities` and `ucumvert`,
+and JavaScript `ucum-lhc`, `convert` and `unitmath` were added later. A compact, paper-style
+summary of precision, coverage and speed, including where Dimvexa is slower or lacks units, is in
+[`docs/benchmarks/paper.md`](docs/benchmarks/paper.md); method:
 [`docs/benchmarking.md`](docs/benchmarking.md). Dimvexa is independent and not affiliated with
 any of them.
 

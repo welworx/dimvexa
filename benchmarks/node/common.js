@@ -91,7 +91,7 @@ function translateExpr(expr, cfg) {
   const units = cfg.units || {};
   if (Object.prototype.hasOwnProperty.call(units, expr)) return units[expr];
   const ops = cfg.ops || {};
-  const pow = cfg.pow || '^';
+  const pow = cfg.pow === undefined ? '^' : cfg.pow;
   const re = /[A-Za-z_°µ%][A-Za-z_0-9°µ%]*|\d+|[./*()^ ]/g;
   const out = [];
   for (const tok of expr.match(re) || []) {
@@ -327,7 +327,7 @@ function main(ad, argv = process.argv.slice(2)) {
     parameters: p, modes: ad.modes,
   };
   res.performance = measurePerformance(ad, corpus, p, log);
-  res.startup = { import_ms: ad.importName ? importTime(`require(${JSON.stringify(ad.importName)})`, p) : null,
+  res.startup = { import_ms: ad.importName ? importTime(ad.importExpr || `require(${JSON.stringify(ad.importName)})`, p) : null,
                   peak_rss_kb: process.resourceUsage().maxRSS, package_bytes: ad.packageBytes() };
   if (ad.kind === 'library') res.semantics = measureSemantics(ad, corpus);
   fs.mkdirSync(outDir, { recursive: true });

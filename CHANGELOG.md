@@ -7,6 +7,10 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+### Added
+
+- Benchmarks: comparison runs 3 and 4 (`docs/benchmarks/comparison-run-3.md`, `comparison-run-4.md`) with all libraries on one corpus; runners for `quantities`, `ucumvert`, `ucum-lhc`, `convert` and `unitmath`; a compact paper-style summary of precision, coverage and speed (`docs/benchmarks/paper.md`, tables from `benchmarks/tools/paper_tables.py`), linked from the README. No "fastest" or "most accurate" claim follows from them.
+
 ## [0.2.2] - 2026-11-10
 
 ### Changed

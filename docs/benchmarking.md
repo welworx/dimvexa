@@ -120,7 +120,7 @@ on a networked machine.
 
 ## Status of the runners
 
-Latest full run: 2026-11-08, see [`benchmarks/comparison-run-2.md`](benchmarks/comparison-run-2.md) (first run: [`comparison-run-1.md`](benchmarks/comparison-run-1.md)) for
+Latest full run: 2026-11-10 (plus a separate run of five more libraries the same day, [`comparison-run-4.md`](benchmarks/comparison-run-4.md)), see [`benchmarks/comparison-run-3.md`](benchmarks/comparison-run-3.md) (earlier: [`run 2`](benchmarks/comparison-run-2.md), [`comparison-run-1.md`](benchmarks/comparison-run-1.md)) for
 the summary, the caveats and the cases where Dimvexa is slower, and
 [`benchmarks/comparison.md`](benchmarks/comparison.md) for every table. One run on one shared VM:
 indicative, not a basis for a "fastest" claim.
@@ -128,12 +128,13 @@ indicative, not a basis for a "fastest" claim.
 | Runner | Run on a networked machine |
 |---|---|
 | Corpus generator, report generator | yes |
-| Corpus with 28 independent cases and the refusal groups | Dimvexa semantics run on the new corpus; the competitor result files are **from the older corpus** and have not been rerun (no network in the authoring environment). `benchmarks/run_all.sh` refreshes everything |
+| Corpus with 40 independent cases and the refusal groups | yes; every result file, Dimvexa and competitors, comes from the same run on the current corpus (run 3) |
 | Dimvexa, Rust API, and Rust ceilings | yes, full run |
 | Dimvexa CLI (spawn per conversion) | yes, full run |
 | uom (needed a one-line fix to compile) | yes, 20 typed pairs only |
 | pint 0.26.2, unyt 3.2.0, astropy 8.0.2, NumPy ceiling | yes; spellings checked against the installed libraries |
 | mathjs 13.2.0, js-quantities 1.8.0, convert-units 2.3.4, JavaScript ceiling | yes; spellings checked |
+| quantities 0.16.4, ucumvert 0.3.3 (Python); @lhncbc/ucum-lhc 8.0.1, convert 8.0.2, unitmath 1.1.1 (Node) | yes, from a later session on the same VM class than the main run; see [`benchmarks/comparison-run-4.md`](benchmarks/comparison-run-4.md) for the caveat. ucum-lhc and convert have no prepared API (one mode); unitmath also has a Fraction number-type mode |
 | ucum-units | not written |
 | Dimvexa Python binding (`run_dimvexa_py.py`) and WASM binding (`run_dimvexa_wasm.js`) | yes, full run (run 2) |
 | `bench-compare.yml` | not run on GitHub yet (its action pins are verified; use `benchmarks/run_all.sh` locally) |

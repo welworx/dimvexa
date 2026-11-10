@@ -1,0 +1,2722 @@
+{
+ "corpus_id": "64b746f32cb6d2a6",
+ "date_utc": "2026-11-10T01:41:23Z",
+ "fixture": false,
+ "kind": "library",
+ "library": {
+  "name": "convert",
+  "version": "8.0.2"
+ },
+ "lockfile": "requirements.lock.txt+package-lock.json+Cargo.lock",
+ "machine": {
+  "arch": "x64",
+  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "governor": null,
+  "logical_cores": 4,
+  "os": "Linux 6.18.44-fc-v338"
+ },
+ "modes": {
+  "plain": {
+   "description": "convert(x, from).to(to) per value (the only API; no prepared converter)",
+   "idiomatic": "plain"
+  }
+ },
+ "parameters": {
+  "batch_sizes": [
+   1000,
+   100000,
+   1000000
+  ],
+  "cold_samples": 5,
+  "min_sample_s": 0.05,
+  "quick": false,
+  "samples": 15,
+  "timer": "process.hrtime.bigint",
+  "tolerance_ulp": 4,
+  "warmup_s": 0.3
+ },
+ "performance": {
+  "plain": {
+   "affine_temperature": {
+    "batch": {
+     "1000": {
+      "mad": 6.413000000000011,
+      "max": 202.345,
+      "median": 86.835,
+      "min": 75.915,
+      "raw": [
+       82.495,
+       84.014,
+       110.451,
+       91.092,
+       89.554,
+       97.981,
+       83.791,
+       93.248,
+       86.835,
+       80.891,
+       111.352,
+       78.373,
+       75.915,
+       202.345,
+       76.433
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 0.7287299999999988,
+      "max": 53.13983,
+      "median": 50.29168,
+      "min": 45.3568,
+      "raw": [
+       48.16305,
+       45.3568,
+       51.55289,
+       50.70068,
+       50.19789,
+       50.29168,
+       50.13276,
+       49.89366,
+       51.02041,
+       50.0165,
+       50.17627,
+       52.61738,
+       52.19894,
+       53.13983,
+       52.62933
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 0.3838050000000024,
+      "max": 50.91733,
+      "median": 50.347984,
+      "min": 49.701372,
+      "raw": [
+       49.989914,
+       50.347984,
+       50.731789,
+       49.701372,
+       50.91733
+      ],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.24143153429031372,
+     "max": 6.122218072414398,
+     "median": 5.850236773490906,
+     "min": 3.7094184160232544,
+     "raw": [
+      3.7094184160232544,
+      5.1602941155433655,
+      5.98447060585022,
+      6.078827857971191,
+      5.850236773490906,
+      5.253487288951874,
+      4.229385435581207,
+      5.948995053768158,
+      5.94610470533371,
+      5.944658994674683,
+      4.257118403911591,
+      5.078310191631317,
+      5.608805239200592,
+      5.899213016033173,
+      6.122218072414398
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": null,
+    "prepare_cold": {
+     "mad": 124,
+     "max": 15162,
+     "median": 703,
+     "min": 579,
+     "raw": [
+      15162,
+      1398,
+      703,
+      702,
+      579
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 4.659345626831055,
+     "max": 231.90972518920898,
+     "median": 117.20267677307129,
+     "min": 107.51199913024902,
+     "raw": [
+      114.13397789001465,
+      112.54333114624023,
+      216.58571815490723,
+      229.0643138885498,
+      228.14186477661133,
+      231.90972518920898,
+      170.40274810791016,
+      117.20267677307129,
+      115.47128868103027,
+      110.99297142028809,
+      107.51199913024902,
+      115.44974708557129,
+      120.67804908752441,
+      117.11600685119629,
+      117.53421974182129
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 3.671359062194824,
+     "max": 76.04793357849121,
+     "median": 58.43256759643555,
+     "min": 54.76120853424072,
+     "raw": [
+      54.76120853424072,
+      56.08954906463623,
+      62.70825004577637,
+      70.6703872680664,
+      57.09619140625,
+      57.57332515716553,
+      70.97566604614258,
+      76.04793357849121,
+      58.43256759643555,
+      62.174784660339355,
+      68.47763538360596,
+      63.628058433532715,
+      56.35474872589111,
+      56.98545169830322,
+      56.69712543487549
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   },
+   "compound_cp": {
+    "error": "RangeError: kJ/(kg.K) is not a valid unit",
+    "unsupported": true
+   },
+   "linear_pressure": {
+    "batch": {
+     "1000": {
+      "mad": 0.8359999999999985,
+      "max": 107.629,
+      "median": 34.073,
+      "min": 33.098,
+      "raw": [
+       35.196,
+       34.073,
+       33.588,
+       33.098,
+       42.016,
+       35.237,
+       34.909,
+       33.956,
+       36.674,
+       33.737,
+       53.271,
+       107.629,
+       34.038,
+       33.79,
+       33.436
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "100000": {
+      "mad": 0.5219200000000015,
+      "max": 45.58674,
+      "median": 43.27637,
+      "min": 41.01451,
+      "raw": [
+       42.81858,
+       44.68145,
+       43.46177,
+       41.25071,
+       42.92482,
+       43.27637,
+       44.27277,
+       43.30592,
+       43.25711,
+       44.64862,
+       43.56887,
+       42.75445,
+       45.58674,
+       41.01451,
+       41.21571
+      ],
+      "samples": 15,
+      "unit": "ns"
+     },
+     "1000000": {
+      "mad": 0.6760519999999985,
+      "max": 43.869892,
+      "median": 43.19384,
+      "min": 41.736982,
+      "raw": [
+       43.19384,
+       43.869892,
+       41.736982,
+       42.406048,
+       43.62339
+      ],
+      "samples": 5,
+      "unit": "ns"
+     }
+    },
+    "loop_overhead": {
+     "mad": 0.03653872013092041,
+     "max": 3.529232442378998,
+     "median": 3.3870638608932495,
+     "min": 3.2177629470825195,
+     "raw": [
+      3.2177629470825195,
+      3.524486780166626,
+      3.369628369808197,
+      3.411684215068817,
+      3.3073763847351074,
+      3.4674720764160156,
+      3.42360258102417,
+      3.529232442378998,
+      3.4062368869781494,
+      3.3691330552101135,
+      3.3931846022605896,
+      3.2994335889816284,
+      3.364080548286438,
+      3.320419490337372,
+      3.3870638608932495
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "oneshot": null,
+    "prepare_cold": {
+     "mad": 1795,
+     "max": 30234,
+     "median": 6452,
+     "min": 3328,
+     "raw": [
+      30234,
+      5114,
+      6452,
+      3328,
+      8247
+     ],
+     "samples": 5,
+     "unit": "ns"
+    },
+    "prepare_warm": {
+     "mad": 8.2115478515625,
+     "max": 511.1608657836914,
+     "median": 478.3984909057617,
+     "min": 441.44776916503906,
+     "raw": [
+      478.3984909057617,
+      486.6100387573242,
+      494.7097473144531,
+      511.1608657836914,
+      471.89100646972656,
+      484.2252502441406,
+      471.41544342041016,
+      494.3325653076172,
+      502.35424041748047,
+      482.5115280151367,
+      441.44776916503906,
+      456.2744369506836,
+      476.3347473144531,
+      462.0970764160156,
+      473.6344757080078
+     ],
+     "samples": 15,
+     "unit": "ns"
+    },
+    "scalar": {
+     "mad": 0.4474911689758301,
+     "max": 43.75597620010376,
+     "median": 41.33458614349365,
+     "min": 39.348206520080566,
+     "raw": [
+      43.36588716506958,
+      43.75597620010376,
+      41.12214803695679,
+      42.01249980926514,
+      40.30120038986206,
+      41.165263175964355,
+      40.439088344573975,
+      41.29025173187256,
+      41.28586149215698,
+      41.425623416900635,
+      41.33458614349365,
+      41.78207731246948,
+      41.91427755355835,
+      41.771655559539795,
+      39.348206520080566
+     ],
+     "samples": 15,
+     "unit": "ns"
+    }
+   },
+   "linear_speed": {
+    "error": "RangeError: m/s is not a valid unit",
+    "unsupported": true
+   }
+  }
+ },
+ "runtime": {
+  "language": "javascript",
+  "name": "node",
+  "version": "v22.23.4"
+ },
+ "schema": "dimvexa.bench.result/1",
+ "semantics": {
+  "plain": {
+   "accuracy": {
+    "answered": 134,
+    "bit_identical": 96,
+    "cases": 236,
+    "max_ulp": 4409024035195715600,
+    "median_ulp": 0,
+    "over_1_ulp": 24,
+    "tolerance_ulp": 4,
+    "unsupported": 102,
+    "worst": [
+     {
+      "got": "5.684341886080802e-14",
+      "id": "dv-common-034",
+      "ulp": 4409024035195715600,
+      "want": "0.0"
+     },
+     {
+      "got": "5.684341886080802e-14",
+      "id": "hw-064",
+      "ulp": 4409024035195715600,
+      "want": "0.0"
+     },
+     {
+      "got": "5.684341886080802e-14",
+      "id": "ind-021",
+      "ulp": 4409024035195715600,
+      "want": "0.0"
+     },
+     {
+      "got": "4.448222",
+      "id": "dv-common-007",
+      "ulp": 433178168,
+      "want": "4.4482216152605"
+     },
+     {
+      "got": "4.448222",
+      "id": "hw-035",
+      "ulp": 433178168,
+      "want": "4.4482216152605"
+     }
+    ],
+    "wrong": 21
+   },
+   "cases": {
+    "must_convert": [
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km -> m",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kg -> g",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.001",
+      "id": "dv-base-003",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ms -> s",
+      "want": "0.001"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: mA is not a valid unit",
+      "id": "dv-base-004",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "got": "1.7999999999999998",
+      "id": "dv-base-005",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "K -> rankine",
+      "want": "1.8"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: kmol is not a valid unit",
+      "id": "dv-base-006",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.001",
+      "id": "dv-base-007",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mcd -> cd",
+      "want": "0.001"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: s1 is not a valid unit",
+      "id": "dv-base-008",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: kg.m/s2 is not a valid unit",
+      "id": "dv-base-009",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: kg/(m.s2) is not a valid unit",
+      "id": "dv-base-010",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: N.m is not a valid unit",
+      "id": "dv-base-011",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: J/s is not a valid unit",
+      "id": "dv-base-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: A.s is not a valid unit",
+      "id": "dv-base-013",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: V is not a valid unit",
+      "id": "dv-base-014",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: ohm is not a valid unit",
+      "id": "dv-base-015",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError:  is not a valid unit",
+      "id": "dv-base-016",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: C/V is not a valid unit",
+      "id": "dv-base-017",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: A/V is not a valid unit",
+      "id": "dv-base-018",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: Wb is not a valid unit",
+      "id": "dv-base-019",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: T is not a valid unit",
+      "id": "dv-base-020",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: H is not a valid unit",
+      "id": "dv-base-021",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "60",
+      "id": "dv-base-022",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "min -> s",
+      "want": "60.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "60",
+      "id": "dv-base-023",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "h -> min",
+      "want": "60.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "24",
+      "id": "dv-base-024",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "d -> h",
+      "want": "24.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-025",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mL -> cm3",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.001",
+      "id": "dv-base-026",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "L -> m3",
+      "want": "0.001"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-027",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tonne -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1000",
+      "id": "dv-base-028",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "t -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "3.6",
+      "id": "dv-base-029",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kWh -> MJ",
+      "want": "3.6"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "dv-base-030",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "celsius -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "211.99999999999983",
+      "id": "dv-base-031",
+      "outcome": "wrong_value",
+      "ulp": 6,
+      "used": "celsius -> fahrenheit",
+      "want": "212.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "25",
+      "id": "dv-base-032",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "celsius -> celsius",
+      "want": "25.0"
+     },
+     {
+      "category": "temperature",
+      "detail": "RangeError: delta_K is not a valid unit",
+      "id": "dv-base-033",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "RangeError: delta_degC is not a valid unit",
+      "id": "dv-base-034",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: km/h is not a valid unit",
+      "id": "dv-base-035",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: kmol/h is not a valid unit",
+      "id": "dv-base-036",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "RangeError: delta_degF is not a valid unit",
+      "id": "dv-base-037",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: W/(m.K) is not a valid unit",
+      "id": "dv-base-038",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: kJ/(kg.K) is not a valid unit",
+      "id": "dv-base-039",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "10000",
+      "id": "dv-base-040",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ha -> m2",
+      "want": "10000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: au is not a valid unit",
+      "id": "dv-base-041",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: angstrom is not a valid unit",
+      "id": "dv-base-042",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: Bq is not a valid unit",
+      "id": "dv-base-043",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: Gy is not a valid unit",
+      "id": "dv-base-044",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: Sv is not a valid unit",
+      "id": "dv-base-045",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: lm is not a valid unit",
+      "id": "dv-base-046",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-047",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "lx -> lm/m2",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: kat is not a valid unit",
+      "id": "dv-base-048",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: 1 is not a valid unit",
+      "id": "dv-base-049",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-051",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "arcmin -> deg",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-base-052",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "arcsec -> deg",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "100",
+      "id": "dv-common-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "bar -> kPa",
+      "want": "100.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "101325",
+      "id": "dv-common-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "atm -> Pa",
+      "want": "101325.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: mmHg is not a valid unit",
+      "id": "dv-common-003",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-004",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "torr -> atm",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "133.32236842105263",
+      "id": "dv-common-005",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "torr -> Pa",
+      "want": "133.32236842105263"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: g_n is not a valid unit",
+      "id": "dv-common-006",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "4.448222",
+      "id": "dv-common-007",
+      "outcome": "wrong_value",
+      "ulp": 433178168,
+      "used": "lbf -> N",
+      "want": "4.4482216152605"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "6894.757",
+      "id": "dv-common-008",
+      "outcome": "wrong_value",
+      "ulp": 322342023,
+      "used": "psi -> Pa",
+      "want": "6894.757293168362"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-009",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "psi -> lbf/in2",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: cal_th is not a valid unit",
+      "id": "dv-common-010",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: cal_IT is not a valid unit",
+      "id": "dv-common-011",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: Btu_IT is not a valid unit",
+      "id": "dv-common-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: Btu_th is not a valid unit",
+      "id": "dv-common-013",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "745.699872",
+      "id": "dv-common-014",
+      "outcome": "wrong_value",
+      "ulp": 3674390,
+      "used": "hp -> W",
+      "want": "745.6998715822702"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: hp_metric is not a valid unit",
+      "id": "dv-common-015",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "25.4",
+      "id": "dv-common-016",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "in -> mm",
+      "want": "25.4"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "12.000000000000002",
+      "id": "dv-common-017",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "ft -> in",
+      "want": "12.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "3",
+      "id": "dv-common-018",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "yd -> ft",
+      "want": "3.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1609.344",
+      "id": "dv-common-019",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mi -> m",
+      "want": "1609.344"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1852",
+      "id": "dv-common-020",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "nmi -> m",
+      "want": "1852.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.3048006096012192",
+      "id": "dv-common-021",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "US survey foot -> m",
+      "want": "0.3048006096012192"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: mi_us_survey is not a valid unit",
+      "id": "dv-common-022",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "453.59237",
+      "id": "dv-common-023",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "lb -> g",
+      "want": "453.59237"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-024",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ounce -> lb",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "31.1034768",
+      "id": "dv-common-025",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "troy ounce -> g",
+      "want": "31.1034768"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "2000",
+      "id": "dv-common-026",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "short ton -> lb",
+      "want": "2000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "2240",
+      "id": "dv-common-027",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "long ton -> lb",
+      "want": "2240.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "3.785411784",
+      "id": "dv-common-028",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "gallon -> L",
+      "want": "3.785411784"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "4.5460899999999995",
+      "id": "dv-common-029",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "imp gal -> L",
+      "want": "4.54609"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-030",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "pint -> gallon",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-031",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "imp pt -> imp gal",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: lbmol is not a valid unit",
+      "id": "dv-common-032",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: lbmol is not a valid unit",
+      "id": "dv-common-033",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "got": "5.684341886080802e-14",
+      "id": "dv-common-034",
+      "outcome": "wrong_value",
+      "ulp": 4409024035195715600,
+      "used": "fahrenheit -> celsius",
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "-39.99999999999997",
+      "id": "dv-common-035",
+      "outcome": "correct",
+      "ulp": 4,
+      "used": "fahrenheit -> celsius",
+      "want": "-40.0"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15000000000003",
+      "id": "dv-common-036",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "rankine -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "detail": "RangeError: delta_degF is not a valid unit",
+      "id": "dv-common-037",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "RangeError: delta_degR is not a valid unit",
+      "id": "dv-common-038",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: kcal_th is not a valid unit",
+      "id": "dv-common-039",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: delta_K is not a valid unit",
+      "id": "dv-common-040",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: °R is not a valid unit",
+      "id": "dv-common-041",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: Btu_IT/(lb.delta_degF) is not a valid unit",
+      "id": "dv-common-042",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "7",
+      "id": "dv-common-043",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "wk -> d",
+      "want": "7.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "31536000",
+      "id": "dv-common-044",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "yr -> s",
+      "want": "31536000.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: yr_julian is not a valid unit",
+      "id": "dv-common-045",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "4046.8564224",
+      "id": "dv-common-047",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "acre -> m2",
+      "want": "4046.8564224"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: kn is not a valid unit",
+      "id": "dv-common-049",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-050",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "US fluid ounce -> gallon",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "8",
+      "id": "dv-common-051",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "cup -> US fluid ounce",
+      "want": "8.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "2",
+      "id": "dv-common-052",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "quart -> pint",
+      "want": "2.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "14.786764781250001",
+      "id": "dv-common-053",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "tbsp -> mL",
+      "want": "14.78676478125"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-054",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tsp -> tbsp",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1",
+      "id": "dv-common-055",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "imperial fluid ounce -> imp gal",
+      "want": "1.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "1.1365224999999999",
+      "id": "dv-common-056",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "imp qt -> L",
+      "want": "1.1365225"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "64.79891",
+      "id": "dv-common-057",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "grain -> mg",
+      "want": "64.79891"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: carat is not a valid unit",
+      "id": "dv-common-058",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: erg is not a valid unit",
+      "id": "dv-common-059",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "0.00001",
+      "id": "dv-common-060",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "dyn -> N",
+      "want": "1e-05"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "9.80665",
+      "id": "dv-common-061",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kgf -> N",
+      "want": "9.80665"
+     },
+     {
+      "category": "dimvexa_vector",
+      "got": "90",
+      "id": "dv-common-062",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "grad -> deg",
+      "want": "90.0"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: cP is not a valid unit",
+      "id": "dv-common-063",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "RangeError: cSt is not a valid unit",
+      "id": "dv-common-064",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "got": "1000",
+      "id": "hw-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "km -> m",
+      "want": "1000.0"
+     },
+     {
+      "category": "si",
+      "detail": "RangeError: km/h is not a valid unit",
+      "id": "hw-002",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "si",
+      "got": "3.6",
+      "id": "hw-003",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kWh -> MJ",
+      "want": "3.6"
+     },
+     {
+      "category": "si",
+      "got": "10",
+      "id": "hw-004",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "MPa -> bar",
+      "want": "10.0"
+     },
+     {
+      "category": "si",
+      "got": "1",
+      "id": "hw-005",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "Pa -> atm",
+      "want": "1.0"
+     },
+     {
+      "category": "si",
+      "got": "0.001",
+      "id": "hw-006",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "L -> m3",
+      "want": "0.001"
+     },
+     {
+      "category": "si",
+      "got": "9000",
+      "id": "hw-007",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "h -> s",
+      "want": "9000.0"
+     },
+     {
+      "category": "si",
+      "got": "1440",
+      "id": "hw-008",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "d -> min",
+      "want": "1440.0"
+     },
+     {
+      "category": "si",
+      "got": "1000",
+      "id": "hw-009",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tonne -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "si",
+      "got": "39.37007874015748",
+      "id": "hw-010",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mm -> in",
+      "want": "39.37007874015748"
+     },
+     {
+      "category": "si",
+      "got": "1",
+      "id": "hw-011",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "m3 -> L",
+      "want": "1.0"
+     },
+     {
+      "category": "si",
+      "detail": "RangeError: kg.m/s2 is not a valid unit",
+      "id": "hw-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "25.4",
+      "id": "hw-013",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "in -> mm",
+      "want": "25.4"
+     },
+     {
+      "category": "imperial_us",
+      "got": "0.3048",
+      "id": "hw-014",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ft -> m",
+      "want": "0.3048"
+     },
+     {
+      "category": "imperial_us",
+      "got": "1.609344",
+      "id": "hw-015",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mi -> km",
+      "want": "1.609344"
+     },
+     {
+      "category": "imperial_us",
+      "got": "1852",
+      "id": "hw-016",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "nmi -> m",
+      "want": "1852.0"
+     },
+     {
+      "category": "imperial_us",
+      "got": "45.359237",
+      "id": "hw-017",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "lb -> kg",
+      "want": "45.359237"
+     },
+     {
+      "category": "imperial_us",
+      "got": "28.349523125",
+      "id": "hw-018",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ounce -> g",
+      "want": "28.349523125"
+     },
+     {
+      "category": "imperial_us",
+      "got": "31.1034768",
+      "id": "hw-019",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "troy ounce -> g",
+      "want": "31.1034768"
+     },
+     {
+      "category": "imperial_us",
+      "got": "907.18474",
+      "id": "hw-020",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "short ton -> kg",
+      "want": "907.18474"
+     },
+     {
+      "category": "imperial_us",
+      "got": "1016.0469088",
+      "id": "hw-021",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "long ton -> kg",
+      "want": "1016.0469088"
+     },
+     {
+      "category": "imperial_us",
+      "got": "3.785411784",
+      "id": "hw-022",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "gallon -> L",
+      "want": "3.785411784"
+     },
+     {
+      "category": "imperial_us",
+      "got": "4.5460899999999995",
+      "id": "hw-023",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "imp gal -> L",
+      "want": "4.54609"
+     },
+     {
+      "category": "imperial_us",
+      "got": "0.8326741846289889",
+      "id": "hw-024",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "gallon -> imp gal",
+      "want": "0.8326741846289889"
+     },
+     {
+      "category": "imperial_us",
+      "got": "473.17647300000004",
+      "id": "hw-025",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "pint -> mL",
+      "want": "473.176473"
+     },
+     {
+      "category": "imperial_us",
+      "got": "568.26125",
+      "id": "hw-026",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "imp pt -> mL",
+      "want": "568.26125"
+     },
+     {
+      "category": "imperial_us",
+      "got": "0.3048006096012192",
+      "id": "hw-027",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "US survey foot -> m",
+      "want": "0.3048006096012192"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "RangeError: mi_us_survey is not a valid unit",
+      "id": "hw-028",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "RangeError: cal_th is not a valid unit",
+      "id": "hw-029",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "RangeError: cal_IT is not a valid unit",
+      "id": "hw-030",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "RangeError: Btu_IT is not a valid unit",
+      "id": "hw-031",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "RangeError: Btu_th is not a valid unit",
+      "id": "hw-032",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "745.699872",
+      "id": "hw-033",
+      "outcome": "wrong_value",
+      "ulp": 3674390,
+      "used": "hp -> W",
+      "want": "745.6998715822702"
+     },
+     {
+      "category": "imperial_us",
+      "detail": "RangeError: hp_metric is not a valid unit",
+      "id": "hw-034",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "imperial_us",
+      "got": "4.448222",
+      "id": "hw-035",
+      "outcome": "wrong_value",
+      "ulp": 433178168,
+      "used": "lbf -> N",
+      "want": "4.4482216152605"
+     },
+     {
+      "category": "pressure",
+      "got": "6894.757",
+      "id": "hw-036",
+      "outcome": "wrong_value",
+      "ulp": 322342023,
+      "used": "psi -> Pa",
+      "want": "6894.757293168362"
+     },
+     {
+      "category": "pressure",
+      "got": "0.999739765",
+      "id": "hw-037",
+      "outcome": "wrong_value",
+      "ulp": 382890748,
+      "used": "psi -> bar",
+      "want": "0.9997398075094124"
+     },
+     {
+      "category": "pressure",
+      "got": "14.503774389728312",
+      "id": "hw-038",
+      "outcome": "wrong_value",
+      "ulp": 347175397,
+      "used": "bar -> psi",
+      "want": "14.50377377302092"
+     },
+     {
+      "category": "pressure",
+      "detail": "RangeError: mmHg is not a valid unit",
+      "id": "hw-039",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "pressure",
+      "got": "1",
+      "id": "hw-040",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "torr -> atm",
+      "want": "1.0"
+     },
+     {
+      "category": "pressure",
+      "detail": "RangeError: mmHg is not a valid unit",
+      "id": "hw-041",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "pressure",
+      "got": "14.695949400392212",
+      "id": "hw-042",
+      "outcome": "wrong_value",
+      "ulp": 351775471,
+      "used": "atm -> psi",
+      "want": "14.695948775513449"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: psig is not a valid unit",
+      "id": "hw-043",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: kmol/h is not a valid unit",
+      "id": "hw-044",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: lbmol/h is not a valid unit",
+      "id": "hw-045",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: lbmol/h is not a valid unit",
+      "id": "hw-046",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: cP is not a valid unit",
+      "id": "hw-047",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: cSt is not a valid unit",
+      "id": "hw-048",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: cSt is not a valid unit",
+      "id": "hw-049",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: W/(m.K) is not a valid unit",
+      "id": "hw-050",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: kJ/(kg.K) is not a valid unit",
+      "id": "hw-051",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: kJ/(kg.K) is not a valid unit",
+      "id": "hw-052",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: Btu_IT/(lb.delta_degF) is not a valid unit",
+      "id": "hw-053",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: W/(m.K) is not a valid unit",
+      "id": "hw-054",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: W/(m2.K) is not a valid unit",
+      "id": "hw-055",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: Nm3/h is not a valid unit",
+      "id": "hw-056",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: Nm3/h is not a valid unit",
+      "id": "hw-057",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: scf/min is not a valid unit",
+      "id": "hw-058",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: bbl is not a valid unit",
+      "id": "hw-059",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "process",
+      "detail": "RangeError: bbl is not a valid unit",
+      "id": "hw-060",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15",
+      "id": "hw-061",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "celsius -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "211.99999999999983",
+      "id": "hw-062",
+      "outcome": "wrong_value",
+      "ulp": 6,
+      "used": "celsius -> fahrenheit",
+      "want": "212.0"
+     },
+     {
+      "category": "temperature",
+      "got": "-40.000000000000114",
+      "id": "hw-063",
+      "outcome": "wrong_value",
+      "ulp": 16,
+      "used": "celsius -> fahrenheit",
+      "want": "-40.0"
+     },
+     {
+      "category": "temperature",
+      "got": "5.684341886080802e-14",
+      "id": "hw-064",
+      "outcome": "wrong_value",
+      "ulp": 4409024035195715600,
+      "used": "fahrenheit -> celsius",
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "98.59999999999985",
+      "id": "hw-065",
+      "outcome": "wrong_value",
+      "ulp": 10,
+      "used": "celsius -> fahrenheit",
+      "want": "98.6"
+     },
+     {
+      "category": "temperature",
+      "got": "26.850000000000023",
+      "id": "hw-066",
+      "outcome": "wrong_value",
+      "ulp": 6,
+      "used": "K -> celsius",
+      "want": "26.85"
+     },
+     {
+      "category": "temperature",
+      "got": "273.15000000000003",
+      "id": "hw-067",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "rankine -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "temperature",
+      "got": "0",
+      "id": "hw-068",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "K -> rankine",
+      "want": "0.0"
+     },
+     {
+      "category": "temperature",
+      "got": "293.15000000000003",
+      "id": "hw-069",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "fahrenheit -> K",
+      "want": "293.15"
+     },
+     {
+      "category": "temperature",
+      "detail": "RangeError: delta_degC is not a valid unit",
+      "id": "hw-070",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "RangeError: delta_degF is not a valid unit",
+      "id": "hw-071",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "temperature",
+      "detail": "RangeError: delta_K is not a valid unit",
+      "id": "hw-072",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: m/s is not a valid unit",
+      "id": "hw-073",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: kg/m3 is not a valid unit",
+      "id": "hw-074",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: g/cm3 is not a valid unit",
+      "id": "hw-075",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: lb/ft3 is not a valid unit",
+      "id": "hw-076",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: kW.h is not a valid unit",
+      "id": "hw-077",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: J/(mol.K) is not a valid unit",
+      "id": "hw-078",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: N/m2 is not a valid unit",
+      "id": "hw-079",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: gallon/min is not a valid unit",
+      "id": "hw-080",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: m3/h is not a valid unit",
+      "id": "hw-081",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: lb/h is not a valid unit",
+      "id": "hw-082",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "RangeError: psi.in2 is not a valid unit",
+      "id": "hw-083",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "25.4",
+      "id": "ind-001",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "in -> mm",
+      "want": "25.4"
+     },
+     {
+      "category": "independent",
+      "got": "0.3048",
+      "id": "ind-002",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ft -> m",
+      "want": "0.3048"
+     },
+     {
+      "category": "independent",
+      "got": "0.9144",
+      "id": "ind-003",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "yd -> m",
+      "want": "0.9144"
+     },
+     {
+      "category": "independent",
+      "got": "1.609344",
+      "id": "ind-004",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mi -> km",
+      "want": "1.609344"
+     },
+     {
+      "category": "independent",
+      "got": "1852",
+      "id": "ind-005",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "nmi -> m",
+      "want": "1852.0"
+     },
+     {
+      "category": "independent",
+      "got": "0.45359237",
+      "id": "ind-006",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "lb -> kg",
+      "want": "0.45359237"
+     },
+     {
+      "category": "independent",
+      "got": "28.349523125",
+      "id": "ind-007",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ounce -> g",
+      "want": "28.349523125"
+     },
+     {
+      "category": "independent",
+      "got": "4.448222",
+      "id": "ind-008",
+      "outcome": "wrong_value",
+      "ulp": 433178168,
+      "used": "lbf -> N",
+      "want": "4.4482216152605"
+     },
+     {
+      "category": "independent",
+      "got": "101325",
+      "id": "ind-009",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "atm -> Pa",
+      "want": "101325.0"
+     },
+     {
+      "category": "independent",
+      "got": "100000",
+      "id": "ind-010",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "bar -> Pa",
+      "want": "100000.0"
+     },
+     {
+      "category": "independent",
+      "detail": "RangeError: cal_th is not a valid unit",
+      "id": "ind-011",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "RangeError: cal_IT is not a valid unit",
+      "id": "ind-012",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "3.785411784",
+      "id": "ind-013",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "gallon -> L",
+      "want": "3.785411784"
+     },
+     {
+      "category": "independent",
+      "got": "0.473176473",
+      "id": "ind-014",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "pint -> L",
+      "want": "0.473176473"
+     },
+     {
+      "category": "independent",
+      "got": "3600000",
+      "id": "ind-015",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "kWh -> J",
+      "want": "3600000.0"
+     },
+     {
+      "category": "independent",
+      "got": "86400",
+      "id": "ind-016",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "d -> s",
+      "want": "86400.0"
+     },
+     {
+      "category": "independent",
+      "got": "1000",
+      "id": "ind-017",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "tonne -> kg",
+      "want": "1000.0"
+     },
+     {
+      "category": "independent",
+      "detail": "RangeError: mi/h is not a valid unit",
+      "id": "ind-018",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "0.028316846592",
+      "id": "ind-019",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "ft3 -> m3",
+      "want": "0.028316846592"
+     },
+     {
+      "category": "independent",
+      "got": "211.99999999999983",
+      "id": "ind-020",
+      "outcome": "wrong_value",
+      "ulp": 6,
+      "used": "celsius -> fahrenheit",
+      "want": "212.0"
+     },
+     {
+      "category": "independent",
+      "got": "5.684341886080802e-14",
+      "id": "ind-021",
+      "outcome": "wrong_value",
+      "ulp": 4409024035195715600,
+      "used": "fahrenheit -> celsius",
+      "want": "0.0"
+     },
+     {
+      "category": "independent",
+      "got": "37",
+      "id": "ind-022",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "fahrenheit -> celsius",
+      "want": "37.0"
+     },
+     {
+      "category": "independent",
+      "got": "-40.000000000000114",
+      "id": "ind-023",
+      "outcome": "wrong_value",
+      "ulp": 16,
+      "used": "celsius -> fahrenheit",
+      "want": "-40.0"
+     },
+     {
+      "category": "independent",
+      "got": "-273.15",
+      "id": "ind-024",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "K -> celsius",
+      "want": "-273.15"
+     },
+     {
+      "category": "independent",
+      "got": "273.15",
+      "id": "ind-025",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "celsius -> K",
+      "want": "273.15"
+     },
+     {
+      "category": "independent",
+      "got": "67.99999999999994",
+      "id": "ind-026",
+      "outcome": "correct",
+      "ulp": 4,
+      "used": "celsius -> fahrenheit",
+      "want": "68.0"
+     },
+     {
+      "category": "independent",
+      "detail": "RangeError: delta_degC is not a valid unit",
+      "id": "ind-027",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "detail": "RangeError: delta_degF is not a valid unit",
+      "id": "ind-028",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "231.00000000000003",
+      "id": "ind-029",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "gallon -> in3",
+      "want": "231.0"
+     },
+     {
+      "category": "independent",
+      "got": "4.5460899999999995",
+      "id": "ind-030",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "imp gal -> L",
+      "want": "4.54609"
+     },
+     {
+      "category": "independent",
+      "got": "0.3048006096012192",
+      "id": "ind-031",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "US survey foot -> m",
+      "want": "0.3048006096012192"
+     },
+     {
+      "category": "independent",
+      "got": "5280",
+      "id": "ind-032",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "mi -> ft",
+      "want": "5280.0"
+     },
+     {
+      "category": "independent",
+      "got": "12.000000000000002",
+      "id": "ind-033",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "ft -> in",
+      "want": "12.0"
+     },
+     {
+      "category": "independent",
+      "got": "16",
+      "id": "ind-034",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "lb -> ounce",
+      "want": "16.0"
+     },
+     {
+      "category": "independent",
+      "detail": "RangeError: Btu_IT is not a valid unit",
+      "id": "ind-035",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "0.5682612499999999",
+      "id": "ind-037",
+      "outcome": "correct",
+      "ulp": 1,
+      "used": "imp pt -> L",
+      "want": "0.56826125"
+     },
+     {
+      "category": "independent",
+      "detail": "RangeError: mi_us_survey is not a valid unit",
+      "id": "ind-038",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "independent",
+      "got": "100.00000000000006",
+      "id": "ind-039",
+      "outcome": "correct",
+      "ulp": 4,
+      "used": "fahrenheit -> celsius",
+      "want": "100.0"
+     },
+     {
+      "category": "independent",
+      "got": "20.000000000000057",
+      "id": "ind-040",
+      "outcome": "wrong_value",
+      "ulp": 16,
+      "used": "fahrenheit -> celsius",
+      "want": "20.0"
+     },
+     {
+      "category": "independent",
+      "got": "283.15",
+      "id": "ind-041",
+      "outcome": "correct",
+      "ulp": 0,
+      "used": "celsius -> K",
+      "want": "283.15"
+     }
+    ],
+    "must_refuse": [
+     {
+      "category": "ambiguous_name",
+      "detail": "RangeError: ton is not a valid unit",
+      "group": "ambiguous_name",
+      "id": "ref-001",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "3.785411784",
+      "group": "ambiguous_name",
+      "id": "ref-002",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "US gallon 3.785 L versus imperial gallon 4.546 L: 20 percent apart"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "28.349523125",
+      "group": "ambiguous_name",
+      "id": "ref-003",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "avoirdupois 28.35 g, troy 31.10 g (fluid ounces are volumes)"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "0.473176473",
+      "group": "ambiguous_name",
+      "id": "ref-004",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "US pint, imperial pint, dry pint, and also the typographic point"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "RangeError: cal is not a valid unit",
+      "group": "ambiguous_name",
+      "id": "ref-005",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "RangeError: Btu is not a valid unit",
+      "group": "ambiguous_name",
+      "id": "ref-006",
+      "outcome": "refused"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "745.699872",
+      "group": "ambiguous_name",
+      "id": "ref-007",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "mechanical 745.70 W versus metric 735.50 W (and electric 746 W)"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "1.609344",
+      "group": "ambiguous_name",
+      "id": "ref-008",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "international mile versus US survey mile (about 3.2 mm per mile apart)"
+     },
+     {
+      "category": "ambiguous_name",
+      "got": "0.3048",
+      "group": "ambiguous_name",
+      "id": "ref-009",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "international foot versus US survey foot (2 ppm apart); only matters for geodetic work, listed because the request does not say which"
+     },
+     {
+      "category": "ambiguous_name",
+      "detail": "RangeError: ppm is not a valid unit",
+      "group": "ambiguous_name",
+      "id": "ref-010",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "RangeError: Nm3 is not a valid unit",
+      "group": "other",
+      "id": "ref-011",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "RangeError: Nm3 is not a valid unit",
+      "group": "other",
+      "id": "ref-012",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "RangeError: scf is not a valid unit",
+      "group": "other",
+      "id": "ref-013",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "RangeError: Nm3 is not a valid unit",
+      "group": "other",
+      "id": "ref-014",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "RangeError: wt% is not a valid unit",
+      "group": "other",
+      "id": "ref-015",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "RangeError: Cannot convert between different measures: kg and L",
+      "group": "other",
+      "id": "ref-016",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "RangeError: mol is not a valid unit",
+      "group": "other",
+      "id": "ref-017",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "RangeError: psig is not a valid unit",
+      "group": "other",
+      "id": "ref-018",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "RangeError: barg is not a valid unit",
+      "group": "other",
+      "id": "ref-019",
+      "outcome": "refused"
+     },
+     {
+      "category": "missing_context",
+      "detail": "RangeError: mH2O is not a valid unit",
+      "group": "other",
+      "id": "ref-020",
+      "outcome": "refused"
+     },
+     {
+      "category": "kind",
+      "group": "other",
+      "id": "ref-021",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "group": "other",
+      "id": "ref-022",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "group": "other",
+      "id": "ref-023",
+      "outcome": "not_applicable"
+     },
+     {
+      "category": "kind",
+      "detail": "RangeError: delta_K is not a valid unit",
+      "group": "other",
+      "id": "ref-024",
+      "outcome": "refused"
+     },
+     {
+      "category": "kind",
+      "detail": "RangeError: delta_degC is not a valid unit",
+      "group": "other",
+      "id": "ref-025",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "got": "60",
+      "group": "other",
+      "id": "ref-026",
+      "outcome": "silently_accepted",
+      "why_it_should_refuse": "length is not time"
+     },
+     {
+      "category": "dimension",
+      "detail": "RangeError: Cannot convert between different measures: kg and N",
+      "group": "other",
+      "id": "ref-027",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "RangeError: Cannot convert between different measures: psi and N",
+      "group": "other",
+      "id": "ref-028",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "RangeError: Cannot convert between different measures: W and J",
+      "group": "other",
+      "id": "ref-029",
+      "outcome": "refused"
+     },
+     {
+      "category": "dimension",
+      "detail": "RangeError: Cannot convert between different measures: bar and W",
+      "group": "other",
+      "id": "ref-030",
+      "outcome": "refused"
+     }
+    ]
+   },
+   "coverage": {
+    "compound": {
+     "known": 0,
+     "total": 11,
+     "unknown": [
+      "m/s",
+      "km/h",
+      "kg/m3",
+      "g/cm3",
+      "lb/ft3",
+      "N/m2",
+      "J/(mol.K)",
+      "kg.m2/s2",
+      "W/(m2.K)",
+      "mol/L",
+      "kg/(m2.s)"
+     ]
+    },
+    "dimvexa_seed_table": {
+     "known": 64,
+     "total": 98,
+     "unknown": [
+      "A",
+      "mol",
+      "V",
+      "ohm",
+      "Wb",
+      "T",
+      "H",
+      "delta_K",
+      "delta_degC",
+      "au",
+      "angstrom",
+      "Bq",
+      "Gy",
+      "Sv",
+      "lm",
+      "kat",
+      "g_n",
+      "mmHg",
+      "cal_th",
+      "cal_IT",
+      "Btu_IT",
+      "Btu_th",
+      "hp_metric",
+      "mi_us_survey",
+      "lbmol",
+      "delta_degF",
+      "delta_degR",
+      "yr_julian",
+      "acre_us_survey",
+      "kn",
+      "carat",
+      "erg",
+      "P",
+      "St"
+     ]
+    },
+    "imperial_us": {
+     "known": 17,
+     "total": 24,
+     "unknown": [
+      "Btu_IT",
+      "Btu_th",
+      "cal_th",
+      "cal_IT",
+      "hp_metric",
+      "mi_us_survey",
+      "bbl"
+     ]
+    },
+    "pressure": {
+     "known": 5,
+     "total": 10,
+     "unknown": [
+      "mmHg",
+      "barg",
+      "psig",
+      "kgf/cm2",
+      "mH2O"
+     ]
+    },
+    "process": {
+     "known": 0,
+     "total": 19,
+     "unknown": [
+      "kmol/h",
+      "lbmol/h",
+      "cP",
+      "cSt",
+      "W/(m.K)",
+      "kJ/(kg.K)",
+      "Btu_IT/(lb.delta_degF)",
+      "Nm3",
+      "Nm3/h",
+      "scf",
+      "scf/min",
+      "bbl/d",
+      "mol/s",
+      "m3/h",
+      "kg/h",
+      "lb/h",
+      "gal_us/min",
+      "kg/(m.s)",
+      "mPa.s"
+     ]
+    },
+    "si": {
+     "known": 18,
+     "total": 25,
+     "unknown": [
+      "A",
+      "mol",
+      "V",
+      "ohm",
+      "Wb",
+      "T",
+      "H"
+     ]
+    },
+    "si_prefixed": {
+     "known": 15,
+     "total": 17,
+     "unknown": [
+      "kmol",
+      "mmol"
+     ]
+    },
+    "temperature": {
+     "known": 4,
+     "total": 8,
+     "unknown": [
+      "delta_K",
+      "delta_degC",
+      "delta_degF",
+      "delta_degR"
+     ]
+    }
+   },
+   "must_convert": {
+    "by_category": {
+     "compound": {
+      "correct": 0,
+      "total": 16,
+      "unsupported": 16,
+      "wrong_value": 0
+     },
+     "dimvexa_vector": {
+      "correct": 51,
+      "total": 97,
+      "unsupported": 43,
+      "wrong_value": 3
+     },
+     "imperial_us": {
+      "correct": 15,
+      "total": 23,
+      "unsupported": 6,
+      "wrong_value": 2
+     },
+     "independent": {
+      "correct": 28,
+      "total": 40,
+      "unsupported": 7,
+      "wrong_value": 5
+     },
+     "pressure": {
+      "correct": 1,
+      "total": 7,
+      "unsupported": 2,
+      "wrong_value": 4
+     },
+     "process": {
+      "correct": 0,
+      "total": 18,
+      "unsupported": 18,
+      "wrong_value": 0
+     },
+     "si": {
+      "correct": 10,
+      "total": 12,
+      "unsupported": 2,
+      "wrong_value": 0
+     },
+     "temperature": {
+      "correct": 8,
+      "total": 23,
+      "unsupported": 8,
+      "wrong_value": 7
+     }
+    },
+    "correct": 113,
+    "total": 236,
+    "unsupported": 102,
+    "wrong_value": 21
+   },
+   "must_refuse": {
+    "by_category": {
+     "ambiguous_name": {
+      "not_applicable": 0,
+      "refused": 4,
+      "silently_accepted": 6,
+      "total": 10
+     },
+     "dimension": {
+      "not_applicable": 0,
+      "refused": 4,
+      "silently_accepted": 1,
+      "total": 5
+     },
+     "kind": {
+      "not_applicable": 3,
+      "refused": 2,
+      "silently_accepted": 0,
+      "total": 5
+     },
+     "missing_context": {
+      "not_applicable": 0,
+      "refused": 10,
+      "silently_accepted": 0,
+      "total": 10
+     }
+    },
+    "by_group": {
+     "ambiguous_name": {
+      "not_applicable": 0,
+      "refused": 4,
+      "silently_accepted": 6,
+      "total": 10
+     },
+     "other": {
+      "not_applicable": 3,
+      "refused": 16,
+      "silently_accepted": 1,
+      "total": 20
+     }
+    },
+    "not_applicable": 3,
+    "refused": 20,
+    "silently_accepted": 7,
+    "total": 30
+   }
+  }
+ },
+ "startup": {
+  "import_ms": {
+   "interpreter_baseline_ms": 34.861812,
+   "mad": 2.943786000000003,
+   "max": 14.551822999999999,
+   "median": 7.977285999999999,
+   "min": 2.2927019999999985,
+   "raw": [
+    9.639322999999997,
+    5.0334999999999965,
+    7.977285999999999,
+    2.2927019999999985,
+    14.551822999999999
+   ],
+   "samples": 5,
+   "unit": "ms"
+  },
+  "package_bytes": 1024379,
+  "peak_rss_kb": 86288
+ }
+}

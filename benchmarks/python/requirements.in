@@ -4,3 +4,5 @@ numpy>=2.0
 pint>=0.24
 unyt>=3.0
 astropy>=6.0
+quantities>=0.16
+ucumvert>=0.3

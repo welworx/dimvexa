@@ -8,8 +8,12 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@lhncbc/ucum-lhc": "8.0.1",
+    "convert": "8.0.2",
     "convert-units": "2.3.4",
+    "fraction.js": "4.3.7",
     "js-quantities": "1.8.0",
-    "mathjs": "13.2.0"
+    "mathjs": "13.2.0",
+    "unitmath": "1.1.1"
   }
 }
