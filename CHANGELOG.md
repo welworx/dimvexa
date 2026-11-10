@@ -7,6 +7,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-10
 ### Added
 
 - Units `bbl` (petroleum barrel, 42 US gal), `psig`, `barg`, `Pag` (gauge pressure), `Nm3` (normal cubic metre, 273.15 K and 101 325 Pa) and `scf` (standard cubic foot, 60 degF and 14.696 psia), closing the gaps found by the comparison benchmark. Gauge pressures and gas volumes carry a reference state (ADR-013): `psig` to `barg`, `Nm3/h` to `Nm3/min` and `scf/min` to `scf/h` work and stay exact; `psig` to `bar`, `Nm3` to `m3`, `Nm3/h` to `m3/h` and `scf` to `Nm3` are refused with the code `refused`, never guessed. Combining two reference units in one expression is refused too.
