@@ -95,6 +95,17 @@ The [user guide](docs/guide.md) has the full unit list, configs and densities, u
 own, the angle limitations and self-update. The Python and WASM bindings have their own
 READMEs in [`bindings/`](bindings); an Excel add-in is an early spike ([docs](docs/excel.md)).
 
+## Benchmarked against
+
+[uom](https://github.com/iliekturtles/uom) (Rust), [Pint](https://github.com/hgrecco/pint),
+[Astropy](https://github.com/astropy/astropy) and [unyt](https://github.com/yt-project/unyt)
+(Python), [math.js](https://github.com/josdejong/mathjs),
+[convert-units](https://github.com/convert-units/convert-units) and
+[js-quantities](https://github.com/gentooboontoo/js-quantities) (JavaScript), on speed,
+accuracy and how each handles ambiguous input. Method and results:
+[`docs/benchmarking.md`](docs/benchmarking.md). Dimvexa is independent and not affiliated with
+any of them.
+
 ## Contributing
 
 Missing a unit? Open a *Unit request* issue with a primary source. For code, see
