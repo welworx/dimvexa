@@ -40,6 +40,9 @@ pub struct UnitDef {
     pub source: &'static str,
     /// Free-text note (derivation, caveats).
     pub note: &'static str,
+    /// The reference state the unit is defined at (ADR-013), for example
+    /// `273.15 K, 101 325 Pa`. Empty for a unit without one; required for a reference kind.
+    pub conditions: &'static str,
 }
 
 /// A bare symbol that is deliberately rejected, with the explicit symbols to use instead.
@@ -71,6 +74,7 @@ pub struct Unit {
     namespace: String,
     source: String,
     note: String,
+    conditions: String,
 }
 
 impl Unit {
@@ -126,6 +130,7 @@ impl Unit {
             namespace: "std".to_string(),
             source: String::new(),
             note: String::new(),
+            conditions: String::new(),
         })
     }
 
@@ -159,11 +164,15 @@ impl Unit {
             }
             unit.aliases.push((*alias).to_string());
         }
+        if def.kind.is_reference() && def.conditions.trim().is_empty() {
+            return Err(bad("a unit with a reference state needs its conditions"));
+        }
         unit.exactness = def.exactness;
         unit.prefixes = def.prefixes;
         unit.namespace = def.namespace.to_string();
         unit.source = def.source.to_string();
         unit.note = def.note.to_string();
+        unit.conditions = def.conditions.to_string();
         Ok(unit)
     }
 
@@ -284,6 +293,13 @@ impl Unit {
     #[must_use]
     pub fn note(&self) -> &str {
         &self.note
+    }
+
+    /// The reference state the unit is defined at (`273.15 K, 101 325 Pa` for `Nm3`), or an
+    /// empty string for a unit without one (ADR-013).
+    #[must_use]
+    pub fn conditions(&self) -> &str {
+        &self.conditions
     }
 }
 
@@ -616,6 +632,7 @@ mod tests {
             namespace: "std",
             source: "test",
             note: "",
+            conditions: "",
         };
         assert_eq!(
             Unit::from_def(&d).unwrap().factor(),

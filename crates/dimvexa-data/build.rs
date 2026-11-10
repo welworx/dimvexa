@@ -87,13 +87,14 @@ fn unit_def(t: &toml_lite::Table) -> Res<String> {
         s,
         "    UnitDef {{ symbol: {}, aliases: &[{}], dim: [{}], kind: {kind}, shape: {shape}, \
          factor: {factor}, offset: {offset}, exactness: {exactness}, prefixes: {prefixes}, \
-         namespace: {}, source: {}, note: {} }},",
+         namespace: {}, source: {}, note: {}, conditions: {} }},",
         lit(symbol),
         aliases.join(", "),
         dim.join(", "),
         lit(t.str("namespace").map_err(ctx)?),
         lit(t.str("source").map_err(ctx)?),
         lit(t.str("note").map_err(ctx)?),
+        lit(t.opt_str("conditions").map_err(ctx)?.unwrap_or("")),
     );
     Ok(s)
 }

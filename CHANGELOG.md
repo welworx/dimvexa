@@ -12,7 +12,8 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 - Units `bbl` (petroleum barrel, 42 US gal), `psig`, `barg`, `Pag` (gauge pressure), `Nm3` (normal cubic metre, 273.15 K and 101 325 Pa) and `scf` (standard cubic foot, 60 degF and 14.696 psia), closing the gaps found by the comparison benchmark. Gauge pressures and gas volumes carry a reference state (ADR-013): `psig` to `barg`, `Nm3/h` to `Nm3/min` and `scf/min` to `scf/h` work and stay exact; `psig` to `bar`, `Nm3` to `m3`, `Nm3/h` to `m3/h` and `scf` to `Nm3` are refused with the code `refused`, never guessed. Combining two reference units in one expression is refused too.
 - `quantity_kind` gains `gauge_pressure`, `normal_volume` and `standard_volume` in `dimvexa.convert/2` and `dimvexa.units/2` (additive; the field was an enum).
 - A reference unit may end in digits (`Nm3`); `Nm3` and `Nm^3` are the same unit. Every other unit symbol is still letters only, so `m3` stays `m^3`.
-- Data version 12.
+- Units gain an optional `conditions` field: the reference state a unit is defined at (`273.15 K (0 degC), 101 325 Pa` for `Nm3`). It is mandatory for gauge and gas-volume units (`validate-data` checks it), shown by `dimvexa units NAME`, and added as `unit.conditions` (string or null) to `dimvexa.units/2`.
+- Data version 13.
 
 ## [0.2.2] - 2026-11-10
 

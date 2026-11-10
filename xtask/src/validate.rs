@@ -190,6 +190,14 @@ pub fn run(root: &Path) -> Result<Report, String> {
         if kind.is_none() {
             err(format!("{at}: missing or unknown 'kind'"));
         }
+        if kind.is_some_and(Kind::is_reference)
+            && t.opt_str("conditions")
+                .map_or(true, |c| c.is_none_or(|c| c.trim().is_empty()))
+        {
+            err(format!(
+                "{at}: a unit with a reference state needs 'conditions' (ADR-013)"
+            ));
+        }
         let dim = match t.ints("dim") {
             Ok(d) if d.len() == 7 && d.iter().all(|e| (-20..=20).contains(e)) => d,
             Ok(_) => {

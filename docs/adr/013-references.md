@@ -68,6 +68,9 @@ implement this ADR with its recommendations. What shipped, and where it differs 
   references; those variants are a unit request (`unit-request-triage`). `Nm3` ends in a digit, which
   the parser reads as a power, so a unit of a reference kind is the only one allowed a trailing
   digit and `Nm`+`3` resolves to it.
+* **Conditions are data.** A unit has an optional `conditions` text (the reference state, as for
+  densities), required for every reference kind and shown by `dimvexa units NAME` and in the
+  `dimvexa.units/2` JSON. It is documentation, not arithmetic: the kind decides what converts.
 * **Gauge units shipped:** `psig`, `barg`, and `Pag` (with SI prefixes, so `kPag`, `MPag`). Gauge
   to absolute stays refused (KL-23); the caller-supplied ambient pressure is still not built.
 * **`bbl`** is the petroleum barrel, 42 US gal (158.987294928 L). The US liquid barrel and the dry

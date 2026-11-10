@@ -814,6 +814,7 @@ prefixes = "none"
 namespace = "std"
 source = "NIST SP 811 (2008), Appendix B (pound-force per square inch); gauge pressure is measured from the ambient pressure (ADR-013)"
 note = "same size as psi; the value is relative to the ambient pressure, which is not part of the unit, so psig converts only to other gauge units (barg, Pag) and never to absolute pressure"
+conditions = "gauge: measured from the local ambient pressure, which is not part of the unit"
 
 [[unit]]
 symbol = "barg"
@@ -828,6 +829,7 @@ prefixes = "none"
 namespace = "std"
 source = "NIST SP 811 (2008), Appendix B (bar = 100 kPa); gauge pressure is measured from the ambient pressure (ADR-013)"
 note = "same size as bar; gauge reference, see psig"
+conditions = "gauge: measured from the local ambient pressure, which is not part of the unit"
 
 [[unit]]
 symbol = "Pag"
@@ -842,6 +844,7 @@ prefixes = "si"
 namespace = "si"
 source = "BIPM SI Brochure (2019), Table 4 (pascal); gauge pressure is measured from the ambient pressure (ADR-013)"
 note = "same size as Pa; gauge reference, see psig. kPag and MPag are SI prefixes on Pag"
+conditions = "gauge: measured from the local ambient pressure, which is not part of the unit"
 
 [[unit]]
 symbol = "Nm3"
@@ -856,6 +859,7 @@ prefixes = "none"
 namespace = "std"
 source = "DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa"
 note = "normal cubic metre: one m^3 of gas at 273.15 K and 101 325 Pa (ADR-013). Some users mean 20 degC or 15 degC; those are not this unit. Converts only to units with the same reference (Nm3/h to Nm3/min); to m3 or scf it is refused because that needs the actual state and a gas model (ADR-001)"
+conditions = "273.15 K (0 degC), 101 325 Pa (DIN 1343 normal condition)"
 
 [[unit]]
 symbol = "scf"
@@ -870,3 +874,4 @@ prefixes = "none"
 namespace = "std"
 source = "NIST SP 811 (2008), Appendix B (foot, so the cubic foot is 0.3048^3 m^3); reference state 60 degF and 14.696 psia per GPA Standard 2145 and API MPMS Chapter 14.3"
 note = "standard cubic foot = ft^3 of gas at 60 degF and 14.696 psia (ADR-013). Some contracts use 14.73 psia; that is not this unit. Converts only within its own reference (scf/min to scf/h); to m3, ft3 or Nm3 it is refused (ADR-001)"
+conditions = "60 degF (288.7056 K), 14.696 psia"

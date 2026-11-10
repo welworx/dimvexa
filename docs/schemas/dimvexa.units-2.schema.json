@@ -354,6 +354,7 @@
             "factor",
             "offset",
             "sources",
+            "conditions",
             "note",
             "origin",
             "mapping"
@@ -426,6 +427,13 @@
               "items": {
                 "type": "string"
               }
+            },
+            "conditions": {
+              "description": "The reference state of a gauge or gas-volume unit (ADR-013), for example `273.15 K, 101 325 Pa` for Nm3; null for a unit without one.",
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "note": {
               "type": [
