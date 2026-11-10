@@ -47,7 +47,7 @@ dependency without an issue and an ADR. Edition 2024, MSRV 1.85 (do not change i
 | `crates/dimvexa-cli` | `dimvexa convert`, `units`, `configs`, `update` (self-update, ADR-015); no conversion logic of its own; snapshots in `tests/snapshots` |
 | `crates/dimvexa-testkit` | test helpers; differential, exact-path, property, overflow and zero-allocation tests |
 | `xtask` | `ci`, `validate-data`, `update-data-hash`, `bench-check` |
-| `docs/` | `PLAN.md`, `DESIGN.md`, `adr/`, `excel.md`, `brand/` (logo, icons, design guidelines), `precision.md`, `benchmarks/`, `ci-pinning.md`, `schemas/` |
+| `docs/` | `guide.md` (CLI user guide; its examples are tested in `crates/dimvexa-cli/tests/cli.rs`), `PLAN.md`, `DESIGN.md`, `adr/`, `excel.md`, `brand/` (logo, icons, design guidelines), `precision.md`, `benchmarks/`, `ci-pinning.md`, `schemas/` |
 | `.github/` | workflows (pinned actions, see `docs/ci-pinning.md`), issue forms, PR template |
 | `extras/`, `fuzz/` | network-only tooling; separate workspaces, never built offline |
 | `benchmarks/` | cross-library comparison: corpus, runners, report generator (own workspaces; competitors need network) |

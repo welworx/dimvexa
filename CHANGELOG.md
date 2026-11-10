@@ -7,6 +7,10 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+### Changed
+
+- README: shortened to a tour (install, a few examples, links). The full unit list, `--config`, densities, your own units, the angle limitations and `dimvexa update` moved to `docs/guide.md`, still tested against the real CLI output. The GitHub issues badge is gone.
+
 ### Added
 
 - `docs/brand`: the Dimvexa logo, app icons (16 to 512 px), lockups, GitHub social preview and design guidelines; the README header, the Excel add-in icons, every crate and binding README (so the crates.io, PyPI and npm pages) and the docs.rs logo and favicon use them.
