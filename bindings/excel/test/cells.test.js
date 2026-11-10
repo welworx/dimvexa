@@ -40,7 +40,7 @@ const quoted = (t) => t
     try { got = String(await associated[m[1].toUpperCase()](...args)); } catch (e) { got = "error: " + e.message; }
     let pass;
     if (expected.startsWith("error:")) {
-      pass = got.includes(quoted(expected).replace(/^dimvexa /, "dimvexa "));
+      pass = got.includes(quoted(expected));
     } else if (Number.isNaN(Number(expected))) {
       pass = got === expected;
     } else {
