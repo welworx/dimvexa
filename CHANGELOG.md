@@ -6,8 +6,14 @@ All notable changes are documented here. The format follows
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
 ## [Unreleased]
+### Added
+
+- Unit `ar` (are, 100 m^2, NIST SP 811 B.8) and the week aliases `wk` and `w`. `Nm3` has the printable symbol and alias `Nm³`; a reference unit may end in a superscript digit, no other symbol may (`m³` is still an error).
+- Bare `a` (year or are), `month` and `mo` (no fixed length) are refused as ambiguous with the explicit choices.
+
 ### Changed
 
+- The reference states of `Nm3` and `scf` print degrees as `°C` and `°F`.
 - `cargo xtask ci` gains an `msrv` stage (a `cargo check` on Rust 1.85, read from `rust-version`), and the pre-commit hook runs fmt, clippy and `msrv` on staged Rust files, so code that only compiles on the pinned toolchain (a let chain) no longer reaches CI.
 
 ## [0.4.0] - 2026-11-11

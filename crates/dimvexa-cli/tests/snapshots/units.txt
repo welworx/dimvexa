@@ -80,6 +80,7 @@ delta_K	ΔK	Kelvin difference	temperature_difference	defined	none	ΔK	BIPM SI Br
 delta_degC	Δ°C	Degree Celsius difference	temperature_difference	defined	none	Δ°C	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4, note (f) (degree Celsius, temperature intervals)
 
 ## area
+ar	ar	Are	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (are = 1 dam^2 = 10^2 m^2)
 ha	ha	Hectare	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (hectare = 1 hm^2 = 10^4 m^2)
 
 ## length
@@ -165,7 +166,7 @@ delta_degF	Δ°F	Degree Fahrenheit difference	temperature_difference	defined	non
 delta_degR	Δ°R	Degree Rankine difference	temperature_difference	defined	none	Δ°R	NIST SP 811 (2008), Appendix B (degree Rankine, temperature interval)
 
 ## time
-week	week	Week	plain	defined	none	-	ISO 8601-1:2019 (week of 7 days); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (day = 86 400 s)
+week	week	Week	plain	defined	none	wk, w	ISO 8601-1:2019 (week of 7 days); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (day = 86 400 s)
 yr_common	yr_common	Common year	plain	defined	none	-	NIST SP 811 (2008), Appendix B (year, 365 days)
 yr_julian	yr_julian	Julian year	plain	defined	none	-	IAU Style Manual (1989), Julian year a = 365.25 d; BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (day = 86 400 s)
 
@@ -217,7 +218,7 @@ barg	barg	Bar gauge	gauge_pressure	defined	none	-	NIST SP 811 (2008), Appendix B
 Pag	Pag	Pascal gauge	gauge_pressure	defined	si	-	BIPM SI Brochure (2019), Table 4 (pascal); gauge pressure is measured from the ambient pressure (ADR-013)
 
 ## volume
-Nm3	Nm3	Normal cubic metre	normal_volume	defined	none	-	DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa
+Nm3	Nm³	Normal cubic metre	normal_volume	defined	none	Nm³	DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa
 scf	scf	Standard cubic foot	standard_volume	defined	none	-	NIST SP 811 (2008), Appendix B (foot, so the cubic foot is 0.3048^3 m^3); reference state 60 degF and 14.696 psia per GPA Standard 2145 (edition not checked)
 
 ## ambiguous symbols (refused unless your config resolves them)
@@ -241,3 +242,6 @@ qt	qt_us, qt_imp	-	US liquid quart (946.352946 mL), imperial quart (1.1365225 L)
 cup	cup_us	-	US cup (236.5882365 mL), metric cup (250 mL), imperial cup and the US customary legal cup (240 mL) differ
 tbsp	tbsp_us	-	US (14.78676478125 mL), metric (15 mL), UK and Australian (20 mL) tablespoons differ
 tsp	tsp_us	-	US (4.92892159375 mL) and metric (5 mL) teaspoons differ
+a	yr_julian, yr_common, ar	-	a is the year (annum) and, in NIST SP 811, the are (100 m^2); the year is 365, 365.25 or 365.2425 days depending on the definition
+month	-	month_30, month_julian	a month has 28 to 31 days; there is no fixed length, so a month is never guessed (30 d and the mean Julian month of 30.4375 d are planned)
+mo	-	month_30, month_julian	same as month

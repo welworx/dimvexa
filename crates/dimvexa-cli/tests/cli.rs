@@ -2284,11 +2284,7 @@ fn units_shows_the_conditions_of_a_user_unit_built_on_a_reference_unit() {
     let j = dimvexa(&["units", "MMscf", "--json", "--config", &cfg]);
     let v = json::parse(&j.stdout).unwrap();
     json::check_units_schema(&v);
-    assert!(
-        j.stdout.contains("\"conditions\":\"60 degF"),
-        "{}",
-        j.stdout
-    );
+    assert!(j.stdout.contains("\"conditions\":\"60 °F"), "{}", j.stdout);
     // The conversion itself still works within the reference and is refused across it.
     assert_eq!(
         dimvexa(&["convert", "1", "MMscf", "scf", "--config", &cfg]).stdout,

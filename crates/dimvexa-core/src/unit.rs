@@ -5,7 +5,7 @@ use core::fmt;
 
 use crate::dim::Dim;
 use crate::error::{Error, Result};
-use crate::expr::{Expr, is_valid_symbol, is_valid_symbol_for};
+use crate::expr::{Expr, is_valid_symbol_for};
 use crate::kind::{Exactness, Kind, Shape};
 use crate::prefix::PrefixMode;
 use crate::ratio::Ratio;
@@ -165,7 +165,7 @@ impl Unit {
             return Err(bad("affine units cannot take prefixes"));
         }
         for alias in def.aliases {
-            if !is_valid_symbol(alias) {
+            if !is_valid_symbol_for(alias, def.kind) {
                 return Err(bad(
                     "alias contains characters that cannot appear in a symbol",
                 ));
@@ -224,7 +224,7 @@ impl Unit {
     /// [`Error::InvalidDefinition`] if an alias is not a well-formed symbol.
     pub fn with_aliases(mut self, aliases: &[&str]) -> Result<Self> {
         for a in aliases {
-            if !is_valid_symbol(a) {
+            if !is_valid_symbol_for(a, self.kind) {
                 return Err(Error::InvalidDefinition {
                     symbol: self.id,
                     message: format!("alias '{a}' is not a well-formed symbol"),
@@ -437,7 +437,7 @@ impl UnitExpr {
     }
 
     /// The reference state of the unit that gives this expression its reference kind
-    /// (`273.15 K (0 degC), 101 325 Pa` for `Nm3/h`), or an empty string without one.
+    /// (`273.15 K (0 °C), 101 325 Pa` for `Nm3/h`), or an empty string without one.
     #[must_use]
     pub fn conditions(&self) -> &str {
         &self.conditions
