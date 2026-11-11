@@ -5,7 +5,7 @@
 # files, manifest.xml and a short SIDELOAD.txt. VERSION must equal the workspace version
 # (scripts/check-versions.sh prints it), and so must the manifest's <Version> (plus ".0").
 #
-#   scripts/package-excel-addin.sh 0.3.0 out/
+#   scripts/package-excel-addin.sh 0.4.0 out/
 #
 # This is a development build for sideloading: the manifest points at https://localhost:3000
 # (ADR-016), nothing is hosted or published.

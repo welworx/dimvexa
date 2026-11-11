@@ -6,6 +6,8 @@ All notable changes are documented here. The format follows
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
 ## [Unreleased]
+
+## [0.4.0] - 2026-11-11
 ### Changed
 
 - **Breaking (ADR-017):** a unit has an `id`, a `symbol` and a `name`. What was `symbol` (the ASCII name the parser accepts, `degC`) is now `id`; `symbol` is the symbol to print (`°C`, `Ω`, `Å`, `t`; it is the id or an alias, so it reads back). `Unit::symbol()` is now `Unit::id()` and `Unit::symbol()` returns the printable one; `UnitDef` gains `id`. The unit tables use `id = ...` and an optional `symbol = ...`. `dimvexa units --json` and `units NAME --json` move to `dimvexa.units/3` (`symbol` renamed to `id`, `symbol` and `name` added; schema in `docs/schemas/dimvexa.units-3.schema.json`), and the `units` text table has `id` and `symbol` columns. Python `unit_info` returns `id` too.
