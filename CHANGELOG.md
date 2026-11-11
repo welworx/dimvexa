@@ -6,6 +6,9 @@ All notable changes are documented here. The format follows
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
 ## [Unreleased]
+### Added
+
+- Every table unit has a full name (`Pascal` for `Pa`, `Pound-force per square inch` for `psi`). `name` is mandatory in the unit tables (`validate-data` checks it), available as `Unit::name()` and `UnitDef::name`, shown by `dimvexa units` (new second column) and `dimvexa units NAME`, and added as `name` to `dimvexa.units/2` (additive) and to the Python `unit_info`. A user unit without a name reads as its symbol.
 
 ## [0.3.0] - 2026-11-10
 ### Added

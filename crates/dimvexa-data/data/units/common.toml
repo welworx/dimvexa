@@ -5,6 +5,7 @@
 
 [[unit]]
 symbol = "bar"
+name = "Bar"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -19,6 +20,7 @@ note = "bar = 1e5 Pa by definition"
 
 [[unit]]
 symbol = "atm"
+name = "Standard atmosphere"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -33,6 +35,7 @@ note = "standard atmosphere = 101325 Pa exactly"
 
 [[unit]]
 symbol = "g_n"
+name = "Standard gravity"
 aliases = []
 dim = [0, 1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -47,6 +50,7 @@ note = "standard acceleration of gravity 9.80665 m/s^2 exactly"
 
 [[unit]]
 symbol = "lbf"
+name = "Pound-force"
 aliases = []
 dim = [1, 1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -61,6 +65,7 @@ note = "lbf = lb * g_n = 0.45359237 kg * 9.80665 m/s^2"
 
 [[unit]]
 symbol = "psi"
+name = "Pound-force per square inch"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -75,6 +80,7 @@ note = "psi = lbf/in^2 = (0.45359237 * 9.80665) / 0.0254^2 Pa, derived exactly f
 
 [[unit]]
 symbol = "mmHg"
+name = "Millimetre of mercury"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -89,6 +95,7 @@ note = "conventional mercury density 13595.1 kg/m^3 * g_n * 1 mm = 133.322387415
 
 [[unit]]
 symbol = "torr"
+name = "Torr"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -103,6 +110,7 @@ note = "torr = atm/760 exactly; differs from mmHg by about 1.4e-7 relative"
 
 [[unit]]
 symbol = "cal_th"
+name = "Thermochemical calorie"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -117,6 +125,7 @@ note = "thermochemical calorie = 4.184 J exactly"
 
 [[unit]]
 symbol = "cal_IT"
+name = "International Table calorie"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -131,6 +140,7 @@ note = "International Table calorie = 4.1868 J exactly"
 
 [[unit]]
 symbol = "Btu_IT"
+name = "International Table British thermal unit"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -145,6 +155,7 @@ note = "Btu_IT = cal_IT/g * lb * (5/9 K) = 4.1868 * 453.59237 / 1.8 J = 1055.055
 
 [[unit]]
 symbol = "Btu_th"
+name = "Thermochemical British thermal unit"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -159,6 +170,7 @@ note = "Btu_th = cal_th/g * lb * (5/9 K) = 4.184 * 453.59237 / 1.8 J, derived ex
 
 [[unit]]
 symbol = "hp_mech"
+name = "Mechanical horsepower"
 aliases = []
 dim = [1, 2, -3, 0, 0, 0, 0]
 kind = "plain"
@@ -173,6 +185,7 @@ note = "mechanical horsepower = 550 ft lbf/s = 550 * 0.3048 * 0.45359237 * 9.806
 
 [[unit]]
 symbol = "hp_metric"
+name = "Metric horsepower"
 aliases = []
 dim = [1, 2, -3, 0, 0, 0, 0]
 kind = "plain"
@@ -187,6 +200,7 @@ note = "metric horsepower = 75 kgf m/s = 75 * 9.80665 W = 735.49875 W"
 
 [[unit]]
 symbol = "in"
+name = "Inch"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -201,6 +215,7 @@ note = "inch = 0.0254 m exactly"
 
 [[unit]]
 symbol = "ft"
+name = "Foot"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -215,6 +230,7 @@ note = "international foot = 0.3048 m exactly"
 
 [[unit]]
 symbol = "yd"
+name = "Yard"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -229,6 +245,7 @@ note = "international yard = 0.9144 m exactly"
 
 [[unit]]
 symbol = "mi"
+name = "Mile"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -243,6 +260,7 @@ note = "international mile = 5280 ft = 1609.344 m; the US survey mile is mi_us_s
 
 [[unit]]
 symbol = "nmi"
+name = "Nautical mile"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -257,6 +275,7 @@ note = "international nautical mile = 1852 m exactly"
 
 [[unit]]
 symbol = "ft_us_survey"
+name = "US survey foot"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -271,6 +290,7 @@ note = "US survey foot = 1200/3937 m; deprecated by NIST and NGS from 2023-01-01
 
 [[unit]]
 symbol = "mi_us_survey"
+name = "US survey mile"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -285,6 +305,7 @@ note = "US statute mile = 5280 US survey feet"
 
 [[unit]]
 symbol = "lb"
+name = "Pound"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -299,6 +320,7 @@ note = "avoirdupois pound = 0.45359237 kg exactly"
 
 [[unit]]
 symbol = "oz_av"
+name = "Avoirdupois ounce"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -313,6 +335,7 @@ note = "avoirdupois ounce = lb/16 (mass)"
 
 [[unit]]
 symbol = "oz_troy"
+name = "Troy ounce"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -327,6 +350,7 @@ note = "troy ounce = 480 grains, grain = 64.79891 mg, so 31.1034768 g exactly"
 
 [[unit]]
 symbol = "ton_short"
+name = "Short ton"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -341,6 +365,7 @@ note = "short ton = 2000 lb = 907.18474 kg"
 
 [[unit]]
 symbol = "ton_long"
+name = "Long ton"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -355,6 +380,7 @@ note = "long ton = 2240 lb = 1016.0469088 kg"
 
 [[unit]]
 symbol = "gal_us"
+name = "US liquid gallon"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -369,6 +395,7 @@ note = "US liquid gallon = 231 in^3 = 3.785411784 L exactly"
 
 [[unit]]
 symbol = "gal_imp"
+name = "Imperial gallon"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -383,6 +410,7 @@ note = "imperial gallon = 4.54609 L exactly"
 
 [[unit]]
 symbol = "pt_us"
+name = "US liquid pint"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -397,6 +425,7 @@ note = "US liquid pint = gal_us/8; the dry pint is a different unit and not incl
 
 [[unit]]
 symbol = "pt_imp"
+name = "Imperial pint"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -411,6 +440,7 @@ note = "imperial pint = gal_imp/8"
 
 [[unit]]
 symbol = "lbmol"
+name = "Pound-mole"
 aliases = []
 dim = [0, 0, 0, 0, 0, 1, 0]
 kind = "plain"
@@ -425,6 +455,7 @@ note = "pound-mole = 1 lb expressed in grams as a number of moles = 453.59237 mo
 
 [[unit]]
 symbol = "degF"
+name = "Degree Fahrenheit"
 aliases = ["°F"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "absolute_temperature"
@@ -439,6 +470,7 @@ note = "K = (degF + 459.67) * 5/9; absolute temperature"
 
 [[unit]]
 symbol = "degR"
+name = "Degree Rankine"
 aliases = ["°R"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "absolute_temperature"
@@ -453,6 +485,7 @@ note = "K = degR * 5/9; absolute temperature, linear (zero at absolute zero)"
 
 [[unit]]
 symbol = "delta_degF"
+name = "Degree Fahrenheit difference"
 aliases = ["Δ°F"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "temperature_difference"
@@ -467,6 +500,7 @@ note = "temperature difference of 1 degF = 5/9 K"
 
 [[unit]]
 symbol = "delta_degR"
+name = "Degree Rankine difference"
 aliases = ["Δ°R"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "temperature_difference"
@@ -481,6 +515,7 @@ note = "temperature difference of 1 degR = 5/9 K"
 
 [[unit]]
 symbol = "week"
+name = "Week"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -495,6 +530,7 @@ note = "week = 7 d"
 
 [[unit]]
 symbol = "yr_common"
+name = "Common year"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -509,6 +545,7 @@ note = "common year = 365 d; the bare words yr and year are ambiguous and reject
 
 [[unit]]
 symbol = "yr_julian"
+name = "Julian year"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -523,6 +560,7 @@ note = "Julian year = 365.25 d, the astronomical year; the bare words yr and yea
 
 [[unit]]
 symbol = "ly"
+name = "Light year"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -537,6 +575,7 @@ note = "light year = 299 792 458 m/s * 31 557 600 s = 9 460 730 472 580 800 m"
 
 [[unit]]
 symbol = "acre_int"
+name = "International acre"
 aliases = []
 dim = [0, 2, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -551,6 +590,7 @@ note = "acre = 43 560 ft^2 with the international foot (4046.8564224 m^2); acre_
 
 [[unit]]
 symbol = "acre_us_survey"
+name = "US survey acre"
 aliases = []
 dim = [0, 2, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -565,6 +605,7 @@ note = "acre = 43 560 ft_us_survey^2 (about 4046.8726 m^2)"
 
 [[unit]]
 symbol = "kn"
+name = "Knot"
 aliases = []
 dim = [0, 1, -1, 0, 0, 0, 0]
 kind = "plain"
@@ -579,6 +620,7 @@ note = "knot = 1 nmi/h = 1852/3600 m/s"
 
 [[unit]]
 symbol = "fl_oz_us"
+name = "US fluid ounce"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -593,6 +635,7 @@ note = "US fluid ounce = gal_us/128 = 29.5735295625 mL"
 
 [[unit]]
 symbol = "cup_us"
+name = "US cup"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -607,6 +650,7 @@ note = "US cup = gal_us/16 = 8 fl_oz_us = 236.5882365 mL"
 
 [[unit]]
 symbol = "qt_us"
+name = "US liquid quart"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -621,6 +665,7 @@ note = "US liquid quart = gal_us/4"
 
 [[unit]]
 symbol = "tbsp_us"
+name = "US tablespoon"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -635,6 +680,7 @@ note = "US tablespoon = fl_oz_us/2 = gal_us/256; the bare word tbsp is ambiguous
 
 [[unit]]
 symbol = "tsp_us"
+name = "US teaspoon"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -649,6 +695,7 @@ note = "US teaspoon = tbsp_us/3 = gal_us/768; the bare word tsp is ambiguous and
 
 [[unit]]
 symbol = "fl_oz_imp"
+name = "Imperial fluid ounce"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -663,6 +710,7 @@ note = "imperial fluid ounce = gal_imp/160 = 28.4130625 mL"
 
 [[unit]]
 symbol = "qt_imp"
+name = "Imperial quart"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -677,6 +725,7 @@ note = "imperial quart = gal_imp/4 = 1.1365225 L"
 
 [[unit]]
 symbol = "grain"
+name = "Grain"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -691,6 +740,7 @@ note = "grain = lb/7000 = 64.79891 mg"
 
 [[unit]]
 symbol = "carat"
+name = "Metric carat"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -705,6 +755,7 @@ note = "metric carat = 200 mg"
 
 [[unit]]
 symbol = "erg"
+name = "Erg"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -719,6 +770,7 @@ note = "erg = 1e-7 J (CGS)"
 
 [[unit]]
 symbol = "dyn"
+name = "Dyne"
 aliases = []
 dim = [1, 1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -733,6 +785,7 @@ note = "dyne = 1e-5 N (CGS)"
 
 [[unit]]
 symbol = "kgf"
+name = "Kilogram-force"
 aliases = []
 dim = [1, 1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -747,6 +800,7 @@ note = "kilogram-force = 1 kg * g_n = 9.80665 N"
 
 [[unit]]
 symbol = "grad"
+name = "Gradian"
 aliases = ["gon"]
 dim = [0, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -761,6 +815,7 @@ note = "grad (gon) = pi/200 rad. Factor uses pi ~ 245850922/78256779 (a continue
 
 [[unit]]
 symbol = "P"
+name = "Poise"
 aliases = ["poise"]
 dim = [1, -1, -1, 0, 0, 0, 0]
 kind = "plain"
@@ -775,6 +830,7 @@ note = "dynamic viscosity, CGS; 1 P = 1 g/(cm s) = 0.1 Pa s; cP is the SI prefix
 
 [[unit]]
 symbol = "St"
+name = "Stokes"
 aliases = ["stokes"]
 dim = [0, 2, -1, 0, 0, 0, 0]
 kind = "plain"
@@ -789,6 +845,7 @@ note = "kinematic viscosity, CGS; 1 St = 1 cm^2/s; cSt is the SI prefix c on St"
 
 [[unit]]
 symbol = "bbl"
+name = "Oil barrel"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -803,6 +860,7 @@ note = "petroleum (oil) barrel = 42 gal_us = 42 * 231 in^3 = 158.987294928 L exa
 
 [[unit]]
 symbol = "psig"
+name = "Pound-force per square inch gauge"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "gauge_pressure"
@@ -818,6 +876,7 @@ conditions = "gauge: measured from the local ambient pressure, which is not part
 
 [[unit]]
 symbol = "barg"
+name = "Bar gauge"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "gauge_pressure"
@@ -833,6 +892,7 @@ conditions = "gauge: measured from the local ambient pressure, which is not part
 
 [[unit]]
 symbol = "Pag"
+name = "Pascal gauge"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "gauge_pressure"
@@ -848,6 +908,7 @@ conditions = "gauge: measured from the local ambient pressure, which is not part
 
 [[unit]]
 symbol = "Nm3"
+name = "Normal cubic metre"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "normal_volume"
@@ -863,6 +924,7 @@ conditions = "273.15 K (0 degC), 101 325 Pa (DIN 1343 normal condition)"
 
 [[unit]]
 symbol = "scf"
+name = "Standard cubic foot"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "standard_volume"

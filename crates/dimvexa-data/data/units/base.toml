@@ -4,6 +4,7 @@
 
 [[unit]]
 symbol = "m"
+name = "Metre"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -18,6 +19,7 @@ note = "metre, defined by the fixed value of the speed of light"
 
 [[unit]]
 symbol = "g"
+name = "Gram"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -32,6 +34,7 @@ note = "gram = 1/1000 of the SI base unit kilogram; kg is resolved as k + g"
 
 [[unit]]
 symbol = "s"
+name = "Second"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -46,6 +49,7 @@ note = "second, defined by the caesium hyperfine frequency"
 
 [[unit]]
 symbol = "A"
+name = "Ampere"
 aliases = []
 dim = [0, 0, 0, 1, 0, 0, 0]
 kind = "plain"
@@ -60,6 +64,7 @@ note = "ampere, defined by the fixed value of the elementary charge"
 
 [[unit]]
 symbol = "K"
+name = "Kelvin"
 aliases = []
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "absolute_temperature"
@@ -74,6 +79,7 @@ note = "kelvin, defined by the fixed value of the Boltzmann constant; absolute t
 
 [[unit]]
 symbol = "mol"
+name = "Mole"
 aliases = []
 dim = [0, 0, 0, 0, 0, 1, 0]
 kind = "plain"
@@ -88,6 +94,7 @@ note = "mole, defined by the fixed value of the Avogadro constant"
 
 [[unit]]
 symbol = "cd"
+name = "Candela"
 aliases = []
 dim = [0, 0, 0, 0, 0, 0, 1]
 kind = "plain"
@@ -102,6 +109,7 @@ note = "candela, defined by the luminous efficacy of 540 THz radiation"
 
 [[unit]]
 symbol = "Hz"
+name = "Hertz"
 aliases = []
 dim = [0, 0, -1, 0, 0, 0, 0]
 kind = "plain"
@@ -116,6 +124,7 @@ note = "hertz = 1/s"
 
 [[unit]]
 symbol = "N"
+name = "Newton"
 aliases = []
 dim = [1, 1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -130,6 +139,7 @@ note = "newton = kg m/s^2"
 
 [[unit]]
 symbol = "Pa"
+name = "Pascal"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -144,6 +154,7 @@ note = "pascal = N/m^2"
 
 [[unit]]
 symbol = "J"
+name = "Joule"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -158,6 +169,7 @@ note = "joule = N m"
 
 [[unit]]
 symbol = "W"
+name = "Watt"
 aliases = []
 dim = [1, 2, -3, 0, 0, 0, 0]
 kind = "plain"
@@ -172,6 +184,7 @@ note = "watt = J/s"
 
 [[unit]]
 symbol = "C"
+name = "Coulomb"
 aliases = []
 dim = [0, 0, 1, 1, 0, 0, 0]
 kind = "plain"
@@ -186,6 +199,7 @@ note = "coulomb = A s"
 
 [[unit]]
 symbol = "V"
+name = "Volt"
 aliases = []
 dim = [1, 2, -3, -1, 0, 0, 0]
 kind = "plain"
@@ -200,6 +214,7 @@ note = "volt = W/A"
 
 [[unit]]
 symbol = "ohm"
+name = "Ohm"
 aliases = ["Ω", "Ω"]
 dim = [1, 2, -3, -2, 0, 0, 0]
 kind = "plain"
@@ -214,6 +229,7 @@ note = "ohm = V/A; Greek capital omega and the ohm sign are aliases"
 
 [[unit]]
 symbol = "F"
+name = "Farad"
 aliases = []
 dim = [-1, -2, 4, 2, 0, 0, 0]
 kind = "plain"
@@ -228,6 +244,7 @@ note = "farad = C/V"
 
 [[unit]]
 symbol = "S"
+name = "Siemens"
 aliases = []
 dim = [-1, -2, 3, 2, 0, 0, 0]
 kind = "plain"
@@ -242,6 +259,7 @@ note = "siemens = A/V"
 
 [[unit]]
 symbol = "Wb"
+name = "Weber"
 aliases = []
 dim = [1, 2, -2, -1, 0, 0, 0]
 kind = "plain"
@@ -256,6 +274,7 @@ note = "weber = V s"
 
 [[unit]]
 symbol = "T"
+name = "Tesla"
 aliases = []
 dim = [1, 0, -2, -1, 0, 0, 0]
 kind = "plain"
@@ -270,6 +289,7 @@ note = "tesla = Wb/m^2"
 
 [[unit]]
 symbol = "H"
+name = "Henry"
 aliases = []
 dim = [1, 2, -2, -2, 0, 0, 0]
 kind = "plain"
@@ -284,6 +304,7 @@ note = "henry = Wb/A"
 
 [[unit]]
 symbol = "min"
+name = "Minute"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -298,6 +319,7 @@ note = "minute = 60 s"
 
 [[unit]]
 symbol = "h"
+name = "Hour"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -312,6 +334,7 @@ note = "hour = 60 min = 3600 s"
 
 [[unit]]
 symbol = "d"
+name = "Day"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -326,6 +349,7 @@ note = "day = 24 h = 86400 s (not a sidereal or calendar day)"
 
 [[unit]]
 symbol = "L"
+name = "Litre"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -340,6 +364,7 @@ note = "litre = 1 dm^3 = 1/1000 m^3"
 
 [[unit]]
 symbol = "tonne"
+name = "Tonne"
 aliases = ["t"]
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -354,6 +379,7 @@ note = "tonne (metric ton) = 1000 kg; t is an alias; the bare word ton is ambigu
 
 [[unit]]
 symbol = "Wh"
+name = "Watt hour"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -368,6 +394,7 @@ note = "watt hour = 3600 J; kWh and MWh come from the SI prefixes"
 
 [[unit]]
 symbol = "degC"
+name = "Degree Celsius"
 aliases = ["°C"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "absolute_temperature"
@@ -382,6 +409,7 @@ note = "degree Celsius: K = degC + 273.15; absolute temperature"
 
 [[unit]]
 symbol = "delta_K"
+name = "Kelvin difference"
 aliases = ["ΔK"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "temperature_difference"
@@ -396,6 +424,7 @@ note = "temperature difference of 1 K"
 
 [[unit]]
 symbol = "delta_degC"
+name = "Degree Celsius difference"
 aliases = ["Δ°C"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "temperature_difference"
@@ -410,6 +439,7 @@ note = "temperature difference of 1 degC = 1 K"
 
 [[unit]]
 symbol = "ha"
+name = "Hectare"
 aliases = []
 dim = [0, 2, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -424,6 +454,7 @@ note = "hectare = 10 000 m^2"
 
 [[unit]]
 symbol = "au"
+name = "Astronomical unit"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -438,6 +469,7 @@ note = "astronomical unit fixed by the IAU in 2012"
 
 [[unit]]
 symbol = "angstrom"
+name = "Angstrom"
 aliases = ["Å", "Å"]
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -452,6 +484,7 @@ note = "angstrom = 1e-10 m; the capital A with ring (U+00C5) and the angstrom si
 
 [[unit]]
 symbol = "Bq"
+name = "Becquerel"
 aliases = []
 dim = [0, 0, -1, 0, 0, 0, 0]
 kind = "plain"
@@ -466,6 +499,7 @@ note = "becquerel = 1/s (same dimension as the hertz)"
 
 [[unit]]
 symbol = "Gy"
+name = "Gray"
 aliases = []
 dim = [0, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -480,6 +514,7 @@ note = "gray = J/kg (same dimension as the sievert)"
 
 [[unit]]
 symbol = "Sv"
+name = "Sievert"
 aliases = []
 dim = [0, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -494,6 +529,7 @@ note = "sievert = J/kg (same dimension as the gray)"
 
 [[unit]]
 symbol = "lm"
+name = "Lumen"
 aliases = []
 dim = [0, 0, 0, 0, 0, 0, 1]
 kind = "plain"
@@ -508,6 +544,7 @@ note = "lumen = cd sr, and the steradian is dimensionless (ADR-007)"
 
 [[unit]]
 symbol = "lx"
+name = "Lux"
 aliases = []
 dim = [0, -2, 0, 0, 0, 0, 1]
 kind = "plain"
@@ -522,6 +559,7 @@ note = "lux = lm/m^2"
 
 [[unit]]
 symbol = "kat"
+name = "Katal"
 aliases = []
 dim = [0, 0, -1, 0, 0, 1, 0]
 kind = "plain"
@@ -536,6 +574,7 @@ note = "katal = mol/s"
 
 [[unit]]
 symbol = "rad"
+name = "Radian"
 aliases = []
 dim = [0, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -550,6 +589,7 @@ note = "radian = m/m, dimensionless (ADR-007)"
 
 [[unit]]
 symbol = "deg"
+name = "Degree of arc"
 aliases = ["°"]
 dim = [0, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -564,6 +604,7 @@ note = "degree = pi/180 rad. Factor uses pi ~ 245850922/78256779 (a continued-fr
 
 [[unit]]
 symbol = "arcmin"
+name = "Arcminute"
 aliases = []
 dim = [0, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -578,6 +619,7 @@ note = "arcminute = deg/60. Factor uses pi ~ 245850922/78256779 (a continued-fra
 
 [[unit]]
 symbol = "arcsec"
+name = "Arcsecond"
 aliases = []
 dim = [0, 0, 0, 0, 0, 0, 0]
 kind = "plain"

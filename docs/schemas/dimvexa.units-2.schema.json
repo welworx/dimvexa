@@ -78,6 +78,10 @@
                 "type": "string",
                 "description": "Primary symbol, accepted as written in `dimvexa convert`."
               },
+              "name": {
+                "type": "string",
+                "description": "Full name of the unit, for example `Pascal` for `Pa`. Equals the symbol for a user unit without a name."
+              },
               "group": {
                 "type": "string",
                 "description": "Quantity group by dimension: length, mass, time, volume, pressure, energy, ... Dimensions without a name read `dimension[<exponents>]`. The set of names may grow."
@@ -362,6 +366,10 @@
             "symbol": {
               "type": "string",
               "description": "The table symbol, or the expression as written."
+            },
+            "name": {
+              "type": ["string", "null"],
+              "description": "Full name of a table unit, `null` for an expression such as km."
             },
             "group": {
               "type": "string"

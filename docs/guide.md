@@ -97,6 +97,7 @@ $ dimvexa convert 1 ton kg
 error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne, or load a config that resolves it
 $ dimvexa units ton_short
 ton_short
+  name          Short ton
   group         mass
   aliases       -
   dimension     kg

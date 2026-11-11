@@ -1167,8 +1167,9 @@ fn units_text(
     densities: &[Constant],
     user: &[ConfigUnit],
 ) -> String {
-    let mut s =
-        String::from("# columns: symbol, quantity_kind, exactness, prefixes, aliases, source\n");
+    let mut s = String::from(
+        "# columns: symbol, name, quantity_kind, exactness, prefixes, aliases, source\n",
+    );
     let mut current: Option<&str> = None;
     for (g, u) in units {
         if current != Some(g.as_str()) {
@@ -1177,8 +1178,9 @@ fn units_text(
         }
         let _ = writeln!(
             s,
-            "{}\t{}\t{}\t{}\t{}\t{}",
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}",
             cell(u.symbol()),
+            cell(u.name()),
             u.kind().name(),
             u.exactness().name(),
             u.prefixes().name(),
@@ -1265,8 +1267,9 @@ fn units_json(
             let aliases: Vec<String> = u.aliases().iter().map(|a| json_string(a)).collect();
             let dims: Vec<String> = u.dim().exponents().iter().map(ToString::to_string).collect();
             format!(
-                "{{\"symbol\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"source\":{},\"origin\":{}}}",
+                "{{\"symbol\":{},\"name\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"source\":{},\"origin\":{}}}",
                 json_string(u.symbol()),
+                json_string(u.name()),
                 json_string(g),
                 aliases.join(","),
                 dims.join(","),
@@ -1355,6 +1358,7 @@ struct Detail {
     /// What was asked for (a symbol, an alias or a mapped name).
     queried: String,
     symbol: String,
+    name: Option<String>,
     group: String,
     aliases: Vec<String>,
     dim: Dim,
@@ -1385,6 +1389,7 @@ fn unit_detail(
         return Ok(Detail {
             queried: query.to_string(),
             symbol: u.symbol().to_string(),
+            name: Some(u.name().to_string()).filter(|n| n != u.symbol()),
             group: group_name(u.dim()),
             aliases: u.aliases().to_vec(),
             dim: u.dim(),
@@ -1410,6 +1415,7 @@ fn unit_detail(
     Ok(Detail {
         queried: query.to_string(),
         symbol: query.to_string(),
+        name: None,
         group: group_name(e.dim()),
         aliases: Vec::new(),
         dim: e.dim(),
@@ -1439,6 +1445,9 @@ fn detail_text(d: &Detail) -> String {
     let mut line = |k: &str, v: String| {
         let _ = writeln!(s, "  {k:<14}{}", cell(&v));
     };
+    if let Some(n) = &d.name {
+        line("name", n.clone());
+    }
     line("group", d.group.clone());
     line("aliases", none(&d.aliases.join(", ")));
     line("dimension", d.dim.to_string());
@@ -1489,10 +1498,11 @@ fn detail_json(d: &Detail) -> String {
     let opt = |v: Option<&str>| v.map_or_else(|| "null".to_string(), json_string);
     let dims: Vec<String> = d.dim.exponents().iter().map(ToString::to_string).collect();
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"symbol\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"conditions\":{},\"note\":{},\"origin\":{},\"mapping\":{}}}}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"symbol\":{},\"name\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"conditions\":{},\"note\":{},\"origin\":{},\"mapping\":{}}}}}",
         json_string(&schema_id("units")),
         json_string(&dimvexa::data_version()),
         json_string(&d.symbol),
+        opt(d.name.as_deref()),
         json_string(&d.group),
         list(&d.aliases),
         dims.join(","),

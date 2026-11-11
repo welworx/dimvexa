@@ -261,6 +261,7 @@ fn unit_info<'py>(py: Python<'py>, symbol: &str) -> PyResult<Option<Bound<'py, P
     };
     let d = PyDict::new(py);
     d.set_item("symbol", u.symbol())?;
+    d.set_item("name", u.name())?;
     d.set_item("aliases", u.aliases().to_vec())?;
     d.set_item("dimension", u.dim().to_string())?;
     d.set_item("kind", u.kind().to_string())?;

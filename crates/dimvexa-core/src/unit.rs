@@ -18,6 +18,8 @@ use crate::ratio::Ratio;
 pub struct UnitDef {
     /// Primary symbol, for example `psi`.
     pub symbol: &'static str,
+    /// Full name, for example `Pascal` for `Pa`.
+    pub name: &'static str,
     /// Alternative symbols, for example `["\u{b0}C"]` for `degC`.
     pub aliases: &'static [&'static str],
     /// Dimension exponents of `[kg, m, s, A, K, mol, cd]`.
@@ -64,6 +66,7 @@ pub struct AmbiguousDef {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Unit {
     symbol: String,
+    name: String,
     aliases: Vec<String>,
     dim: Dim,
     kind: Kind,
@@ -120,6 +123,7 @@ impl Unit {
         }
         Ok(Self {
             symbol: symbol.to_string(),
+            name: symbol.to_string(),
             aliases: Vec::new(),
             dim,
             kind,
@@ -167,6 +171,10 @@ impl Unit {
         if def.kind.is_reference() && def.conditions.trim().is_empty() {
             return Err(bad("a unit with a reference state needs its conditions"));
         }
+        if def.name.trim().is_empty() {
+            return Err(bad("a table unit needs a name"));
+        }
+        unit.name = def.name.to_string();
         unit.exactness = def.exactness;
         unit.prefixes = def.prefixes;
         unit.namespace = def.namespace.to_string();
@@ -174,6 +182,15 @@ impl Unit {
         unit.note = def.note.to_string();
         unit.conditions = def.conditions.to_string();
         Ok(unit)
+    }
+
+    /// Sets the full name (`Pascal` for `Pa`). A unit without one is named by its symbol.
+    #[must_use]
+    pub fn with_name(mut self, name: &str) -> Self {
+        if !name.trim().is_empty() {
+            self.name = name.to_string();
+        }
+        self
     }
 
     /// Adds aliases (alternative symbols).
@@ -294,6 +311,13 @@ impl Unit {
     #[must_use]
     pub fn source(&self) -> &str {
         &self.source
+    }
+
+    /// Full name, for example `Pascal` for `Pa`. A unit defined without a name (a user unit)
+    /// reads as its symbol.
+    #[must_use]
+    pub fn name(&self) -> &str {
+        &self.name
     }
 
     /// Note.
@@ -702,6 +726,7 @@ mod tests {
     fn from_def_checks_shape() {
         let mut d = UnitDef {
             symbol: "x",
+            name: "ex",
             aliases: &[],
             dim: [0, 1, 0, 0, 0, 0, 0],
             kind: Kind::Plain,

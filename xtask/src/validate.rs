@@ -172,7 +172,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
         if !kind_of_row.map_or_else(|| is_valid_symbol(&sym), |k| is_valid_symbol_for(&sym, k)) {
             err(format!("{at}: symbol is not well-formed"));
         }
-        for key in ["source", "note", "namespace"] {
+        for key in ["name", "source", "note", "namespace"] {
             match t.str(key) {
                 Ok(v) if !v.trim().is_empty() => {}
                 Ok(_) => err(format!("{at}: '{key}' is empty")),

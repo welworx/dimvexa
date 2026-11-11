@@ -339,8 +339,8 @@ fn units_lists_every_table_entry_by_group() {
     let n = dimvexa_data::registry().unwrap().len();
     let r = dimvexa(&["units"]);
     assert_eq!(r.code, 0);
-    // Unit rows have six tab-separated columns; the ambiguous rows have four.
-    let rows = r.stdout.lines().filter(|l| l.split('\t').count() == 6);
+    // Unit rows have seven tab-separated columns; the ambiguous rows have four.
+    let rows = r.stdout.lines().filter(|l| l.split('\t').count() == 7);
     assert_eq!(rows.count(), n);
     assert!(r.stdout.lines().any(|l| l == "## volume"));
     assert!(r.stdout.lines().any(|l| l.starts_with("psi\t")));
