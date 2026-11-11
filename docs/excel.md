@@ -212,7 +212,7 @@ Enter these in a blank sheet:
 
 | Formula | Expect |
 |---|---|
-| `=DIMVEXA.VERSION()` | text like `dimvexa data …, 98 units` |
+| `=DIMVEXA.VERSION()` | text like `dimvexa data v14+fnv1a64:…, 104 units` (the numbers change with the unit table) |
 | `=DIMVEXA.CONVERT(1,"km","m")` | `1000` |
 | `=DIMVEXA.CONVERT(100,"degC","K")` | `373.15` (`373,15` with a decimal comma) |
 | `=DIMVEXA.CONVERT(1,"kg","m")` | an error; the hover text starts `dimvexa dimension_mismatch:` |

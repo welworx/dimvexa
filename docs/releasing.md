@@ -1,24 +1,39 @@
 # Releasing
 
 One version number for everything: the five Rust crates (crates.io), the Python package
-`dimvexa` (PyPI) and the npm package `@dimvexa/wasm`. `.github/workflows/release.yml` builds and
+`dimvexa` (PyPI), the npm package `@dimvexa/wasm` and the Excel add-in (its manifest carries the
+same version plus a fourth part `.0`, as Office requires). `.github/workflows/release.yml` builds and
 publishes all of them from `main`.
 
 ## Cutting a release
 
 1. Follow the `release` skill (`.claude/skills/release/SKILL.md`): bump the version in
    `Cargo.toml`, `bindings/python/Cargo.toml` (also its `dimvexa = "x.y.z"` dependency) and
-   `bindings/wasm/Cargo.toml`, refresh both bindings' `Cargo.lock`, update `CHANGELOG.md`.
-2. `scripts/check-versions.sh` prints the version if every file agrees, and fails otherwise.
+   `bindings/wasm/Cargo.toml` and `bindings/excel/manifest.xml` (`<Version>X.Y.Z.0</Version>`),
+   refresh both bindings' `Cargo.lock`, update `CHANGELOG.md`.
+2. `scripts/check-versions.sh` prints the version if every file agrees, and fails otherwise. It
+   also runs on every pull request (the `excel add-in` job in `ci.yml`), so a forgotten bump is
+   caught before the release.
 3. Merge to `main`. The workflow runs:
    `plan` (is `vX.Y.Z` already tagged? if so everything else is skipped) -> `verify`
    (`cargo xtask ci`) -> wheels (Linux x86_64/aarch64, macOS arm64/x86_64, Windows), sdist,
-   npm package, crates package check -> **approval of the `release` environment** ->
-   crates.io (core, data, config, dimvexa, cli) -> PyPI and npm -> tag `vX.Y.Z` and GitHub release.
+   npm package, Excel add-in (built and tested with the real WASM), crates package check -> **approval of the `release` environment** ->
+   crates.io (core, data, config, dimvexa, cli) -> PyPI and npm -> tag `vX.Y.Z` and GitHub release
+   (with the CLI binaries and `dimvexa-excel-addin-X.Y.Z.zip`).
 4. A failed run can be re-run: versions already on a registry are skipped. The tag is created
    last, so it also marks a complete release.
 
 Merges to `main` that do not change the version publish nothing.
+
+## Excel add-in
+
+CI (`ci.yml`, job `excel add-in`) builds the add-in with `bindings/excel/build.sh`, runs
+`bindings/excel/test/functions.test.js` and `cells.test.js` (the real WASM, a mocked Excel) and
+packs `dimvexa-excel-addin-X.Y.Z.zip` with `scripts/package-excel-addin.sh` on every pull request.
+The release workflow does the same and attaches the zip to the GitHub release. It is a
+**sideload build**: the manifest points at `https://localhost:3000` (ADR-016), so nothing is
+hosted and nothing is submitted to AppSource or a store; those are owner decisions (ADR-016, open
+item 5). Mocked tests prove the functions, not Excel itself.
 
 ## Homebrew (no Rust needed)
 
