@@ -268,12 +268,13 @@ pub fn run(root: &Path) -> Result<Report, String> {
                 ));
             }
         }
-        if let Ok(Some(shown)) = t.opt_str("symbol")
-            && !all_names.iter().any(|n| n == shown)
-        {
-            err(format!(
-                "{at}: symbol '{shown}' must be the id or one of the aliases, so it reads back"
-            ));
+        // No let chain here: they need Rust 1.88 and the MSRV is 1.85.
+        if let Ok(Some(shown)) = t.opt_str("symbol") {
+            if !all_names.iter().any(|n| n == shown) {
+                err(format!(
+                    "{at}: symbol '{shown}' must be the id or one of the aliases, so it reads back"
+                ));
+            }
         }
         rows.insert(
             sym.clone(),

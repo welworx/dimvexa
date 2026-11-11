@@ -18,3 +18,11 @@ description: Use when changing a public item, an error code, the CLI output or t
 * Once a release exists, run `cargo semver-checks` against it; before that, review the diff of
   the public items by hand.
 * A change of policy (ambiguity, exactness, scope) needs an ADR (`adr` skill).
+* Renaming or removing a JSON field means a new schema version in the same change: bump
+  `schema_id` in `crates/dimvexa-cli/src/lib.rs`, add `docs/schemas/dimvexa.<cmd>-N.schema.json`
+  (keep the old file), update the `--help` text, the version strings in `AGENTS.md` and this
+  skill, `crates/dimvexa-cli/tests/support/json.rs` and `cli.rs`, regenerate the snapshots
+  (`DIMVEXA_UPDATE_SNAPSHOTS=1 cargo test -p dimvexa-cli`, then read the diff) and the guide's
+  examples. Record the decision in an ADR (ADR-017 is the model).
+* Library code must build on the MSRV (1.85): no let chains, no newer std APIs. `cargo xtask ci
+  msrv` checks it.

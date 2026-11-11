@@ -6,6 +6,9 @@ All notable changes are documented here. The format follows
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
 ## [Unreleased]
+### Changed
+
+- `cargo xtask ci` gains an `msrv` stage (a `cargo check` on Rust 1.85, read from `rust-version`), and the pre-commit hook runs fmt, clippy and `msrv` on staged Rust files, so code that only compiles on the pinned toolchain (a let chain) no longer reaches CI.
 
 ## [0.4.0] - 2026-11-11
 ### Changed

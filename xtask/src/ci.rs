@@ -31,6 +31,10 @@ enum Kind {
     ValidateData,
     /// `cargo xtask check-docs`, in process.
     CheckDocs,
+    /// `cargo check` on the minimum supported Rust version (`rust-version` in `Cargo.toml`), so
+    /// that a newer language feature (let chains need 1.88, the MSRV is 1.85) cannot pass here
+    /// on the pinned toolchain and fail in CI.
+    Msrv,
     /// `cargo package --list` for the data crate must contain the unit tables, so that the
     /// published crate is self-contained.
     PackageList,
@@ -56,6 +60,11 @@ const STAGES: &[Stage] = &[
             "-D",
             "warnings",
         ]),
+    },
+    Stage {
+        name: "msrv",
+        about: "the workspace compiles on the minimum supported Rust version (cargo check)",
+        kind: Kind::Msrv,
     },
     Stage {
         name: "test",
@@ -143,6 +152,7 @@ fn run_stage(stage: &Stage, root: &Path, validate: &dyn Fn() -> bool) -> bool {
     match &stage.kind {
         Kind::ValidateData => validate(),
         Kind::PackageList => package_list(root),
+        Kind::Msrv => msrv_check(root),
         Kind::CheckDocs => {
             let errors = crate::docs_check::run(root);
             for e in &errors {
@@ -177,6 +187,60 @@ fn run_stage(stage: &Stage, root: &Path, validate: &dyn Fn() -> bool) -> bool {
             }
         }
     }
+}
+
+/// The `rust-version` of the workspace, the single source for the MSRV.
+fn msrv_version(root: &Path) -> Option<String> {
+    let text = std::fs::read_to_string(root.join("Cargo.toml")).ok()?;
+    text.lines()
+        .find_map(|l| l.trim().strip_prefix("rust-version = "))
+        .map(|v| v.trim().trim_matches('"').to_string())
+        .filter(|v| !v.is_empty())
+}
+
+/// Checks the whole workspace with the MSRV toolchain, installing it with rustup if missing.
+fn msrv_check(root: &Path) -> bool {
+    let Some(version) = msrv_version(root) else {
+        eprintln!("    cannot read rust-version from Cargo.toml");
+        return false;
+    };
+    let has_toolchain = |v: &str| {
+        Command::new("rustc")
+            .arg(format!("+{v}"))
+            .arg("-V")
+            .output()
+            .is_ok_and(|o| o.status.success())
+    };
+    if !has_toolchain(&version) {
+        println!("    installing the {version} toolchain (rustup toolchain install {version})");
+        let installed = Command::new("rustup")
+            .args(["toolchain", "install", &version])
+            .args(["--profile", "minimal", "--no-self-update"])
+            .status()
+            .is_ok_and(|s| s.success());
+        if !installed {
+            eprintln!(
+                "    cannot install Rust {version}; install it with: \
+                 rustup toolchain install {version} --profile minimal"
+            );
+            return false;
+        }
+    }
+    let args = [
+        "check",
+        "--workspace",
+        "--all-targets",
+        "--all-features",
+        "--locked",
+    ];
+    println!("    $ RUSTUP_TOOLCHAIN={version} cargo {}", args.join(" "));
+    Command::new(std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into()))
+        .args(args)
+        .current_dir(root)
+        .env("RUSTUP_TOOLCHAIN", &version)
+        .env("CARGO_TERM_COLOR", "always")
+        .status()
+        .is_ok_and(|s| s.success())
 }
 
 /// Files that must be in the `dimvexa-data` package for it to build on its own.
@@ -254,6 +318,9 @@ pub fn run(args: &[String], root: &Path, validate: &dyn Fn() -> bool) -> ExitCod
                         Kind::PackageList => String::from(
                             "cargo package --list -p dimvexa-data, then check the file list",
                         ),
+                        Kind::Msrv => String::from(
+                            "RUSTUP_TOOLCHAIN=<rust-version> cargo check --workspace --all-targets --all-features --locked",
+                        ),
                     };
                     println!("{:<8} {} ({how})", s.name, s.about);
                 }
@@ -328,7 +395,7 @@ mod tests {
     fn stage_names_are_unique_and_include_the_documented_set() {
         let names: Vec<&str> = STAGES.iter().map(|s| s.name).collect();
         for n in [
-            "fmt", "clippy", "test", "doctest", "docs", "data", "example",
+            "fmt", "clippy", "msrv", "test", "doctest", "docs", "data", "example",
         ] {
             assert!(names.contains(&n), "{n}");
         }
