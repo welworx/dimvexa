@@ -691,3 +691,40 @@ fn a_unit_built_on_a_reference_unit_keeps_the_reference_and_its_conditions() {
     assert_eq!(reg.parse("m3/h").unwrap().conditions(), "");
     assert_eq!(reg.parse("scf/scf").unwrap().conditions(), "");
 }
+
+/// Review of 2026-11-11: a power of 0 cancels a reference. `(scf)^0` is the plain number 1 and a
+/// unit built on it is plain, so it can never let an actual volume pass as `scf`; a reference at
+/// any other power than 1 cannot be a base.
+#[test]
+fn a_power_zero_of_a_reference_unit_is_plain_and_cannot_reach_the_reference() {
+    let reg = registry().unwrap();
+    let one = reg.parse("(scf)^0").unwrap();
+    assert_eq!(one.kind().name(), "plain");
+    assert_eq!(one.reference_power(), 0);
+    assert_eq!(one.conditions(), "");
+    assert_eq!(reg.conversion("(Nm3)^0", "1").unwrap().factor(), Ratio::ONE);
+
+    let reg = with(
+        "[[unit]]\nsymbol = \"stdref\"\nbase = \"(scf)^0\"\nfactor = \"1\"\n\
+         exactness = \"defined\"\nsource = \"test\"\n",
+    );
+    let stdref = reg.get("stdref").unwrap();
+    assert_eq!(stdref.kind().name(), "plain");
+    assert_eq!(stdref.conditions(), "");
+    for to in ["scf", "Nm3"] {
+        assert_eq!(
+            reg.conversion("stdref.m3", to).unwrap_err().code(),
+            "refused",
+            "{to}"
+        );
+    }
+    for base in ["(scf)^2", "1/scf", "Nm3/Nm3.scf"] {
+        let text = format!(
+            "[[unit]]\nsymbol = \"x\"\nbase = \"{base}\"\nfactor = \"1\"\n\
+             exactness = \"defined\"\nsource = \"test\"\n"
+        );
+        let mut reg = registry().unwrap();
+        let outcome = apply(&mut reg, &[cfg(&text, "test.toml")]);
+        assert!(outcome.is_err(), "{base}");
+    }
+}

@@ -34,7 +34,7 @@ Fixing one: remove or change the pinning test, update the entry (or delete it), 
 | KL-20 | A value is a plain number: `2*pi`, `2pi` and `pi/2` are `invalid_number`. A decimal such as `6.283185307179586` is not exactly 2 pi. | Typing an angle in multiples of pi. | The parser reads numbers, not expressions; pi is not a constant (ADR-010). | Define `pi` and `turn` with `examples/configs/angle.toml`, or give the angle in degrees. |
 | KL-21 | Angle is dimensionless, so `rad/s` and `Hz` convert 1:1, and a unit such as `turn` would give `1 turn/s = 6.28 Hz`. Because of that `rev`, `turn` and `rpm` are not shipped. | `convert 1 rad/s Hz`. | ADR-007. | A separate cycle/angle distinction, decided by the owner. |
 
-## Gauge pressure and standard volumes (ADR-013, proposed)
+## Gauge pressure and standard volumes (ADR-013)
 
 | ID | Limitation | When you see it | Why it is not fixed yet | Idea for the fix |
 |---|---|---|---|---|
@@ -61,7 +61,7 @@ the `source` and `note` in `crates/dimvexa-data/data/units/common.toml` and the 
 | Unit | Claim to verify | Where it is cited | What to look at |
 |---|---|---|---|
 | `scf` | 60 degF and 14.696 psia as the reference state | `source` and `conditions` of `scf` | GPA Standard 2145 (find the edition, and the table that states the base conditions); the review doubted a link to API MPMS 14.3, which is usually quoted with 14.73 psia, so that citation was removed. If the standard gives another base, change `conditions` and the note, not only the source. |
-| `Nm3` | normal condition 273.15 K and 101 325 Pa | `source` and `conditions` of `Nm3` | DIN 1343 (the 1990-01 edition is cited); the standard is paywalled. Check the year and that "normal condition" is the term it uses. |
+| `Nm3` | normal condition 273.15 K and 101 325 Pa | `source` and `conditions` of `Nm3` | DIN 1343 (the year 1990 is cited); the standard is paywalled. Check the year and that "normal condition" is the term it uses. |
 | `bbl` | 42 US gallons per petroleum barrel, 1.589 873 E-01 m^3 | `source` of `bbl` and its vector | NIST SP 811 (2008), Appendix B.8, entry "barrel [for petroleum, 42 gallons (U.S.)]"; confirm the exact wording and the printed value. |
 | `psig`, `barg`, `Pag` | gauge pressure is measured from the ambient pressure | `source` of the three units | NIST SP 811 gives `psi` and `bar` only; look for a standard that defines gauge pressure (for example ISO 80000-4 or ISO 80000-1) and cite it, or keep the current wording as a statement of the definition. |
 

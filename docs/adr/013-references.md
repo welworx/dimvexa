@@ -39,7 +39,7 @@ in the table, and the benchmark corpus counts the same-reference conversions (`p
    conditions do vary (0 or 20 degC, 1 atm or 1 bar; 14.696 or 14.73 psia), so bare `Nm3` and `scf`
    would be listed in `ambiguous.toml` with explicit variants (for example `Nm3_0C`, `scf_60F`).
    The benchmark corpus uses bare `Nm3` and `scf`; if the owner prefers a default, it must name the
-   standard that fixes it. The exact names and the choice are OPEN.
+   standard that fixes it. The names that shipped are described under "Implemented".
 6. **Strict only.** No relaxed mode (a gauge unit read as another gauge unit when the target is
    unqualified). It is postponed and needs its own ADR.
 
@@ -79,29 +79,25 @@ implement this ADR with its recommendations. What shipped, and where it differs 
 The sources of `scf`, `Nm3`, `bbl` and the gauge units were cited from memory and are not checked
 against the documents; the open checks are listed in `docs/known-limitations.md` ("Open checks").
 
-### OPEN (still undecided)
+### OPEN items of the proposal, as settled by what shipped
 
-* **Packaging.** Recommended: the mechanism (kind, reference id, error codes) in
-  `dimvexa-core`, the `references.toml` table in `dimvexa-data` so one build step, one hash and
-  one `validate-data` cover it. A separate `dimvexa-references` crate is possible, with no third
-  party dependency, but it needs a second compiled table and a version pairing with the data
-  crate. Split it only if users need the references without the unit table.
-* **Which references ship in the first release.** Recommended: ambient (gauge), `normal_0C`,
-  `iso_13443_std` and `gas_60F`; others by unit request (see `unit-request-triage`).
-* **Exact unit names** for the non-default variants.
-* **Kind shape.** One `Referenced` kind with a reference id on the unit, or one kind per family
-  (`GaugePressure`, `StandardVolume`). Recommended: one kind per family, because the kind algebra
-  differs (gauge minus gauge is a plain pressure difference; volumes have no such rule).
+* **Packaging:** the mechanism is in `dimvexa-core`; there is no separate `references.toml`, so no
+  second table, hash or crate. Add one when a second reference per family ships.
+* **Which references ship:** gauge (ambient), normal 0 degC (`Nm3`) and 60 degF / 14.696 psia
+  (`scf`). `iso_13443_std` (15 degC) and other states are unit requests (KL-22).
+* **Names:** the bare `Nm3` and `scf`; no explicit variants yet.
+* **Kind shape:** one kind per family, as recommended.
 
 ## Consequences
 
 * The corpus cases that need same-reference conversion become supported without weakening the
   must-refuse cases (`ref-011` to `ref-014`, `ref-018`, `ref-019`).
 * This is a public API and data schema change: `Kind` gains variants (it is `non_exhaustive`),
-  the JSON schema gains a reference field within `dimvexa.convert/1`, and `Error::ALL_CODES`
-  gains a code. It needs the `api-change` steps and a golden vector per unit.
+  `quantity_kind` gains three values and `dimvexa.units/2` a `conditions` field, `UnitDef` gains the
+  field `conditions`, and `Error::ALL_CODES` is unchanged (`refused` is reused). Every unit has a
+  golden vector.
 * Users bring their own thermodynamics for cross-reference work, as ADR-001 intends.
-* Nothing is implemented until the owner confirms the OPEN items and moves the status to Accepted.
+* Implemented on 2026-11-10; see "Implemented" above.
 
 ## Notes on numbering
 

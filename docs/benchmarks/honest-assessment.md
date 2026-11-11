@@ -22,8 +22,9 @@ benchmark publication: it does not replace `comparison.md` and does not license 
 > are unsupported, that "24 of 30" refusals carry the intended reason, and the coverage gaps for
 > `psig`, `barg`, `Nm3`, `scf` and `bbl` are **superseded**: see
 > [`comparison-run-3.md`](comparison-run-3.md) (242 of 242 must-convert cases correct, 0 wrong,
-> 25 of 27 refusals with the intended code). Still true: `inHg`, `mH2O`, `wt%` and `cP`-style
-> gaps listed there, the stated limits of the machine, and every competitor number that was not
+> 25 of 27 refusals with the intended code). Still true: `inHg`, `mH2O` and `wt%` are not
+> supported (the lists below that also name `kgf/cm2`, `cP` and `cSt` as unsupported predate
+> later unit additions: those three convert today), the stated limits of the machine, and every competitor number that was not
 > rerun. Gauge to absolute pressure, `Nm3` to `m3` and `Nm3` to `scf` are refused by design
 > (KL-22, KL-23).
 

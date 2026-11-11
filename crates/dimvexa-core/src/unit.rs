@@ -613,18 +613,22 @@ impl UnitExpr {
             return Ok(self.clone());
         }
         self.refuse_affine(&Self::unity())?;
+        let ref_exp = self.ref_exp.checked_mul(exp).ok_or(Error::Overflow {
+            operation: "reference power",
+        })?;
+        // A power of 0 cancels the reference: `(scf)^0` is the plain number 1, not a
+        // dimensionless standard volume that would let an actual volume pass as `scf`.
+        let keeps_reference = self.kind.is_reference() && ref_exp != 0;
         Ok(Self {
             expr: Expr::Pow(Box::new(self.expr.clone()), exp),
             dim: self.dim.checked_scale(exp)?,
-            kind: if self.kind.is_reference() {
+            kind: if keeps_reference {
                 self.kind
             } else {
                 Kind::Plain
             },
-            ref_exp: self.ref_exp.checked_mul(exp).ok_or(Error::Overflow {
-                operation: "reference power",
-            })?,
-            conditions: if self.kind.is_reference() {
+            ref_exp,
+            conditions: if keeps_reference {
                 self.conditions.clone()
             } else {
                 String::new()

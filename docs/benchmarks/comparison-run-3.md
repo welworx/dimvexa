@@ -30,13 +30,13 @@ must-convert cases since run 2 (earlier corpus additions and the 6 golden vector
   ref-023, which have no spelling in the Dimvexa runner. The nine unsupported cases of run 2 are now
   answered, among them `psig->barg`, `Nm3/h` to `Nm3/min` and `Nm3/s`, `scf/min->scf/h` and `bbl`
   to `L` and `m3`.
-* Refused for the intended reason (Rust rows only): **25 of 27**, up from 24 of 30. `Nm3->m3`,
+* Refused for the intended reason (Rust rows only): **25 of 27**. Run 2 counted 24 of 30; the denominators differ because the three temperature-kind cases (ref-021 to ref-023) are now "not applicable" for the Dimvexa runner and no longer counted as refused, so the two figures are not a like-for-like improvement. `Nm3->m3`,
   `m3->Nm3`, `scf->m3`, `Nm3->scf` and `psig->bar` now fail with `refused` and name the reference
   states instead of `unknown_unit`; two refusals (`wt%`, `mH2O`) are still unknown or unparsable
   units.
 * The pint row is copied from `comparison.md`. Other libraries are in `comparison.md`; none was
   edited by hand.
-* Coverage lists (Dimvexa, parsed of listed): `process` 19/19 (was 14/19), `imperial_us` 24/24,
+* Coverage lists (Dimvexa, parsed of listed): `process` 19/19 (was 12/19 in run 2: `cP`, `cSt`, `Nm3`, `Nm3/h`, `scf`, `scf/min`, `bbl/d` were unknown), `imperial_us` 24/24,
   `pressure` 8/10 (`inHg` and `mH2O` are still unknown), `dimvexa_seed_table` 104/104.
 * Max error of the fast path: 1 ulp (bound: 1 linear, 2 affine); 234 of 242 bit-identical on the
   fast path, 240 of 242 on the exact path, 242 of 242 on the text path.
@@ -64,5 +64,5 @@ slowdowns on this VM against `baseline-m0.tsv` with and without the change (chec
 ## Not run or not done
 
 * No quiet machine, no CPU pinning, no governor control: timings are indicative.
-* `baseline-m0.tsv` was not re-recorded.
+* `baseline-m0.tsv` was not re-recorded for this run; it was re-recorded afterwards on the same VM (see `M0.md`).
 * The cross-library speed ranking is not a claim: no "fastest" statement follows from this page.

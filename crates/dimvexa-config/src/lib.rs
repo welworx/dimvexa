@@ -866,7 +866,7 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
             u.base
         )));
     }
-    if base.reference_power() != 0 && base.reference_power() != 1 {
+    if base.kind().is_reference() && base.reference_power() != 1 {
         return Err(bad(format!(
             "base '{}' carries a reference state to the power {}; only a plain unit or one reference unit (power 1) can be a base",
             u.base,

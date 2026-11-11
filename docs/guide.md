@@ -73,7 +73,7 @@ Not in the table on purpose:
 * **Angles** have limitations of their own: see [Angles and pi](#angles-and-pi-limitations).
 * **Not yet:** `eV` and `Da` (their factors do not fit the exact `i128` arithmetic, see
   ADR-010), `rev` and `rpm`, information (`bit`, `B`), percent and ppm, logarithmic units
-  (`dB`, `Np`), the parsec, months and oil barrels (see [a unit of your own](#example-a-unit-of-your-own)). Open a *Unit
+  (`dB`, `Np`), the parsec, and months (see [a unit of your own](#example-a-unit-of-your-own)). Open a *Unit
   request* issue.
 
 ## Finding a unit
@@ -273,6 +273,8 @@ What a density does and does not do:
 - `dimvexa units --config NAME_OR_PATH` lists the densities your configs define.
 
 ### Example: a unit of your own
+
+(`bbl`, the 42 gallon oil barrel, is built in; the example below defines `bbl_oil` only to show the mechanism.)
 
 A `[[unit]]` is an exact multiple of a unit that already exists, so its dimension comes from the
 base and cannot be mistyped. It needs a factor, whether the definition is `defined` or

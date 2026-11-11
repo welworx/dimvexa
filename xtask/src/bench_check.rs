@@ -29,7 +29,12 @@
 //! metadata=bench-layout-K"`, which changes symbol hashes and with them the link order) and run
 //! once more, up to `--layouts` layouts in total (default 5), and every row is judged by its
 //! best median per side over all layouts. The same layouts are tried on both sides, so the
-//! comparison stays fair; a row that is slow in every layout is a regression. The working tree may be dirty: what it contains is what is measured. The worktree is
+//! comparison stays fair; a row that is slow in every layout is a regression. This costs
+//! sensitivity: the two builds differ in code (and version), so layout K is not the same alignment
+//! on both sides, and a real slowdown smaller than the spread between layouts (about 15 percent on
+//! the 10^3 rows) can pass. The output says so (`note:`) whenever escalation is what cleared a
+//! row. One run at a time: the worktree has a fixed path, so two concurrent runs clobber each
+//! other. The working tree may be dirty: what it contains is what is measured. The worktree is
 //! removed afterwards, also on failure; its build output lives in `target/bench-ab-base` so a
 //! second run is incremental.
 //!
@@ -183,7 +188,21 @@ fn run_bench_layout(dir: &Path, target_dir: Option<&Path>, layout: usize) -> Res
         cmd.env("CARGO_TARGET_DIR", t);
     }
     if layout > 0 {
-        cmd.env("RUSTFLAGS", format!("-C metadata=bench-layout-{layout}"));
+        // The salt is appended to the user's own RUSTFLAGS, so every layout is built with the
+        // same flags as layout 0. Flags that sit in a cargo config (`build.rustflags`) are
+        // replaced by the env var; move them to RUSTFLAGS to keep them in every layout.
+        if std::env::var_os("CARGO_ENCODED_RUSTFLAGS").is_some() {
+            return Err(
+                "CARGO_ENCODED_RUSTFLAGS is set and would hide the layout salt; unset it or use --layouts 1"
+                    .to_string(),
+            );
+        }
+        let mut flags = std::env::var("RUSTFLAGS").unwrap_or_default();
+        if !flags.trim().is_empty() {
+            flags.push(' ');
+        }
+        let _ = write!(flags, "-C metadata=bench-layout-{layout}");
+        cmd.env("RUSTFLAGS", flags);
     }
     let out = cmd.output().map_err(|e| format!("cannot run cargo: {e}"))?;
     if !out.status.success() {
@@ -262,8 +281,9 @@ fn parse_opts(args: &[String]) -> Result<Opts, String> {
             "--threshold" => {
                 o.threshold = it
                     .next()
-                    .and_then(|v| v.parse().ok())
-                    .ok_or("--threshold needs a number (percent)")?;
+                    .and_then(|v| v.parse::<f64>().ok())
+                    .filter(|v| v.is_finite() && *v >= 0.0)
+                    .ok_or("--threshold needs a number of percent, zero or more")?;
             }
             "--runs" => {
                 o.runs = it
@@ -396,6 +416,9 @@ fn execute_against(rev: &str, o: &Opts, root: &Path) -> Result<bool, String> {
     // Layout escalation: a row still slow may be alignment, not code. Rebuild both sides under
     // another metadata salt and keep the best median per side over every layout tried.
     let mut layouts_used = 1;
+    // Rows that are slow in the first layout; if escalation clears them, say so below.
+    let initially_slow: Vec<(String, f64, f64)> =
+        slow_rows(&best_of(&a_runs), &best_of(&b_runs), o.threshold);
     // Best median per side of each layout tried; layout 0 is the rounds above.
     let mut per_layout: Vec<(Rows, Rows)> = vec![(best_of(&a_runs), best_of(&b_runs))];
     for layout in 1..o.layouts {
@@ -433,6 +456,22 @@ fn execute_against(rev: &str, o: &Opts, root: &Path) -> Result<bool, String> {
         );
     }
     let slow = slow_rows(&a, &b, o.threshold);
+    for (k, x, y) in &initially_slow {
+        if !slow.iter().any(|(s, _, _)| s == k) && layouts_used > 1 {
+            let cells: Vec<String> = per_layout
+                .iter()
+                .enumerate()
+                .filter_map(|(i, (la, lb))| {
+                    Some(format!("L{i} {:.3}|{:.3}", la.get(k)?, lb.get(k)?))
+                })
+                .collect();
+            println!(
+                "bench-check: note: `{k}` was {:.1}% slower in the first layout ({x:.3} -> {y:.3}) and passes only on the best layout per side after {layouts_used} layouts ({}); a real slowdown smaller than that spread can pass this way",
+                (y / x - 1.0) * 100.0,
+                cells.join("  ")
+            );
+        }
+    }
     if layouts_used > 1 {
         for (k, _, _) in &slow {
             let cells: Vec<String> = per_layout
@@ -559,6 +598,27 @@ mod tests {
         let runs = [mk(3.0), mk(1.0), mk(2.0)];
         assert!((best_of(&runs)["a"] - 1.0).abs() < 1e-12);
         assert!((median_of(&runs)["a"] - 2.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn threshold_must_be_a_sane_number() {
+        let a = |v: &[&str]| parse_opts(&v.iter().map(|s| (*s).to_string()).collect::<Vec<_>>());
+        assert!(a(&["--threshold", "NaN"]).is_err());
+        assert!(a(&["--threshold", "-5"]).is_err());
+        assert!(a(&["--threshold", "inf"]).is_err());
+        assert_eq!(a(&["--threshold", "0"]).map(|o| o.threshold), Ok(0.0));
+    }
+
+    #[test]
+    fn a_slowdown_in_every_layout_is_still_slow() {
+        // Best median per side over layouts: a real 15 percent slowdown is slow in all of them.
+        let mk = |v: f64| Rows::from([("slice affine apply_slice 10^5".to_string(), v)]);
+        let a = best_of(&[mk(1.00), mk(1.02), mk(0.99)]);
+        let b = best_of(&[mk(1.15), mk(1.17), mk(1.14)]);
+        assert_eq!(slow_rows(&a, &b, 10.0).len(), 1);
+        // A layout mode: one of the new side's layouts is as fast as the old one.
+        let b = best_of(&[mk(1.15), mk(1.00), mk(1.14)]);
+        assert_eq!(slow_rows(&a, &b, 10.0).len(), 0);
     }
 
     #[test]
