@@ -7,6 +7,9 @@ extend-ignore-re = [
     "\\bPNGs?\\b",
     # Hex digests of f64 bit patterns in the benchmark corpus (letters like `ba` are not words).
     "\"expect_f64_bits\": \"[0-9a-f]+\"",
+    # The 16 digit hex corpus id of the benchmark corpus (`ba7a0ac6c7889f23`) and the hash of the
+    # unit tables; letters like `ba` are not words.
+    "\\b[0-9a-f]{16}\\b",
 ]
 
 [default.extend-words]
