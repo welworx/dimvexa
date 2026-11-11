@@ -1,6 +1,6 @@
 # ADR-010: Pi is a fraction; eV and Da do not fit the exact arithmetic
 
-Status: Proposed for eV and Da (needs the owner's decision); accepted for angle
+Status: Superseded by [ADR-018](018-constants-and-exact-pi.md) (step 1 delivered: the angle units are exact, `eV` and `Da` are shipped); kept for the history of the convergent
 
 ## Context
 

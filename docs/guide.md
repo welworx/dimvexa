@@ -8,7 +8,7 @@ self-update. Every command and output shown here is checked by the test suite
 - [Supported units](#supported-units)
 - [Finding a unit](#finding-a-unit)
 - [Names and densities: `--config`](#names-and-densities---config)
-- [Angles and pi: limitations](#angles-and-pi-limitations)
+- [Angles and pi](#angles-and-pi)
 - [Updating](#updating)
 
 ## Supported units
@@ -19,7 +19,7 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | Group | Unit ids |
 |---|---|
 | length | `m`, `au`, `angstrom`, `in`, `ft`, `yd`, `mi`, `nmi`, `ft_us_survey`, `mi_us_survey`, `ly` |
-| mass | `g`, `tonne`, `lb`, `oz_av`, `oz_troy`, `ton_short`, `ton_long`, `grain`, `carat` |
+| mass | `g`, `tonne`, `Da`, `lb`, `oz_av`, `oz_troy`, `ton_short`, `ton_long`, `grain`, `carat` |
 | time | `s`, `min`, `h`, `d`, `week`, `yr_common`, `yr_julian` |
 | electric_current | `A` |
 | temperature | `K`, `degC`, `delta_K`, `delta_degC`, `degF`, `degR`, `delta_degF`, `delta_degR` |
@@ -28,7 +28,7 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | frequency | `Hz`, `Bq` |
 | force | `N`, `lbf`, `dyn`, `kgf` |
 | pressure | `Pa`, `bar`, `atm`, `psi`, `mmHg`, `torr`, `psig`, `barg`, `Pag` |
-| energy | `J`, `Wh`, `cal_th`, `cal_IT`, `Btu_IT`, `Btu_th`, `erg` |
+| energy | `J`, `Wh`, `eV`, `cal_th`, `cal_IT`, `Btu_IT`, `Btu_th`, `erg` |
 | power | `W`, `hp_mech`, `hp_metric` |
 | electric_charge | `C` |
 | voltage | `V` |
@@ -70,9 +70,8 @@ Not in the table on purpose:
 * **Ambiguous names** are refused with the explicit choices: `yr` and `year` (use `yr_julian` or
   `yr_common`), `acre` (`acre_int` or `acre_us_survey`), `qt`, `cup`, `tbsp`, `tsp`, `oz`, `gal`,
   `ton` and more. `dimvexa units` lists them all.
-* **Angles** have limitations of their own: see [Angles and pi](#angles-and-pi-limitations).
-* **Not yet:** `eV` and `Da` (their factors do not fit the exact `i128` arithmetic, see
-  ADR-010), `rev` and `rpm`, information (`bit`, `B`), percent and ppm, logarithmic units
+* **Angles** have limitations of their own: see [Angles and pi](#angles-and-pi).
+* **Not yet:** `rev` and `rpm`, information (`bit`, `B`), percent and ppm, logarithmic units
   (`dB`, `Np`), the parsec, and months (see [a unit of your own](#example-a-unit-of-your-own)). Open a *Unit
   request* issue.
 
@@ -123,7 +122,7 @@ Convert a US ton to the metric (SI) tonne by naming both explicitly:
 $ dimvexa convert 1 ton_short tonne
 0.90718474 tonne
 $ dimvexa convert 1 ton_short tonne --exact
-45359237/50000000 tonne
+45359237/50000000 = 0.90718474 tonne
 $ dimvexa convert 1 ton_short kg
 907.18474 kg
 $ dimvexa convert 1 ton_long tonne
@@ -257,7 +256,7 @@ $ dimvexa convert 1 L kg --config examples/configs/water.toml --density water_20
 0.9982067 kg
 note: used density water_20C (998.2067 kg/m3; air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1); examples/configs/water.toml:9)
 $ dimvexa convert 1 gal_us tonne --config examples/configs/water.toml --density water_20C --exact
-4723279256309691/1250000000000000000 tonne
+4723279256309691/1250000000000000000 = 0.0037786234050477528 tonne
 note: used density water_20C (998.2067 kg/m3; air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1); examples/configs/water.toml:9)
 ```
 
@@ -298,7 +297,7 @@ note = "petroleum barrel = 42 US gallons"
 $ dimvexa convert 1 bbl_oil L --config examples/configs/oil.toml
 158.987294928 L
 $ dimvexa convert 1 Mbbl_oil m3 --config examples/configs/oil.toml --exact
-9936705933/62500 m^3
+9936705933/62500 = 158987.294928 m^3
 $ dimvexa units bbl_oil --config examples/configs/oil.toml
 bbl_oil
   group         volume
@@ -325,29 +324,36 @@ Rules for your units:
 - If the base is `measured`, so is the new unit, whatever you state.
 - `dimvexa units` marks them (`[yours: file:line]`) and the JSON has an `origin` for each.
 
-## Angles and pi: limitations
+## Angles and pi
 
-`rad`, `deg`, `arcmin`, `arcsec` and `grad` (alias `gon`) work, with these limits. Read them before
-you rely on an angle result.
+`rad`, `deg`, `arcmin`, `arcsec` and `grad` (alias `gon`) are exact (ADR-018). A factor can carry
+a power of pi and a power of ten next to its fraction, so the degree is exactly `1/180 pi` radian
+and no approximation of pi is stored anywhere. `--exact` shows pi as a symbol next to the result
+rounded once, and the decimal stays the default output:
 
-1. **Pi is a fraction, not pi.** Pi is irrational and every factor here is an exact fraction.
-   `deg`, `arcmin`, `arcsec` and `grad` use pi = 245850922/78256779, a continued-fraction
-   approximation (3.14159265358979324 against the true 3.14159265358979323846..., relative error
-   2.5e-17). That is below half an `f64` ulp (1.1e-16), so ordinary `f64` results equal the true
-   value except possibly in the last bit. Longer approximations overflow the exact `i128`
-   arithmetic (ADR-010).
-2. **`--exact` is exact for the fraction, not for pi.** `convert 180 deg rad --exact` prints
-   `245850922/78256779 rad`. Do not read that as a proof about pi. These units are marked
-   `measured` in `dimvexa units deg` for that reason.
-3. **Only `rad` links are affected.** `deg`, `arcmin`, `arcsec` and `grad` share the one fraction,
-   so `60 arcmin` to `deg` or `100 grad` to `deg` are exact. Only a conversion to or from `rad`
-   (or a compound that contains it) carries the tiny error.
-4. **You cannot type `2*pi` or `2pi`.** A value is a plain number (`6.283185307179586`) or a
-   fraction (`1/3`). Typing the decimal works for `f64` (`6.283185307179586 rad` to `deg` gives
-   `360 deg`), but the decimal is not exactly 2 pi, so `--exact` shows a tiny difference
-   (about 1.8e-14 deg). Use degrees (`360 deg`) when you can. To write multiples of pi, define
-   `pi` and `turn` yourself with the shipped example config, which uses the same fraction, so
-   `2 pi` is exactly 360 deg:
+```console
+$ dimvexa convert 180 deg rad --exact
+pi = 3.141592653589793 rad
+$ dimvexa convert 90 deg rad --exact
+1/2 pi = 1.5707963267948966 rad
+$ dimvexa convert 90 deg rad
+1.5707963267948966 rad
+$ dimvexa convert 1 rad deg --exact
+180 pi^-1 = 57.29577951308232 deg
+```
+
+What to know:
+
+1. **`deg`, `arcmin`, `arcsec`, `grad` and `rad` convert among themselves exactly.** `60 arcmin`
+   to `deg`, `100 grad` to `deg` and `180 deg` to `rad` carry no error. The decimal is rounded
+   once, at the end, to the nearest `f64`. These units are `defined` in `dimvexa units deg`.
+2. **Addition is not defined for values with different exponents.** Combining `pi` with a plain
+   number in a sum (`1 + pi`) is refused with `overflow`, never approximated. A conversion only
+   multiplies, so this shows up only through the library (`Ratio::checked_add`).
+3. **You cannot type `2*pi` or `2pi` as a value.** A value is a plain number (`6.283185307179586`)
+   or a fraction (`1/3`); the decimal is not exactly 2 pi, so `--exact` shows a tiny difference
+   (about 1.8e-14 deg). Use degrees (`360 deg`), or define `pi` and `turn` with the shipped
+   example config, which defines them on `deg` and so keeps them exact:
 
    ```console
    $ dimvexa convert 2 pi deg --config examples/configs/angle.toml
@@ -356,17 +362,16 @@ you rely on an angle result.
    6.283185307179586 rad
    ```
 
-5. **Angle is dimensionless** (ADR-007), so `rad/s` and `Hz` are the same dimension and
+4. **Angle is dimensionless** (ADR-007), so `rad/s` and `Hz` are the same dimension and
    `1 rad/s` converts to `1 Hz`, and `1 deg` converts to a plain number (`dimvexa convert 1 deg 1`
    gives 0.017453292519943295). Dimvexa does not know that a hertz counts cycles and a radian
    per second counts radians. Because of this there is no `rev`, `turn` or `rpm`: `1 turn/s`
    would convert to `6.28 Hz`, which is wrong for a frequency. The example config defines `turn`
    with that caveat, on your own responsibility.
-6. **Missing:** `sr` (steradian), the parsec and angular `mil`. `eV` and `Da` are also missing
-   because of the same arithmetic limit (ADR-010).
+5. **Missing:** `sr` (steradian), the parsec and angular `mil`.
 
-The decision and the options for an exact pi are in [`docs/adr/010-units-that-do-not-fit-i128.md`](adr/010-units-that-do-not-fit-i128.md);
-the pinned limitation is KL-19 in [`docs/known-limitations.md`](known-limitations.md).
+The number type is described in [`docs/adr/018-constants-and-exact-pi.md`](adr/018-constants-and-exact-pi.md);
+the former limitation KL-19 (pi as a fraction) is closed in [`docs/known-limitations.md`](known-limitations.md).
 
 ## Updating
 

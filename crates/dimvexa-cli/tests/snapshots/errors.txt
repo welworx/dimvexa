@@ -1,7 +1,7 @@
 $ dimvexa convert 1 ton kg --json
 [exit 1]
 --- stdout
-{"schema":"dimvexa.convert/2","ok":false,"error":{"code":"ambiguous_symbol","message":"'ton' is ambiguous: use ton_short or ton_long or tonne, or load a config that resolves it","candidates":["ton_short","ton_long","tonne"],"suggestions":["ton_short","ton_long","tonne"]}}
+{"schema":"dimvexa.convert/3","ok":false,"error":{"code":"ambiguous_symbol","message":"'ton' is ambiguous: use ton_short or ton_long or tonne, or load a config that resolves it","candidates":["ton_short","ton_long","tonne"],"suggestions":["ton_short","ton_long","tonne"]}}
 --- stderr
 
 $ dimvexa convert 1 gal L
@@ -13,19 +13,19 @@ error[ambiguous_symbol]: 'gal' is ambiguous: use gal_us or gal_imp, or load a co
 $ dimvexa convert 1 kcal J --json
 [exit 1]
 --- stdout
-{"schema":"dimvexa.convert/2","ok":false,"error":{"code":"ambiguous_symbol","message":"'kcal' is ambiguous: use kcal_th or kcal_IT, or load a config that resolves it","candidates":["kcal_th","kcal_IT"],"suggestions":["kcal_th","kcal_IT"]}}
+{"schema":"dimvexa.convert/3","ok":false,"error":{"code":"ambiguous_symbol","message":"'kcal' is ambiguous: use kcal_th or kcal_IT, or load a config that resolves it","candidates":["kcal_th","kcal_IT"],"suggestions":["kcal_th","kcal_IT"]}}
 --- stderr
 
 $ dimvexa convert 1 H s --json
 [exit 1]
 --- stdout
-{"schema":"dimvexa.convert/2","ok":false,"error":{"code":"dimension_mismatch","message":"dimension mismatch: [kg m^2 s^-2 A^-2] cannot be converted to [s]"}}
+{"schema":"dimvexa.convert/3","ok":false,"error":{"code":"dimension_mismatch","message":"dimension mismatch: [kg m^2 s^-2 A^-2] cannot be converted to [s]"}}
 --- stderr
 
 $ dimvexa convert 1 m s --json
 [exit 1]
 --- stdout
-{"schema":"dimvexa.convert/2","ok":false,"error":{"code":"dimension_mismatch","message":"dimension mismatch: [m] cannot be converted to [s]"}}
+{"schema":"dimvexa.convert/3","ok":false,"error":{"code":"dimension_mismatch","message":"dimension mismatch: [m] cannot be converted to [s]"}}
 --- stderr
 
 $ dimvexa convert 1 J/mol.K J/mol/K
@@ -43,13 +43,13 @@ error[kind_mismatch]: kind mismatch in conversion: absolute_temperature and temp
 $ dimvexa convert 5 K delta_degF --json
 [exit 1]
 --- stdout
-{"schema":"dimvexa.convert/2","ok":false,"error":{"code":"kind_mismatch","message":"kind mismatch in conversion: absolute_temperature and temperature_difference are not compatible (a temperature point and a temperature difference are different kinds; for a difference use delta_K)","suggestions":["delta_K"]}}
+{"schema":"dimvexa.convert/3","ok":false,"error":{"code":"kind_mismatch","message":"kind mismatch in conversion: absolute_temperature and temperature_difference are not compatible (a temperature point and a temperature difference are different kinds; for a difference use delta_K)","suggestions":["delta_K"]}}
 --- stderr
 
 $ dimvexa convert 1 degC/s K/s --json
 [exit 1]
 --- stdout
-{"schema":"dimvexa.convert/2","ok":false,"error":{"code":"refused","message":"refused: 'degC' has an offset (temperature scale) and cannot be part of a compound unit; use the difference unit delta_degC for a temperature difference","suggestions":["delta_degC"]}}
+{"schema":"dimvexa.convert/3","ok":false,"error":{"code":"refused","message":"refused: 'degC' has an offset (temperature scale) and cannot be part of a compound unit; use the difference unit delta_degC for a temperature difference","suggestions":["delta_degC"]}}
 --- stderr
 
 $ dimvexa convert 1 ppm 1
@@ -89,8 +89,9 @@ Commands:
   update -y        do not ask "Update to vX.Y.Z? [y/N]" first (also --yes)
 
 Options:
-  --exact      print the exact rational result (num/den) instead of a decimal
-  --json       machine-readable output (schema dimvexa.convert/2; dimvexa.units/3 for units,
+  --exact      print the exact result and its decimal: a fraction, with pi or a power of ten when
+               the value has one (`1/2 pi = 1.5707963267948966`), instead of the decimal alone
+  --json       machine-readable output (schema dimvexa.convert/3; dimvexa.units/4 for units,
                dimvexa.configs/1 for configs)
   --color WHEN auto (default: a terminal, unless NO_COLOR is set), always (also
                CLICOLOR_FORCE=1) or never; JSON is never coloured

@@ -92,11 +92,11 @@ fn text_output_and_shorthand() {
     assert_eq!(dimvexa(&["10", "m/s", "km/h"]).stdout, "36 km/h\n");
     assert_eq!(
         dimvexa(&["convert", "10", "m/s", "km/h", "--exact"]).stdout,
-        "36/1 km/h\n"
+        "36/1 = 36 km/h\n"
     );
     assert_eq!(
         dimvexa(&["--exact", "convert", "1", "psi", "Pa"]).stdout,
-        "8896443230521/1290320000 Pa\n"
+        "8896443230521/1290320000 = 6894.757293168362 Pa\n"
     );
     assert_eq!(
         dimvexa(&["convert", "1", "psi", "Pa"]).stdout,
@@ -109,7 +109,7 @@ fn text_output_and_shorthand() {
     );
     assert_eq!(
         dimvexa(&["convert", "1", "kWh", "MJ", "--exact"]).stdout,
-        "18/5 MJ\n"
+        "18/5 = 3.6 MJ\n"
     );
     assert_eq!(dimvexa(&["convert", "1.5e3", "m", "km"]).stdout, "1.5 km\n");
     assert_eq!(
@@ -150,7 +150,7 @@ fn snapshots_of_successful_json() {
 fn json_fields_have_the_documented_values() {
     let r = dimvexa(&["convert", "10", "m/s", "km/h", "--json"]);
     let v = json::parse(&r.stdout).unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/2");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/3");
     assert!(v.get("ok").unwrap().as_bool());
     assert_eq!(v.get("input").unwrap().get("value").unwrap().as_str(), "10");
     assert_eq!(v.get("input").unwrap().get("unit").unwrap().as_str(), "m/s");
@@ -394,7 +394,7 @@ fn units_shows_the_details_of_one_unit() {
     snapshot("units_psi.txt", &r.stdout);
     let v = json::parse(&dimvexa(&["units", "psi", "--json"]).stdout).unwrap();
     let u = v.get("unit").unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/3");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
     assert_eq!(u.get("id").unwrap().as_str(), "psi");
     assert_eq!(u.get("group").unwrap().as_str(), "pressure");
     assert_eq!(
@@ -425,7 +425,7 @@ fn units_unknown_and_ambiguous_names_are_loud_errors() {
         let r = dimvexa(&["units", name, "--json"]);
         assert_eq!(r.code, 1, "{name}");
         let v = json::parse(&r.stdout).unwrap();
-        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/3");
+        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
         assert!(!v.get("ok").unwrap().as_bool());
         assert_eq!(v.get("error").unwrap().get("code").unwrap().as_str(), code);
         assert!(
@@ -456,7 +456,7 @@ fn units_misuse_is_a_usage_error_in_the_units_schema() {
         let r = dimvexa(&a);
         assert_eq!(r.code, 2, "{args:?}");
         let v = json::parse(&r.stdout).unwrap();
-        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/3");
+        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
         assert!(!v.get("ok").unwrap().as_bool());
         assert_eq!(
             v.get("error").unwrap().get("code").unwrap().as_str(),
@@ -765,13 +765,13 @@ fn a_config_can_never_redefine_an_existing_symbol() {
     // In JSON the failure uses the schema of the command.
     let v = json::parse(&dimvexa(&["convert", "1", "t", "kg", "--json", "--config", &cfg]).stdout)
         .unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/2");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/3");
     assert_eq!(
         v.get("error").unwrap().get("code").unwrap().as_str(),
         "invalid_definition"
     );
     let v = json::parse(&dimvexa(&["units", "--json", "--config", &cfg]).stdout).unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/3");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
     // Unknown targets, unknown sections and bad syntax are errors too.
     for (name, text, needle) in [
         (
@@ -815,7 +815,7 @@ fn config_usage_errors_exit_2() {
     let v =
         json::parse(&dimvexa(&["units", "--json", "--config", "/nonexistent/dimvexa.toml"]).stdout)
             .unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/3");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
     assert_eq!(
         v.get("error").unwrap().get("code").unwrap().as_str(),
         "usage"
@@ -955,7 +955,7 @@ fn a_density_gives_the_mass_of_a_litre_of_water() {
     );
     assert!(r.stderr.contains("Tanaka") && r.stderr.contains("water.toml:9"));
     let r = dimvexa_at_root(&args(&["convert", "1", "L", "kg", "--exact"]));
-    assert_eq!(r.stdout, "9982067/10000000 kg\n");
+    assert_eq!(r.stdout, "9982067/10000000 = 0.9982067 kg\n");
     // Both directions, other units, and per time.
     assert_eq!(
         dimvexa_at_root(&args(&["convert", "1000", "kg", "m3"])).stdout,
@@ -963,7 +963,7 @@ fn a_density_gives_the_mass_of_a_litre_of_water() {
     );
     assert_eq!(
         dimvexa_at_root(&args(&["convert", "2", "L/h", "kg/h", "--exact"])).stdout,
-        "9982067/5000000 kg/h\n"
+        "9982067/5000000 = 1.9964134 kg/h\n"
     );
     // Same-dimension conversions ignore the density; other mismatches stay errors.
     let r = dimvexa_at_root(&args(&["convert", "1", "m", "km"]));
@@ -1219,7 +1219,7 @@ fn a_config_can_define_a_unit() {
     let r = dimvexa_at_root(&[
         "convert", "1", "Mbbl_oil", "m3", "--exact", "--config", OIL_CFG,
     ]);
-    assert_eq!(r.stdout, "9936705933/62500 m^3\n");
+    assert_eq!(r.stdout, "9936705933/62500 = 158987.294928 m^3\n");
     // It combines with a density from another config: barrels of water in kilograms.
     let r = dimvexa_at_root(&[
         "convert",
@@ -1525,7 +1525,7 @@ fn a_usage_error_follows_the_command_word_not_an_option_value() {
     ]);
     assert_eq!(r.code, 2);
     let v = json::parse(&r.stdout).unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/2");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/3");
 }
 
 /// `docs/known-limitations.md` lists every limitation these tests pin, and each pinned entry
@@ -1555,7 +1555,7 @@ fn known_limitations_document_lists_the_pinned_entries() {
 }
 
 /// The entries of `docs/known-limitations.md` that a test pins.
-const PINNED_LIMITATIONS: [u32; 13] = [1, 4, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18];
+const PINNED_LIMITATIONS: [u32; 14] = [1, 4, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18, 24];
 
 /// Real outputs validate against the schema files in `docs/schemas/`, not only against the
 /// hand-written checks in `support/json.rs`.
@@ -1566,8 +1566,8 @@ fn outputs_validate_against_the_schema_files() {
             .unwrap()
     };
     let (convert, units, configs) = (
-        schema("dimvexa.convert-2.schema.json"),
-        schema("dimvexa.units-3.schema.json"),
+        schema("dimvexa.convert-3.schema.json"),
+        schema("dimvexa.units-4.schema.json"),
         schema("dimvexa.configs-1.schema.json"),
     );
     let cfg = config_file("schema_check.toml", TRADE);
@@ -1576,6 +1576,12 @@ fn outputs_validate_against_the_schema_files() {
     let cases: Vec<(&json::V, Vec<&str>)> = vec![
         (&convert, vec!["convert", "10", "m/s", "km/h", "--json"]),
         (&convert, vec!["convert", "100", "degC", "degF", "--json"]),
+        // ADR-018: pi and powers of ten in exact numbers
+        (&convert, vec!["convert", "90", "deg", "rad", "--json"]),
+        (&convert, vec!["convert", "1", "rad", "deg", "--json"]),
+        (&convert, vec!["convert", "1", "TeV^2", "J^2", "--json"]),
+        (&units, vec!["units", "deg", "--json"]),
+        (&units, vec!["units", "eV", "--json"]),
         (
             &convert,
             [&["convert", "1", "L", "kg", "--json"][..], &w].concat(),
@@ -1830,28 +1836,54 @@ fn units_json_marks_the_ambiguous_names_a_config_resolves() {
     assert!(text.contains("refused unless your config resolves them"));
 }
 
-/// KL-19: the angle units use pi as 245850922/78256779.
+/// KL-19 is closed (ADR-018): the angle units carry pi as a symbol, so they are exact.
 #[test]
-fn known_limitation_kl_19_pi_is_a_fraction() {
+fn angle_units_are_exact_with_pi_kept_symbolic() {
     let r = dimvexa(&["convert", "180", "deg", "rad", "--exact"]);
-    assert_eq!(r.code, 0);
-    assert!(
-        r.stdout.starts_with("245850922/78256779 rad"),
-        "KL-19 fixed? then pi is no longer a fraction: {}",
-        r.stdout
+    assert_eq!(
+        (r.code, r.stdout.as_str()),
+        (0, "pi = 3.141592653589793 rad\n")
     );
-    // Among themselves the angle units are exact.
+    // Half a turn in other units, exactly, and the decimal stays the default output.
+    assert_eq!(
+        dimvexa(&["convert", "90", "deg", "rad", "--exact"]).stdout,
+        "1/2 pi = 1.5707963267948966 rad\n"
+    );
+    assert_eq!(
+        dimvexa(&["convert", "90", "deg", "rad"]).stdout,
+        "1.5707963267948966 rad\n"
+    );
+    assert_eq!(
+        dimvexa(&["convert", "1", "rad", "deg", "--exact"]).stdout,
+        "180 pi^-1 = 57.29577951308232 deg\n"
+    );
     assert_eq!(
         dimvexa(&["convert", "60", "arcmin", "deg", "--exact"]).stdout,
-        "1/1 deg\n"
+        "1/1 = 1 deg\n"
     );
+    assert_eq!(
+        dimvexa(&["convert", "1", "grad", "arcsec", "--exact"]).stdout,
+        "3240/1 = 3240 arcsec\n"
+    );
+    // The JSON carries the symbolic value and the rounded decimal.
+    let r = dimvexa(&["convert", "90", "deg", "rad", "--json"]);
+    let v = json::parse(&r.stdout).unwrap();
+    json::check_convert_schema(&v);
+    let exact = v.get("exact").unwrap();
+    assert_eq!(exact.get("value").unwrap().as_str(), "1/2 pi");
+    assert_eq!(exact.get("decimal").unwrap().as_str(), "1.5707963267948966");
+    assert_eq!(exact.get("factor").unwrap().as_str(), "1/180 pi");
+    assert_eq!(v.get("exactness").unwrap().as_str(), "defined");
+    let out = v.get("output").unwrap();
+    assert_eq!(out.get("value").unwrap().as_str(), "1.5707963267948966");
+    assert!(out.get("truncated").unwrap().as_bool());
 }
 
 /// The guide's angle examples (`2 pi`, `turn`) run against the shipped example config.
 #[test]
 fn guide_angle_examples_are_real() {
     const CFG: &str = "examples/configs/angle.toml";
-    let section = readme_section(&guide(), "## Angles and pi: limitations");
+    let section = readme_section(&guide(), "## Angles and pi");
     for (args, out) in [
         (
             &["convert", "2", "pi", "deg", "--config", CFG][..],
@@ -1867,7 +1899,10 @@ fn guide_angle_examples_are_real() {
         assert!(section.contains(&format!("$ dimvexa {}\n   {out}", args.join(" "))));
     }
     let r = dimvexa_at_root(&["convert", "2", "pi", "deg", "--config", CFG, "--exact"]);
-    assert_eq!(r.stdout.trim_end(), "360/1 deg");
+    assert_eq!(r.stdout.trim_end(), "360/1 = 360 deg");
+    // `turn` is exactly 2 pi rad (the config defines it as 360 deg).
+    let r = dimvexa_at_root(&["convert", "1", "turn", "rad", "--config", CFG, "--exact"]);
+    assert_eq!(r.stdout.trim_end(), "2 pi = 6.283185307179586 rad");
     assert_eq!(
         dimvexa(&["convert", "1", "deg", "1"]).stdout,
         "0.017453292519943295 1\n"

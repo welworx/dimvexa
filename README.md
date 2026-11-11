@@ -40,7 +40,7 @@ error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne,
 ## Why Dimvexa
 
 - **Exact.** Factors are rational numbers with a source and an exact/measured flag;
-  `--exact` prints the exact fraction.
+  `--exact` prints the exact value (a fraction, with pi where it has one) and its decimal.
 - **Loud.** Ambiguous names (`ton`, `gal`, `oz`), overflow and unsupported requests are errors
   with stable codes.
 - **Right about temperature.** Points (`degC`) and differences (`delta_degC`) are different
@@ -75,7 +75,7 @@ Units combine with `*`, `/` and powers, and prefixes work on SI units:
 $ dimvexa convert 1 L/min m3/h
 0.06 m^3/h
 $ dimvexa convert 1 ton_short tonne --exact
-45359237/50000000 tonne
+45359237/50000000 = 0.90718474 tonne
 $ dimvexa units mass         # every mass unit, and the names refused as ambiguous
 $ dimvexa units ton_short    # one unit: factor, exactness, source
 ```

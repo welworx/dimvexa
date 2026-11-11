@@ -57,13 +57,16 @@ fn all_vectors_reproduce_exactly() {
             "{label}: empty source"
         );
         let value: Ratio = v.str("value").unwrap().parse().unwrap();
-        let expect: Ratio = v.str("expect").unwrap().parse().unwrap();
+        let expect = Ratio::parse_symbolic(v.str("expect").unwrap()).unwrap();
         let conv = reg
             .conversion(from, to)
             .unwrap_or_else(|e| panic!("{label}: {e}"));
         let got = conv.apply_exact(value).unwrap();
         match v.opt_str("rel_tol").unwrap() {
-            None => assert_eq!(got, expect, "{label}: got {got}, expected {expect}"),
+            None => assert!(
+                got.checked_eq(expect).unwrap(),
+                "{label}: got {got}, expected {expect}"
+            ),
             Some(tol) => {
                 let tol: Ratio = tol.parse().unwrap();
                 let diff = got.checked_sub(expect).unwrap();
@@ -376,4 +379,82 @@ fn nm3_is_an_error_when_nm_is_also_a_unit() {
     }
     // The plain unit itself is untouched.
     assert!(reg.parse("Nm").is_ok());
+}
+
+/// ADR-018: the angle units are exact, and `eV` and `Da` compose where a plain `i128` fraction
+/// would overflow.
+#[test]
+fn angle_units_ev_and_da_are_exact_and_compose() {
+    let reg = dimvexa_data::registry().unwrap();
+    let exact = |from: &str, to: &str, x: &str| {
+        reg.conversion(from, to)
+            .unwrap()
+            .apply_exact(Ratio::parse_symbolic(x).unwrap())
+            .unwrap()
+    };
+    let sym = |s: &str| Ratio::parse_symbolic(s).unwrap();
+    // exact angles: pi stays symbolic, powers of pi cancel
+    assert_eq!(exact("deg", "rad", "180"), Ratio::PI);
+    assert_eq!(exact("deg", "rad", "90"), sym("1/2 pi"));
+    assert_eq!(exact("rad", "deg", "1"), sym("180 pi^-1"));
+    assert_eq!(exact("arcsec", "deg", "3600"), sym("1"));
+    assert_eq!(exact("grad", "deg", "100"), sym("90"));
+    assert_eq!(exact("arcsec", "arcmin", "60"), sym("1"));
+    assert_eq!(exact("deg", "rad", "1"), sym("1/180 pi"));
+    assert_eq!(exact("deg", "deg", "1"), sym("1"));
+    // deg^2 -> rad^2 carries pi^2; the arcsec square used to overflow with a long pi
+    assert_eq!(exact("deg^2", "rad^2", "1"), sym("1/32400 pi^2"));
+    assert!(reg.parse("arcsec.arcsec").is_ok());
+    for id in ["deg", "arcmin", "arcsec", "grad"] {
+        let u = reg.get(id).unwrap();
+        assert_eq!(u.exactness(), dimvexa_core::Exactness::Defined, "{id}");
+        assert_eq!(u.factor().pi_exp(), 1, "{id}");
+    }
+    // eV is defined, Da is measured (CODATA 2018 is named in the source)
+    let (ev, da) = (reg.get("eV").unwrap(), reg.get("Da").unwrap());
+    assert_eq!(ev.exactness(), dimvexa_core::Exactness::Defined);
+    assert_eq!(da.exactness(), dimvexa_core::Exactness::Measured);
+    assert!(da.source().contains("CODATA 2018") && da.note().contains("CODATA 2018"));
+    assert_eq!(
+        exact("eV", "J", "1").to_fraction_string(),
+        "801088317/5000000000000000000000000000"
+    );
+    // (a prefix on eV or Da is a power of ten in the exponent, so compare values, not `==`)
+    let same = |a: Ratio, b: &str| a.checked_eq(sym(b)).unwrap();
+    assert!(same(exact("keV", "eV", "1"), "1000"));
+    assert!(same(exact("MeV", "keV", "1"), "1000"));
+    assert!(same(exact("kDa", "Da", "1"), "1000"));
+    // squares and products that overflow a plain fraction work because the power of ten is an
+    // exponent, also with a prefix (TeV^2 is 10^24 * 1602176634^2 * 10^-56)
+    let ev2 = reg.parse("eV.eV").unwrap().factor();
+    assert_eq!((ev2.num(), ev2.ten_exp()), (2_566_969_966_535_569_956, -56));
+    let tev2 = reg.parse("TeV.TeV").unwrap().factor();
+    assert_eq!(tev2.ten_exp(), -56 + 24);
+    assert!(same(exact("TeV^2", "GeV^2", "1"), "1000000"));
+    assert!(same(
+        exact("eV/Da", "J/kg", "1"),
+        "801088317/8302695333 10^9"
+    ));
+    // the correctly rounded decimals
+    let c = reg.conversion("eV", "J").unwrap();
+    assert_eq!(c.factor_f64().to_bits(), 1.602_176_634e-19_f64.to_bits());
+    assert_eq!(
+        c.apply_exact_f64(1.0).unwrap().to_bits(),
+        1.602_176_634e-19_f64.to_bits()
+    );
+    let c = reg.conversion("deg", "rad").unwrap();
+    assert_eq!(
+        c.factor_f64().to_bits(),
+        0.017_453_292_519_943_295_f64.to_bits()
+    );
+    assert_eq!(
+        c.apply_exact_f64(180.0).unwrap().to_bits(),
+        core::f64::consts::PI.to_bits()
+    );
+    assert_eq!(
+        c.apply_exact_f64(90.0).unwrap().to_bits(),
+        core::f64::consts::FRAC_PI_2.to_bits()
+    );
+    // a compound with an angle: deg/s -> rad/s
+    assert_eq!(exact("deg/s", "rad/s", "180"), Ratio::PI);
 }

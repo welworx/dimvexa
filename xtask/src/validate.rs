@@ -72,6 +72,30 @@ fn strict_fraction(s: &str) -> Result<Ratio, String> {
     Ok(r)
 }
 
+/// Parses a factor: `num/den` in lowest terms, optionally followed by `10^k` and `pi` or
+/// `pi^m` (ADR-018), for example `1/180 pi`. The coefficient may be left out when a factor
+/// follows.
+fn strict_factor(s: &str) -> Result<Ratio, String> {
+    let head = s.split_whitespace().next().unwrap_or("");
+    let starts_factor = head == "pi" || head.starts_with("pi^") || head.starts_with("10^");
+    let (coef, rest) = if starts_factor {
+        (Ratio::ONE, s)
+    } else {
+        let tail = s.trim_start().strip_prefix(head).unwrap_or("");
+        (strict_fraction(head)?, tail)
+    };
+    if rest.trim().is_empty() {
+        return Ok(coef);
+    }
+    let factors = Ratio::parse_symbolic(rest).map_err(|e| format!("'{s}': {e}"))?;
+    if factors.num() != 1 || factors.den() != 1 || !factors.has_exponents() {
+        return Err(format!(
+            "'{s}': after the fraction only '10^k' and 'pi^m' may follow"
+        ));
+    }
+    Ok(coef.with_exponents(factors.ten_exp(), factors.pi_exp()))
+}
+
 fn data_hash(root: &Path) -> Result<String, String> {
     let mut input: Vec<u8> = Vec::new();
     for f in toml_files(&root.join("crates/dimvexa-data/data/units"))? {
@@ -212,7 +236,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
         let factor = t
             .str("factor")
             .map_err(|_| "missing".to_string())
-            .and_then(strict_fraction);
+            .and_then(strict_factor);
         let offset = t
             .str("offset")
             .map_err(|_| "missing".to_string())
@@ -351,7 +375,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
         }
         for key in ["value", "expect"] {
             if let Ok(v) = t.str(key) {
-                if v.parse::<Ratio>().is_err() {
+                if Ratio::parse_symbolic(v).is_err() {
                     err(format!("{at}: '{key}' = '{v}' is not an exact number"));
                 }
             }

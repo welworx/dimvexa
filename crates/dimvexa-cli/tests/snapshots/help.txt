@@ -25,8 +25,9 @@ Commands:
   update -y        do not ask "Update to vX.Y.Z? [y/N]" first (also --yes)
 
 Options:
-  --exact      print the exact rational result (num/den) instead of a decimal
-  --json       machine-readable output (schema dimvexa.convert/2; dimvexa.units/3 for units,
+  --exact      print the exact result and its decimal: a fraction, with pi or a power of ten when
+               the value has one (`1/2 pi = 1.5707963267948966`), instead of the decimal alone
+  --json       machine-readable output (schema dimvexa.convert/3; dimvexa.units/4 for units,
                dimvexa.configs/1 for configs)
   --color WHEN auto (default: a terminal, unless NO_COLOR is set), always (also
                CLICOLOR_FORCE=1) or never; JSON is never coloured

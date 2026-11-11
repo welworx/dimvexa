@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # Golden vectors for the common pack: value in `from` converts exactly to `expect` in `to`.
-# `expect` is a fraction, an integer or a decimal. With `rel_tol` the comparison is approximate
+# `expect` is a fraction, an integer, a decimal or a symbolic value such as `pi` or
+# `180 pi^-1` (ADR-018). With `rel_tol` the comparison is approximate
 # (used where the source publishes a rounded number). `source` says where the number comes from.
 
 [[vector]]

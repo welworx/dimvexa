@@ -4,6 +4,8 @@ Status: Accepted by the owner on 2026-11-11, including the two recommended defau
 
 Supersedes the pi, `eV` and `Da` part of [ADR-010](010-units-that-do-not-fit-i128.md) (its option 2).
 
+Implementation: step 1 (the number type, exact angles, `eV`, `Da`) is done on the branch `claude/adr-018-step1`; the measurements are in [`docs/benchmarks/adr-018-step1.md`](../benchmarks/adr-018-step1.md). Steps 2 and 3 are not started.
+
 ## Context
 
 * A factor is an exact `i128` fraction (ADR-002, ADR-004). Pi has no exact fraction, so the angle

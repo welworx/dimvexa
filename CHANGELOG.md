@@ -6,8 +6,20 @@ All notable changes are documented here. The format follows
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
 ## [Unreleased]
+### Added
+
+- Units `eV` (electronvolt, `defined`, 1.602176634e-19 J) and `Da` (dalton, `measured`, CODATA 2018 atomic mass constant 1.66053906660e-27 kg; the edition is pinned in the unit's source and note). They take SI prefixes and compose without overflow (`eV.eV`, `TeV.TeV`), because their power of ten is an exponent and not part of the fraction (ADR-018, step 1).
+- `Ratio::PI`, `Ratio::with_exponents`, `ten_exp`, `pi_exp`, `has_exponents`, `folded`, `checked_eq` and `Ratio::parse_symbolic` (the table notation, `1/180 pi`, `1602176634 10^-28`); `UnitDef::factor_exp`.
+- Benchmark rows for the angle conversion (`deg -> rad`: scalar apply, `apply_exact`, `apply_exact_f64`, parse+prepare) and for `eV` (`docs/benchmarks/adr-018-step1.md`).
+
 ### Changed
 
+- **Breaking (ADR-018, step 1):** a `Ratio` is `num/den * 10^k * pi^m`. Multiplication, division and powers add and scale the exponents; addition and ordering of two non-zero numbers with different exponents are refused with `overflow`, never approximated; an offset keeps exponents 0. `==` compares the stored representation, `checked_eq` compares values. `Ratio::to_f64` folds a power of ten that fits and otherwise brackets the value with 128-bit directed rounding, so a value with pi is the correctly rounded `f64` or an error. `num()` and `den()` are the coefficient only. `UnitDef` gains the field `factor_exp` (0.x breaking change: add `factor_exp: (0, 0)` to a literal).
+- **Breaking:** the angle units `deg`, `arcmin`, `arcsec` and `grad` are exact and `defined`: `deg` is `1/180 pi` rad. The convergent 245850922/78256779 is gone from tables, notes, tests and docs, so `convert 180 deg rad --exact` is `pi` (KL-19 closed). `examples/configs/angle.toml` defines `pi` and `turn` on `deg` and stays exact.
+- **Breaking:** `--exact` prints the exact value and the decimal (`1/2 pi = 1.5707963267948966 rad`, `36/1 = 36 km/h`). The decimal stays the default output.
+- **Breaking:** JSON schemas move to `dimvexa.convert/3` and `dimvexa.units/4` (new files in `docs/schemas/`, the old ones stay): exact numbers (`exact.value`, `exact.factor`, units `factor`) may carry `pi` and a power of ten (`1/2 pi`), `exact.decimal` is new, and for a value with pi `output.value` is the rounded decimal with `truncated` true. `dimvexa.configs/1` does not change.
+- Python: `Conversion.factor` and `Quantity.value` can read `1/180 pi` (not built or run here, see the benchmark note).
+- Data version 17.
 - `cargo xtask ci` gains an `msrv` stage (a `cargo check` on Rust 1.85, read from `rust-version`), and the pre-commit hook runs fmt, clippy and `msrv` on staged Rust files, so code that only compiles on the pinned toolchain (a let chain) no longer reaches CI.
 
 ## [0.4.0] - 2026-11-11

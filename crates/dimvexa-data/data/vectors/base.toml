@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # Golden vectors for the base pack: value in `from` converts exactly to `expect` in `to`.
-# `expect` is a fraction, an integer or a decimal. With `rel_tol` the comparison is approximate
+# `expect` is a fraction, an integer, a decimal or a symbolic value such as `pi` or
+# `180 pi^-1` (ADR-018). With `rel_tol` the comparison is approximate
 # (used where the source publishes a rounded number). `source` says where the number comes from.
 
 [[vector]]
@@ -400,9 +401,16 @@ unit = "deg"
 value = "180"
 from = "deg"
 to = "rad"
-expect = "3.14159265"
-rel_tol = "1e-8"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (180 degrees = pi rad, pi = 3.14159265358979...)"
+expect = "pi"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (180 degrees = pi rad)"
+
+[[vector]]
+unit = "deg"
+value = "1"
+from = "rad"
+to = "deg"
+expect = "180 pi^-1"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (1 degree = (pi/180) rad, so 1 rad = 180/pi degrees)"
 
 [[vector]]
 unit = "arcmin"
@@ -419,3 +427,19 @@ from = "arcsec"
 to = "deg"
 expect = "1"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (1 degree = 3600 arcseconds)"
+
+[[vector]]
+unit = "eV"
+value = "1"
+from = "eV"
+to = "J"
+expect = "801088317/5000000000000000000000000000"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (1 eV = 1.602 176 634 x 10^-19 J, exact)"
+
+[[vector]]
+unit = "Da"
+value = "1"
+from = "Da"
+to = "kg"
+expect = "8302695333/5000000000000000000000000000000000000"
+source = "CODATA 2018 recommended values (Tiesinga et al., Rev. Mod. Phys. 93, 025010 (2021)), atomic mass constant m_u = 1.660 539 066 60(50) x 10^-27 kg; BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (1 Da = m_u)"

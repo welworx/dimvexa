@@ -19,8 +19,24 @@ fn data_dir() -> PathBuf {
     PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap_or_default()).join("data")
 }
 
-fn fraction(s: &str, what: &str) -> Res<String> {
-    let (n, d) = s
+/// Parses `num/den`, optionally followed by `10^k` and `pi` or `pi^m` (ADR-018), for example
+/// `1/180 pi` or `1602176634 10^-28`. Returns the fraction and the two exponents. The
+/// coefficient may be left out when a factor follows (`pi`).
+fn symbolic(s: &str, what: &str) -> Res<((i128, i128), (i32, i32))> {
+    let mut tokens = s.split_whitespace().peekable();
+    let first = tokens.peek().copied().unwrap_or("");
+    let is_factor = |t: &str| t == "pi" || t.starts_with("pi^") || t.starts_with("10^");
+    let coef = if is_factor(first) {
+        "1/1".to_string()
+    } else {
+        tokens.next();
+        if first.contains('/') {
+            first.to_string()
+        } else {
+            format!("{first}/1")
+        }
+    };
+    let (n, d) = coef
         .split_once('/')
         .ok_or_else(|| format!("{what}: '{s}' is not 'num/den'"))?;
     let n: i128 = n
@@ -34,7 +50,46 @@ fn fraction(s: &str, what: &str) -> Res<String> {
     if d <= 0 {
         return Err(format!("{what}: denominator must be positive in '{s}'"));
     }
+    let (mut ten, mut pi) = (None, None);
+    for t in tokens {
+        if let Some(k) = t.strip_prefix("10^") {
+            let k: i32 = k
+                .parse()
+                .map_err(|_| format!("{what}: bad power of ten in '{s}'"))?;
+            if ten.replace(k).is_some() {
+                return Err(format!("{what}: two powers of ten in '{s}'"));
+            }
+        } else if t == "pi" || t.starts_with("pi^") {
+            let m: i32 = match t.strip_prefix("pi^") {
+                Some(m) => m
+                    .parse()
+                    .map_err(|_| format!("{what}: bad power of pi in '{s}'"))?,
+                None => 1,
+            };
+            if pi.replace(m).is_some() {
+                return Err(format!("{what}: two powers of pi in '{s}'"));
+            }
+        } else {
+            return Err(format!("{what}: unexpected '{t}' in '{s}'"));
+        }
+    }
+    Ok(((n, d), (ten.unwrap_or(0), pi.unwrap_or(0))))
+}
+
+fn fraction(s: &str, what: &str) -> Res<String> {
+    let ((n, d), (ten, pi)) = symbolic(s, what)?;
+    if (ten, pi) != (0, 0) {
+        return Err(format!("{what}: '{s}' may not carry a power of ten or pi"));
+    }
     Ok(format!("({n}_i128, {d}_i128)"))
+}
+
+fn factor_parts(s: &str) -> Res<(String, String)> {
+    let ((n, d), (ten, pi)) = symbolic(s, "factor")?;
+    Ok((
+        format!("({n}_i128, {d}_i128)"),
+        format!("({ten}_i32, {pi}_i32)"),
+    ))
 }
 
 fn lit(s: &str) -> String {
@@ -81,13 +136,13 @@ fn unit_def(t: &toml_lite::Table) -> Res<String> {
         "si_binary" => "PrefixMode::SiAndBinary",
         other => return Err(ctx(format!("unknown prefixes '{other}'"))),
     };
-    let factor = fraction(t.str("factor").map_err(ctx)?, "factor").map_err(ctx)?;
+    let (factor, factor_exp) = factor_parts(t.str("factor").map_err(ctx)?).map_err(ctx)?;
     let offset = fraction(t.str("offset").map_err(ctx)?, "offset").map_err(ctx)?;
     let mut s = String::new();
     let _ = writeln!(
         s,
         "    UnitDef {{ id: {}, symbol: {}, name: {}, aliases: &[{}], dim: [{}], kind: {kind}, shape: {shape}, \
-         factor: {factor}, offset: {offset}, exactness: {exactness}, prefixes: {prefixes}, \
+         factor: {factor}, factor_exp: {factor_exp}, offset: {offset}, exactness: {exactness}, prefixes: {prefixes}, \
          namespace: {}, source: {}, note: {}, conditions: {} }},",
         lit(symbol),
         lit(t.opt_str("symbol").map_err(ctx)?.unwrap_or(symbol)),

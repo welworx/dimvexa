@@ -71,6 +71,9 @@ pub struct Conversion {
     offset_f64: f64,
     shift_f64: f64,
     shift_lo_f64: f64,
+    /// The factor as one unreduced fraction with its power of ten multiplied in, used by the
+    /// exact `f64` path; the denominator 0 means "none" (a power of pi, or no fit).
+    fold: (i128, i128),
 }
 
 impl Conversion {
@@ -106,6 +109,7 @@ impl Conversion {
             Shape::Affine
         };
         let shift = offset.checked_div(factor)?;
+        let shift = shift.folded().unwrap_or(shift);
         let shift_f64 = shift.to_f64()?;
         // Second part of the shift (shift - shift_f64, rounded): makes the shift accurate to
         // about 106 bits, so an inexact shift such as 273.15 no longer limits the result.
@@ -121,7 +125,22 @@ impl Conversion {
             offset_f64: offset.to_f64()?,
             shift_f64,
             shift_lo_f64,
+            fold: Self::fold_factor(factor, offset),
         })
+    }
+
+    /// The factor as `(num, den)` with `10^k` multiplied in, or `(1, 0)` when the exact `f64`
+    /// path cannot use a single fraction (a power of pi, a power of ten that does not fit, or
+    /// an offset with exponents).
+    fn fold_factor(factor: Ratio, offset: Ratio) -> (i128, i128) {
+        const NONE: (i128, i128) = (1, 0);
+        if factor.pi_exp() != 0 || offset.has_exponents() {
+            return NONE;
+        }
+        if factor.ten_exp() == 0 {
+            return (factor.num(), factor.den());
+        }
+        factor.folded().map_or(NONE, |f| (f.num(), f.den()))
     }
 
     /// Prepares the conversion from `from` to `to`.
@@ -348,11 +367,13 @@ impl Conversion {
 
     /// Converts an exact value: `a * x + b` in checked rational arithmetic.
     ///
-    /// This is the reference path: no rounding happens at all.
+    /// This is the reference path: no rounding happens at all. If the factor carries a power
+    /// of pi or of ten, so does the result (`180 deg` to `rad` is exactly `pi`).
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] if the result does not fit in `i128` fractions.
+    /// [`Error::Overflow`] if the result does not fit in `i128` fractions, or if `a * x` and
+    /// `b` have different exponents and cannot be added exactly.
     pub fn apply_exact(&self, x: Ratio) -> Result<Ratio> {
         self.factor.checked_mul(x)?.checked_add(self.offset)
     }
@@ -467,7 +488,10 @@ impl Conversion {
                 None
             }
         };
-        let (fnum, fden) = (self.factor.num(), self.factor.den());
+        let (fnum, fden) = self.fold;
+        if fden == 0 {
+            return None;
+        }
         let prod = fnum.checked_mul(smant)?;
         let (num, den) = match (self.shape, exp >= 0) {
             (Shape::Linear, true) => (prod.checked_mul(pow(exp)?)?, fden),

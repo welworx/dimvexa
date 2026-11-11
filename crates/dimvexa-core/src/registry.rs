@@ -7,7 +7,7 @@ use crate::conversion::Conversion;
 use crate::error::{Error, Result};
 use crate::expr::{Expr, is_valid_symbol};
 use crate::kind::Kind;
-use crate::prefix::{Prefix, PrefixMode, all_prefixes};
+use crate::prefix::{Prefix, PrefixFamily, PrefixMode, all_prefixes};
 use crate::quantity::Quantity;
 use crate::ratio::Ratio;
 use crate::unit::{AmbiguousDef, Unit, UnitDef, UnitExpr};
@@ -291,7 +291,15 @@ impl Registry {
     fn unit_expr(&self, text: &str, unit: &Unit, prefix: Option<Prefix>) -> Result<UnitExpr> {
         let (factor, mut sources) = match prefix {
             Some(p) => (
-                unit.factor().checked_mul(p.factor()?)?,
+                // A unit that keeps a power of ten in its exponent (`eV`, `Da`, ADR-018) keeps a
+                // decimal prefix there too, so `TeV.TeV` does not grow the fraction and overflow.
+                // Every other unit multiplies the prefix into the fraction as before.
+                if p.family == PrefixFamily::Si && unit.factor().ten_exp() != 0 {
+                    unit.factor()
+                        .checked_mul(Ratio::ONE.with_exponents(p.exp, 0))?
+                } else {
+                    unit.factor().checked_mul(p.factor()?)?
+                },
                 vec![PREFIX_SOURCE.to_string()],
             ),
             None => (unit.factor(), Vec::new()),

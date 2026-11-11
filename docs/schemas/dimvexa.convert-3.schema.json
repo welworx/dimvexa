@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dimvexa.convert/3",
+  "title": "dimvexa.convert/3",
+  "description": "Output of `dimvexa convert --json`. Adding fields is allowed within a schema version; removing or changing them requires a new version. Exact numbers are strings so no JSON parser rounds them. /2 replaces /1: `bridge` became `density` and the always-null `profile` is gone (ADR-014). /3 (ADR-018): exact numbers may carry a power of ten and a power of pi (`1/2 pi`), and `exact.decimal` is new.",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "ok",
+        "input",
+        "output",
+        "exact",
+        "exactness",
+        "dimension",
+        "kind",
+        "quantity_kind",
+        "packs",
+        "data_version",
+        "sources",
+        "config",
+        "density"
+      ],
+      "properties": {
+        "schema": {
+          "const": "dimvexa.convert/3"
+        },
+        "ok": {
+          "const": true
+        },
+        "input": {
+          "type": "object",
+          "required": [
+            "value",
+            "unit"
+          ],
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "unit": {
+              "type": "string"
+            }
+          }
+        },
+        "output": {
+          "type": "object",
+          "required": [
+            "value",
+            "unit",
+            "f64",
+            "truncated"
+          ],
+          "properties": {
+            "value": {
+              "type": "string",
+              "description": "Decimal expansion of the exact result, at most 15 fraction digits. For a value with pi (no finite expansion) it is the result rounded once to the nearest f64 and `truncated` is true."
+            },
+            "unit": {
+              "type": "string"
+            },
+            "f64": {
+              "type": "number",
+              "description": "The exact result rounded once to the nearest f64."
+            },
+            "truncated": {
+              "type": "boolean",
+              "description": "True if value was cut at 15 fraction digits, or if the exact result has a power of pi and value is its rounded decimal."
+            }
+          }
+        },
+        "exact": {
+          "type": "object",
+          "required": [
+            "value",
+            "decimal",
+            "factor",
+            "offset"
+          ],
+          "properties": {
+            "value": {
+              "type": "string",
+              "pattern": "^-?([0-9]+(/[0-9]+)?)?( ?(10\\^-?[0-9]+|pi(\\^-?[0-9]+)?)){0,2}$",
+              "description": "Exact value as `num/den`, or with a power of ten and/or pi after the fraction when the value has one (ADR-018): `1/2 pi`, `pi`, `180 pi^-1`, `1602176634 10^-28`. A coefficient of 1 is left out beside a factor. A power of ten that fits the fraction is multiplied in."
+            },
+            "decimal": {
+              "type": "string",
+              "description": "The exact value rounded once to the nearest f64, as the shortest decimal that reads back to it (for example 1.5707963267948966 for 1/2 pi)."
+            },
+            "factor": {
+              "type": "string",
+              "pattern": "^-?([0-9]+(/[0-9]+)?)?( ?(10\\^-?[0-9]+|pi(\\^-?[0-9]+)?)){0,2}$",
+              "description": "Exact value as `num/den`, or with a power of ten and/or pi after the fraction when the value has one (ADR-018): `1/2 pi`, `pi`, `180 pi^-1`, `1602176634 10^-28`. A coefficient of 1 is left out beside a factor. A power of ten that fits the fraction is multiplied in."
+            },
+            "offset": {
+              "type": "string",
+              "pattern": "^-?[0-9]+/[0-9]+$",
+              "description": "Exact offset b in y = a * x + b; always a plain fraction."
+            }
+          }
+        },
+        "exactness": {
+          "enum": [
+            "defined",
+            "measured"
+          ]
+        },
+        "dimension": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 7,
+          "maxItems": 7,
+          "description": "Exponents of kg, m, s, A, K, mol, cd."
+        },
+        "kind": {
+          "enum": [
+            "linear",
+            "affine"
+          ],
+          "description": "Conversion shape (named `kind` in the plan's sketch; see quantity_kind for the quantity kind)."
+        },
+        "quantity_kind": {
+          "enum": [
+            "plain",
+            "absolute_temperature",
+            "temperature_difference",
+            "gauge_pressure",
+            "normal_volume",
+            "standard_volume"
+          ]
+        },
+        "packs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "data_version": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "config": {
+          "type": "array",
+          "description": "The configs applied with --config, in order (empty if none): the file as given, or `bundled:NAME` for a config that ships with dimvexa, and a content hash (fnv1a64), so a result can be reproduced.",
+          "items": {
+            "type": "object",
+            "required": [
+              "file",
+              "hash"
+            ],
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "hash": {
+                "type": "string",
+                "pattern": "^fnv1a64:[0-9a-f]{16}$"
+              }
+            }
+          }
+        },
+        "density": {
+          "description": "The density the conversion went through (ADR-014), or null. A density is used only when requested with --density and only when the plain conversion is refused (mass <-> volume needs a density). The result's exactness is then `measured`, and the density's source is also listed in `sources`. A number written on the command line (`--density 998.2067kg/m3`) has file `--density` and line 0.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "name",
+                "kind",
+                "value",
+                "unit",
+                "conditions",
+                "source",
+                "file",
+                "line"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "density"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "pattern": "^-?[0-9]+(/[0-9]+)?$",
+                  "description": "Exact value in `unit`."
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "kg/m3 for a density."
+                },
+                "conditions": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "dimvexa.convert/3"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "object",
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "enum": [
+                "parse_error",
+                "invalid_number",
+                "unknown_unit",
+                "ambiguous_symbol",
+                "ambiguous_expression",
+                "dimension_mismatch",
+                "kind_mismatch",
+                "overflow",
+                "division_by_zero",
+                "length_mismatch",
+                "refused",
+                "invalid_definition",
+                "duplicate_symbol",
+                "usage"
+              ],
+              "description": "Library error codes (stable, non-exhaustive list) plus `usage` for command-line mistakes."
+            },
+            "message": {
+              "type": "string"
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Explicit symbols or close matches (ambiguous_symbol, unknown_unit)."
+            },
+            "suggestions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Everything the error recommends instead: candidates, or the delta unit (delta_K, delta_degC, ...) for temperature kind errors and refused offset units."
+            }
+          }
+        }
+      }
+    }
+  ]
+}

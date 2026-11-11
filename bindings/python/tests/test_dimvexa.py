@@ -12,6 +12,13 @@ def test_scalar_exact_factor() -> None:
     assert dimvexa.conversion("m/s", "km/h").factor == "18/5"
 
 
+def test_angles_are_exact_with_pi_symbolic() -> None:
+    # ADR-018: the degree is exactly pi/180 rad, so the factor reads `1/180 pi` and the exact
+    # path rounds once.
+    assert dimvexa.conversion("deg", "rad").factor == "1/180 pi"
+    assert dimvexa.convert(180.0, "deg", "rad", exact=True) == math.pi
+
+
 def test_affine() -> None:
     assert dimvexa.convert(100.0, "degC", "degF") == pytest.approx(212.0)
     assert dimvexa.conversion("degC", "K").shape == "affine"

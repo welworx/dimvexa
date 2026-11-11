@@ -601,13 +601,13 @@ aliases = ["°"]
 dim = [0, 0, 0, 0, 0, 0, 0]
 kind = "plain"
 shape = "linear"
-factor = "122925461/7043110110"
+factor = "1/180 pi"
 offset = "0/1"
-exactness = "measured"
+exactness = "defined"
 prefixes = "none"
 namespace = "si"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (degree = (pi/180) rad)"
-note = "degree = pi/180 rad. Factor uses pi ~ 245850922/78256779 (a continued-fraction convergent, relative error 2.5e-17, below half an f64 ulp), so the unit is marked measured; all angle units share it, so deg/arcmin/arcsec/grad convert among themselves exactly (ADR-010)"
+note = "degree = pi/180 rad, exact: the factor carries pi as a symbol (ADR-018), so deg/arcmin/arcsec/grad convert among themselves exactly and to rad with pi kept until the final rounding"
 
 [[unit]]
 id = "arcmin"
@@ -616,13 +616,13 @@ aliases = []
 dim = [0, 0, 0, 0, 0, 0, 0]
 kind = "plain"
 shape = "linear"
-factor = "122925461/422586606600"
+factor = "1/10800 pi"
 offset = "0/1"
-exactness = "measured"
+exactness = "defined"
 prefixes = "none"
 namespace = "si"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcminute = (1/60) degree)"
-note = "arcminute = deg/60. Factor uses pi ~ 245850922/78256779 (a continued-fraction convergent, relative error 2.5e-17, below half an f64 ulp), so the unit is marked measured; all angle units share it, so deg/arcmin/arcsec/grad convert among themselves exactly (ADR-010)"
+note = "arcminute = deg/60 = pi/10800 rad, exact (ADR-018)"
 
 [[unit]]
 id = "arcsec"
@@ -631,10 +631,40 @@ aliases = []
 dim = [0, 0, 0, 0, 0, 0, 0]
 kind = "plain"
 shape = "linear"
-factor = "122925461/25355196396000"
+factor = "1/648000 pi"
 offset = "0/1"
-exactness = "measured"
+exactness = "defined"
 prefixes = "none"
 namespace = "si"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcsecond = (1/60) arcminute)"
-note = "arcsecond = arcmin/60. Factor uses pi ~ 245850922/78256779 (a continued-fraction convergent, relative error 2.5e-17, below half an f64 ulp), so the unit is marked measured; all angle units share it, so deg/arcmin/arcsec/grad convert among themselves exactly (ADR-010)"
+note = "arcsecond = arcmin/60 = pi/648000 rad, exact (ADR-018)"
+
+[[unit]]
+id = "eV"
+name = "Electronvolt"
+aliases = []
+dim = [1, 2, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1602176634/1 10^-28"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (1 eV = 1.602 176 634 x 10^-19 J, exact since the elementary charge e is fixed, ch. 2, Table 1)"
+note = "electronvolt = e * 1 V with e = 1.602176634e-19 C (defined), so 1 eV = 1.602176634e-19 J; stored as 1602176634 x 10^-28 so the power of ten never enters the fraction (ADR-018)"
+
+[[unit]]
+id = "Da"
+name = "Dalton"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "16605390666/1 10^-37"
+offset = "0/1"
+exactness = "measured"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (dalton = unified atomic mass unit); CODATA 2018 recommended value of the atomic mass constant m_u = 1.660 539 066 60(50) x 10^-27 kg (Tiesinga et al., Rev. Mod. Phys. 93, 025010 (2021))"
+note = "1 Da = m_u = 1.66053906660e-27 kg (CODATA 2018 pinned, standard uncertainty 5.0e-37 kg); a measured value, so a later CODATA edition changes it; stored as 16605390666 x 10^-37 (ADR-018)"
