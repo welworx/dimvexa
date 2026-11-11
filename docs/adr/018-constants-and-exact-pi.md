@@ -1,7 +1,6 @@
 # ADR-018: Values carry powers of ten and pi; constants are a named, cited datatype
 
-Status: Proposed (owner agreed to the direction and the three steps on 2026-11-11; the open
-sub-decisions below are not confirmed)
+Status: Accepted by the owner on 2026-11-11, including the two recommended defaults marked OPEN below
 
 Supersedes the pi, `eV` and `Da` part of [ADR-010](010-units-that-do-not-fit-i128.md) (its option 2).
 
@@ -46,10 +45,10 @@ Delivered in three steps, each a separate change that can be released and benchm
    powers in a value (`2 pi rad`, `pi/2 rad`). Only names in the constants table are accepted
    (no free-form formulas, ADR-001).
 
-Output (OPEN, recommended default): `--exact` prints both the symbolic fraction (`1/2 pi`) and
+Output (confirmed): `--exact` prints both the symbolic fraction (`1/2 pi`) and
 the correctly rounded decimal; `--json` carries both (`exact` and `decimal`).
 
-OPEN, recommended: pi is a built-in constant `pi` in step 2 and is not redefinable by a config
+Confirmed: pi is a built-in constant `pi` in step 2 and is not redefinable by a config
 (a user pi would silently change the meaning of every angle).
 
 ## Speed gate (applies to every step)
