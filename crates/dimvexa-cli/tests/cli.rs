@@ -92,7 +92,7 @@ fn text_output_and_shorthand() {
     assert_eq!(dimvexa(&["10", "m/s", "km/h"]).stdout, "36 km/h\n");
     assert_eq!(
         dimvexa(&["convert", "10", "m/s", "km/h", "--exact"]).stdout,
-        "36/1 = 36 km/h\n"
+        "36 km/h\n"
     );
     assert_eq!(
         dimvexa(&["--exact", "convert", "1", "psi", "Pa"]).stdout,
@@ -1859,11 +1859,11 @@ fn angle_units_are_exact_with_pi_kept_symbolic() {
     );
     assert_eq!(
         dimvexa(&["convert", "60", "arcmin", "deg", "--exact"]).stdout,
-        "1/1 = 1 deg\n"
+        "1 deg\n"
     );
     assert_eq!(
         dimvexa(&["convert", "1", "grad", "arcsec", "--exact"]).stdout,
-        "3240/1 = 3240 arcsec\n"
+        "3240 arcsec\n"
     );
     // The JSON carries the symbolic value and the rounded decimal.
     let r = dimvexa(&["convert", "90", "deg", "rad", "--json"]);
@@ -1899,7 +1899,7 @@ fn guide_angle_examples_are_real() {
         assert!(section.contains(&format!("$ dimvexa {}\n   {out}", args.join(" "))));
     }
     let r = dimvexa_at_root(&["convert", "2", "pi", "deg", "--config", CFG, "--exact"]);
-    assert_eq!(r.stdout.trim_end(), "360/1 = 360 deg");
+    assert_eq!(r.stdout.trim_end(), "360 deg");
     // `turn` is exactly 2 pi rad (the config defines it as 360 deg).
     let r = dimvexa_at_root(&["convert", "1", "turn", "rad", "--config", CFG, "--exact"]);
     assert_eq!(r.stdout.trim_end(), "2 pi = 6.283185307179586 rad");

@@ -43,6 +43,10 @@ A number is `num/den * 10^k * pi^m` (ADR-018). Rounding it to `f64` is correct, 
   against about 47 ns for `deg -> rad` on the machine of `docs/benchmarks/adr-018-step1.md`,
   because the two bounds are 128-bit quotients (no allocation). The fast path is unchanged: the
   `f64` factor is computed once when the `Conversion` is prepared.
+* Speed-up option, not done: compute the lower and upper bound of the factor once when the
+  `Conversion` is prepared and only multiply by the 53-bit mantissa of `x` per call; this should
+  bring `apply_exact_f64` for a pi factor close to the plain-fraction cost. Do it if the exact
+  path of angles becomes a bottleneck.
 * Sums and orderings of values with different exponents (`1 + pi`) are refused with `overflow`.
 
 ## What an ulp is
