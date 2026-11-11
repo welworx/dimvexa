@@ -20,6 +20,7 @@
 mod toml_lite;
 
 mod bench_check;
+mod bench_matrix;
 mod chains;
 mod ci;
 mod docs_check;
@@ -69,6 +70,7 @@ fn main() -> ExitCode {
             }
         }
         "bench-check" => bench_check::run(&rest, &root),
+        "bench-matrix" => bench_matrix::run(&rest, &root),
         "check-docs" => {
             let errors = docs_check::run(&root);
             for e in &errors {
@@ -94,7 +96,7 @@ fn main() -> ExitCode {
         },
         _ => {
             eprintln!(
-                "usage: cargo xtask <ci [STAGE...] | check-docs | bench-check | validate-data | update-data-hash>"
+                "usage: cargo xtask <ci [STAGE...] | check-docs | bench-check | bench-matrix | validate-data | update-data-hash>"
             );
             ExitCode::from(2)
         }

@@ -30,9 +30,13 @@ PyPI and npm (`docs/releasing.md`).
    workflow publishes in the order core, data, config, dimvexa, cli, and skips versions that
    are already on a registry.
 6. Public API diff: `cargo semver-checks` once a baseline release exists (`api-change` skill).
-7. Benchmarks and `docs/precision.md` still match the code (`benchmarks`, `precision` skills), and
-   a report named after the version in `docs/benchmarks/` (for example `docs/benchmarks/v0.5.0.md`) exists for this version (one report per release, listed in
-   `docs/benchmarks/README.md`).
+7. Benchmarks and `docs/precision.md` still match the code (`benchmarks`, `precision` skills):
+   `cargo xtask bench-matrix --reports` has been run with the current `m0.rs` (so every released
+   version and this one were measured with one bench file, 6 alternating runs each), the generated
+   `docs/benchmarks/matrix.md`, `matrix-raw.tsv` and `vX.Y.Z.md` reports are committed (one report per
+   release, listed in `docs/benchmarks/README.md`), and a hand-written narrative exists for this
+   version if a row moved beyond the noise. After the release is published, add its commit to
+   `docs/benchmarks/releases.tsv`.
 8. After the merge, the owner approves the run. Verify, do not assume: the five crates on
    crates.io, `dimvexa` on PyPI (5 wheels + sdist), `@dimvexa/wasm` on npm and the tag `vX.Y.Z`.
    Known gap: crates.io trusted publishing is not confirmed to work yet (the first release

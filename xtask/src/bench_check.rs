@@ -94,7 +94,7 @@ const GUARDED: &[&str] = &[
     "apply_exact_f64",
 ];
 
-type Rows = BTreeMap<String, f64>;
+pub type Rows = BTreeMap<String, f64>;
 
 /// Rows short enough (one call, a 1000-element slice) for the alignment of a loop to decide the
 /// result; a flagged one gets the `--layouts` hint.
@@ -182,7 +182,7 @@ fn run_bench(root: &Path) -> Result<Rows, String> {
 }
 
 /// Runs the m0 bench in `dir`, optionally with its own cargo target directory.
-fn run_bench_in(dir: &Path, target_dir: Option<&Path>) -> Result<Rows, String> {
+pub fn run_bench_in(dir: &Path, target_dir: Option<&Path>) -> Result<Rows, String> {
     run_bench_layout(dir, target_dir, 0)
 }
 
@@ -333,7 +333,7 @@ fn report(base: &Rows, now: &Rows, threshold: f64, base_label: &str) {
 }
 
 /// Output of a git command in `root`, or the reason it failed.
-fn git(root: &Path, args: &[&str]) -> Result<String, String> {
+pub fn git(root: &Path, args: &[&str]) -> Result<String, String> {
     let out = Command::new("git")
         .args(args)
         .current_dir(root)
