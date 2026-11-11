@@ -55,7 +55,7 @@
           "properties": {
             "value": {
               "type": "string",
-              "description": "Decimal expansion of the exact result, at most 15 fraction digits. For a value with pi (no finite expansion) it is the result rounded once to the nearest f64 and `truncated` is true."
+              "description": "Decimal expansion of the exact result, at most 15 fraction digits. For a value with pi (no finite expansion), or a power of ten that does not fit the fraction, it is the result rounded once to the nearest f64, written as the shortest decimal that reads back to it (it may use exponent form, such as 1.7453292519943296e-22), and `truncated` is true."
             },
             "unit": {
               "type": "string"

@@ -1006,10 +1006,11 @@ fn density_note(b: &Constant) -> String {
 fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
     // A value with pi has no finite expansion: the decimal is then the result rounded once to
     // the nearest f64, and `truncated` says it is not the whole value.
-    let (decimal, complete) = if o.exact.pi_exp() == 0 {
-        o.exact.to_decimal(15)?
-    } else {
-        (f64_text(o.approx), false)
+    // The same fallback applies to a power of ten that does not fit the fraction.
+    let (decimal, complete) = match o.exact.to_decimal(15) {
+        Ok(d) => d,
+        Err(_) if o.exact.pi_exp() != 0 || o.exact.ten_exp() != 0 => (f64_text(o.approx), false),
+        Err(e) => return Err(e),
     };
     let dims: Vec<String> =
         o.to.dim()

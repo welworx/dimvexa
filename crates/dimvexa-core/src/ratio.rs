@@ -187,10 +187,12 @@ impl Ratio {
         let k = self.ten.unsigned_abs();
         let p = Self::from_int(pow10(k)?);
         let coef = Self::plain(self.num, self.den);
+        // The plain fraction product: `checked_mul` may keep a power of ten in the exponent,
+        // which is exactly what folding must not do.
         let coef = if self.ten > 0 {
-            coef.checked_mul(p)?
+            coef.mul_fraction(p)?
         } else {
-            coef.checked_div(p)?
+            coef.mul_fraction(Self::new(1, p.num)?)?
         };
         Ok(coef.with_exponents(0, self.pi))
     }
@@ -291,8 +293,46 @@ impl Ratio {
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] if the result does not fit in `i128`.
+    /// [`Error::Overflow`] if the result does not fit in `i128` even with the factors of 10
+    /// moved into the exponent.
     pub fn checked_mul(self, rhs: Self) -> Result<Self> {
+        match self.mul_fraction(rhs) {
+            // When an operand already keeps a power of ten in its exponent (`eV`, `Da`), a factor
+            // of 10 in the other fraction (`2e29`) may be what overflows the product while the
+            // value fits: move such factors into the exponent and multiply again (exact). Plain
+            // fractions keep overflowing as before (ADR-004).
+            Err(Error::Overflow { .. }) if self.ten != 0 || rhs.ten != 0 => {
+                self.strip_tens()?.mul_fraction(rhs.strip_tens()?)
+            }
+            other => other,
+        }
+    }
+
+    /// The same number with the factors of 10 of the numerator and of the denominator moved
+    /// into the power of ten (`10^30` becomes `1 * 10^30`). Still reduced.
+    fn strip_tens(self) -> Result<Self> {
+        let err = || overflow("ratio exponent");
+        if self.num == 0 {
+            return Ok(self);
+        }
+        let (mut num, mut den, mut ten) = (self.num, self.den, self.ten);
+        while num.checked_rem(10) == Some(0) {
+            num = num.checked_div(10).ok_or_else(err)?;
+            ten = ten.checked_add(1).ok_or_else(err)?;
+        }
+        while den.checked_rem(10) == Some(0) {
+            den = den.checked_div(10).ok_or_else(err)?;
+            ten = ten.checked_sub(1).ok_or_else(err)?;
+        }
+        Ok(Self {
+            num,
+            den,
+            ten,
+            ..self
+        })
+    }
+
+    fn mul_fraction(self, rhs: Self) -> Result<Self> {
         let err = || overflow("ratio mul");
         let g1 = i128::try_from(gcd(self.num.unsigned_abs(), rhs.den.unsigned_abs()))
             .map_err(|_| err())?;
@@ -1127,6 +1167,37 @@ mod tests {
 
     fn pi_part(n: i128, d: i128, ten: i32, pi: i32) -> Ratio {
         r(n, d).with_exponents(ten, pi)
+    }
+
+    #[test]
+    fn folded_never_keeps_a_power_of_ten_it_could_not_fold() {
+        // 50/8302695333 * 10^37 does not fit i128: folding must fail, not drop the exponent
+        let v = pi_part(50, 8_302_695_333, 37, 0);
+        assert!(v.folded().is_err());
+        assert_eq!(v.to_fraction_string(), "50/8302695333 10^37");
+        assert_eq!(
+            v.to_f64().unwrap().to_bits(),
+            6.022_140_762_081_123e28_f64.to_bits()
+        );
+    }
+
+    #[test]
+    fn mul_moves_tens_into_the_exponent_only_beside_a_ten_exponent() {
+        let ev = pi_part(1_602_176_634, 1, -28, 0);
+        let big = r(2_000_000_000_000_000_000_000_000_000_000, 1); // 2e30
+        let p = big.checked_mul(ev).unwrap();
+        assert!(
+            p.checked_eq(r(3_204_353_268, 1).with_exponents(2, 0))
+                .unwrap()
+        );
+        assert_eq!(
+            p.to_f64().unwrap().to_bits(),
+            3.204_353_268e11_f64.to_bits()
+        );
+        // plain fractions still overflow (ADR-004), and so does a real overflow
+        assert!(r(10_i128.pow(38), 1).checked_mul(r(100, 1)).is_err());
+        let huge = r(i128::MAX, 1);
+        assert!(huge.checked_mul(huge).is_err());
     }
 
     #[test]

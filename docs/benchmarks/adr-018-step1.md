@@ -140,3 +140,20 @@ Reading it:
   affine, bounds unchanged), `exact_f64.rs` (including 360 values from an independent oracle for the
   angle, `eV` and `Da` conversions), `overflow_census.rs`, `zero_alloc.rs` and the property tests, all via
   `cargo xtask ci` (exit status 0).
+
+## Re-check after the review fixes
+
+A review found two CLI bugs (`--json` failing for a power of ten that does not fold, and an overflow
+for `2e29 eV` that fits), fixed in `Ratio::checked_mul` (a retry that moves factors of 10 into the
+exponent, only beside an operand that already has a ten exponent) and in the CLI. The hot-path
+rows do not call `checked_mul`, but the gate was run again:
+
+* Run 1 (`bench-check --against 1ca7d0d`) failed on 4 rows (+22.9 percent `apply_exact_f64 (affine)`,
+  +11.7, +35.2, +14.4 percent on micro rows). Run 2 failed on 3 **different** rows (`single call`
+  +16.3, `slice affine apply_slice 10^6` +11.7, `slice linear apply_slice 10^3` +39.3 percent) while
+  others improved by up to 26 percent. The set of flagged rows changes from run to run.
+* `bench-check --layouts 5` (the check the tool recommends for micro rows) ended with
+  `bench-check: ok` after 2 layouts. The tool warns that a real slowdown smaller than the layout
+  spread (about 10 percent here, for example `scalar linear apply (latency chain)` 3.764 vs 4.154)
+  can pass this way, so this is a no-regression result within the noise of this VM, not proof
+  that there is no small slowdown.

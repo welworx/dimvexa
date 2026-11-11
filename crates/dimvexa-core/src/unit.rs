@@ -482,7 +482,7 @@ impl UnitExpr {
     pub fn is_unity(&self) -> bool {
         self.dim.is_dimensionless()
             && self.kind == Kind::Plain
-            && self.factor == Ratio::ONE
+            && self.factor.checked_eq(Ratio::ONE) == Ok(true)
             && self.offset.is_zero()
     }
 
