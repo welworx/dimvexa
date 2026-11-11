@@ -309,9 +309,12 @@ fn main() {
         },
     );
     b.run(
-        "registry construction, 63 units (cold start)",
+        "registry construction, all table units (cold start)",
         1,
-        "Registry::from_defs on the compiled table",
+        &format!(
+            "Registry::from_defs on the compiled table ({} units)",
+            reg.units().len()
+        ),
         || registry().unwrap(),
     );
 
