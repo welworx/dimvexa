@@ -5,7 +5,7 @@ All notable changes are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Release notes are generated from Conventional
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
-## [Unreleased]
+## [0.5.0] - 2026-11-11
 ### Added
 
 - Units `eV` (electronvolt, `defined`, 1.602176634e-19 J) and `Da` (dalton, `measured`, CODATA 2018 atomic mass constant 1.66053906660e-27 kg; the edition is pinned in the unit's source and note). They take SI prefixes and compose without overflow (`eV.eV`, `TeV.TeV`), because their power of ten is an exponent and not part of the fraction (ADR-018, step 1).
@@ -19,7 +19,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 - **Breaking:** `--exact` prints the exact value and the decimal (`1/2 pi = 1.5707963267948966 rad`, `18/5 = 3.6 MJ`); a whole number is printed once (`36 km/h`). The decimal stays the default output.
 - **Breaking:** JSON schemas move to `dimvexa.convert/3` and `dimvexa.units/4` (new files in `docs/schemas/`, the old ones stay): exact numbers (`exact.value`, `exact.factor`, units `factor`) may carry `pi` and a power of ten (`1/2 pi`), `exact.decimal` is new, and for a value with pi `output.value` is the rounded decimal with `truncated` true. `dimvexa.configs/1` does not change.
 - An affine `Conversion` whose factor or offset carries pi or a power of ten is refused (`invalid_definition`) instead of losing accuracy silently; supporting it is a TODO (KL-25). No shipped unit is affected.
-- Python: `Conversion.factor` and `Quantity.value` can read `1/180 pi` (not built or run here, see the benchmark note).
+- Python: `Conversion.factor` and `Quantity.value` can read `1/180 pi`.
 - Data version 17.
 - `cargo xtask ci` gains an `msrv` stage (a `cargo check` on Rust 1.85, read from `rust-version`), and the pre-commit hook runs fmt, clippy and `msrv` on staged Rust files, so code that only compiles on the pinned toolchain (a let chain) no longer reaches CI.
 

@@ -631,7 +631,8 @@ impl Ratio {
     }
 
     /// The exact value as text. Without exponents it is always `numerator/denominator`,
-    /// including for integers (`36/1`). A power of ten is multiplied into the fraction when it
+    /// including for integers (`36/1`); with a power of ten or pi after the fraction an integer
+    /// coefficient is written without `/1` (`2 pi`, `320435326800` when the power of ten folds). A power of ten is multiplied into the fraction when it
     /// fits, so a result reads as it always did; what remains is written after the fraction:
     /// `1/2 pi`, `pi`, `2 pi`, `1/180 pi^2`, `180 pi^-1`, `1602176634 10^-28`. A coefficient of
     /// 1 is left out when a factor follows, and the denominator 1 is left out beside pi.

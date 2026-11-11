@@ -10,7 +10,7 @@ publishes all of them from `main`.
 1. Follow the `release` skill (`.claude/skills/release/SKILL.md`): bump the version in
    `Cargo.toml`, `bindings/python/Cargo.toml` (also its `dimvexa = "x.y.z"` dependency) and
    `bindings/wasm/Cargo.toml` and `bindings/excel/manifest.xml` (`<Version>X.Y.Z.0</Version>`),
-   refresh both bindings' `Cargo.lock`, update `CHANGELOG.md`.
+   refresh the root `Cargo.lock` and both bindings' `Cargo.lock`, update `CHANGELOG.md`.
 2. `scripts/check-versions.sh` prints the version if every file agrees, and fails otherwise. It
    also runs on every pull request (the `excel add-in` job in `ci.yml`), so a forgotten bump is
    caught before the release.

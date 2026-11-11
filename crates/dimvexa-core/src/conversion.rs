@@ -90,8 +90,9 @@ impl Conversion {
     ///
     /// # Errors
     ///
-    /// [`Error::InvalidDefinition`] if `factor` is zero; [`Error::Overflow`] if the exact
-    /// numbers cannot be formed.
+    /// [`Error::InvalidDefinition`] if `factor` is zero, or if there is an offset and the factor
+    /// or the offset carries a power of ten or pi (the accuracy bound could not be kept; KL-25);
+    /// [`Error::Overflow`] if the exact numbers cannot be formed.
     pub fn affine(factor: Ratio, offset: Ratio) -> Result<Self> {
         Self::new(factor, offset)
     }
@@ -260,7 +261,8 @@ impl Conversion {
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] on overflow of the exact numbers.
+    /// [`Error::Overflow`] on overflow of the exact numbers; [`Error::InvalidDefinition`] if the
+    /// inverse of an affine conversion would carry a power of ten or pi (KL-25).
     pub fn inverse(&self) -> Result<Self> {
         let inv = self.factor.checked_recip()?;
         let off = self.offset.checked_neg()?.checked_mul(inv)?;
@@ -271,7 +273,8 @@ impl Conversion {
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] on overflow of the exact numbers.
+    /// [`Error::Overflow`] on overflow of the exact numbers; [`Error::InvalidDefinition`] if the
+    /// result is affine and would carry a power of ten or pi (KL-25).
     pub fn then(&self, next: &Self) -> Result<Self> {
         let factor = self.factor.checked_mul(next.factor)?;
         let offset = self
