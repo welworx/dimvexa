@@ -325,6 +325,14 @@ expect = "10000"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (hectare = 10^4 m^2)"
 
 [[vector]]
+unit = "ar"
+value = "1"
+from = "ar"
+to = "m^2"
+expect = "100"
+source = "NIST SP 811 (2008), Appendix B.8 (are = 1 dam^2 = 10^2 m^2)"
+
+[[vector]]
 unit = "au"
 value = "1"
 from = "au"

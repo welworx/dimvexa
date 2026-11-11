@@ -458,3 +458,26 @@ fn angle_units_ev_and_da_are_exact_and_compose() {
     // a compound with an angle: deg/s -> rad/s
     assert_eq!(exact("deg/s", "rad/s", "180"), Ratio::PI);
 }
+
+/// Short names the owner asked for: `w`/`wk` for week, `ar` for the are, `Nm³` for `Nm3`; the
+/// bare `a` (year or are), `month` and `mo` stay refused.
+#[test]
+fn time_area_and_superscript_names() {
+    let reg = dimvexa_data::registry().unwrap();
+    let week = reg.parse("week").unwrap().factor();
+    assert_eq!(reg.parse("w").unwrap().factor(), week);
+    assert_eq!(reg.parse("wk").unwrap().factor(), week);
+    assert_eq!(reg.parse("ar").unwrap().factor(), Ratio::from_int(100));
+    assert_eq!(reg.parse("Nm\u{b3}").unwrap().factor(), Ratio::ONE);
+    assert!(reg.conversion("Nm\u{b3}/h", "Nm3/min").is_ok());
+    assert_eq!(reg.get("Nm3").unwrap().symbol(), "Nm\u{b3}");
+    for bare in ["a", "month", "mo"] {
+        assert_eq!(
+            reg.parse(bare).unwrap_err().code(),
+            "ambiguous_symbol",
+            "{bare}"
+        );
+    }
+    // A superscript digit is allowed only on a reference unit: `m³` is not `m^3`.
+    assert!(reg.parse("m\u{b3}").is_err());
+}

@@ -82,6 +82,16 @@ pub fn is_symbol_char(c: char) -> bool {
     c.is_alphabetic() || c == '_' || c == '\u{b0}'
 }
 
+/// True for a superscript digit (`²`, `³`, ...). It may end the symbol of a reference unit
+/// (`Nm³`, ADR-013), never start a symbol.
+#[must_use]
+pub const fn is_superscript_digit(c: char) -> bool {
+    matches!(
+        c,
+        '\u{b2}' | '\u{b3}' | '\u{b9}' | '\u{2070}' | '\u{2074}'..='\u{2079}'
+    )
+}
+
 /// True if `s` is a well-formed unit symbol (non-empty, only symbol characters).
 #[must_use]
 pub fn is_valid_symbol(s: &str) -> bool {
@@ -97,7 +107,7 @@ pub fn is_valid_symbol_for(s: &str, kind: crate::kind::Kind) -> bool {
     if is_valid_symbol(s) {
         return true;
     }
-    let base = s.trim_end_matches(|c: char| c.is_ascii_digit());
+    let base = s.trim_end_matches(|c: char| c.is_ascii_digit() || is_superscript_digit(c));
     kind.is_reference() && base.len() < s.len() && is_valid_symbol(base)
 }
 
@@ -132,7 +142,8 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
         after_caret = false;
         if is_symbol_char(c) {
             let mut s = String::new();
-            while let Some(ch) = at(i).filter(|&ch| is_symbol_char(ch)) {
+            while let Some(ch) = at(i).filter(|&ch| is_symbol_char(ch) || is_superscript_digit(ch))
+            {
                 s.push(ch);
                 i = next(i);
             }

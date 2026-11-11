@@ -6,7 +6,7 @@
 * Compiler: rustc 1.99.1 (58cf8f9c3 2026-10-13)
 * Profile: `bench` (release, thin LTO)
 * Bench file: `crates/dimvexa/benches/m0.rs` at 0ab1591 copied into every version
-* Commits: 0.1.0 = bf07121e86c07e625a3a7f0a, 0.1.1 = 1c37729fe5fc86109da71443, 0.1.2 = e02ecaf2ee77296a57d4c160, 0.2.0 = 2aac456723b8516970d87134, 0.2.1 = 8e18fd8a94484b7bbc22e0b8, 0.2.2 = 3e59c3bd45d6017265b402ba, 0.3.0 = 973eba268cc8d255814fdfb7, 0.4.0 = 1ca7d0d2d3ae0975c8b62d25, 0.5.0 = e4a1b4a (working tree)
+* Commits: 0.1.0 = bf07121, 0.1.1 = 1c37729, 0.1.2 = e02ecaf, 0.2.0 = 2aac456, 0.2.1 = 8e18fd8, 0.2.2 = 3e59c3b, 0.3.0 = 973eba2, 0.4.0 = 1ca7d0d, 0.5.0 = e4a1b4a (working tree)
 
 Statistic: the median over 6 runs of each run's median ns/op; spread = (max - min) / median of those runs. Rounds alternate: round r runs every version once, in the order of the columns, so drift of the machine hits all of them. A change marked `(noise)` is not larger than the spread of either side and says nothing about the code.
 

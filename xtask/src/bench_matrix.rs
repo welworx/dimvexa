@@ -360,7 +360,11 @@ fn execute(args: &[String], root: &Path) -> Result<(), String> {
             format!(
                 "{} = {}",
                 s.label,
-                s.commit.chars().take(24).collect::<String>()
+                if s.temporary {
+                    s.commit.chars().take(7).collect::<String>()
+                } else {
+                    s.commit.clone()
+                }
             )
         })
         .collect();

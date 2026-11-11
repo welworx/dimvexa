@@ -39,7 +39,7 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | magnetic_flux_density | `T` |
 | inductance | `H` |
 | volume | `m3`, `dm3`, `cm3`, `mm3`, `km3`, `in3`, `ft3`, `yd3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp`, `bbl`, `Nm3`, `scf` |
-| area | `m2`, `dm2`, `cm2`, `mm2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `ha`, `acre_int`, `acre_us_survey` |
+| area | `m2`, `dm2`, `cm2`, `mm2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `ar`, `ha`, `acre_int`, `acre_us_survey` |
 | absorbed_dose | `Gy`, `Sv` |
 | illuminance | `lx` |
 | catalytic_activity | `kat` |
@@ -67,8 +67,8 @@ $ dimvexa convert 1 L/min m3/h          # volume flow
 
 Not in the table on purpose:
 
-* **Ambiguous names** are refused with the explicit choices: `yr` and `year` (use `yr_julian` or
-  `yr_common`), `acre` (`acre_int` or `acre_us_survey`), `qt`, `cup`, `tbsp`, `tsp`, `oz`, `gal`,
+* **Ambiguous names** are refused with the explicit choices: `yr`, `year` and `a` (use `yr_julian`
+  or `yr_common`; `a` is also the are, write `ar`), `month` and `mo` (no fixed length), `acre` (`acre_int` or `acre_us_survey`), `qt`, `cup`, `tbsp`, `tsp`, `oz`, `gal`,
   `ton` and more. `dimvexa units` lists them all.
 * **Angles** have limitations of their own: see [Angles and pi](#angles-and-pi).
 * **Not yet:** `rev` and `rpm`, information (`bit`, `B`), percent and ppm, logarithmic units

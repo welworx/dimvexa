@@ -443,6 +443,21 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4, note (f) (degree Cel
 note = "temperature difference of 1 degC = 1 K"
 
 [[unit]]
+id = "ar"
+name = "Are"
+aliases = []
+dim = [0, 2, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "100/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B.8 (are = 1 dam^2 = 10^2 m^2)"
+note = "are = 100 m^2 (1 dam^2). NIST writes the symbol as a, which is also the year, so the id is ar and bare a is rejected; not an SI unit, hectare is the accepted one"
+
+[[unit]]
 id = "ha"
 name = "Hectare"
 aliases = []

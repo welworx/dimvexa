@@ -11,6 +11,8 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 - Units `eV` (electronvolt, `defined`, 1.602176634e-19 J) and `Da` (dalton, `measured`, CODATA 2018 atomic mass constant 1.66053906660e-27 kg; the edition is pinned in the unit's source and note). They take SI prefixes and compose without overflow (`eV.eV`, `TeV.TeV`), because their power of ten is an exponent and not part of the fraction (ADR-018, step 1).
 - `Ratio::PI`, `Ratio::with_exponents`, `ten_exp`, `pi_exp`, `has_exponents`, `folded`, `checked_eq` and `Ratio::parse_symbolic` (the table notation, `1/180 pi`, `1602176634 10^-28`); `UnitDef::factor_exp`.
 - Benchmark rows for the angle conversion (`deg -> rad`: scalar apply, `apply_exact`, `apply_exact_f64`, parse+prepare) and for `eV` (`docs/benchmarks/v0.5.0.md`).
+- Unit `ar` (are, 100 m^2, NIST SP 811 B.8) and the week aliases `wk` and `w`. `Nm3` has the printable symbol and alias `Nm³`; a reference unit may end in a superscript digit, no other symbol may (`m³` is still an error).
+- Bare `a` (year or are), `month` and `mo` (no fixed length) are refused as ambiguous with the explicit choices.
 
 ### Changed
 
@@ -20,7 +22,8 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 - **Breaking:** JSON schemas move to `dimvexa.convert/3` and `dimvexa.units/4` (new files in `docs/schemas/`, the old ones stay): exact numbers (`exact.value`, `exact.factor`, units `factor`) may carry `pi` and a power of ten (`1/2 pi`), `exact.decimal` is new, and for a value with pi `output.value` is the rounded decimal with `truncated` true. `dimvexa.configs/1` does not change.
 - An affine `Conversion` whose factor or offset carries pi or a power of ten is refused (`invalid_definition`) instead of losing accuracy silently; supporting it is a TODO (KL-25). No shipped unit is affected.
 - Python: `Conversion.factor` and `Quantity.value` can read `1/180 pi`.
-- Data version 17.
+- The reference states of `Nm3` and `scf` print degrees as `°C` and `°F`.
+- Data version 19.
 - `cargo xtask ci` gains an `msrv` stage (a `cargo check` on Rust 1.85, read from `rust-version`), and the pre-commit hook runs fmt, clippy and `msrv` on staged Rust files, so code that only compiles on the pinned toolchain (a let chain) no longer reaches CI.
 
 ## [0.4.0] - 2026-11-11

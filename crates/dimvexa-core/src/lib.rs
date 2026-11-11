@@ -65,7 +65,8 @@ pub use conversion::Conversion;
 pub use dim::Dim;
 pub use error::{Error, Result};
 pub use expr::{
-    Expr, MAX_DEPTH, MAX_INPUT_CHARS, is_symbol_char, is_valid_symbol, is_valid_symbol_for,
+    Expr, MAX_DEPTH, MAX_INPUT_CHARS, is_superscript_digit, is_symbol_char, is_valid_symbol,
+    is_valid_symbol_for,
 };
 pub use kind::{Exactness, Kind, Shape};
 pub use prefix::{BINARY_PREFIXES, Prefix, PrefixFamily, PrefixMode, SI_PREFIXES, all_prefixes};
