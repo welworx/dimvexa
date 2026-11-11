@@ -1,10 +1,12 @@
 # Released versions measured by `cargo xtask bench-matrix`: version<TAB>commit, oldest first.
-# The release skill adds a line when a version is released (use the commit that was released).
-0.1.0	bf07121
-0.1.1	1c37729
+# The release skill adds a line when a version is released: the commit its tag points to
+# (`git rev-list -n1 vX.Y.Z`), not a version-bump commit.
+0.1.0	a897064
+0.1.1	fc9bd47
 0.1.2	e02ecaf
 0.2.0	2aac456
 0.2.1	8e18fd8
 0.2.2	3e59c3b
 0.3.0	973eba2
 0.4.0	1ca7d0d
+0.5.0	4750b32
