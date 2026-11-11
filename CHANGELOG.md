@@ -10,7 +10,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 - Units `eV` (electronvolt, `defined`, 1.602176634e-19 J) and `Da` (dalton, `measured`, CODATA 2018 atomic mass constant 1.66053906660e-27 kg; the edition is pinned in the unit's source and note). They take SI prefixes and compose without overflow (`eV.eV`, `TeV.TeV`), because their power of ten is an exponent and not part of the fraction (ADR-018, step 1).
 - `Ratio::PI`, `Ratio::with_exponents`, `ten_exp`, `pi_exp`, `has_exponents`, `folded`, `checked_eq` and `Ratio::parse_symbolic` (the table notation, `1/180 pi`, `1602176634 10^-28`); `UnitDef::factor_exp`.
-- Benchmark rows for the angle conversion (`deg -> rad`: scalar apply, `apply_exact`, `apply_exact_f64`, parse+prepare) and for `eV` (`docs/benchmarks/adr-018-step1.md`).
+- Benchmark rows for the angle conversion (`deg -> rad`: scalar apply, `apply_exact`, `apply_exact_f64`, parse+prepare) and for `eV` (`docs/benchmarks/v0.5.0.md`).
 
 ### Changed
 

@@ -9,7 +9,8 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
   15 samples per row, median reported). Vectorisation check:
   `crates/dimvexa-testkit/examples/asm_probe.rs`. The criterion and iai suites in `extras/` need
   network access and have never run; do not quote them.
-* Record results in `docs/benchmarks/M0.md` (or a new file per milestone) with the machine,
+* Record results in one report per released version, a file named after the version in `docs/benchmarks/` (for example `docs/benchmarks/v0.5.0.md`) (index:
+  `docs/benchmarks/README.md`), with the machine,
   compiler, profile and method, and copy the numbers from the output. **Only claim numbers you
   measured**; say what was not run.
 * Regression guard: `cargo xtask bench-check` compares a fresh `m0` run with

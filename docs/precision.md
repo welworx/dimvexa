@@ -41,7 +41,7 @@ A number is `num/den * 10^k * pi^m` (ADR-018). Rounding it to `f64` is correct, 
   is not acceptable. No table unit is one: offsets exist only for temperatures, whose factors are
   plain fractions. To support it properly is a TODO (KL-25).
 * The exact `f64` path of a conversion with pi is slower than for a plain fraction: about 700 ns
-  against about 47 ns for `deg -> rad` on the machine of `docs/benchmarks/adr-018-step1.md`,
+  against about 47 ns for `deg -> rad` on the machine of `docs/benchmarks/v0.5.0.md`,
   because the two bounds are 128-bit quotients (no allocation). The fast path is unchanged: the
   `f64` factor is computed once when the `Conversion` is prepared.
 * Speed-up option, not done: compute the lower and upper bound of the factor once when the

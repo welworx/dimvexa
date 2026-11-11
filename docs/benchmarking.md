@@ -2,7 +2,7 @@
 
 Dimvexa's claim is "exact, fast and loud about what it cannot do". This page says how that is
 measured against other unit libraries, so that anybody can reproduce and challenge the numbers.
-Own-performance numbers (the M0 spike) are in [`docs/benchmarks/M0.md`](benchmarks/M0.md).
+Own-performance numbers: one report per released version in [`docs/benchmarks/`](benchmarks/README.md) (the M0 spike is [`M0.md`](benchmarks/M0.md)).
 
 ## Rules
 
