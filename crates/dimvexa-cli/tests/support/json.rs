@@ -38,7 +38,7 @@ impl V {
             panic!("not a string: {self:?}")
         }
     }
-    pub fn is_null(&self) -> bool {
+    pub const fn is_null(&self) -> bool {
         matches!(self, V::Null)
     }
 
