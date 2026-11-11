@@ -115,3 +115,21 @@ symbol = "tsp"
 candidates = ["tsp_us"]
 planned = []
 note = "US (4.92892159375 mL) and metric (5 mL) teaspoons differ"
+
+[[ambiguous]]
+symbol = "a"
+candidates = ["yr_julian", "yr_common", "ar"]
+planned = []
+note = "a is the year (annum) and, in NIST SP 811, the are (100 m^2); the year is 365, 365.25 or 365.2425 days depending on the definition"
+
+[[ambiguous]]
+symbol = "month"
+candidates = []
+planned = ["month_30", "month_julian"]
+note = "a month has 28 to 31 days; there is no fixed length, so a month is never guessed (30 d and the mean Julian month of 30.4375 d are planned)"
+
+[[ambiguous]]
+symbol = "mo"
+candidates = []
+planned = ["month_30", "month_julian"]
+note = "same as month"

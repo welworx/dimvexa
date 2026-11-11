@@ -20,7 +20,7 @@ magnetic_flux	1
 magnetic_flux_density	1
 inductance	1
 volume	15
-area	3
+area	4
 absorbed_dose	2
 illuminance	1
 catalytic_activity	1

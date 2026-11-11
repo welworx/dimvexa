@@ -412,26 +412,26 @@ fn a_prefix_on_an_ambiguous_name_cannot_be_redefined() {
 fn overriding_a_unit_keeps_the_units_that_build_on_it_working() {
     let base = format!(
         "{}{}",
-        unit_text("ua", "kg", "2", ""),
-        unit_text("ub", "ua", "3", "")
+        unit_text("uu", "kg", "2", ""),
+        unit_text("ub", "uu", "3", "")
     );
     let mut reg = registry().unwrap();
     let applied = apply(
         &mut reg,
         &[
             cfg(&base, "A.toml"),
-            cfg(&unit_text("ua", "kg", "5", ""), "B.toml"),
+            cfg(&unit_text("uu", "kg", "5", ""), "B.toml"),
         ],
     )
     .unwrap();
-    assert_eq!(factor(&reg, "ua", "kg"), Ratio::from_int(5));
+    assert_eq!(factor(&reg, "uu", "kg"), Ratio::from_int(5));
     assert_eq!(
         factor(&reg, "ub", "kg"),
         Ratio::from_int(15),
-        "ub follows the new ua"
+        "ub follows the new uu"
     );
     let order: Vec<&str> = applied.units.iter().map(|u| u.symbol.as_str()).collect();
-    assert_eq!(order, ["ua", "ub"], "an override keeps its position");
+    assert_eq!(order, ["uu", "ub"], "an override keeps its position");
     assert_eq!(applied.units[0].origin, "B.toml");
 }
 

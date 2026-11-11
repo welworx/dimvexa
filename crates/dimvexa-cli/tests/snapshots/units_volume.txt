@@ -14,7 +14,7 @@ tsp_us	tsp_us	US teaspoon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (t
 fl_oz_imp	fl_oz_imp	Imperial fluid ounce	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (fluid ounce = 1/20 pint)
 qt_imp	qt_imp	Imperial quart	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (quart = 1/4 gallon)
 bbl	bbl	Oil barrel	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)
-Nm3	Nm3	Normal cubic metre	normal_volume	defined	none	-	DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa
+Nm3	Nm³	Normal cubic metre	normal_volume	defined	none	Nm³	DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa
 scf	scf	Standard cubic foot	standard_volume	defined	none	-	NIST SP 811 (2008), Appendix B (foot, so the cubic foot is 0.3048^3 m^3); reference state 60 degF and 14.696 psia per GPA Standard 2145 (edition not checked)
 
 ## ambiguous symbols (refused unless your config resolves them)

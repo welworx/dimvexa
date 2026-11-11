@@ -257,9 +257,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
             Err(e) => err(format!("{at}: {e}")),
         }
         for n in &all_names {
-            if !(is_valid_symbol(n)
-                || (n == &sym && kind_of_row.is_some_and(|k| is_valid_symbol_for(n, k))))
-            {
+            if !(is_valid_symbol(n) || kind_of_row.is_some_and(|k| is_valid_symbol_for(n, k))) {
                 err(format!("{at}: name '{n}' is not well-formed"));
             }
             if let Some(owner) = names.insert(n.clone(), sym.clone()) {
