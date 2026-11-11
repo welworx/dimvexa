@@ -1,5 +1,5 @@
 {
-  "_note": "pint 0.26.2: Spellings checked against the installed library (see docs/benchmarks/comparison-run-1.md). Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template. No delta_degR and no pound-mole exist in pint's default registry.",
+  "_note": "pint 0.26.2: Spellings checked against the installed library (see docs/benchmarks/comparison/comparison-run-1.md). Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template. No delta_degR and no pound-mole exist in pint's default registry.",
   "ops": {
     ".": "*"
   },

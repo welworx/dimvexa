@@ -2,7 +2,7 @@
 
 Dimvexa's claim is "exact, fast and loud about what it cannot do". This page says how that is
 measured against other unit libraries, so that anybody can reproduce and challenge the numbers.
-Own-performance numbers: one report per released version in [`docs/benchmarks/`](benchmarks/README.md) (the M0 spike is [`M0.md`](benchmarks/M0.md)).
+Own-performance numbers: one report per released version in [`docs/benchmarks/`](benchmarks/README.md) (the M0 spike is [`M0.md`](benchmarks/history/M0.md)).
 
 ## Rules
 
@@ -18,7 +18,7 @@ Own-performance numbers: one report per released version in [`docs/benchmarks/`]
    including those where Dimvexa loses or fails.
 5. **Maintainers may review their runner.** Open a *Benchmark runner review* issue; corrections
    are applied before publication. Draft requests for each runner:
-   [`benchmarks/runner-review-requests.md`](benchmarks/runner-review-requests.md) (not yet posted).
+   [`benchmarks/comparison/runner-review-requests.md`](benchmarks/comparison/runner-review-requests.md) (not yet posted).
 
 ## What is measured
 
@@ -53,7 +53,7 @@ library only, offline, deterministic; `--check` verifies the committed files).
   The oracle is only a cross-check and generation fails on any disagreement. The report shows
   correct/total per origin so that corpus bias is visible. ind-029 to ind-035 and ind-037, ind-038 are exact definitions read from the UCUM essence file (cited, facts only);
   ind-039 to ind-041 are single facts that also appear in the mathjs and pint test suites. The astropy suite is not
-  used, and the UCUM licence text has not been checked (see `docs/benchmarks/honest-assessment.md`).
+  used, and the UCUM licence text has not been checked (see `docs/benchmarks/comparison/honest-assessment.md`).
 * `must_refuse.json`: requests that must be refused or flagged: ambiguous names (`ton`, `gal`,
   `oz`, `pt`, `cal`, `Btu`, `hp`, `mile`, `foot`, bare `ppm`), missing context (`Nm3` to `m3`,
   gauge to absolute pressure, mass fraction to mole fraction, water head), temperature kind
@@ -98,7 +98,7 @@ python3 -I benchmarks/tools/test_report.py           # tests of the corpus and t
 cd benchmarks/runners/dimvexa-rs && cargo run --release -- --cli ../../../target/release/dimvexa
 python3 benchmarks/python/run_pint.py                # needs: pip install -r benchmarks/python/requirements.in
 node benchmarks/node/run_mathjs.js                   # needs: npm install in benchmarks/node
-python3 benchmarks/tools/report.py                   # results/*.json -> docs/benchmarks/comparison.md
+python3 benchmarks/tools/report.py                   # results/*.json -> docs/benchmarks/comparison/comparison.md
 ```
 The competitor libraries in `benchmarks/node` are declared as `devDependencies` and pinned to exact
 versions on purpose: a comparison run is only reproducible for the versions it names, so they are
@@ -120,9 +120,9 @@ on a networked machine.
 
 ## Status of the runners
 
-Latest full run: 2026-11-10, see [`benchmarks/comparison-run-3.md`](benchmarks/comparison-run-3.md) (earlier: [run 2](benchmarks/comparison-run-2.md), [run 1](benchmarks/comparison-run-1.md)) for
+Latest full run: 2026-11-10, see [`benchmarks/comparison/comparison-run-3.md`](benchmarks/comparison/comparison-run-3.md) (earlier: [run 2](benchmarks/comparison/comparison-run-2.md), [run 1](benchmarks/comparison/comparison-run-1.md)) for
 the summary, the caveats and the cases where Dimvexa is slower, and
-[`benchmarks/comparison.md`](benchmarks/comparison.md) for every table. One run on one shared VM:
+[`benchmarks/comparison/comparison.md`](benchmarks/comparison/comparison.md) for every table. One run on one shared VM:
 indicative, not a basis for a "fastest" claim.
 
 | Runner | Run on a networked machine |

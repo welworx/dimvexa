@@ -14,7 +14,7 @@ const fn overflow(operation: &'static str) -> Error {
 /// Greatest common divisor by Euclid's algorithm. `gcd(0, 0) == 0`.
 ///
 /// Stein's binary algorithm was tried and measured 30 to 40 percent slower on `u128` in M0
-/// (see docs/benchmarks/M0.md), so the simple algorithm stays (plan section 6.2).
+/// (see docs/benchmarks/history/M0.md), so the simple algorithm stays (plan section 6.2).
 const fn gcd(mut a: u128, mut b: u128) -> u128 {
     while b != 0 {
         let t = match a.checked_rem(b) {

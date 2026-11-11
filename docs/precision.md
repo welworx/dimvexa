@@ -157,7 +157,7 @@ says so.
 
 Stay on the fast path for bulk data. A million values convert in about half a
 millisecond; the exact path is several hundred times slower per value and is not vectorised
-(numbers in `docs/benchmarks/M0.md`).
+(numbers in `docs/benchmarks/history/M0.md`).
 
 `apply_exact_f64` needs the exact arithmetic to fit into checked `i128` fractions. Extreme
 inputs and extreme factors give an `overflow` error rather than a wrong answer; for linear

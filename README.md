@@ -47,7 +47,7 @@ error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne,
   units, and mixing them is an error that names the right one.
 - **Fast and precise.** A prepared conversion is a multiply (and an add for temperature scales):
   about 0.5 ns each in a loop, within 1 ulp of the exact answer (2 ulp for temperature scales);
-  see [precision](docs/precision.md) and [benchmarks](docs/benchmarks/M0.md).
+  see [precision](docs/precision.md) and [benchmarks](docs/benchmarks/history/M0.md).
 - **Extensible by data.** About 100 units (SI with prefixes, US customary, imperial, pressure,
   energy, power, temperature) in cited tables. Your own names, units and densities go in a
   small config file.

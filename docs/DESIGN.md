@@ -1,4 +1,4 @@
-> Copy of the spec supplied for M0 (2026-11-07), with the placeholder name replaced by `dimvexa`. Decisions taken during M0 are recorded in `docs/adr/` and `docs/benchmarks/M0.md`.
+> Copy of the spec supplied for M0 (2026-11-07), with the placeholder name replaced by `dimvexa`. Decisions taken during M0 are recorded in `docs/adr/` and `docs/benchmarks/history/M0.md`.
 
 # Standalone Unit Library: Design Draft
 

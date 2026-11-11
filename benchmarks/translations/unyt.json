@@ -1,5 +1,5 @@
 {
-  "_note": "unyt 3.2.0: Spellings checked against the installed library (see docs/benchmarks/comparison-run-1.md). Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template.",
+  "_note": "unyt 3.2.0: Spellings checked against the installed library (see docs/benchmarks/comparison/comparison-run-1.md). Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template.",
   "ops": {
     ".": "*"
   },

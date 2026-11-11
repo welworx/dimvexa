@@ -4,7 +4,7 @@
 # parallel: that would add noise), then regenerates the report. Needs network access the first time
 # (PyPI, npm, crates.io). Method and rules: docs/benchmarking.md.
 #
-#   benchmarks/run_all.sh              full run; replaces benchmarks/results/ and docs/benchmarks/comparison.md
+#   benchmarks/run_all.sh              full run; replaces benchmarks/results/ and docs/benchmarks/comparison/comparison.md
 #   benchmarks/run_all.sh --quick      smoke test: a few samples, written to a temporary directory,
 #                                      never to results/ (quick numbers must not be published)
 #   benchmarks/run_all.sh --skip-install   reuse the existing venv and node_modules
@@ -77,5 +77,5 @@ else
   rm -f benchmarks/results/*.json benchmarks/results/machine.txt
   cp "$out"/*.json "$out/machine.txt" benchmarks/results/
   python3 -I benchmarks/tools/report.py
-  echo "done. Review docs/benchmarks/comparison.md, then update docs/benchmarks/comparison-run-N.md by hand."
+  echo "done. Review docs/benchmarks/comparison/comparison.md, then update docs/benchmarks/comparison/comparison-run-N.md by hand."
 fi

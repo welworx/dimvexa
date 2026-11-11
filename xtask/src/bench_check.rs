@@ -23,7 +23,7 @@
 //!
 //! **Layout escalation (opt-in, `--layouts N`, default 1 = off).** On tiny rows (one call, a 1000-element slice, 0.04 ns per element) the
 //! alignment of a loop decides the result, and a rebuild that changes no code can move a row by
-//! 20 percent: on 2026-11-10 a version bump alone did (`docs/benchmarks/M0.md`). A real slowdown
+//! 20 percent: on 2026-11-10 a version bump alone did (`docs/benchmarks/history/M0.md`). A real slowdown
 //! shifts every layout, an alignment effect does not. So if a guarded row is still slow after the
 //! rounds, both sides are rebuilt under another crate-metadata salt (`RUSTFLAGS="-C
 //! metadata=bench-layout-K"`, which changes symbol hashes and with them the link order) and run
@@ -502,7 +502,7 @@ fn execute_against(rev: &str, o: &Opts, root: &Path) -> Result<bool, String> {
     );
     if layouts_used == 1 && slow.iter().any(|(k, _, _)| layout_sensitive(k)) {
         eprintln!(
-            "hint: a flagged row is a tiny micro row, which a rebuild alone can move by about 15 percent (code layout, docs/benchmarks/M0.md); rerun with `--layouts 5` to see whether it is only that. A row that stays slow in every layout is a regression."
+            "hint: a flagged row is a tiny micro row, which a rebuild alone can move by about 15 percent (code layout, docs/benchmarks/history/M0.md); rerun with `--layouts 5` to see whether it is only that. A row that stays slow in every layout is a regression."
         );
     }
     for (k, x, y) in &slow {

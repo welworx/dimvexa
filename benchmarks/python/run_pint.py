@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""Runner for pint. Run in the first comparison (docs/benchmarks/comparison-run-1.md).
+"""Runner for pint. Run in the first comparison (docs/benchmarks/comparison/comparison-run-1.md).
 
 Modes: "plain" is the Quantity API (`Quantity(x, from).to(to).magnitude`, one Quantity holding a
 NumPy array for batches); "factor" extracts the factor once and multiplies (pint's documented

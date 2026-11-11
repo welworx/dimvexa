@@ -16,7 +16,7 @@
 //! two), and its "nearest neighbour" property is checked in `exact_f64_is_correctly_rounded`.
 //!
 //! Set `DIMVEXA_DIFF_REPORT=1` and run with `--nocapture` to print the statistics that are
-//! quoted in `docs/benchmarks/M0.md`.
+//! quoted in `docs/benchmarks/history/M0.md`.
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,

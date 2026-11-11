@@ -8,8 +8,13 @@ claim against another library without a link to a dated run (`docs/benchmarking.
 | Version | Report |
 |---|---|
 | 0.5.0 | [`v0.5.0.md`](v0.5.0.md): number type with powers of ten and pi (ADR-018 step 1), exact angles, `eV`, `Da` |
-| 0.4.0 and earlier | no per-version report was written. The M0 spike numbers are in [`M0.md`](M0.md) (the guarded rows of `cargo xtask bench-check` come from it); the layout experiment of 2026-11-10 is in [`m0-layout-2026-11-10/`](m0-layout-2026-11-10/README.md). Nothing is reconstructed after the fact. |
+| 0.4.0 and earlier | no per-version report was written. The M0 spike numbers are in [`history/M0.md`](history/M0.md) (the guarded rows of `cargo xtask bench-check` come from it); the layout experiment of 2026-11-10 is in [`history/m0-layout-2026-11-10/`](history/m0-layout-2026-11-10/README.md). Nothing is reconstructed after the fact. |
 
-Other files here are not per-version reports: `baseline-m0.tsv` (the stored baseline of one machine for
-`bench-check`), the cross-library comparison runs (`comparison*.md`, `honest-assessment.md`,
-`runner-review-requests.md`) and `img/`.
+Layout of this folder:
+
+| Path | What |
+|---|---|
+| `vX.Y.Z.md` (for example `v0.5.0.md`) | the report of one released version |
+| `baseline-m0.tsv` | the stored baseline of one machine for `cargo xtask bench-check` (re-recorded with `--update`) |
+| `history/` | the M0 spike (`M0.md`) and the layout experiment of 2026-11-10; kept as records, not updated |
+| `comparison/` | the cross-library comparison: generated `comparison.md` and charts (`img/`), the dated runs `comparison-run-*.md`, `honest-assessment.md`, `runner-review-requests.md`; method in [`../benchmarking.md`](../benchmarking.md) |

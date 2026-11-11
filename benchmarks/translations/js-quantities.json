@@ -1,5 +1,5 @@
 {
-  "_note": "js-quantities 1.8.0: Spellings checked against the installed library (see docs/benchmarks/comparison-run-1.md). Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template. Points are temp*, differences are deg*; a bare K against a temperature point becomes tempK (runner).",
+  "_note": "js-quantities 1.8.0: Spellings checked against the installed library (see docs/benchmarks/comparison/comparison-run-1.md). Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template. Points are temp*, differences are deg*; a bare K against a temperature point becomes tempK (runner).",
   "ops": {},
   "pow": "^",
   "flatten_parens": true,
