@@ -9,7 +9,7 @@
 //! cargo xtask bench-check --threshold 15   allowed slowdown in percent (default 10)
 //! cargo xtask bench-check --runs 5         at most this many runs when a row looks slow
 //! cargo xtask bench-check --against REV    A/B: REV against the working tree, same machine
-//! cargo xtask bench-check --against REV --layouts 1   no layout escalation (see below)
+//! cargo xtask bench-check --against REV --layouts 5   diagnose: try 5 code layouts (see below)
 //! ```
 //!
 //! **A/B mode (`--against REV`, the one to use on a shared cloud VM).** The stored baseline below
@@ -21,13 +21,13 @@
 //! always runs; further rounds (up to `--runs`, default 3) only run while a guarded row looks
 //! slow.
 //!
-//! **Layout escalation.** On tiny rows (one call, a 1000-element slice, 0.04 ns per element) the
+//! **Layout escalation (opt-in, `--layouts N`, default 1 = off).** On tiny rows (one call, a 1000-element slice, 0.04 ns per element) the
 //! alignment of a loop decides the result, and a rebuild that changes no code can move a row by
 //! 20 percent: on 2026-11-10 a version bump alone did (`docs/benchmarks/M0.md`). A real slowdown
 //! shifts every layout, an alignment effect does not. So if a guarded row is still slow after the
 //! rounds, both sides are rebuilt under another crate-metadata salt (`RUSTFLAGS="-C
 //! metadata=bench-layout-K"`, which changes symbol hashes and with them the link order) and run
-//! once more, up to `--layouts` layouts in total (default 5), and every row is judged by its
+//! once more, up to `--layouts` layouts in total, and every row is judged by its
 //! best median per side over all layouts. The same layouts are tried on both sides, so the
 //! comparison stays fair; a row that is slow in every layout is a regression. This costs
 //! sensitivity: the two builds differ in code (and version), so layout K is not the same alignment
@@ -74,8 +74,10 @@ const DEFAULT_THRESHOLD_PCT: f64 = 10.0;
 const ABS_FLOOR_NS: f64 = 0.03;
 /// Default maximum number of runs per check.
 const DEFAULT_RUNS: usize = 3;
-/// Default number of code layouts an A/B check may try before it calls a row slow.
-const DEFAULT_LAYOUTS: usize = 5;
+/// Default number of code layouts an A/B check tries before it calls a row slow. 1 means no
+/// escalation: a flagged row fails, which is the strict choice for a guard (a missed regression
+/// is silent, a false alarm is not). `--layouts N` opts in to the diagnosis below.
+const DEFAULT_LAYOUTS: usize = 1;
 /// Number of runs a baseline update takes the median of.
 const UPDATE_RUNS: usize = 3;
 /// Baseline path relative to the repository root.
@@ -93,6 +95,12 @@ const GUARDED: &[&str] = &[
 ];
 
 type Rows = BTreeMap<String, f64>;
+
+/// Rows short enough (one call, a 1000-element slice) for the alignment of a loop to decide the
+/// result; a flagged one gets the `--layouts` hint.
+fn layout_sensitive(name: &str) -> bool {
+    name.starts_with("single call via") || name.ends_with("10^3")
+}
 
 fn guarded(name: &str) -> bool {
     GUARDED.iter().any(|p| name.starts_with(p))
@@ -492,6 +500,11 @@ fn execute_against(rev: &str, o: &Opts, root: &Path) -> Result<bool, String> {
         a_runs.len(),
         o.threshold
     );
+    if layouts_used == 1 && slow.iter().any(|(k, _, _)| layout_sensitive(k)) {
+        eprintln!(
+            "hint: a flagged row is a tiny micro row, which a rebuild alone can move by about 15 percent (code layout, docs/benchmarks/M0.md); rerun with `--layouts 5` to see whether it is only that. A row that stays slow in every layout is a regression."
+        );
+    }
     for (k, x, y) in &slow {
         eprintln!(
             "error: `{k}` is {:.1}% slower than {rev} in {layouts_used} layout(s) ({x:.3} -> {y:.3} ns/op); explain it or fix it",
@@ -619,6 +632,22 @@ mod tests {
         // A layout mode: one of the new side's layouts is as fast as the old one.
         let b = best_of(&[mk(1.15), mk(1.00), mk(1.14)]);
         assert_eq!(slow_rows(&a, &b, 10.0).len(), 0);
+    }
+
+    #[test]
+    fn layout_escalation_is_opt_in() {
+        let a = |v: &[&str]| parse_opts(&v.iter().map(|s| (*s).to_string()).collect::<Vec<_>>());
+        assert_eq!(a(&["--against", "main"]).map(|o| o.layouts), Ok(1));
+        assert_eq!(
+            a(&["--against", "main", "--layouts", "5"]).map(|o| o.layouts),
+            Ok(5)
+        );
+        assert!(layout_sensitive("slice affine apply_slice 10^3"));
+        assert!(layout_sensitive("single call via black_box(&conv)"));
+        assert!(!layout_sensitive("slice affine apply_slice 10^6"));
+        assert!(!layout_sensitive(
+            "apply_exact_f64 (affine, correctly rounded)"
+        ));
     }
 
     #[test]
