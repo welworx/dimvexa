@@ -103,6 +103,17 @@ impl Conversion {
                 message: String::from("factor must not be zero"),
             });
         }
+        if !offset.is_zero() && (factor.has_exponents() || offset.has_exponents()) {
+            // The shift `b / a` could not be split into two parts that keep the 2 ulp affine
+            // bound, and `a * x + b` cannot be added exactly with unlike exponents. Refuse
+            // instead of losing accuracy silently (docs/known-limitations.md, KL-25).
+            return Err(Error::InvalidDefinition {
+                symbol: String::from("conversion"),
+                message: String::from(
+                    "an affine conversion needs a plain fraction factor and offset (no power of ten or pi)",
+                ),
+            });
+        }
         let shape = if offset.is_zero() {
             Shape::Linear
         } else {
@@ -713,6 +724,18 @@ mod tests {
         assert_eq!(c.apply(-0.0).to_bits(), (-0.0_f64).to_bits());
         let big = Conversion::linear(r(1_000_000, 1)).unwrap();
         assert_eq!(big.apply(f64::MAX), f64::INFINITY);
+    }
+
+    #[test]
+    fn affine_with_a_pi_or_ten_factor_is_refused_not_degraded() {
+        let pi = Ratio::PI;
+        let e = Conversion::affine(pi, r(1, 2)).unwrap_err();
+        assert_eq!(e.code(), "invalid_definition");
+        assert!(Conversion::affine(r(3, 1).with_exponents(-28, 0), r(1, 2)).is_err());
+        // linear conversions with exponents are fine
+        assert!(Conversion::linear(pi).is_ok());
+        // so are affine ones with plain fractions
+        assert!(Conversion::affine(r(5, 9), r(-160, 9)).is_ok());
     }
 
     #[test]

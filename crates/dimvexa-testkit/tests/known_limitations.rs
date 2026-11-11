@@ -148,3 +148,14 @@ fn known_limitation_kl_24_unlike_exponents_cannot_be_added_or_ordered() {
     assert_ne!(ev, plain, "KL-24 fixed? then `==` compares values");
     assert!(ev.checked_eq(plain).unwrap());
 }
+
+/// KL-25 (TODO): an affine conversion with a pi or power-of-ten factor is refused when prepared.
+#[test]
+fn known_limitation_kl_25_affine_with_exponents_is_refused() {
+    let e = dimvexa::Conversion::affine(Ratio::PI, Ratio::new(1, 2).unwrap()).unwrap_err();
+    assert_eq!(
+        e.code(),
+        "invalid_definition",
+        "KL-25 fixed? then support it"
+    );
+}

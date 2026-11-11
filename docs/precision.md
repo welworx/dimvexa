@@ -36,9 +36,10 @@ A number is `num/den * 10^k * pi^m` (ADR-018). Rounding it to `f64` is correct, 
   `crates/dimvexa-testkit/tests/exact_f64.rs`: values computed outside this code base with
   140-digit decimals), by the differential test over every conversion of the table, and by
   `subnormal_angle_results_are_within_one_ulp` for tiny results.
-* Not covered: an *affine* conversion whose factor carries pi or a power of ten (no table unit
-  is one: offsets exist only for temperatures, whose factors are plain fractions). The second
-  part of the shift (`shift_lo`) is then dropped, so the 2 ulp affine bound is not claimed there.
+* An *affine* conversion whose factor or offset carries pi or a power of ten is refused when it is
+  prepared (`invalid_definition`), because its accuracy bound could not be kept and a silent loss
+  is not acceptable. No table unit is one: offsets exist only for temperatures, whose factors are
+  plain fractions. To support it properly is a TODO (KL-25).
 * The exact `f64` path of a conversion with pi is slower than for a plain fraction: about 700 ns
   against about 47 ns for `deg -> rad` on the machine of `docs/benchmarks/adr-018-step1.md`,
   because the two bounds are 128-bit quotients (no allocation). The fast path is unchanged: the

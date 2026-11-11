@@ -1555,7 +1555,7 @@ fn known_limitations_document_lists_the_pinned_entries() {
 }
 
 /// The entries of `docs/known-limitations.md` that a test pins.
-const PINNED_LIMITATIONS: [u32; 14] = [1, 4, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18, 24];
+const PINNED_LIMITATIONS: [u32; 15] = [1, 4, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18, 24, 25];
 
 /// Real outputs validate against the schema files in `docs/schemas/`, not only against the
 /// hand-written checks in `support/json.rs`.
