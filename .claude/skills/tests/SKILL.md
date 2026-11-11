@@ -24,3 +24,6 @@ Rules, each enforced by `cargo xtask ci`:
   check-docs` rejects files named scratch or probe and blanket lint allowances.
 * Randomised tests print or fix their seed so a failure can be replayed.
 * Library code has no `unwrap` or panics, but tests may use them (`clippy.toml`).
+
+Tests and test helpers must compile on the MSRV (1.85) too: no let chains. `cargo xtask ci msrv`
+checks all targets; CI's `msrv` job also runs the tests on 1.85.

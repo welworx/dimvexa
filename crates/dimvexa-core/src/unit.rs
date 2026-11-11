@@ -16,8 +16,12 @@ use crate::ratio::Ratio;
 /// when loading.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UnitDef {
-    /// Primary symbol, for example `psi`.
+    /// Identifier: the ASCII name the parser accepts, for example `degC`.
+    pub id: &'static str,
+    /// Symbol to print, for example `\u{b0}C` for `degC`. It is the id or one of the aliases.
     pub symbol: &'static str,
+    /// Full name, for example `Pascal` for `Pa`.
+    pub name: &'static str,
     /// Alternative symbols, for example `["\u{b0}C"]` for `degC`.
     pub aliases: &'static [&'static str],
     /// Dimension exponents of `[kg, m, s, A, K, mol, cd]`.
@@ -63,7 +67,9 @@ pub struct AmbiguousDef {
 /// `si_value = factor * x + offset`, where `x` is the value in this unit.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Unit {
+    id: String,
     symbol: String,
+    name: String,
     aliases: Vec<String>,
     dim: Dim,
     kind: Kind,
@@ -89,7 +95,7 @@ impl Unit {
     /// ```
     /// use dimvexa_core::{Dim, Ratio, Unit};
     /// let inch = Unit::linear("in", Dim::M, Ratio::new(127, 5000)?)?;
-    /// assert_eq!(inch.symbol(), "in");
+    /// assert_eq!(inch.id(), "in");
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     pub fn linear(symbol: &str, dim: Dim, factor: Ratio) -> Result<Self> {
@@ -119,7 +125,9 @@ impl Unit {
             return Err(bad("only absolute temperature units may have an offset"));
         }
         Ok(Self {
+            id: symbol.to_string(),
             symbol: symbol.to_string(),
+            name: symbol.to_string(),
             aliases: Vec::new(),
             dim,
             kind,
@@ -143,9 +151,9 @@ impl Unit {
     pub fn from_def(def: &UnitDef) -> Result<Self> {
         let factor = Ratio::new(def.factor.0, def.factor.1)?;
         let offset = Ratio::new(def.offset.0, def.offset.1)?;
-        let mut unit = Self::new(def.symbol, Dim::new(def.dim), def.kind, factor, offset)?;
+        let mut unit = Self::new(def.id, Dim::new(def.dim), def.kind, factor, offset)?;
         let bad = |message: &str| Error::InvalidDefinition {
-            symbol: def.symbol.to_string(),
+            symbol: def.id.to_string(),
             message: message.to_string(),
         };
         match (def.shape, offset.is_zero()) {
@@ -167,6 +175,14 @@ impl Unit {
         if def.kind.is_reference() && def.conditions.trim().is_empty() {
             return Err(bad("a unit with a reference state needs its conditions"));
         }
+        if def.symbol != def.id && !def.aliases.contains(&def.symbol) {
+            return Err(bad("the symbol must be the id or one of the aliases"));
+        }
+        unit.symbol = def.symbol.to_string();
+        if def.name.trim().is_empty() {
+            return Err(bad("a table unit needs a name"));
+        }
+        unit.name = def.name.to_string();
         unit.exactness = def.exactness;
         unit.prefixes = def.prefixes;
         unit.namespace = def.namespace.to_string();
@@ -174,6 +190,31 @@ impl Unit {
         unit.note = def.note.to_string();
         unit.conditions = def.conditions.to_string();
         Ok(unit)
+    }
+
+    /// Sets the full name (`Pascal` for `Pa`). A unit without one is named by its symbol.
+    #[must_use]
+    pub fn with_name(mut self, name: &str) -> Self {
+        if !name.trim().is_empty() {
+            self.name = name.to_string();
+        }
+        self
+    }
+
+    /// Sets the symbol to print. It must be an alias or the id, so what is printed reads back.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidDefinition`] if the symbol is neither the id nor an alias.
+    pub fn with_symbol(mut self, symbol: &str) -> Result<Self> {
+        if symbol != self.id && !self.aliases.iter().any(|a| a == symbol) {
+            return Err(Error::InvalidDefinition {
+                symbol: self.id,
+                message: "the symbol must be the id or one of the aliases".to_string(),
+            });
+        }
+        self.symbol = symbol.to_string();
+        Ok(self)
     }
 
     /// Adds aliases (alternative symbols).
@@ -185,7 +226,7 @@ impl Unit {
         for a in aliases {
             if !is_valid_symbol(a) {
                 return Err(Error::InvalidDefinition {
-                    symbol: self.symbol,
+                    symbol: self.id,
                     message: format!("alias '{a}' is not a well-formed symbol"),
                 });
             }
@@ -226,7 +267,14 @@ impl Unit {
         self
     }
 
-    /// Primary symbol.
+    /// Identifier: the ASCII name the parser accepts and the table is keyed by (`degC`).
+    #[must_use]
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    /// Symbol to print (`\u{b0}C` for `degC`). Equals the id when the unit has no other form;
+    /// the symbol is always accepted as input too.
     #[must_use]
     pub fn symbol(&self) -> &str {
         &self.symbol
@@ -294,6 +342,13 @@ impl Unit {
     #[must_use]
     pub fn source(&self) -> &str {
         &self.source
+    }
+
+    /// Full name, for example `Pascal` for `Pa`. A unit defined without a name (a user unit)
+    /// reads as its symbol.
+    #[must_use]
+    pub fn name(&self) -> &str {
+        &self.name
     }
 
     /// Note.
@@ -701,7 +756,9 @@ mod tests {
     #[test]
     fn from_def_checks_shape() {
         let mut d = UnitDef {
+            id: "x",
             symbol: "x",
+            name: "ex",
             aliases: &[],
             dim: [0, 1, 0, 0, 0, 0, 0],
             kind: Kind::Plain,

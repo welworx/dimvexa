@@ -89,6 +89,74 @@ impl Prefix {
     }
 }
 
+impl PrefixFamily {
+    /// Short name: `si` or `binary`.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Si => "si",
+            Self::Binary => "binary",
+        }
+    }
+}
+
+impl Prefix {
+    /// The symbol to print. It is the symbol itself except for micro, whose three input forms
+    /// (`\u{b5}`, `\u{3bc}`, `u`) all print as the micro sign `\u{b5}`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_core::SI_PREFIXES;
+    /// let u = SI_PREFIXES.iter().find(|p| p.symbol == "u").unwrap();
+    /// assert_eq!(u.display_symbol(), "\u{b5}");
+    /// ```
+    #[must_use]
+    pub const fn display_symbol(self) -> &'static str {
+        if self.exp == -6 && matches!(self.family, PrefixFamily::Si) {
+            "\u{b5}"
+        } else {
+            self.symbol
+        }
+    }
+
+    /// The name of a prefixed unit, capitalised like the table names: the prefix name joined to the
+    /// unit name, whose first letter is lowered unless the name starts with an acronym (`US`).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_core::SI_PREFIXES;
+    /// let k = SI_PREFIXES.iter().find(|p| p.symbol == "k").unwrap();
+    /// assert_eq!(k.compose_name("Metre"), "Kilometre");
+    /// assert_eq!(k.compose_name("Watt hour"), "Kilowatt hour");
+    /// ```
+    #[must_use]
+    pub fn compose_name(self, unit_name: &str) -> String {
+        let mut chars = unit_name.chars();
+        let first = chars.next();
+        let second = chars.next();
+        let lower_first = second.is_none_or(|c| !c.is_uppercase());
+        let mut out = String::new();
+        let mut prefix = self.name.chars();
+        if let Some(c) = prefix.next() {
+            out.extend(c.to_uppercase());
+        }
+        out.push_str(prefix.as_str());
+        match first {
+            Some(c) if lower_first => out.extend(c.to_lowercase()),
+            Some(c) => out.push(c),
+            None => {}
+        }
+        out.push_str(
+            unit_name
+                .get(first.map_or(0, char::len_utf8)..)
+                .unwrap_or(""),
+        );
+        out
+    }
+}
+
 const fn si(symbol: &'static str, name: &'static str, exp: i32) -> Prefix {
     Prefix {
         symbol,

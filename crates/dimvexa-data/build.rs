@@ -42,7 +42,8 @@ fn lit(s: &str) -> String {
 }
 
 fn unit_def(t: &toml_lite::Table) -> Res<String> {
-    let symbol = t.str("symbol")?;
+    let id = t.str("id")?;
+    let symbol = id;
     let ctx = |e: String| format!("unit '{symbol}': {e}");
     let dim = t.ints("dim").map_err(ctx)?;
     if dim.len() != 7 {
@@ -85,10 +86,12 @@ fn unit_def(t: &toml_lite::Table) -> Res<String> {
     let mut s = String::new();
     let _ = writeln!(
         s,
-        "    UnitDef {{ symbol: {}, aliases: &[{}], dim: [{}], kind: {kind}, shape: {shape}, \
+        "    UnitDef {{ id: {}, symbol: {}, name: {}, aliases: &[{}], dim: [{}], kind: {kind}, shape: {shape}, \
          factor: {factor}, offset: {offset}, exactness: {exactness}, prefixes: {prefixes}, \
          namespace: {}, source: {}, note: {}, conditions: {} }},",
         lit(symbol),
+        lit(t.opt_str("symbol").map_err(ctx)?.unwrap_or(symbol)),
+        lit(t.str("name").map_err(ctx)?),
         aliases.join(", "),
         dim.join(", "),
         lit(t.str("namespace").map_err(ctx)?),

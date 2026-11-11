@@ -249,7 +249,7 @@ fn units() -> PyResult<Vec<String>> {
     Ok(registry()?
         .units()
         .iter()
-        .map(|u| u.symbol().to_owned())
+        .map(|u| u.id().to_owned())
         .collect())
 }
 
@@ -260,7 +260,9 @@ fn unit_info<'py>(py: Python<'py>, symbol: &str) -> PyResult<Option<Bound<'py, P
         return Ok(None);
     };
     let d = PyDict::new(py);
+    d.set_item("id", u.id())?;
     d.set_item("symbol", u.symbol())?;
+    d.set_item("name", u.name())?;
     d.set_item("aliases", u.aliases().to_vec())?;
     d.set_item("dimension", u.dim().to_string())?;
     d.set_item("kind", u.kind().to_string())?;

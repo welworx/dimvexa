@@ -1,0 +1,620 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dimvexa.units/3",
+  "title": "dimvexa.units/3",
+  "description": "Output of `dimvexa units --json`: the table (or one group of it, or only its group names with `--groups`), the details of one unit (`dimvexa units UNIT`), or a usage error. Adding fields is allowed within a schema version; removing or changing them requires a new version. /2 replaces /1: `bridges` became `densities` (ADR-014).",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "ok",
+        "data_version",
+        "group",
+        "groups",
+        "units",
+        "ambiguous",
+        "config",
+        "mappings",
+        "densities"
+      ],
+      "properties": {
+        "schema": {
+          "const": "dimvexa.units/3"
+        },
+        "ok": {
+          "const": true
+        },
+        "data_version": {
+          "type": "string",
+          "description": "Table identifier, `v<version>+<hash>`."
+        },
+        "group": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The group the listing was narrowed to (`dimvexa units GROUP`), or null for the whole table. With a group, `ambiguous` only holds the symbols that have a candidate in it."
+        },
+        "groups": {
+          "type": "array",
+          "description": "Every group of the whole table, also when the listing is narrowed: the values `dimvexa units GROUP` accepts.",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "units"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "units": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Number of units in the group."
+              }
+            }
+          }
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "symbol",
+              "name",
+              "group",
+              "aliases",
+              "dimension",
+              "quantity_kind",
+              "exactness",
+              "prefixes",
+              "namespace",
+              "source",
+              "origin"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Identifier: the ASCII name `dimvexa convert` accepts, for example `degC`."
+              },
+              "symbol": {
+                "type": "string",
+                "description": "Symbol to print, for example `°C` for `degC`. Equals `id` when the unit has no other form. It is the id or an alias."
+              },
+              "name": {
+                "type": "string",
+                "description": "Full name of the unit, for example `Pascal` for `Pa`. Equals the symbol for a user unit without a name."
+              },
+              "group": {
+                "type": "string",
+                "description": "Quantity group by dimension: length, mass, time, volume, pressure, energy, ... Dimensions without a name read `dimension[<exponents>]`. The set of names may grow."
+              },
+              "aliases": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Alternative symbols, for example the degree-sign spelling of degC."
+              },
+              "dimension": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 7,
+                "maxItems": 7,
+                "description": "Exponents of kg, m, s, A, K, mol, cd."
+              },
+              "quantity_kind": {
+                "enum": [
+                  "plain",
+                  "absolute_temperature",
+                  "temperature_difference",
+                  "gauge_pressure",
+                  "normal_volume",
+                  "standard_volume"
+                ]
+              },
+              "exactness": {
+                "enum": [
+                  "defined",
+                  "measured"
+                ]
+              },
+              "prefixes": {
+                "enum": [
+                  "none",
+                  "si",
+                  "si_binary"
+                ],
+                "description": "Which prefix families the symbol accepts."
+              },
+              "namespace": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string",
+                "description": "Primary citation of the definition."
+              },
+              "origin": {
+                "description": "Where the unit was defined when it comes from a `--config` file (`[[unit]]`), else null.",
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "file",
+                      "line"
+                    ],
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "ambiguous": {
+          "type": "array",
+          "description": "Bare symbols the shipped table refuses with `ambiguous_symbol`. One that your `--config` maps to a unit is still listed, with `resolved_by` set; with no config it is null.",
+          "items": {
+            "type": "object",
+            "required": [
+              "symbol",
+              "candidates",
+              "planned",
+              "note",
+              "resolved_by"
+            ],
+            "properties": {
+              "symbol": {
+                "type": "string"
+              },
+              "candidates": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Explicit symbols present in the table (may be empty while only planned ones exist)."
+              },
+              "planned": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Explicit symbols planned but not yet in the table."
+              },
+              "note": {
+                "type": "string"
+              },
+              "resolved_by": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "unit",
+                      "file",
+                      "line"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "type": "string"
+                      },
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "config": {
+          "type": "array",
+          "description": "The user config files applied with --config, in order (empty if none): the file as given and a content hash (fnv1a64), so a result can be reproduced.",
+          "items": {
+            "type": "object",
+            "required": [
+              "file",
+              "hash"
+            ],
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "hash": {
+                "type": "string",
+                "pattern": "^fnv1a64:[0-9a-f]{16}$"
+              }
+            }
+          }
+        },
+        "mappings": {
+          "type": "array",
+          "description": "Names resolved by the --config files, in application order (empty if none). A name listed here is no longer reported as refused.",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "unit",
+              "file",
+              "line"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "unit": {
+                "type": "string",
+                "description": "The unit the name stands for: a table unit or one of your `[[unit]]`."
+              },
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        "densities": {
+          "type": "array",
+          "description": "Densities defined by the --config configs (empty if none), in application order.",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "kind",
+              "value",
+              "unit",
+              "conditions",
+              "source",
+              "file",
+              "line"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "density"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "pattern": "^-?[0-9]+(/[0-9]+)?$",
+                "description": "Exact value in `unit`."
+              },
+              "unit": {
+                "type": "string",
+                "description": "kg/m3 for a density."
+              },
+              "conditions": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": true,
+      "description": "`dimvexa units`, `dimvexa units GROUP` and `dimvexa units --groups` (then `units` and `ambiguous` are empty)."
+    },
+    {
+      "type": "object",
+      "description": "`dimvexa units UNIT --json`: one table unit (looked up by symbol or alias), or a resolved prefixed or compound expression such as `km` or `kW.h`, for which prefixes, namespace, note and origin are null.",
+      "required": [
+        "schema",
+        "ok",
+        "data_version",
+        "unit"
+      ],
+      "properties": {
+        "schema": {
+          "const": "dimvexa.units/3"
+        },
+        "ok": {
+          "const": true
+        },
+        "data_version": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "object",
+          "required": [
+            "id",
+            "symbol",
+            "name",
+            "prefix",
+            "base",
+            "group",
+            "aliases",
+            "dimension",
+            "quantity_kind",
+            "exactness",
+            "prefixes",
+            "namespace",
+            "factor",
+            "offset",
+            "sources",
+            "note",
+            "origin",
+            "mapping"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "The table id, or the expression as written."
+            },
+            "symbol": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Symbol to print, for example `°C` for `degC`. It is the id or an alias, so it reads back. `null` for an expression such as km."
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Full name of a table unit, or of a single prefixed unit (`Kilometre`). `null` for a compound expression."
+            },
+            "prefix": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Set only for a single prefixed unit such as `km`: the prefix. `symbol` is the printed form (micro prints as the micro sign), `exp` the exponent of 10 (SI) or 2 (binary).",
+              "required": [
+                "symbol",
+                "name",
+                "exp",
+                "family"
+              ],
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "exp": {
+                  "type": "integer"
+                },
+                "family": {
+                  "enum": [
+                    "si",
+                    "binary"
+                  ]
+                }
+              }
+            },
+            "base": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Set only for a single prefixed unit: the table unit under the prefix.",
+              "required": [
+                "id",
+                "symbol",
+                "name"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "symbol": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            },
+            "group": {
+              "type": "string"
+            },
+            "aliases": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "dimension": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 7,
+              "maxItems": 7,
+              "description": "Exponents of kg, m, s, A, K, mol, cd."
+            },
+            "quantity_kind": {
+              "enum": [
+                "plain",
+                "absolute_temperature",
+                "temperature_difference",
+                "gauge_pressure",
+                "normal_volume",
+                "standard_volume"
+              ]
+            },
+            "exactness": {
+              "enum": [
+                "defined",
+                "measured"
+              ]
+            },
+            "prefixes": {
+              "enum": [
+                "none",
+                "si",
+                "si_binary",
+                null
+              ]
+            },
+            "namespace": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "factor": {
+              "type": "string",
+              "pattern": "^-?[0-9]+/[0-9]+$",
+              "description": "Exact factor a in si = a * x + b (coherent SI unit of the dimension)."
+            },
+            "offset": {
+              "type": "string",
+              "pattern": "^-?[0-9]+/[0-9]+$",
+              "description": "Exact offset b in si = a * x + b."
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "conditions": {
+              "description": "The reference state of a gauge or gas-volume unit (ADR-013), for example `273.15 K, 101 325 Pa` for Nm3; null for a unit without one.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "note": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "origin": {
+              "description": "Where the unit was defined when it comes from a `--config` file (`[[unit]]`), else null.",
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "file",
+                    "line"
+                  ],
+                  "properties": {
+                    "file": {
+                      "type": "string"
+                    },
+                    "line": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              ]
+            },
+            "mapping": {
+              "description": "Set when the queried name is one of your `[map]` names (for example `mt`): the name and where the config maps it; null otherwise.",
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "file",
+                    "line"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "file": {
+                      "type": "string"
+                    },
+                    "line": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "dimvexa.units/3"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "object",
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "type": "string",
+              "description": "`usage` for a bad command line (extra arguments, --exact, --groups with a name); `unknown_unit` or `ambiguous_symbol` when the name is neither a group nor a unit; a library error code if the table cannot be loaded."
+            },
+            "message": {
+              "type": "string"
+            },
+            "suggestions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "For `unknown_unit` and `ambiguous_symbol`: the close matches or explicit symbols to use instead."
+            }
+          }
+        }
+      }
+    }
+  ]
+}

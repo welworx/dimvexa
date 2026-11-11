@@ -160,7 +160,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
     let mut rows: BTreeMap<String, Row> = BTreeMap::new();
     let mut names: BTreeMap<String, String> = BTreeMap::new(); // symbol or alias -> owner
     for (fname, t) in &unit_tables {
-        let sym = match t.str("symbol") {
+        let sym = match t.str("id") {
             Ok(s) => s.to_string(),
             Err(e) => {
                 err(format!("{fname}: {e}"));
@@ -172,7 +172,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
         if !kind_of_row.map_or_else(|| is_valid_symbol(&sym), |k| is_valid_symbol_for(&sym, k)) {
             err(format!("{at}: symbol is not well-formed"));
         }
-        for key in ["source", "note", "namespace"] {
+        for key in ["name", "source", "note", "namespace"] {
             match t.str(key) {
                 Ok(v) if !v.trim().is_empty() => {}
                 Ok(_) => err(format!("{at}: '{key}' is empty")),
@@ -265,6 +265,14 @@ pub fn run(root: &Path) -> Result<Report, String> {
             if let Some(owner) = names.insert(n.clone(), sym.clone()) {
                 err(format!(
                     "{at}: duplicate symbol or alias '{n}' (already used by '{owner}')"
+                ));
+            }
+        }
+        // No let chain here: they need Rust 1.88 and the MSRV is 1.85.
+        if let Ok(Some(shown)) = t.opt_str("symbol") {
+            if !all_names.iter().any(|n| n == shown) {
+                err(format!(
+                    "{at}: symbol '{shown}' must be the id or one of the aliases, so it reads back"
                 ));
             }
         }
@@ -478,15 +486,23 @@ mod tests {
     #[test]
     fn detects_duplicate_symbols() {
         let e = errors_after("dup", "units/common.toml", |t| {
-            t.replacen("symbol = \"atm\"", "symbol = \"bar\"", 1)
+            t.replacen("id = \"atm\"", "id = \"bar\"", 1)
         });
         assert!(has(&e, "duplicate symbol or alias 'bar'"), "{e:?}");
     }
 
     #[test]
+    fn detects_a_symbol_that_does_not_read_back() {
+        let e = errors_after("shown", "units/base.toml", |t| {
+            t.replacen("symbol = \"\u{b0}C\"", "symbol = \"degrees\"", 1)
+        });
+        assert!(has(&e, "must be the id or one of the aliases"), "{e:?}");
+    }
+
+    #[test]
     fn detects_ambiguous_bare_symbol_used_as_unit() {
         let e = errors_after("amb", "units/common.toml", |t| {
-            t.replacen("symbol = \"gal_us\"", "symbol = \"gal\"", 1)
+            t.replacen("id = \"gal_us\"", "id = \"gal\"", 1)
         });
         assert!(
             has(&e, "'gal' is declared ambiguous but is also a unit symbol"),
@@ -518,7 +534,7 @@ mod tests {
         )
         .unwrap();
         let psi_factor = real
-            .split("symbol = \"psi\"")
+            .split("id = \"psi\"")
             .nth(1)
             .and_then(|s| s.lines().find(|l| l.starts_with("factor = ")))
             .unwrap()

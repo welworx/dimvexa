@@ -3,7 +3,8 @@
 # Factors are exact fractions num/den of the coherent SI unit: si = factor * x + offset.
 
 [[unit]]
-symbol = "m"
+id = "m"
+name = "Metre"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -17,7 +18,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "metre, defined by the fixed value of the speed of light"
 
 [[unit]]
-symbol = "g"
+id = "g"
+name = "Gram"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -31,7 +33,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "gram = 1/1000 of the SI base unit kilogram; kg is resolved as k + g"
 
 [[unit]]
-symbol = "s"
+id = "s"
+name = "Second"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -45,7 +48,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "second, defined by the caesium hyperfine frequency"
 
 [[unit]]
-symbol = "A"
+id = "A"
+name = "Ampere"
 aliases = []
 dim = [0, 0, 0, 1, 0, 0, 0]
 kind = "plain"
@@ -59,7 +63,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "ampere, defined by the fixed value of the elementary charge"
 
 [[unit]]
-symbol = "K"
+id = "K"
+name = "Kelvin"
 aliases = []
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "absolute_temperature"
@@ -73,7 +78,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "kelvin, defined by the fixed value of the Boltzmann constant; absolute temperature kind"
 
 [[unit]]
-symbol = "mol"
+id = "mol"
+name = "Mole"
 aliases = []
 dim = [0, 0, 0, 0, 0, 1, 0]
 kind = "plain"
@@ -87,7 +93,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "mole, defined by the fixed value of the Avogadro constant"
 
 [[unit]]
-symbol = "cd"
+id = "cd"
+name = "Candela"
 aliases = []
 dim = [0, 0, 0, 0, 0, 0, 1]
 kind = "plain"
@@ -101,7 +108,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"
 note = "candela, defined by the luminous efficacy of 540 THz radiation"
 
 [[unit]]
-symbol = "Hz"
+id = "Hz"
+name = "Hertz"
 aliases = []
 dim = [0, 0, -1, 0, 0, 0, 0]
 kind = "plain"
@@ -115,7 +123,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "hertz = 1/s"
 
 [[unit]]
-symbol = "N"
+id = "N"
+name = "Newton"
 aliases = []
 dim = [1, 1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -129,7 +138,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "newton = kg m/s^2"
 
 [[unit]]
-symbol = "Pa"
+id = "Pa"
+name = "Pascal"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -143,7 +153,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "pascal = N/m^2"
 
 [[unit]]
-symbol = "J"
+id = "J"
+name = "Joule"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -157,7 +168,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "joule = N m"
 
 [[unit]]
-symbol = "W"
+id = "W"
+name = "Watt"
 aliases = []
 dim = [1, 2, -3, 0, 0, 0, 0]
 kind = "plain"
@@ -171,7 +183,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "watt = J/s"
 
 [[unit]]
-symbol = "C"
+id = "C"
+name = "Coulomb"
 aliases = []
 dim = [0, 0, 1, 1, 0, 0, 0]
 kind = "plain"
@@ -185,7 +198,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "coulomb = A s"
 
 [[unit]]
-symbol = "V"
+id = "V"
+name = "Volt"
 aliases = []
 dim = [1, 2, -3, -1, 0, 0, 0]
 kind = "plain"
@@ -199,7 +213,9 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "volt = W/A"
 
 [[unit]]
-symbol = "ohm"
+id = "ohm"
+name = "Ohm"
+symbol = "Ω"
 aliases = ["Ω", "Ω"]
 dim = [1, 2, -3, -2, 0, 0, 0]
 kind = "plain"
@@ -213,7 +229,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "ohm = V/A; Greek capital omega and the ohm sign are aliases"
 
 [[unit]]
-symbol = "F"
+id = "F"
+name = "Farad"
 aliases = []
 dim = [-1, -2, 4, 2, 0, 0, 0]
 kind = "plain"
@@ -227,7 +244,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "farad = C/V"
 
 [[unit]]
-symbol = "S"
+id = "S"
+name = "Siemens"
 aliases = []
 dim = [-1, -2, 3, 2, 0, 0, 0]
 kind = "plain"
@@ -241,7 +259,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "siemens = A/V"
 
 [[unit]]
-symbol = "Wb"
+id = "Wb"
+name = "Weber"
 aliases = []
 dim = [1, 2, -2, -1, 0, 0, 0]
 kind = "plain"
@@ -255,7 +274,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "weber = V s"
 
 [[unit]]
-symbol = "T"
+id = "T"
+name = "Tesla"
 aliases = []
 dim = [1, 0, -2, -1, 0, 0, 0]
 kind = "plain"
@@ -269,7 +289,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "tesla = Wb/m^2"
 
 [[unit]]
-symbol = "H"
+id = "H"
+name = "Henry"
 aliases = []
 dim = [1, 2, -2, -2, 0, 0, 0]
 kind = "plain"
@@ -283,7 +304,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "henry = Wb/A"
 
 [[unit]]
-symbol = "min"
+id = "min"
+name = "Minute"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -297,7 +319,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
 note = "minute = 60 s"
 
 [[unit]]
-symbol = "h"
+id = "h"
+name = "Hour"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -311,7 +334,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
 note = "hour = 60 min = 3600 s"
 
 [[unit]]
-symbol = "d"
+id = "d"
+name = "Day"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -325,7 +349,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
 note = "day = 24 h = 86400 s (not a sidereal or calendar day)"
 
 [[unit]]
-symbol = "L"
+id = "L"
+name = "Litre"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -339,7 +364,9 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
 note = "litre = 1 dm^3 = 1/1000 m^3"
 
 [[unit]]
-symbol = "tonne"
+id = "tonne"
+name = "Tonne"
+symbol = "t"
 aliases = ["t"]
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -353,7 +380,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
 note = "tonne (metric ton) = 1000 kg; t is an alias; the bare word ton is ambiguous and rejected"
 
 [[unit]]
-symbol = "Wh"
+id = "Wh"
+name = "Watt hour"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -367,7 +395,9 @@ source = "definition: watt (SI Brochure 9th ed., Table 4) times hour (SI Brochur
 note = "watt hour = 3600 J; kWh and MWh come from the SI prefixes"
 
 [[unit]]
-symbol = "degC"
+id = "degC"
+name = "Degree Celsius"
+symbol = "°C"
 aliases = ["°C"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "absolute_temperature"
@@ -381,7 +411,9 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2 (degree Celsius, t/degC = T/K 
 note = "degree Celsius: K = degC + 273.15; absolute temperature"
 
 [[unit]]
-symbol = "delta_K"
+id = "delta_K"
+name = "Kelvin difference"
+symbol = "ΔK"
 aliases = ["ΔK"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "temperature_difference"
@@ -395,7 +427,9 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (kelvin); section 2.3
 note = "temperature difference of 1 K"
 
 [[unit]]
-symbol = "delta_degC"
+id = "delta_degC"
+name = "Degree Celsius difference"
+symbol = "Δ°C"
 aliases = ["Δ°C"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "temperature_difference"
@@ -409,7 +443,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4, note (f) (degree Cel
 note = "temperature difference of 1 degC = 1 K"
 
 [[unit]]
-symbol = "ha"
+id = "ha"
+name = "Hectare"
 aliases = []
 dim = [0, 2, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -423,7 +458,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (hectare = 1 hm^2 = 1
 note = "hectare = 10 000 m^2"
 
 [[unit]]
-symbol = "au"
+id = "au"
+name = "Astronomical unit"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -437,7 +473,9 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 and note (j) (astrono
 note = "astronomical unit fixed by the IAU in 2012"
 
 [[unit]]
-symbol = "angstrom"
+id = "angstrom"
+name = "Angstrom"
+symbol = "Å"
 aliases = ["Å", "Å"]
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -451,7 +489,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (other non-SI units: 
 note = "angstrom = 1e-10 m; the capital A with ring (U+00C5) and the angstrom sign (U+212B) are aliases"
 
 [[unit]]
-symbol = "Bq"
+id = "Bq"
+name = "Becquerel"
 aliases = []
 dim = [0, 0, -1, 0, 0, 0, 0]
 kind = "plain"
@@ -465,7 +504,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "becquerel = 1/s (same dimension as the hertz)"
 
 [[unit]]
-symbol = "Gy"
+id = "Gy"
+name = "Gray"
 aliases = []
 dim = [0, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -479,7 +519,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "gray = J/kg (same dimension as the sievert)"
 
 [[unit]]
-symbol = "Sv"
+id = "Sv"
+name = "Sievert"
 aliases = []
 dim = [0, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -493,7 +534,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "sievert = J/kg (same dimension as the gray)"
 
 [[unit]]
-symbol = "lm"
+id = "lm"
+name = "Lumen"
 aliases = []
 dim = [0, 0, 0, 0, 0, 0, 1]
 kind = "plain"
@@ -507,7 +549,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "lumen = cd sr, and the steradian is dimensionless (ADR-007)"
 
 [[unit]]
-symbol = "lx"
+id = "lx"
+name = "Lux"
 aliases = []
 dim = [0, -2, 0, 0, 0, 0, 1]
 kind = "plain"
@@ -521,7 +564,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "lux = lm/m^2"
 
 [[unit]]
-symbol = "kat"
+id = "kat"
+name = "Katal"
 aliases = []
 dim = [0, 0, -1, 0, 0, 1, 0]
 kind = "plain"
@@ -535,7 +579,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "katal = mol/s"
 
 [[unit]]
-symbol = "rad"
+id = "rad"
+name = "Radian"
 aliases = []
 dim = [0, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -549,7 +594,9 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with
 note = "radian = m/m, dimensionless (ADR-007)"
 
 [[unit]]
-symbol = "deg"
+id = "deg"
+name = "Degree of arc"
+symbol = "°"
 aliases = ["°"]
 dim = [0, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -563,7 +610,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (degree = (pi/180) ra
 note = "degree = pi/180 rad. Factor uses pi ~ 245850922/78256779 (a continued-fraction convergent, relative error 2.5e-17, below half an f64 ulp), so the unit is marked measured; all angle units share it, so deg/arcmin/arcsec/grad convert among themselves exactly (ADR-010)"
 
 [[unit]]
-symbol = "arcmin"
+id = "arcmin"
+name = "Arcminute"
 aliases = []
 dim = [0, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -577,7 +625,8 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcminute = (1/60) d
 note = "arcminute = deg/60. Factor uses pi ~ 245850922/78256779 (a continued-fraction convergent, relative error 2.5e-17, below half an f64 ulp), so the unit is marked measured; all angle units share it, so deg/arcmin/arcsec/grad convert among themselves exactly (ADR-010)"
 
 [[unit]]
-symbol = "arcsec"
+id = "arcsec"
+name = "Arcsecond"
 aliases = []
 dim = [0, 0, 0, 0, 0, 0, 0]
 kind = "plain"

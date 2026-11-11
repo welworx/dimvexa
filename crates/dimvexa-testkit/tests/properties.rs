@@ -349,7 +349,7 @@ fn parser_never_panics_on_noise() {
 /// Groups of the seed table's symbols (plus some prefixed forms) that can convert into each other.
 fn groups(reg: &Registry) -> BTreeMap<String, Vec<String>> {
     let mut g: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    let mut names: Vec<String> = reg.units().iter().map(|u| u.symbol().to_string()).collect();
+    let mut names: Vec<String> = reg.units().iter().map(|u| u.id().to_string()).collect();
     names.extend(
         [
             "km", "mm", "MPa", "kPa", "kWh", "MJ", "kmol", "mg", "kg", "mbar", "mL", "kW", "km2",

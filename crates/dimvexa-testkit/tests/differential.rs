@@ -265,7 +265,7 @@ fn check_affine(conv: &Conversion, x: f64, stats: &mut Stats, label: &str) {
 }
 
 fn pairs(reg: &Registry) -> Vec<(String, String)> {
-    let mut names: Vec<String> = reg.units().iter().map(|u| u.symbol().to_string()).collect();
+    let mut names: Vec<String> = reg.units().iter().map(|u| u.id().to_string()).collect();
     names.extend(
         [
             "km",

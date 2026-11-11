@@ -4,12 +4,15 @@
 #   1. gitleaks:           a secret (API key, token, private key) in the staged changes
 #   2. typos:              spelling in the staged files
 #   3. taplo fmt --check:  formatting of the staged .toml files
+#   4. Rust, when .rs or Cargo files are staged: cargo fmt --check, clippy -D warnings and a
+#      cargo check on the minimum supported Rust version (the checks CI would fail on)
 # Enable once per clone:  git config core.hooksPath .githooks
 # Install the tools:      go install github.com/zricethezav/gitleaks/v8@v8.30.1
 #                         cargo install typos-cli taplo-cli --locked
 # A tool that is not installed is reported and skipped, never a reason to block the commit.
 # The checks read the files in your working tree, which may differ from what is staged.
-# Bypass once with `git commit --no-verify` (CI still runs every check).
+# Bypass once with `git commit --no-verify` (CI still runs every check). Never bypass it to get
+# a red commit onto a PR: fix the failure.
 set -u
 
 fail=0
@@ -48,6 +51,15 @@ elif command -v taplo >/dev/null 2>&1; then
   git diff --cached --name-only --diff-filter=ACMR -z -- '*.toml' | xargs -0 taplo fmt --check -- || fail=1
 else
   echo "pre-commit: taplo is not installed, so TOML format was NOT checked (cargo install taplo-cli --locked)." >&2
+fi
+
+# --- 4. Rust: format, lints and the MSRV (what `cargo xtask ci fmt clippy msrv` runs) ---------
+if git diff --cached --quiet --diff-filter=ACMR -- '*.rs' 'Cargo.toml' '*/Cargo.toml' 'Cargo.lock'; then
+  :
+elif command -v cargo >/dev/null 2>&1; then
+  cargo xtask ci fmt clippy msrv || fail=1
+else
+  echo "pre-commit: cargo is not installed, so fmt, clippy and the MSRV build were NOT checked." >&2
 fi
 
 if [ "$fail" -ne 0 ]; then

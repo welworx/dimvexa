@@ -12,7 +12,7 @@ no third-party dependencies, so it also builds offline.
 ```console
 git clone https://github.com/welworx/dimvexa
 cd dimvexa
-cargo xtask ci          # everything CI runs: fmt, clippy, tests, doc tests, docs, data, example
+cargo xtask ci          # everything CI runs: fmt, clippy, msrv, tests, doc tests, docs, data, example
 cargo test              # just the tests, while you iterate
 cargo run --example pool_pump -p dimvexa
 cargo run -p dimvexa-cli -- convert 10 m/s km/h
@@ -20,9 +20,11 @@ cargo run -p dimvexa-cli -- convert 10 m/s km/h
 
 `cargo xtask ci` is the single entry point. The GitHub workflow runs the same command, with
 warnings as errors, so a green run on your machine is a green run in CI. Its stages are:
-`fmt`, `clippy`, `test`, `doctest`, `docs`, `data`, `package`, `example` and `check-docs`
+`fmt`, `clippy`, `msrv`, `test`, `doctest`, `docs`, `data`, `package`, `example` and `check-docs`
 (this page and `AGENTS.md` are checked: the commands and files they name must exist).
-CI additionally runs the MSRV build, the wasm32 build, `cargo-deny`, typos, taplo, actionlint
+`msrv` compiles the workspace with the minimum supported Rust (1.85, installed by rustup on
+first use), because the pinned toolchain is newer and accepts code that CI's MSRV job rejects
+(let chains need 1.88). CI additionally runs the MSRV tests, the wasm32 build, `cargo-deny`, typos, taplo, actionlint
 and a packaging job. Run a few stages with
 `cargo xtask ci fmt clippy`, see all of them with `cargo xtask ci --list`, and keep going past
 a failure with `--keep-going`.

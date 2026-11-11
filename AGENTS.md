@@ -9,8 +9,11 @@ than an error.
 ## Build, test, check
 
 ```console
-cargo xtask ci                 # the one command: fmt, clippy -D warnings, tests, doc tests,
-                               # docs, data validation, package check, pool_pump example
+git config core.hooksPath .githooks   # once per clone, first thing: the pre-commit hook runs
+                               # fmt, clippy and the MSRV build on staged Rust, plus typos/taplo
+cargo xtask ci                 # the one command: fmt, clippy -D warnings, msrv (cargo check on
+                               # Rust 1.85), tests, doc tests, docs, data validation, package
+                               # check, pool_pump example
 cargo xtask ci fmt clippy      # only some stages (see: cargo xtask ci --list)
 cargo test --workspace         # quick loop
 cargo xtask validate-data      # after touching the unit tables
@@ -34,7 +37,10 @@ dependency without an issue and an ADR. Edition 2024, MSRV 1.85 (do not change i
    (`docs/precision.md`), enforced by `crates/dimvexa-testkit/tests/differential.rs`. Do not
    loosen a bound to make a test pass; find the bug.
 6. Never claim something passed unless you ran it and saw it pass.
-7. No performance or accuracy claim against another library ("fastest", "most accurate") without a
+7. Write code that compiles on the MSRV, 1.85, not only on the pinned toolchain (1.99): no let
+   chains (`if let ... && ...` needs 1.88), no APIs stabilised after 1.85. `cargo xtask ci msrv`
+   checks it; CI's `msrv` job fails the PR otherwise. Do not raise the MSRV to make code compile.
+8. No performance or accuracy claim against another library ("fastest", "most accurate") without a
    link to a dated benchmark run (`docs/benchmarking.md`). Never invent competitor numbers.
 
 ## Where things live
@@ -75,8 +81,19 @@ Read the matching skill in `.claude/skills/<name>/SKILL.md` before the task.
   owner is the sole maintainer and exempt from the DCO check; outside contributors sign off).
   End commits with the attribution lines your environment asks for.
 * Do not push, publish or touch remotes unless the task says so.
+* Commit and push only after `cargo xtask ci` has exited 0, and look at that exit status itself
+  (chain the commit to it with `&&`). Never let a pipeline decide it: with `| grep` or `| tail`
+  the status is that of the last command, so a failing CI looks like success. Fix the cause of a
+  failed hook or check; do not use `--no-verify`.
+* After opening or updating a pull request, read its check runs (`pull_request_read` with
+  `get_check_runs`) and fix every red check before reporting the work as done. A check that
+  passes locally but fails in CI (a different toolchain, OS or lock state) means the local
+  gate is missing something: add it to `cargo xtask ci` or the hook, not only a fix.
 * Keep error codes stable (`Error::ALL_CODES`); adding a field to the JSON schema is allowed
-  within the current schema version (`dimvexa.convert/2`, `dimvexa.units/2`, `dimvexa.configs/1`);
+  within the current schema version (`dimvexa.convert/2`, `dimvexa.units/3`, `dimvexa.configs/1`);
   removing or renaming one needs a new version (ADR-014 did that for `/2`).
 * Update `CHANGELOG.md` for user-visible changes and the relevant ADR or doc for a decision.
+* A breaking change (a renamed JSON field, a changed public item) is allowed while the crate is
+  0.x, but it needs the `api-change` skill: new schema version and file, CHANGELOG `Changed`,
+  an ADR for the decision, and the docs and snapshots updated in the same change.
 * Placeholders are not allowed: no unresolved owner or author markers in committed files.

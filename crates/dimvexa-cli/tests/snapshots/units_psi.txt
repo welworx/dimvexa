@@ -1,4 +1,5 @@
 psi
+  name          Pound-force per square inch
   group         pressure
   aliases       -
   dimension     kg m^-1 s^-2

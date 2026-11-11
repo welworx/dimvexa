@@ -4,7 +4,8 @@
 # si = factor * x + offset.
 
 [[unit]]
-symbol = "bar"
+id = "bar"
+name = "Bar"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -18,7 +19,8 @@ source = "NIST SP 811 (2008), Appendix B (bar = 100 kPa)"
 note = "bar = 1e5 Pa by definition"
 
 [[unit]]
-symbol = "atm"
+id = "atm"
+name = "Standard atmosphere"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -32,7 +34,8 @@ source = "NIST SP 811 (2008), Appendix B (standard atmosphere); 10th CGPM (1954)
 note = "standard atmosphere = 101325 Pa exactly"
 
 [[unit]]
-symbol = "g_n"
+id = "g_n"
+name = "Standard gravity"
 aliases = []
 dim = [0, 1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -46,7 +49,8 @@ source = "NIST SP 811 (2008), Appendix B (standard acceleration of gravity); 3rd
 note = "standard acceleration of gravity 9.80665 m/s^2 exactly"
 
 [[unit]]
-symbol = "lbf"
+id = "lbf"
+name = "Pound-force"
 aliases = []
 dim = [1, 1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -60,7 +64,8 @@ source = "NIST SP 811 (2008), Appendix B (pound-force)"
 note = "lbf = lb * g_n = 0.45359237 kg * 9.80665 m/s^2"
 
 [[unit]]
-symbol = "psi"
+id = "psi"
+name = "Pound-force per square inch"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -74,7 +79,8 @@ source = "NIST SP 811 (2008), Appendix B (pound-force per square inch)"
 note = "psi = lbf/in^2 = (0.45359237 * 9.80665) / 0.0254^2 Pa, derived exactly from lb, g_n and in"
 
 [[unit]]
-symbol = "mmHg"
+id = "mmHg"
+name = "Millimetre of mercury"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -88,7 +94,8 @@ source = "NIST SP 811 (2008), Appendix B (conventional millimeter of mercury); N
 note = "conventional mercury density 13595.1 kg/m^3 * g_n * 1 mm = 133.322387415 Pa; distinct from torr"
 
 [[unit]]
-symbol = "torr"
+id = "torr"
+name = "Torr"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -102,7 +109,8 @@ source = "NIST SP 811 (2008), Appendix B (torr = 101325/760 Pa)"
 note = "torr = atm/760 exactly; differs from mmHg by about 1.4e-7 relative"
 
 [[unit]]
-symbol = "cal_th"
+id = "cal_th"
+name = "Thermochemical calorie"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -116,7 +124,8 @@ source = "NIST SP 811 (2008), Appendix B (calorie_th)"
 note = "thermochemical calorie = 4.184 J exactly"
 
 [[unit]]
-symbol = "cal_IT"
+id = "cal_IT"
+name = "International Table calorie"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -130,7 +139,8 @@ source = "NIST SP 811 (2008), Appendix B (calorie_IT); 5th International Confere
 note = "International Table calorie = 4.1868 J exactly"
 
 [[unit]]
-symbol = "Btu_IT"
+id = "Btu_IT"
+name = "International Table British thermal unit"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -144,7 +154,8 @@ source = "NIST SP 811 (2008), Appendix B (Btu_IT)"
 note = "Btu_IT = cal_IT/g * lb * (5/9 K) = 4.1868 * 453.59237 / 1.8 J = 1055.05585262 J, derived exactly"
 
 [[unit]]
-symbol = "Btu_th"
+id = "Btu_th"
+name = "Thermochemical British thermal unit"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -158,7 +169,8 @@ source = "NIST SP 811 (2008), Appendix B (Btu_th)"
 note = "Btu_th = cal_th/g * lb * (5/9 K) = 4.184 * 453.59237 / 1.8 J, derived exactly (about 1054.3503 J)"
 
 [[unit]]
-symbol = "hp_mech"
+id = "hp_mech"
+name = "Mechanical horsepower"
 aliases = []
 dim = [1, 2, -3, 0, 0, 0, 0]
 kind = "plain"
@@ -172,7 +184,8 @@ source = "NIST SP 811 (2008), Appendix B (horsepower, 550 ft lbf/s)"
 note = "mechanical horsepower = 550 ft lbf/s = 550 * 0.3048 * 0.45359237 * 9.80665 W"
 
 [[unit]]
-symbol = "hp_metric"
+id = "hp_metric"
+name = "Metric horsepower"
 aliases = []
 dim = [1, 2, -3, 0, 0, 0, 0]
 kind = "plain"
@@ -186,7 +199,8 @@ source = "NIST SP 811 (2008), Appendix B (horsepower, metric = 7.354 988 E+02 W;
 note = "metric horsepower = 75 kgf m/s = 75 * 9.80665 W = 735.49875 W"
 
 [[unit]]
-symbol = "in"
+id = "in"
+name = "Inch"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -200,7 +214,8 @@ source = "International yard and pound agreement (1959); NIST SP 811 (2008), App
 note = "inch = 0.0254 m exactly"
 
 [[unit]]
-symbol = "ft"
+id = "ft"
+name = "Foot"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -214,7 +229,8 @@ source = "International yard and pound agreement (1959); NIST SP 811 (2008), App
 note = "international foot = 0.3048 m exactly"
 
 [[unit]]
-symbol = "yd"
+id = "yd"
+name = "Yard"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -228,7 +244,8 @@ source = "International yard and pound agreement (1959); NIST SP 811 (2008), App
 note = "international yard = 0.9144 m exactly"
 
 [[unit]]
-symbol = "mi"
+id = "mi"
+name = "Mile"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -242,7 +259,8 @@ source = "International yard and pound agreement (1959); NIST SP 811 (2008), App
 note = "international mile = 5280 ft = 1609.344 m; the US survey mile is mi_us_survey"
 
 [[unit]]
-symbol = "nmi"
+id = "nmi"
+name = "Nautical mile"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -256,7 +274,8 @@ source = "NIST SP 811 (2008), Appendix B (nautical mile); BIPM SI Brochure, 9th 
 note = "international nautical mile = 1852 m exactly"
 
 [[unit]]
-symbol = "ft_us_survey"
+id = "ft_us_survey"
+name = "US survey foot"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -270,7 +289,8 @@ source = "NIST SP 811 (2008), Appendix B (foot, U.S. survey); NIST SP 811 (2008)
 note = "US survey foot = 1200/3937 m; deprecated by NIST and NGS from 2023-01-01, kept for legacy data"
 
 [[unit]]
-symbol = "mi_us_survey"
+id = "mi_us_survey"
+name = "US survey mile"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -284,7 +304,8 @@ source = "NIST SP 811 (2008), Appendix B (mile, U.S. statute)"
 note = "US statute mile = 5280 US survey feet"
 
 [[unit]]
-symbol = "lb"
+id = "lb"
+name = "Pound"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -298,7 +319,8 @@ source = "International yard and pound agreement (1959); NIST SP 811 (2008), App
 note = "avoirdupois pound = 0.45359237 kg exactly"
 
 [[unit]]
-symbol = "oz_av"
+id = "oz_av"
+name = "Avoirdupois ounce"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -312,7 +334,8 @@ source = "International yard and pound agreement (1959); NIST SP 811 (2008), App
 note = "avoirdupois ounce = lb/16 (mass)"
 
 [[unit]]
-symbol = "oz_troy"
+id = "oz_troy"
+name = "Troy ounce"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -326,7 +349,8 @@ source = "NIST SP 811 (2008), Appendix B (ounce, troy or apothecary)"
 note = "troy ounce = 480 grains, grain = 64.79891 mg, so 31.1034768 g exactly"
 
 [[unit]]
-symbol = "ton_short"
+id = "ton_short"
+name = "Short ton"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -340,7 +364,8 @@ source = "NIST SP 811 (2008), Appendix B (ton, short, 2000 lb)"
 note = "short ton = 2000 lb = 907.18474 kg"
 
 [[unit]]
-symbol = "ton_long"
+id = "ton_long"
+name = "Long ton"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -354,7 +379,8 @@ source = "NIST SP 811 (2008), Appendix B (ton, long, 2240 lb)"
 note = "long ton = 2240 lb = 1016.0469088 kg"
 
 [[unit]]
-symbol = "gal_us"
+id = "gal_us"
+name = "US liquid gallon"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -368,7 +394,8 @@ source = "NIST SP 811 (2008), Appendix B (gallon, U.S. = 3.785 412 E-03 m^3); NI
 note = "US liquid gallon = 231 in^3 = 3.785411784 L exactly"
 
 [[unit]]
-symbol = "gal_imp"
+id = "gal_imp"
+name = "Imperial gallon"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -382,7 +409,8 @@ source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (4.54609 dm^3); 
 note = "imperial gallon = 4.54609 L exactly"
 
 [[unit]]
-symbol = "pt_us"
+id = "pt_us"
+name = "US liquid pint"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -396,7 +424,8 @@ source = "NIST SP 811 (2008), Appendix B (pint, U.S. liquid)"
 note = "US liquid pint = gal_us/8; the dry pint is a different unit and not included"
 
 [[unit]]
-symbol = "pt_imp"
+id = "pt_imp"
+name = "Imperial pint"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -410,7 +439,8 @@ source = "UK Weights and Measures Act 1985, Schedule 1, Part IV (pint = 0.568 26
 note = "imperial pint = gal_imp/8"
 
 [[unit]]
-symbol = "lbmol"
+id = "lbmol"
+name = "Pound-mole"
 aliases = []
 dim = [0, 0, 0, 0, 0, 1, 0]
 kind = "plain"
@@ -424,7 +454,9 @@ source = "derived from the pound definition (International yard and pound agreem
 note = "pound-mole = 1 lb expressed in grams as a number of moles = 453.59237 mol exactly; kmol is k + mol"
 
 [[unit]]
-symbol = "degF"
+id = "degF"
+name = "Degree Fahrenheit"
+symbol = "°F"
 aliases = ["°F"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "absolute_temperature"
@@ -438,7 +470,9 @@ source = "NIST SP 811 (2008), Appendix B (degree Fahrenheit)"
 note = "K = (degF + 459.67) * 5/9; absolute temperature"
 
 [[unit]]
-symbol = "degR"
+id = "degR"
+name = "Degree Rankine"
+symbol = "°R"
 aliases = ["°R"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "absolute_temperature"
@@ -452,7 +486,9 @@ source = "NIST SP 811 (2008), Appendix B (degree Rankine)"
 note = "K = degR * 5/9; absolute temperature, linear (zero at absolute zero)"
 
 [[unit]]
-symbol = "delta_degF"
+id = "delta_degF"
+name = "Degree Fahrenheit difference"
+symbol = "Δ°F"
 aliases = ["Δ°F"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "temperature_difference"
@@ -466,7 +502,9 @@ source = "NIST SP 811 (2008), Appendix B (degree Fahrenheit, temperature interva
 note = "temperature difference of 1 degF = 5/9 K"
 
 [[unit]]
-symbol = "delta_degR"
+id = "delta_degR"
+name = "Degree Rankine difference"
+symbol = "Δ°R"
 aliases = ["Δ°R"]
 dim = [0, 0, 0, 0, 1, 0, 0]
 kind = "temperature_difference"
@@ -480,7 +518,8 @@ source = "NIST SP 811 (2008), Appendix B (degree Rankine, temperature interval)"
 note = "temperature difference of 1 degR = 5/9 K"
 
 [[unit]]
-symbol = "week"
+id = "week"
+name = "Week"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -494,7 +533,8 @@ source = "ISO 8601-1:2019 (week of 7 days); BIPM SI Brochure, 9th ed. (2019), ch
 note = "week = 7 d"
 
 [[unit]]
-symbol = "yr_common"
+id = "yr_common"
+name = "Common year"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -508,7 +548,8 @@ source = "NIST SP 811 (2008), Appendix B (year, 365 days)"
 note = "common year = 365 d; the bare words yr and year are ambiguous and rejected"
 
 [[unit]]
-symbol = "yr_julian"
+id = "yr_julian"
+name = "Julian year"
 aliases = []
 dim = [0, 0, 1, 0, 0, 0, 0]
 kind = "plain"
@@ -522,7 +563,8 @@ source = "IAU Style Manual (1989), Julian year a = 365.25 d; BIPM SI Brochure, 9
 note = "Julian year = 365.25 d, the astronomical year; the bare words yr and year are ambiguous and rejected"
 
 [[unit]]
-symbol = "ly"
+id = "ly"
+name = "Light year"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -536,7 +578,8 @@ source = "IAU Style Manual (1989) (light year = c x Julian year); BIPM SI Brochu
 note = "light year = 299 792 458 m/s * 31 557 600 s = 9 460 730 472 580 800 m"
 
 [[unit]]
-symbol = "acre_int"
+id = "acre_int"
+name = "International acre"
 aliases = []
 dim = [0, 2, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -550,7 +593,8 @@ source = "NIST SP 811 (2008), Appendix B.6 (160 rd^2 = 1 acre = 43 560 ft^2); In
 note = "acre = 43 560 ft^2 with the international foot (4046.8564224 m^2); acre_us_survey differs by about 2 ppm; the bare word acre is ambiguous and rejected"
 
 [[unit]]
-symbol = "acre_us_survey"
+id = "acre_us_survey"
+name = "US survey acre"
 aliases = []
 dim = [0, 2, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -564,7 +608,8 @@ source = "NIST SP 811 (2008), Appendix B (acre, based on U.S. survey foot); NIST
 note = "acre = 43 560 ft_us_survey^2 (about 4046.8726 m^2)"
 
 [[unit]]
-symbol = "kn"
+id = "kn"
+name = "Knot"
 aliases = []
 dim = [0, 1, -1, 0, 0, 0, 0]
 kind = "plain"
@@ -578,7 +623,8 @@ source = "NIST SP 811 (2008), Appendix B (knot = nautical mile per hour); BIPM S
 note = "knot = 1 nmi/h = 1852/3600 m/s"
 
 [[unit]]
-symbol = "fl_oz_us"
+id = "fl_oz_us"
+name = "US fluid ounce"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -592,7 +638,8 @@ source = "NIST SP 811 (2008), Appendix B (fluid ounce, U.S. = 2.957 353 E-05 m^3
 note = "US fluid ounce = gal_us/128 = 29.5735295625 mL"
 
 [[unit]]
-symbol = "cup_us"
+id = "cup_us"
+name = "US cup"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -606,7 +653,8 @@ source = "NIST SP 811 (2008), Appendix B (cup, U.S. liquid measure)"
 note = "US cup = gal_us/16 = 8 fl_oz_us = 236.5882365 mL"
 
 [[unit]]
-symbol = "qt_us"
+id = "qt_us"
+name = "US liquid quart"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -620,7 +668,8 @@ source = "NIST SP 811 (2008), Appendix B (quart, U.S. liquid)"
 note = "US liquid quart = gal_us/4"
 
 [[unit]]
-symbol = "tbsp_us"
+id = "tbsp_us"
+name = "US tablespoon"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -634,7 +683,8 @@ source = "NIST SP 811 (2008), Appendix B (tablespoon, U.S.)"
 note = "US tablespoon = fl_oz_us/2 = gal_us/256; the bare word tbsp is ambiguous and rejected"
 
 [[unit]]
-symbol = "tsp_us"
+id = "tsp_us"
+name = "US teaspoon"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -648,7 +698,8 @@ source = "NIST SP 811 (2008), Appendix B (teaspoon, U.S.)"
 note = "US teaspoon = tbsp_us/3 = gal_us/768; the bare word tsp is ambiguous and rejected"
 
 [[unit]]
-symbol = "fl_oz_imp"
+id = "fl_oz_imp"
+name = "Imperial fluid ounce"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -662,7 +713,8 @@ source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (fluid ounce = 1
 note = "imperial fluid ounce = gal_imp/160 = 28.4130625 mL"
 
 [[unit]]
-symbol = "qt_imp"
+id = "qt_imp"
+name = "Imperial quart"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -676,7 +728,8 @@ source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (quart = 1/4 gal
 note = "imperial quart = gal_imp/4 = 1.1365225 L"
 
 [[unit]]
-symbol = "grain"
+id = "grain"
+name = "Grain"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -690,7 +743,8 @@ source = "NIST SP 811 (2008), Appendix B (grain, 1/7000 pound avoirdupois)"
 note = "grain = lb/7000 = 64.79891 mg"
 
 [[unit]]
-symbol = "carat"
+id = "carat"
+name = "Metric carat"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -704,7 +758,8 @@ source = "NIST SP 811 (2008), Appendix B (carat, metric = 2.0 E-04 kg)"
 note = "metric carat = 200 mg"
 
 [[unit]]
-symbol = "erg"
+id = "erg"
+name = "Erg"
 aliases = []
 dim = [1, 2, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -718,7 +773,8 @@ source = "NIST SP 811 (2008), Appendix B (erg)"
 note = "erg = 1e-7 J (CGS)"
 
 [[unit]]
-symbol = "dyn"
+id = "dyn"
+name = "Dyne"
 aliases = []
 dim = [1, 1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -732,7 +788,8 @@ source = "NIST SP 811 (2008), Appendix B (dyne)"
 note = "dyne = 1e-5 N (CGS)"
 
 [[unit]]
-symbol = "kgf"
+id = "kgf"
+name = "Kilogram-force"
 aliases = []
 dim = [1, 1, -2, 0, 0, 0, 0]
 kind = "plain"
@@ -746,7 +803,8 @@ source = "NIST SP 811 (2008), Appendix B (kilogram-force)"
 note = "kilogram-force = 1 kg * g_n = 9.80665 N"
 
 [[unit]]
-symbol = "grad"
+id = "grad"
+name = "Gradian"
 aliases = ["gon"]
 dim = [0, 0, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -760,7 +818,8 @@ source = "NIST SP 811 (2008), Appendix B (grade); ISO 80000-3:2019 (gon)"
 note = "grad (gon) = pi/200 rad. Factor uses pi ~ 245850922/78256779 (a continued-fraction convergent, relative error 2.5e-17, below half an f64 ulp), so the unit is marked measured; all angle units share it, so deg/arcmin/arcsec/grad convert among themselves exactly (ADR-010)"
 
 [[unit]]
-symbol = "P"
+id = "P"
+name = "Poise"
 aliases = ["poise"]
 dim = [1, -1, -1, 0, 0, 0, 0]
 kind = "plain"
@@ -774,7 +833,8 @@ source = "NIST SP 811 (2008), Appendix B.8 (poise = 1.0 E-01 Pa s)"
 note = "dynamic viscosity, CGS; 1 P = 1 g/(cm s) = 0.1 Pa s; cP is the SI prefix c on P"
 
 [[unit]]
-symbol = "St"
+id = "St"
+name = "Stokes"
 aliases = ["stokes"]
 dim = [0, 2, -1, 0, 0, 0, 0]
 kind = "plain"
@@ -788,7 +848,8 @@ source = "NIST SP 811 (2008), Appendix B.8 (stokes = 1.0 E-04 m^2/s)"
 note = "kinematic viscosity, CGS; 1 St = 1 cm^2/s; cSt is the SI prefix c on St"
 
 [[unit]]
-symbol = "bbl"
+id = "bbl"
+name = "Oil barrel"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -802,7 +863,8 @@ source = "NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U
 note = "petroleum (oil) barrel = 42 gal_us = 42 * 231 in^3 = 158.987294928 L exactly. The US liquid barrel (31.5 gal) and the dry barrel (7056 in^3) are different units and not included, so read bbl as the oil barrel only"
 
 [[unit]]
-symbol = "psig"
+id = "psig"
+name = "Pound-force per square inch gauge"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "gauge_pressure"
@@ -817,7 +879,8 @@ note = "same size as psi; the value is relative to the ambient pressure, which i
 conditions = "gauge: measured from the local ambient pressure, which is not part of the unit"
 
 [[unit]]
-symbol = "barg"
+id = "barg"
+name = "Bar gauge"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "gauge_pressure"
@@ -832,7 +895,8 @@ note = "same size as bar; gauge reference, see psig"
 conditions = "gauge: measured from the local ambient pressure, which is not part of the unit"
 
 [[unit]]
-symbol = "Pag"
+id = "Pag"
+name = "Pascal gauge"
 aliases = []
 dim = [1, -1, -2, 0, 0, 0, 0]
 kind = "gauge_pressure"
@@ -847,7 +911,8 @@ note = "same size as Pa; gauge reference, see psig. kPag and MPag are SI prefixe
 conditions = "gauge: measured from the local ambient pressure, which is not part of the unit"
 
 [[unit]]
-symbol = "Nm3"
+id = "Nm3"
+name = "Normal cubic metre"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "normal_volume"
@@ -862,7 +927,8 @@ note = "normal cubic metre: one m^3 of gas at 273.15 K and 101 325 Pa (ADR-013).
 conditions = "273.15 K (0 degC), 101 325 Pa (DIN 1343 normal condition)"
 
 [[unit]]
-symbol = "scf"
+id = "scf"
+name = "Standard cubic foot"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
 kind = "standard_volume"

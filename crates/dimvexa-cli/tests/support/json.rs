@@ -38,6 +38,10 @@ impl V {
             panic!("not a string: {self:?}")
         }
     }
+    pub const fn is_null(&self) -> bool {
+        matches!(self, V::Null)
+    }
+
     pub fn as_bool(&self) -> bool {
         if let V::Bool(b) = self {
             *b
@@ -261,12 +265,12 @@ pub fn check_convert_schema(v: &V) {
     );
 }
 
-/// Checks a `dimvexa.units/2` document against the documented schema.
+/// Checks a `dimvexa.units/3` document against the documented schema.
 pub fn check_units_schema(v: &V) {
     if v.get("unit").is_some() {
         return check_unit_detail_schema(v);
     }
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/3");
     assert!(v.get("ok").unwrap().as_bool());
     assert!(v.get("data_version").unwrap().as_str().starts_with('v'));
     assert!(v.get("group").is_some(), "missing group");
@@ -288,7 +292,9 @@ pub fn check_units_schema(v: &V) {
     let units = v.get("units").unwrap().as_array();
     for u in units {
         for k in [
+            "id",
             "symbol",
+            "name",
             "group",
             "aliases",
             "dimension",
@@ -301,7 +307,9 @@ pub fn check_units_schema(v: &V) {
         ] {
             assert!(u.get(k).is_some(), "missing units[].{k}");
         }
+        assert_ne!(u.get("id").unwrap().as_str(), "");
         assert_ne!(u.get("symbol").unwrap().as_str(), "");
+        assert_ne!(u.get("name").unwrap().as_str(), "");
         assert_eq!(u.get("dimension").unwrap().as_array().len(), 7);
         assert!(
             [
@@ -331,12 +339,16 @@ pub fn check_units_schema(v: &V) {
     }
 }
 
-fn check_unit_detail_schema(v: &V) {
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
+pub fn check_unit_detail_schema(v: &V) {
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/3");
     assert!(v.get("ok").unwrap().as_bool());
     let u = v.get("unit").unwrap();
     for k in [
+        "id",
         "symbol",
+        "name",
+        "prefix",
+        "base",
         "group",
         "aliases",
         "dimension",
@@ -358,7 +370,7 @@ fn check_unit_detail_schema(v: &V) {
     assert!(u.get("offset").unwrap().as_str().contains('/'));
 }
 
-/// The `config` array of `dimvexa.convert/2` and `dimvexa.units/2`: `[{file, hash}]`.
+/// The `config` array of `dimvexa.convert/2` and `dimvexa.units/3`: `[{file, hash}]`.
 fn check_config_array(v: &V) {
     for c in v.get("config").expect("missing config").as_array() {
         assert_ne!(c.get("file").unwrap().as_str(), "");
@@ -370,7 +382,7 @@ fn check_config_array(v: &V) {
     }
 }
 
-/// A density object of `dimvexa.convert/2` and `dimvexa.units/2`.
+/// A density object of `dimvexa.convert/2` and `dimvexa.units/3`.
 fn check_density(b: &V) {
     for k in [
         "name",

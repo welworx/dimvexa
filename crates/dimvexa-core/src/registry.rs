@@ -246,7 +246,7 @@ impl Registry {
     /// [`Error::DuplicateSymbol`] if the symbol or an alias is taken,
     /// [`Error::InvalidDefinition`] if it is declared ambiguous.
     pub fn register(&mut self, unit: Unit) -> Result<()> {
-        let names: Vec<&str> = core::iter::once(unit.symbol())
+        let names: Vec<&str> = core::iter::once(unit.id())
             .chain(unit.aliases().iter().map(String::as_str))
             .collect();
         for (i, name) in names.iter().enumerate() {
@@ -302,13 +302,13 @@ impl Registry {
         // The temperature-difference unit of the same scale, if one is registered. Only a
         // plain (unprefixed) absolute temperature has one; its factor must agree.
         let difference = if prefix.is_none() && unit.kind() == Kind::AbsoluteTemperature {
-            self.get(&format!("delta_{}", unit.symbol()))
+            self.get(&format!("delta_{}", unit.id()))
                 .filter(|d| {
                     d.kind() == Kind::TemperatureDifference
                         && d.dim() == unit.dim()
                         && d.factor() == unit.factor()
                 })
-                .map(|d| d.symbol().to_string())
+                .map(|d| d.id().to_string())
         } else {
             None
         };
@@ -341,6 +341,44 @@ impl Registry {
         out.dedup();
         out.truncate(5);
         out
+    }
+
+    /// Splits a prefixed single unit such as `km` into its prefix and table unit.
+    ///
+    /// Returns `None` for a table symbol or alias (`m`), for a name that is declared ambiguous
+    /// or that more than one prefix and unit pair could spell, and for anything that is not a
+    /// prefixed table unit. It never guesses: it agrees with
+    /// [`resolve_symbol`](Self::resolve_symbol).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_core::{Registry, Unit, Dim, Ratio, PrefixMode};
+    /// let mut reg = Registry::new();
+    /// let metre = Unit::linear("m", Dim::new([0, 1, 0, 0, 0, 0, 0]), Ratio::ONE)?
+    ///     .with_prefixes(PrefixMode::Si);
+    /// reg.register(metre)?;
+    /// let (p, u) = reg.split_prefixed("km").unwrap();
+    /// assert_eq!((p.symbol, u.id()), ("k", "m"));
+    /// assert!(reg.split_prefixed("m").is_none());
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    #[must_use]
+    pub fn split_prefixed(&self, symbol: &str) -> Option<(Prefix, &Unit)> {
+        if self.ambiguous.contains_key(symbol) || self.get(symbol).is_some() {
+            return None;
+        }
+        self.resolve_symbol(symbol).ok()?;
+        let mut hits = all_prefixes().filter_map(|p| {
+            let rest = symbol.strip_prefix(p.symbol).filter(|r| !r.is_empty())?;
+            if self.ambiguous.contains_key(rest) {
+                return None;
+            }
+            let unit = self.get(rest).filter(|u| u.prefixes().accepts(p.family))?;
+            Some((p, unit))
+        });
+        let first = hits.next()?;
+        hits.next().is_none().then_some(first)
     }
 
     /// Resolves one symbol (with optional prefix) to a unit expression.
@@ -398,7 +436,7 @@ impl Registry {
                 symbol: symbol.to_string(),
                 candidates: many
                     .iter()
-                    .map(|(p, u)| format!("{} + {}", p.symbol, u.symbol()))
+                    .map(|(p, u)| format!("{} + {}", p.symbol, u.id()))
                     .collect(),
             }),
         }
