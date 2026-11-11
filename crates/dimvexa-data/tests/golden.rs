@@ -103,7 +103,7 @@ fn every_unit_has_a_vector_and_every_vector_names_a_unit() {
     let units: BTreeSet<String> = load("units")
         .iter()
         .filter(|t| t.name == "unit")
-        .map(|t| t.str("symbol").unwrap().to_string())
+        .map(|t| t.str("id").unwrap().to_string())
         .collect();
     let vector_units: BTreeSet<String> = load("vectors")
         .iter()

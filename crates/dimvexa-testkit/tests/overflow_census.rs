@@ -32,10 +32,7 @@ fn bits(x: i128) -> u32 {
 fn census() {
     let reg = registry().unwrap();
     let units = reg.units();
-    let exprs: Vec<_> = units
-        .iter()
-        .map(|u| reg.parse(u.symbol()).unwrap())
-        .collect();
+    let exprs: Vec<_> = units.iter().map(|u| reg.parse(u.id()).unwrap()).collect();
     let n = exprs.len();
 
     // A. size of the seed factors themselves
@@ -44,7 +41,7 @@ fn census() {
         for r in [u.factor(), u.offset()] {
             if bits(r.num()) > max_num {
                 max_num = bits(r.num());
-                max_sym = u.symbol().to_string();
+                max_sym = u.id().to_string();
             }
             max_den = max_den.max(bits(r.den()));
         }
@@ -124,13 +121,13 @@ fn census() {
     let (mut pw, mut pw_over) = (0_u32, 0_u32);
     let mut first_pow_overflow = String::new();
     for u in units.iter().filter(|u| u.offset().is_zero()) {
-        let e = reg.parse(u.symbol()).unwrap();
+        let e = reg.parse(u.id()).unwrap();
         for k in -6..=6 {
             pw += 1;
             if e.pow(k).is_err() {
                 pw_over += 1;
                 if first_pow_overflow.is_empty() {
-                    first_pow_overflow = format!("{}^{k}", u.symbol());
+                    first_pow_overflow = format!("{}^{k}", u.id());
                 }
             }
         }

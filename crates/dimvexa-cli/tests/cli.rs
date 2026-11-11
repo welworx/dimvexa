@@ -339,8 +339,8 @@ fn units_lists_every_table_entry_by_group() {
     let n = dimvexa_data::registry().unwrap().len();
     let r = dimvexa(&["units"]);
     assert_eq!(r.code, 0);
-    // Unit rows have seven tab-separated columns; the ambiguous rows have four.
-    let rows = r.stdout.lines().filter(|l| l.split('\t').count() == 7);
+    // Unit rows have eight tab-separated columns; the ambiguous rows have four.
+    let rows = r.stdout.lines().filter(|l| l.split('\t').count() == 8);
     assert_eq!(rows.count(), n);
     assert!(r.stdout.lines().any(|l| l == "## volume"));
     assert!(r.stdout.lines().any(|l| l.starts_with("psi\t")));
@@ -394,8 +394,8 @@ fn units_shows_the_details_of_one_unit() {
     snapshot("units_psi.txt", &r.stdout);
     let v = json::parse(&dimvexa(&["units", "psi", "--json"]).stdout).unwrap();
     let u = v.get("unit").unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
-    assert_eq!(u.get("symbol").unwrap().as_str(), "psi");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/3");
+    assert_eq!(u.get("id").unwrap().as_str(), "psi");
     assert_eq!(u.get("group").unwrap().as_str(), "pressure");
     assert_eq!(
         u.get("factor").unwrap().as_str(),
@@ -406,10 +406,7 @@ fn units_shows_the_details_of_one_unit() {
     assert_ne!(u.get("sources").unwrap().as_array(), []);
     // An alias finds the table unit; a prefixed unit and a compound expression resolve too.
     let c = json::parse(&dimvexa(&["units", "\u{b0}C", "--json"]).stdout).unwrap();
-    assert_eq!(
-        c.get("unit").unwrap().get("symbol").unwrap().as_str(),
-        "degC"
-    );
+    assert_eq!(c.get("unit").unwrap().get("id").unwrap().as_str(), "degC");
     let km = json::parse(&dimvexa(&["units", "km", "--json"]).stdout).unwrap();
     assert_eq!(
         km.get("unit").unwrap().get("factor").unwrap().as_str(),
@@ -428,7 +425,7 @@ fn units_unknown_and_ambiguous_names_are_loud_errors() {
         let r = dimvexa(&["units", name, "--json"]);
         assert_eq!(r.code, 1, "{name}");
         let v = json::parse(&r.stdout).unwrap();
-        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
+        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/3");
         assert!(!v.get("ok").unwrap().as_bool());
         assert_eq!(v.get("error").unwrap().get("code").unwrap().as_str(), code);
         assert!(
@@ -459,7 +456,7 @@ fn units_misuse_is_a_usage_error_in_the_units_schema() {
         let r = dimvexa(&a);
         assert_eq!(r.code, 2, "{args:?}");
         let v = json::parse(&r.stdout).unwrap();
-        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
+        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/3");
         assert!(!v.get("ok").unwrap().as_bool());
         assert_eq!(
             v.get("error").unwrap().get("code").unwrap().as_str(),
@@ -556,14 +553,14 @@ fn guide_supported_units_table_is_exactly_the_cli_table() {
     for u in v.get("units").unwrap().as_array() {
         let (g, s) = (
             u.get("group").unwrap().as_str().to_string(),
-            u.get("symbol").unwrap().as_str().to_string(),
+            u.get("id").unwrap().as_str().to_string(),
         );
         match groups.iter_mut().find(|(name, _)| *name == g) {
             Some((_, syms)) => syms.push(s),
             None => groups.push((g, vec![s])),
         }
     }
-    let mut expected = vec!["| Group | Unit symbols |".to_string()];
+    let mut expected = vec!["| Group | Unit ids |".to_string()];
     for (g, syms) in &groups {
         // Squares and cubes of a length that the guide lists first in their group.
         let powers: &[&str] = match g.as_str() {
@@ -774,7 +771,7 @@ fn a_config_can_never_redefine_an_existing_symbol() {
         "invalid_definition"
     );
     let v = json::parse(&dimvexa(&["units", "--json", "--config", &cfg]).stdout).unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/3");
     // Unknown targets, unknown sections and bad syntax are errors too.
     for (name, text, needle) in [
         (
@@ -818,7 +815,7 @@ fn config_usage_errors_exit_2() {
     let v =
         json::parse(&dimvexa(&["units", "--json", "--config", "/nonexistent/dimvexa.toml"]).stdout)
             .unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/2");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/3");
     assert_eq!(
         v.get("error").unwrap().get("code").unwrap().as_str(),
         "usage"
@@ -855,10 +852,7 @@ fn units_shows_where_a_mapped_name_comes_from() {
     assert_eq!(v.get("config").unwrap().as_array().len(), 1);
     // The details of a mapped name are those of its unit.
     let d = json::parse(&dimvexa(&["units", "mt", "--json", "--config", &cfg]).stdout).unwrap();
-    assert_eq!(
-        d.get("unit").unwrap().get("symbol").unwrap().as_str(),
-        "tonne"
-    );
+    assert_eq!(d.get("unit").unwrap().get("id").unwrap().as_str(), "tonne");
 }
 
 /// The `--config` section of the guide: its TOML block and every command it shows are real.
@@ -1573,7 +1567,7 @@ fn outputs_validate_against_the_schema_files() {
     };
     let (convert, units, configs) = (
         schema("dimvexa.convert-2.schema.json"),
-        schema("dimvexa.units-2.schema.json"),
+        schema("dimvexa.units-3.schema.json"),
         schema("dimvexa.configs-1.schema.json"),
     );
     let cfg = config_file("schema_check.toml", TRADE);

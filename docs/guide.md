@@ -13,10 +13,10 @@ self-update. Every command and output shown here is checked by the test suite
 
 ## Supported units
 
-The table below lists every unit symbol by quantity group (the SI units also accept the SI
+The table below lists every unit id (what you type) by quantity group (the SI units also accept the SI
 prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa units`.
 
-| Group | Unit symbols |
+| Group | Unit ids |
 |---|---|
 | length | `m`, `au`, `angstrom`, `in`, `ft`, `yd`, `mi`, `nmi`, `ft_us_survey`, `mi_us_survey`, `ly` |
 | mass | `g`, `tonne`, `lb`, `oz_av`, `oz_troy`, `ton_short`, `ton_long`, `grain`, `carat` |

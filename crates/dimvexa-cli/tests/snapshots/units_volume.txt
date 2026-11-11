@@ -1,21 +1,21 @@
-# columns: symbol, name, quantity_kind, exactness, prefixes, aliases, source
+# columns: id, symbol, name, quantity_kind, exactness, prefixes, aliases, source
 
 ## volume
-L	Litre	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
-gal_us	US liquid gallon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gallon, U.S. = 3.785 412 E-03 m^3); NIST Handbook 44, Appendix C (231 in^3)
-gal_imp	Imperial gallon	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (4.54609 dm^3); NIST SP 811 (2008), Appendix B (gallon, Canadian and U.K.)
-pt_us	US liquid pint	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pint, U.S. liquid)
-pt_imp	Imperial pint	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part IV (pint = 0.568 261 25 dm^3)
-fl_oz_us	US fluid ounce	plain	defined	none	-	NIST SP 811 (2008), Appendix B (fluid ounce, U.S. = 2.957 353 E-05 m^3); NIST Handbook 44, Appendix C (1 gallon = 128 fluid ounces)
-cup_us	US cup	plain	defined	none	-	NIST SP 811 (2008), Appendix B (cup, U.S. liquid measure)
-qt_us	US liquid quart	plain	defined	none	-	NIST SP 811 (2008), Appendix B (quart, U.S. liquid)
-tbsp_us	US tablespoon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (tablespoon, U.S.)
-tsp_us	US teaspoon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (teaspoon, U.S.)
-fl_oz_imp	Imperial fluid ounce	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (fluid ounce = 1/20 pint)
-qt_imp	Imperial quart	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (quart = 1/4 gallon)
-bbl	Oil barrel	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)
-Nm3	Normal cubic metre	normal_volume	defined	none	-	DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa
-scf	Standard cubic foot	standard_volume	defined	none	-	NIST SP 811 (2008), Appendix B (foot, so the cubic foot is 0.3048^3 m^3); reference state 60 degF and 14.696 psia per GPA Standard 2145 (edition not checked)
+L	L	Litre	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
+gal_us	gal_us	US liquid gallon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gallon, U.S. = 3.785 412 E-03 m^3); NIST Handbook 44, Appendix C (231 in^3)
+gal_imp	gal_imp	Imperial gallon	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (4.54609 dm^3); NIST SP 811 (2008), Appendix B (gallon, Canadian and U.K.)
+pt_us	pt_us	US liquid pint	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pint, U.S. liquid)
+pt_imp	pt_imp	Imperial pint	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part IV (pint = 0.568 261 25 dm^3)
+fl_oz_us	fl_oz_us	US fluid ounce	plain	defined	none	-	NIST SP 811 (2008), Appendix B (fluid ounce, U.S. = 2.957 353 E-05 m^3); NIST Handbook 44, Appendix C (1 gallon = 128 fluid ounces)
+cup_us	cup_us	US cup	plain	defined	none	-	NIST SP 811 (2008), Appendix B (cup, U.S. liquid measure)
+qt_us	qt_us	US liquid quart	plain	defined	none	-	NIST SP 811 (2008), Appendix B (quart, U.S. liquid)
+tbsp_us	tbsp_us	US tablespoon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (tablespoon, U.S.)
+tsp_us	tsp_us	US teaspoon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (teaspoon, U.S.)
+fl_oz_imp	fl_oz_imp	Imperial fluid ounce	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (fluid ounce = 1/20 pint)
+qt_imp	qt_imp	Imperial quart	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (quart = 1/4 gallon)
+bbl	bbl	Oil barrel	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)
+Nm3	Nm3	Normal cubic metre	normal_volume	defined	none	-	DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa
+scf	scf	Standard cubic foot	standard_volume	defined	none	-	NIST SP 811 (2008), Appendix B (foot, so the cubic foot is 0.3048^3 m^3); reference state 60 degF and 14.696 psia per GPA Standard 2145 (edition not checked)
 
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note

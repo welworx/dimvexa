@@ -76,7 +76,7 @@ Read the matching skill in `.claude/skills/<name>/SKILL.md` before the task.
   End commits with the attribution lines your environment asks for.
 * Do not push, publish or touch remotes unless the task says so.
 * Keep error codes stable (`Error::ALL_CODES`); adding a field to the JSON schema is allowed
-  within the current schema version (`dimvexa.convert/2`, `dimvexa.units/2`, `dimvexa.configs/1`);
+  within the current schema version (`dimvexa.convert/2`, `dimvexa.units/3`, `dimvexa.configs/1`);
   removing or renaming one needs a new version (ADR-014 did that for `/2`).
 * Update `CHANGELOG.md` for user-visible changes and the relevant ADR or doc for a decision.
 * Placeholders are not allowed: no unresolved owner or author markers in committed files.

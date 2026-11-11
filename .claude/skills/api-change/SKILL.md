@@ -7,7 +7,7 @@ description: Use when changing a public item, an error code, the CLI output or t
 
 * Semver: the crate is 0.x, but treat breaking changes as such. Enums that may grow are
   `#[non_exhaustive]`. Removing or renaming an error code or a JSON field is breaking;
-  adding a JSON field is allowed within the current schema version (`dimvexa.convert/2`, `dimvexa.units/2`, `dimvexa.configs/1`, `docs/schemas/`); removing or renaming one needs a new version and a new schema file. Error codes live
+  adding a JSON field is allowed within the current schema version (`dimvexa.convert/2`, `dimvexa.units/3`, `dimvexa.configs/1`, `docs/schemas/`); removing or renaming one needs a new version and a new schema file. Error codes live
   in `Error::ALL_CODES` and are tested in `crates/dimvexa-cli/tests/cli.rs`.
 * Every public item has rustdoc (`missing_docs` is denied) and a compiling example; a public
   conversion API states its accuracy guarantee (`docs/precision.md`). Enforced by

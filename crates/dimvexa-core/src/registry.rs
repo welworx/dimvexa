@@ -246,7 +246,7 @@ impl Registry {
     /// [`Error::DuplicateSymbol`] if the symbol or an alias is taken,
     /// [`Error::InvalidDefinition`] if it is declared ambiguous.
     pub fn register(&mut self, unit: Unit) -> Result<()> {
-        let names: Vec<&str> = core::iter::once(unit.symbol())
+        let names: Vec<&str> = core::iter::once(unit.id())
             .chain(unit.aliases().iter().map(String::as_str))
             .collect();
         for (i, name) in names.iter().enumerate() {
@@ -302,13 +302,13 @@ impl Registry {
         // The temperature-difference unit of the same scale, if one is registered. Only a
         // plain (unprefixed) absolute temperature has one; its factor must agree.
         let difference = if prefix.is_none() && unit.kind() == Kind::AbsoluteTemperature {
-            self.get(&format!("delta_{}", unit.symbol()))
+            self.get(&format!("delta_{}", unit.id()))
                 .filter(|d| {
                     d.kind() == Kind::TemperatureDifference
                         && d.dim() == unit.dim()
                         && d.factor() == unit.factor()
                 })
-                .map(|d| d.symbol().to_string())
+                .map(|d| d.id().to_string())
         } else {
             None
         };
@@ -398,7 +398,7 @@ impl Registry {
                 symbol: symbol.to_string(),
                 candidates: many
                     .iter()
-                    .map(|(p, u)| format!("{} + {}", p.symbol, u.symbol()))
+                    .map(|(p, u)| format!("{} + {}", p.symbol, u.id()))
                     .collect(),
             }),
         }
