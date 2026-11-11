@@ -7,7 +7,7 @@ post each one. Each block fills the three fields of the form: *Library and versi
 unfair, wrong or missing?* and *Suggested change*. Numbers are from the first run
 (2026-11-07, [`comparison-run-1.md`](comparison-run-1.md)); they will change after the next run
 because the corpus now includes independent cases and the refusal results are split into
-"ambiguous name" and "other" (see [`../benchmarking.md`](../benchmarking.md)).
+"ambiguous name" and "other" (see [`../benchmarking.md`](../../benchmarking.md)).
 
 Shared context for every request, to paste once if the target repository prefers a single text:
 

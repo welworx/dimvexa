@@ -15,8 +15,8 @@
 //! 1 ulp (linear) or 2 ulp (affine) of that value (`docs/precision.md`).
 //!
 //! Exit codes: `0` success, `1` conversion refused or invalid input, `2` usage error.
-//! With `--json`, errors are printed to stdout as JSON (schema `dimvexa.convert/2`, see
-//! `docs/schemas/`; `units --json` uses `dimvexa.units/3`, `configs --json` `dimvexa.configs/1`) and the exit code stays non-zero. The error `code` is one of the
+//! With `--json`, errors are printed to stdout as JSON (schema `dimvexa.convert/3`, see
+//! `docs/schemas/`; `units --json` uses `dimvexa.units/4`, `configs --json` `dimvexa.configs/1`) and the exit code stays non-zero. The error `code` is one of the
 //! library's stable codes ([`dimvexa::Error::ALL_CODES`]) or `usage`.
 #![forbid(unsafe_code)]
 #![doc(
@@ -58,8 +58,9 @@ Commands:
   update -y        do not ask \"Update to vX.Y.Z? [y/N]\" first (also --yes)
 
 Options:
-  --exact      print the exact rational result (num/den) instead of a decimal
-  --json       machine-readable output (schema dimvexa.convert/2; dimvexa.units/3 for units,
+  --exact      print the exact result and its decimal: a fraction, with pi or a power of ten when
+               the value has one (`1/2 pi = 1.5707963267948966`); a whole number is printed once
+  --json       machine-readable output (schema dimvexa.convert/3; dimvexa.units/4 for units,
                dimvexa.configs/1 for configs)
   --color WHEN auto (default: a terminal, unless NO_COLOR is set), always (also
                CLICOLOR_FORCE=1) or never; JSON is never coloured
@@ -700,12 +701,12 @@ fn f64_text(x: f64) -> String {
     }
 }
 
-/// The JSON schema id of a command: `dimvexa.convert/2`, `dimvexa.units/3`, `dimvexa.configs/1`.
+/// The JSON schema id of a command: `dimvexa.convert/3`, `dimvexa.units/4`, `dimvexa.configs/1`.
 fn schema_id(command: &str) -> String {
     let version = match command {
         "configs" => 1,
-        "units" => 3,
-        _ => 2,
+        "units" => 4,
+        _ => 3,
     };
     format!("{}.{command}/{version}", dimvexa::PROJECT_NAME)
 }
@@ -941,7 +942,12 @@ fn resolve_density(spec: &str, loaded: &Loaded) -> Result<Constant, DensityError
 
 fn render_text(o: &Outcome<'_>, color: bool) -> String {
     let value = if o.args.exact {
-        o.exact.to_fraction_string()
+        // The symbolic exact value and the result rounded once to the nearest f64 (ADR-018).
+        // A whole number is its own decimal, so it is printed once, without "/1".
+        match o.exact.folded() {
+            Ok(w) if w.is_integer() && !w.has_exponents() => w.num().to_string(),
+            _ => format!("{} = {}", o.exact.to_fraction_string(), f64_text(o.approx)),
+        }
     } else {
         f64_text(o.approx)
     };
@@ -998,7 +1004,14 @@ fn density_note(b: &Constant) -> String {
 }
 
 fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
-    let (decimal, complete) = o.exact.to_decimal(15)?;
+    // A value with pi has no finite expansion: the decimal is then the result rounded once to
+    // the nearest f64, and `truncated` says it is not the whole value.
+    // The same fallback applies to a power of ten that does not fit the fraction.
+    let (decimal, complete) = match o.exact.to_decimal(15) {
+        Ok(d) => d,
+        Err(_) if o.exact.pi_exp() != 0 || o.exact.ten_exp() != 0 => (f64_text(o.approx), false),
+        Err(e) => return Err(e),
+    };
     let dims: Vec<String> =
         o.to.dim()
             .exponents()
@@ -1029,7 +1042,7 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
         "{{\"schema\":{},\"ok\":true,\
 \"input\":{{\"value\":{},\"unit\":{}}},\
 \"output\":{{\"value\":{},\"unit\":{},\"f64\":{},\"truncated\":{}}},\
-\"exact\":{{\"value\":{},\"factor\":{},\"offset\":{}}},\
+\"exact\":{{\"value\":{},\"decimal\":{},\"factor\":{},\"offset\":{}}},\
 \"exactness\":{},\"dimension\":[{}],\"kind\":{},\"quantity_kind\":{},\
 \"packs\":[{}],\"data_version\":{},\"sources\":[{}],\"config\":{},\"density\":{}}}",
         json_string(&schema_id("convert")),
@@ -1040,6 +1053,7 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
         f64_text(o.approx),
         !complete,
         json_string(&o.exact.to_fraction_string()),
+        json_string(&f64_text(o.approx)),
         json_string(&o.conv.factor().to_fraction_string()),
         json_string(&o.conv.offset().to_fraction_string()),
         json_string(exactness.name()),
@@ -2145,7 +2159,7 @@ mod tests {
         assert!(out.contains("\ngal\t"), "ambiguous gal belongs to volume");
         let (code, out, _) = run_str(&["units", "--json"]);
         assert_eq!(code, 0);
-        assert!(out.contains("\"schema\":\"dimvexa.units/3\""));
+        assert!(out.contains("\"schema\":\"dimvexa.units/4\""));
         assert_eq!(run_str(&["units", "--exact"]).0, 2);
         assert_eq!(run_str(&["units", "nope"]).0, 1);
         assert_eq!(run_str(&["units", "--groups", "psi"]).0, 2);

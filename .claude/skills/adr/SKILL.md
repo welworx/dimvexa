@@ -7,7 +7,7 @@ description: Use when a change needs a decision recorded or an existing ADR chan
 
 Files: `docs/adr/` (one numbered markdown file per decision). Existing ones: 001 no equations, 002 exactness and precision,
 003 std only, 004 number representation, 005 formula scales, 006 ambiguity, 007 angle,
-008 namespaces, 009 user config.
+008 namespaces, 009 user config, 018 constants and exact pi.
 
 Write an ADR when a change alters the public API, a unit-definition policy, a precision
 guarantee, a dependency policy or the scope. `GOVERNANCE.md` asks for a pull request that

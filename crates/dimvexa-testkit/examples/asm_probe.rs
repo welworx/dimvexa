@@ -1,5 +1,5 @@
 //! Non-inlined wrappers around the batch conversion loops, so the generated assembly can be
-//! inspected. See `docs/benchmarks/M0.md` for how it is used.
+//! inspected. See `docs/benchmarks/history/M0.md` for how it is used.
 #![allow(clippy::missing_docs_in_private_items, missing_docs)]
 
 use dimvexa_core::{Conversion, Ratio};

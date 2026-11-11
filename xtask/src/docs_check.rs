@@ -25,6 +25,7 @@ const COMMANDS: &[&str] = &[
     "update-data-hash",
     "check-docs",
     "bench-check",
+    "bench-matrix",
 ];
 
 /// Top-level directories whose paths are checked for existence when named in backticks.

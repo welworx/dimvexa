@@ -34,7 +34,7 @@ terms (see [`CONTRIBUTING.md`](CONTRIBUTING.md)). Data provenance and policy:
 with, sponsored by or endorsed by any of the projects, companies or organisations named in this
 repository. All product and project names are the property of their respective owners and are
 used for identification only. The benchmark results describe the versions, inputs and machine
-recorded in [`docs/benchmarks/comparison.md`](docs/benchmarks/comparison.md) and are not a
+recorded in [`docs/benchmarks/comparison/comparison.md`](docs/benchmarks/comparison/comparison.md) and are not a
 statement about those projects in general. Maintainers can ask for a runner correction through
 the *Benchmark runner review* issue form.
 

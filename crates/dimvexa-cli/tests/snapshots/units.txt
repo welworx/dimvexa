@@ -105,9 +105,15 @@ kat	kat	Katal	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 
 
 ## angle
 rad	rad	Radian	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
-deg	°	Degree of arc	plain	measured	none	°	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (degree = (pi/180) rad)
-arcmin	arcmin	Arcminute	plain	measured	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcminute = (1/60) degree)
-arcsec	arcsec	Arcsecond	plain	measured	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcsecond = (1/60) arcminute)
+deg	°	Degree of arc	plain	defined	none	°	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (degree = (pi/180) rad)
+arcmin	arcmin	Arcminute	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcminute = (1/60) degree)
+arcsec	arcsec	Arcsecond	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcsecond = (1/60) arcminute)
+
+## energy
+eV	eV	Electronvolt	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (1 eV = 1.602 176 634 x 10^-19 J, exact since the elementary charge e is fixed, ch. 2, Table 1)
+
+## mass
+Da	Da	Dalton	plain	measured	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (dalton = unified atomic mass unit); CODATA 2018 recommended value of the atomic mass constant m_u = 1.660 539 066 60(50) x 10^-27 kg (Tiesinga et al., Rev. Mod. Phys. 93, 025010 (2021))
 
 ## pressure
 bar	bar	Bar	plain	defined	si	-	NIST SP 811 (2008), Appendix B (bar = 100 kPa)
@@ -201,7 +207,7 @@ dyn	dyn	Dyne	plain	defined	none	-	NIST SP 811 (2008), Appendix B (dyne)
 kgf	kgf	Kilogram-force	plain	defined	none	-	NIST SP 811 (2008), Appendix B (kilogram-force)
 
 ## angle
-grad	grad	Gradian	plain	measured	none	gon	NIST SP 811 (2008), Appendix B (grade); ISO 80000-3:2019 (gon)
+grad	grad	Gradian	plain	defined	none	gon	NIST SP 811 (2008), Appendix B (grade); ISO 80000-3:2019 (gon)
 
 ## dynamic_viscosity
 P	P	Poise	plain	defined	si	poise	NIST SP 811 (2008), Appendix B.8 (poise = 1.0 E-01 Pa s)

@@ -218,6 +218,44 @@ fn main() {
         || aff.apply_exact_f64(black_box(98.6)).unwrap(),
     );
 
+    // ---- 1b. factors with a power of pi or of ten (ADR-018). `deg -> rad` exists before and
+    // after ADR-018 (a convergent of pi, then `1/180 pi`), so these rows compare across the
+    // change; `eV` exists only after it and is skipped otherwise.
+    let deg_rad = reg.conversion("deg", "rad").unwrap();
+    b.run(
+        "scalar linear apply, deg -> rad (throughput)",
+        N,
+        "factor_f64 is computed once at prepare, so this must equal the plain linear row",
+        || {
+            let mut acc = 0.0;
+            for x in &xs {
+                acc += deg_rad.apply(black_box(*x));
+            }
+            acc
+        },
+    );
+    let ninety = Ratio::from_int(90);
+    b.run(
+        "apply_exact (Ratio, deg -> rad)",
+        1,
+        "exact path with the pi factor of ADR-018 (a plain fraction before it)",
+        || deg_rad.apply_exact(black_box(ninety)).unwrap(),
+    );
+    b.run(
+        "apply_exact_f64 (deg -> rad, correctly rounded)",
+        1,
+        "f64 in, f64 out; pi uses 128-bit bounds (ADR-018), a plain fraction before it",
+        || deg_rad.apply_exact_f64(black_box(90.5)).unwrap(),
+    );
+    if let Ok(ev_j) = reg.conversion("eV", "J") {
+        b.run(
+            "apply_exact_f64 (eV -> J, correctly rounded)",
+            1,
+            "power of ten folded into one fraction",
+            || ev_j.apply_exact_f64(black_box(1.5)).unwrap(),
+        );
+    }
+
     // ---- 2. parse cost (the library has no cache by design)
     b.run(
         "parse unit `psi` (cold, every call)",
@@ -243,6 +281,20 @@ fn main() {
         "everything done once per prepared handle",
         || reg.conversion(black_box("m/s"), black_box("km/h")).unwrap(),
     );
+    b.run(
+        "conversion(\"deg\",\"rad\") (parse+prepare)",
+        1,
+        "a pi factor (ADR-018) needs the 128-bit rounding once, at prepare",
+        || reg.conversion(black_box("deg"), black_box("rad")).unwrap(),
+    );
+    if reg.conversion("eV", "J").is_ok() {
+        b.run(
+            "conversion(\"eV\",\"J\") (parse+prepare)",
+            1,
+            "power of ten folded at prepare",
+            || reg.conversion(black_box("eV"), black_box("J")).unwrap(),
+        );
+    }
     b.run("conversion(\"degF\",\"degC\")", 1, "affine", || {
         reg.conversion(black_box("degF"), black_box("degC"))
             .unwrap()
@@ -257,9 +309,12 @@ fn main() {
         },
     );
     b.run(
-        "registry construction, 63 units (cold start)",
+        "registry construction, all table units (cold start)",
         1,
-        "Registry::from_defs on the compiled table",
+        &format!(
+            "Registry::from_defs on the compiled table ({} units)",
+            reg.units().len()
+        ),
         || registry().unwrap(),
     );
 

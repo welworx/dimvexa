@@ -1,0 +1,10 @@
+# Released versions measured by `cargo xtask bench-matrix`: version<TAB>commit, oldest first.
+# The release skill adds a line when a version is released (use the commit that was released).
+0.1.0	bf07121
+0.1.1	1c37729
+0.1.2	e02ecaf
+0.2.0	2aac456
+0.2.1	8e18fd8
+0.2.2	3e59c3b
+0.3.0	973eba2
+0.4.0	1ca7d0d

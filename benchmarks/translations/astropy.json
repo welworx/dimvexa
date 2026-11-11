@@ -1,5 +1,5 @@
 {
-  "_note": "astropy 8.0.2: Spellings checked against the installed library (see docs/benchmarks/comparison-run-1.md). Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template. Temperature differences map to K / deg_R (no delta units exist); points use the temperature() equivalency.",
+  "_note": "astropy 8.0.2: Spellings checked against the installed library (see docs/benchmarks/comparison/comparison-run-1.md). Bare ambiguous names are deliberately not mapped. Correct via the 'Runner review' issue template. Temperature differences map to K / deg_R (no delta units exist); points use the temperature() equivalency.",
   "ops": {
     ".": "*"
   },

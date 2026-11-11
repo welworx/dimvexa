@@ -1,4 +1,4 @@
-> Copy of the spec supplied for M0 (2026-11-07), with the placeholder name replaced by `dimvexa`. Decisions taken during M0 are recorded in `docs/adr/` and `docs/benchmarks/M0.md`.
+> Copy of the spec supplied for M0 (2026-11-07), with the placeholder name replaced by `dimvexa`. Decisions taken during M0 are recorded in `docs/adr/` and `docs/benchmarks/history/M0.md`.
 
 # Standalone Unit Library: Design Draft
 
@@ -14,7 +14,7 @@ The library is standalone: it has no dependency on any consumer project and noth
 
 ## 2. Principles
 
-1. **Exact by default.** Every factor is a rational. Each definition records whether it is exact by definition or measured.
+1. **Exact by default.** Every factor is a rational, which may carry a power of ten and a power of pi next to it (ADR-018, so `deg` is exactly `1/180 pi`). Each definition records whether it is exact by definition or measured.
 2. **Fast at runtime.** Parse and compose once. A pre-parsed conversion is one multiply-add, with no allocation.
 3. **No silent ambiguity.** `ton`, `oz`, `pt`, bare `ppm` and bare `gal` are errors unless a config resolves them (`--config us`, ADR-014).
 4. **Kinds, not just dimensions.** Absolute vs delta temperature, gauge vs absolute pressure, mass vs mole fraction are distinct.

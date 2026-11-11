@@ -1,6 +1,6 @@
 # Your own angle names. `pi` is the number pi as a unit, so "2 pi" is an angle of 2*pi radians,
-# and `turn` is a full revolution (2 pi). Both use the same fraction as the shipped angle units,
-# 245850922/78256779 (docs/guide.md, "Angles and pi: limitations"), so `2 pi` is exactly 360 deg.
+# and `turn` is a full revolution (2 pi). They are defined on `deg`, which is exactly pi/180 rad
+# (ADR-018), so `2 pi` is exactly 360 deg and `1 turn` is exactly `2 pi rad`.
 #
 #   dimvexa convert 2 pi deg --config examples/configs/angle.toml
 #   dimvexa convert 1 turn rad --config examples/configs/angle.toml
@@ -11,18 +11,18 @@
 
 [[unit]]
 symbol = "pi"
-base = "rad"
-factor = "245850922/78256779"
-exactness = "measured"
+base = "deg"
+factor = "180"
+exactness = "defined"
 prefixes = "none"
-source = "ISO 80000-3:2019 (pi as a plane angle in radian); the fraction is a convergent of pi, relative error 2.5e-17"
-note = "pi radian, with pi approximated by 245850922/78256779"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (180 degrees = pi rad)"
+note = "pi radian: 180 deg, exact because the degree is exactly pi/180 rad"
 
 [[unit]]
 symbol = "turn"
-base = "rad"
-factor = "491701844/78256779"
-exactness = "measured"
+base = "deg"
+factor = "360"
+exactness = "defined"
 prefixes = "none"
-source = "ISO 80000-3:2019 (revolution = 2 pi rad); the fraction is 2 x a convergent of pi"
-note = "turn = 2 pi radian"
+source = "ISO 80000-3:2019 (revolution = 2 pi rad = 360 degrees)"
+note = "turn = 360 deg = 2 pi radian, exact"

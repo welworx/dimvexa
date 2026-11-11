@@ -6,7 +6,7 @@
 # oracle in truth.toml and fails on any disagreement, so an error in either list is caught.
 # Only exact definitions are used; rounded table values would need a tolerance and are left out.
 # Sources are cited, not copied: one fact per case. ind-029..038 come from the UCUM essence file, ind-039..041 from the mathjs and pint test suites (facts only).
-# Not used: the astropy suite (see docs/benchmarks/honest-assessment.md).
+# Not used: the astropy suite (see docs/benchmarks/comparison/honest-assessment.md).
 
 [[case]]
 id = "ind-001"

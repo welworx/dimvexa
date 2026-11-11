@@ -22,4 +22,4 @@ Source of truth: `docs/precision.md`, ADR-002, ADR-004.
 * No equations of state, no density correlations, no empirical formulas (ADR-001), and no
   silent fallback: overflow is an `overflow` error on the exact path.
 * After a hot-path change rerun `cargo bench -p dimvexa --bench m0` (see the `benchmarks` skill)
-  and update `docs/benchmarks/M0.md` with measured numbers only.
+  and update `docs/benchmarks/history/M0.md` with measured numbers only.

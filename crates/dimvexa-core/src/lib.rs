@@ -49,6 +49,7 @@
 //! # Ok::<(), dimvexa_core::Error>(())
 //! ```
 
+mod approx;
 mod conversion;
 mod dim;
 mod error;

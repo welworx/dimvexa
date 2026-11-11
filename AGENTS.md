@@ -90,7 +90,7 @@ Read the matching skill in `.claude/skills/<name>/SKILL.md` before the task.
   passes locally but fails in CI (a different toolchain, OS or lock state) means the local
   gate is missing something: add it to `cargo xtask ci` or the hook, not only a fix.
 * Keep error codes stable (`Error::ALL_CODES`); adding a field to the JSON schema is allowed
-  within the current schema version (`dimvexa.convert/2`, `dimvexa.units/3`, `dimvexa.configs/1`);
+  within the current schema version (`dimvexa.convert/3`, `dimvexa.units/4`, `dimvexa.configs/1`);
   removing or renaming one needs a new version (ADR-014 did that for `/2`).
 * Update `CHANGELOG.md` for user-visible changes and the relevant ADR or doc for a decision.
 * A breaking change (a renamed JSON field, a changed public item) is allowed while the crate is

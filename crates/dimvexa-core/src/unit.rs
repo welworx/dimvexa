@@ -13,7 +13,8 @@ use crate::ratio::Ratio;
 /// A unit as it appears in a compiled data table (plain data, `const`-constructible).
 ///
 /// Fractions are `(numerator, denominator)` pairs; the registry validates and reduces them
-/// when loading.
+/// when loading. The factor may also carry a power of ten and a power of pi
+/// ([`factor_exp`](Self::factor_exp)); the offset never does.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UnitDef {
     /// Identifier: the ASCII name the parser accepts, for example `degC`.
@@ -32,6 +33,9 @@ pub struct UnitDef {
     pub shape: Shape,
     /// Factor `a` in `si = a * x + b`, as `(numerator, denominator)`.
     pub factor: (i128, i128),
+    /// Exponents of the factor, `(k, m)` for `10^k * pi^m` (ADR-018): `deg` is `1/180` with
+    /// `(0, 1)`, `eV` is `1602176634` with `(-28, 0)`. `(0, 0)` for an ordinary fraction.
+    pub factor_exp: (i32, i32),
     /// Offset `b` in `si = a * x + b`, as `(numerator, denominator)`.
     pub offset: (i128, i128),
     /// Defined or measured.
@@ -124,6 +128,11 @@ impl Unit {
         if !offset.is_zero() && kind != Kind::AbsoluteTemperature {
             return Err(bad("only absolute temperature units may have an offset"));
         }
+        if offset.has_exponents() {
+            return Err(bad(
+                "an offset must be a plain fraction (no power of ten or pi)",
+            ));
+        }
         Ok(Self {
             id: symbol.to_string(),
             symbol: symbol.to_string(),
@@ -149,7 +158,8 @@ impl Unit {
     /// [`Error::InvalidDefinition`] when the row is inconsistent (shape/offset mismatch,
     /// bad fraction, bad symbol or alias), or [`Error::DivisionByZero`] for a zero denominator.
     pub fn from_def(def: &UnitDef) -> Result<Self> {
-        let factor = Ratio::new(def.factor.0, def.factor.1)?;
+        let factor = Ratio::new(def.factor.0, def.factor.1)?
+            .with_exponents(def.factor_exp.0, def.factor_exp.1);
         let offset = Ratio::new(def.offset.0, def.offset.1)?;
         let mut unit = Self::new(def.id, Dim::new(def.dim), def.kind, factor, offset)?;
         let bad = |message: &str| Error::InvalidDefinition {
@@ -472,7 +482,7 @@ impl UnitExpr {
     pub fn is_unity(&self) -> bool {
         self.dim.is_dimensionless()
             && self.kind == Kind::Plain
-            && self.factor == Ratio::ONE
+            && self.factor.checked_eq(Ratio::ONE) == Ok(true)
             && self.offset.is_zero()
     }
 
@@ -764,6 +774,7 @@ mod tests {
             kind: Kind::Plain,
             shape: Shape::Linear,
             factor: (2, 4),
+            factor_exp: (0, 0),
             offset: (0, 1),
             exactness: Exactness::Defined,
             prefixes: PrefixMode::Si,

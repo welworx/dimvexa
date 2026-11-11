@@ -16,7 +16,7 @@
 //! two), and its "nearest neighbour" property is checked in `exact_f64_is_correctly_rounded`.
 //!
 //! Set `DIMVEXA_DIFF_REPORT=1` and run with `--nocapture` to print the statistics that are
-//! quoted in `docs/benchmarks/M0.md`.
+//! quoted in `docs/benchmarks/history/M0.md`.
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,
@@ -129,6 +129,11 @@ fn reference(conv: &Conversion, x: f64, label: &str) -> Option<f64> {
 /// round `(a * m) * 2^(exp2 + 1074)` to the nearest integer, ties to even; that integer is the
 /// bit pattern. `None` if the arithmetic does not fit `u128` or the result is not tiny.
 fn subnormal_reference(conv: &Conversion, x: f64) -> Option<f64> {
+    if conv.factor().has_exponents() {
+        // This oracle works on the plain fraction `num/den`; a factor with a power of pi or of
+        // ten (ADR-018) is covered by `subnormal_angle_results_are_within_one_ulp` instead.
+        return None;
+    }
     let bits = x.abs().to_bits();
     let biased = i32::try_from(bits >> 52).ok()?;
     let frac = bits & ((1_u64 << 52) - 1);
@@ -524,5 +529,35 @@ fn affine_bound_holds_on_a_large_input_set_including_the_zero_point() {
     assert!(stats.max_ulp <= AFFINE_MAX_ULP, "{}", stats.worst);
     if std::env::var_os("DIMVEXA_DIFF_REPORT").is_some() {
         println!("affine (large set): {stats:#?}");
+    }
+}
+
+/// The subnormal oracle above reads a plain fraction, so a factor with pi gets its own check:
+/// `x = k * 2^-1074` times `180/pi` lands on the subnormal grid at `round(k * 57.2957795130823...)`
+/// (the products below were computed with 30-digit decimals of 180/pi), and the fast path must be
+/// within the linear bound of it.
+#[test]
+fn subnormal_angle_results_are_within_one_ulp() {
+    let conv = dimvexa::registry()
+        .unwrap()
+        .conversion("rad", "deg")
+        .unwrap();
+    assert_eq!(conv.factor().pi_exp(), -1);
+    for (k, grid) in [
+        (1_u64, 57_u64),
+        (2, 115),
+        (3, 172),
+        (10, 573),
+        (1000, 57_296),
+    ] {
+        let x = f64::from_bits(k);
+        let fast = conv.apply(x);
+        assert!(fast != 0.0 && fast.abs() < f64::MIN_POSITIVE);
+        let want = f64::from_bits(grid);
+        let ulps = ulp_distance(fast, want).unwrap();
+        assert!(
+            ulps <= LINEAR_MAX_ULP,
+            "k = {k}: {fast:e} vs {want:e}: {ulps} ulp"
+        );
     }
 }

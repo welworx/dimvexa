@@ -71,6 +71,9 @@ pub struct Conversion {
     offset_f64: f64,
     shift_f64: f64,
     shift_lo_f64: f64,
+    /// The factor as one unreduced fraction with its power of ten multiplied in, used by the
+    /// exact `f64` path; the denominator 0 means "none" (a power of pi, or no fit).
+    fold: (i128, i128),
 }
 
 impl Conversion {
@@ -87,8 +90,9 @@ impl Conversion {
     ///
     /// # Errors
     ///
-    /// [`Error::InvalidDefinition`] if `factor` is zero; [`Error::Overflow`] if the exact
-    /// numbers cannot be formed.
+    /// [`Error::InvalidDefinition`] if `factor` is zero, or if there is an offset and the factor
+    /// or the offset carries a power of ten or pi (the accuracy bound could not be kept; KL-25);
+    /// [`Error::Overflow`] if the exact numbers cannot be formed.
     pub fn affine(factor: Ratio, offset: Ratio) -> Result<Self> {
         Self::new(factor, offset)
     }
@@ -100,12 +104,24 @@ impl Conversion {
                 message: String::from("factor must not be zero"),
             });
         }
+        if !offset.is_zero() && (factor.has_exponents() || offset.has_exponents()) {
+            // The shift `b / a` could not be split into two parts that keep the 2 ulp affine
+            // bound, and `a * x + b` cannot be added exactly with unlike exponents. Refuse
+            // instead of losing accuracy silently (docs/known-limitations.md, KL-25).
+            return Err(Error::InvalidDefinition {
+                symbol: String::from("conversion"),
+                message: String::from(
+                    "an affine conversion needs a plain fraction factor and offset (no power of ten or pi)",
+                ),
+            });
+        }
         let shape = if offset.is_zero() {
             Shape::Linear
         } else {
             Shape::Affine
         };
         let shift = offset.checked_div(factor)?;
+        let shift = shift.folded().unwrap_or(shift);
         let shift_f64 = shift.to_f64()?;
         // Second part of the shift (shift - shift_f64, rounded): makes the shift accurate to
         // about 106 bits, so an inexact shift such as 273.15 no longer limits the result.
@@ -121,7 +137,22 @@ impl Conversion {
             offset_f64: offset.to_f64()?,
             shift_f64,
             shift_lo_f64,
+            fold: Self::fold_factor(factor, offset),
         })
+    }
+
+    /// The factor as `(num, den)` with `10^k` multiplied in, or `(1, 0)` when the exact `f64`
+    /// path cannot use a single fraction (a power of pi, a power of ten that does not fit, or
+    /// an offset with exponents).
+    fn fold_factor(factor: Ratio, offset: Ratio) -> (i128, i128) {
+        const NONE: (i128, i128) = (1, 0);
+        if factor.pi_exp() != 0 || offset.has_exponents() {
+            return NONE;
+        }
+        if factor.ten_exp() == 0 {
+            return (factor.num(), factor.den());
+        }
+        factor.folded().map_or(NONE, |f| (f.num(), f.den()))
     }
 
     /// Prepares the conversion from `from` to `to`.
@@ -230,7 +261,8 @@ impl Conversion {
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] on overflow of the exact numbers.
+    /// [`Error::Overflow`] on overflow of the exact numbers; [`Error::InvalidDefinition`] if the
+    /// inverse of an affine conversion would carry a power of ten or pi (KL-25).
     pub fn inverse(&self) -> Result<Self> {
         let inv = self.factor.checked_recip()?;
         let off = self.offset.checked_neg()?.checked_mul(inv)?;
@@ -241,7 +273,8 @@ impl Conversion {
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] on overflow of the exact numbers.
+    /// [`Error::Overflow`] on overflow of the exact numbers; [`Error::InvalidDefinition`] if the
+    /// result is affine and would carry a power of ten or pi (KL-25).
     pub fn then(&self, next: &Self) -> Result<Self> {
         let factor = self.factor.checked_mul(next.factor)?;
         let offset = self
@@ -348,11 +381,13 @@ impl Conversion {
 
     /// Converts an exact value: `a * x + b` in checked rational arithmetic.
     ///
-    /// This is the reference path: no rounding happens at all.
+    /// This is the reference path: no rounding happens at all. If the factor carries a power
+    /// of pi or of ten, so does the result (`180 deg` to `rad` is exactly `pi`).
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] if the result does not fit in `i128` fractions.
+    /// [`Error::Overflow`] if the result does not fit in `i128` fractions, or if `a * x` and
+    /// `b` have different exponents and cannot be added exactly.
     pub fn apply_exact(&self, x: Ratio) -> Result<Ratio> {
         self.factor.checked_mul(x)?.checked_add(self.offset)
     }
@@ -467,7 +502,10 @@ impl Conversion {
                 None
             }
         };
-        let (fnum, fden) = (self.factor.num(), self.factor.den());
+        let (fnum, fden) = self.fold;
+        if fden == 0 {
+            return None;
+        }
         let prod = fnum.checked_mul(smant)?;
         let (num, den) = match (self.shape, exp >= 0) {
             (Shape::Linear, true) => (prod.checked_mul(pow(exp)?)?, fden),
@@ -689,6 +727,18 @@ mod tests {
         assert_eq!(c.apply(-0.0).to_bits(), (-0.0_f64).to_bits());
         let big = Conversion::linear(r(1_000_000, 1)).unwrap();
         assert_eq!(big.apply(f64::MAX), f64::INFINITY);
+    }
+
+    #[test]
+    fn affine_with_a_pi_or_ten_factor_is_refused_not_degraded() {
+        let pi = Ratio::PI;
+        let e = Conversion::affine(pi, r(1, 2)).unwrap_err();
+        assert_eq!(e.code(), "invalid_definition");
+        assert!(Conversion::affine(r(3, 1).with_exponents(-28, 0), r(1, 2)).is_err());
+        // linear conversions with exponents are fine
+        assert!(Conversion::linear(pi).is_ok());
+        // so are affine ones with plain fractions
+        assert!(Conversion::affine(r(5, 9), r(-160, 9)).is_ok());
     }
 
     #[test]

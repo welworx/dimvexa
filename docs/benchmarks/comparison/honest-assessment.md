@@ -6,7 +6,7 @@ benchmark publication: it does not replace `comparison.md` and does not license 
 "most accurate" claim (`AGENTS.md` rule 7).
 
 > **Update 2026-11-08 (after the exact-path speed-up).** Sections 3 to 7 were measured on
-> `c512372`, before commits `a69bc21` and `93c47e6` (see `docs/benchmarks/M0.md`). Those commits
+> `c512372`, before commits `a69bc21` and `93c47e6` (see `docs/benchmarks/history/M0.md`). Those commits
 > are bit-identical to the old path (checked: all 287 convertible registry unit pairs with about
 > 640 inputs each, same hash of result bits and error codes before and after) and make
 > `apply_exact_f64` about 8 times faster (linear 317.5 to 39.4 ns, affine 363.3 to 48.7 ns, median
@@ -147,7 +147,7 @@ Apples-to-oranges, stated first:
 * Scalar "prepared" Dimvexa (about 0.4 ns) is throughput of independent calls in a Rust loop with
   `black_box`; it is below the Rust plain-loop ceiling measured in the same runs (0.62 ns), which
   shows the figure is at the limit of what this harness resolves, not a latency. The latency chain
-  is about 4 ns (`docs/benchmarks/M0.md`, re-checked by `bench-check` today: linear 3.97 ns,
+  is about 4 ns (`docs/benchmarks/history/M0.md`, re-checked by `bench-check` today: linear 3.97 ns,
   affine 5.18 ns).
 * Batch versus scalar: batch rows are ns per element on preallocated buffers for Dimvexa; NumPy
   allocates its output. At 10^6 elements everything is memory bound.

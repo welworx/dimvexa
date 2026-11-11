@@ -11,8 +11,44 @@ The numbers are enforced by tests that fail the build (see "How this is checked"
 | Fast | `Conversion::apply`, `apply_slice`, `apply_in_place`, `apply_vec` | `f64` result from a multiply (linear) or add-add-multiply (affine) | about 0.5 ns per value |
 | Exact | `Conversion::apply_exact` (rational in, rational out), `Conversion::apply_exact_f64` (`f64` in, `f64` out), `Quantity::to_unit` | the exact rational result, or the **correctly rounded** `f64` of it | 50 ns (`apply_exact`) to about 300 ns (`apply_exact_f64`) per value |
 
-The factors themselves are exact rationals (ADR-002). The fast path only has `f64` copies of
-them, rounded once. That rounding is where its error comes from.
+The factors themselves are exact (ADR-002): a fraction, which may carry a power of ten and a
+power of pi next to it (ADR-018, for example `deg` is `1/180 pi`). The fast path only has `f64`
+copies of them, rounded once, when the `Conversion` is prepared; that rounding is where its error
+comes from, and a factor with pi is rounded exactly like any other (see below), so the hot path
+does not depend on how the factor is stored.
+
+### Factors with a power of pi or of ten
+
+A number is `num/den * 10^k * pi^m` (ADR-018). Rounding it to `f64` is correct, never guessed:
+
+* A power of ten that fits `i128` is multiplied into the fraction first, and the fraction is
+  rounded as always (`Ratio::to_f64`, the same code as for a plain fraction).
+* Otherwise, and for every power of pi, the value is bracketed between a lower and an upper bound
+  with 128-bit mantissas and directed rounding (every product and quotient rounds down for the
+  lower bound and up for the upper one; pi is `floor(pi * 2^126)` and the next unit). Rounding to
+  nearest is monotone, so when both bounds round to the same `f64` that `f64` is the correctly
+  rounded value. When they differ (the value is within about 2^-120 of a rounding boundary) or
+  the value is outside the normal `f64` range, the result is an `overflow` error. It is never
+  an unproven number.
+* An accuracy claim for such a value therefore has the same meaning as for a fraction: the linear
+  bound of 1 ulp holds, `apply_exact_f64` is the nearest `f64`. This is tested against an
+  independent oracle (`factors_with_pi_or_a_power_of_ten_are_correctly_rounded` in
+  `crates/dimvexa-testkit/tests/exact_f64.rs`: values computed outside this code base with
+  140-digit decimals), by the differential test over every conversion of the table, and by
+  `subnormal_angle_results_are_within_one_ulp` for tiny results.
+* An *affine* conversion whose factor or offset carries pi or a power of ten is refused when it is
+  prepared (`invalid_definition`), because its accuracy bound could not be kept and a silent loss
+  is not acceptable. No table unit is one: offsets exist only for temperatures, whose factors are
+  plain fractions. To support it properly is a TODO (KL-25).
+* The exact `f64` path of a conversion with pi is slower than for a plain fraction: about 700 ns
+  against about 47 ns for `deg -> rad` on the machine of `docs/benchmarks/v0.5.0.md`,
+  because the two bounds are 128-bit quotients (no allocation). The fast path is unchanged: the
+  `f64` factor is computed once when the `Conversion` is prepared.
+* Speed-up option, not done: compute the lower and upper bound of the factor once when the
+  `Conversion` is prepared and only multiply by the 53-bit mantissa of `x` per call; this should
+  bring `apply_exact_f64` for a pi factor close to the plain-fraction cost. Do it if the exact
+  path of angles becomes a bottleneck.
+* Sums and orderings of values with different exponents (`1 + pi`) are refused with `overflow`.
 
 ## What an ulp is
 
@@ -121,7 +157,7 @@ says so.
 
 Stay on the fast path for bulk data. A million values convert in about half a
 millisecond; the exact path is several hundred times slower per value and is not vectorised
-(numbers in `docs/benchmarks/M0.md`).
+(numbers in `docs/benchmarks/history/M0.md`).
 
 `apply_exact_f64` needs the exact arithmetic to fit into checked `i128` fractions. Extreme
 inputs and extreme factors give an `overflow` error rather than a wrong answer; for linear

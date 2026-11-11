@@ -134,3 +134,28 @@ fn known_limitation_kl_23_gauge_to_absolute_is_refused() {
         );
     }
 }
+
+/// KL-24: values with different exponents cannot be added or ordered, and `==` compares the
+/// representation (ADR-018).
+#[test]
+fn known_limitation_kl_24_unlike_exponents_cannot_be_added_or_ordered() {
+    let pi = Ratio::PI;
+    assert_eq!(Ratio::ONE.checked_add(pi).unwrap_err().code(), "overflow");
+    assert_eq!(Ratio::ONE.checked_sub(pi).unwrap_err().code(), "overflow");
+    assert_eq!(Ratio::ONE.checked_cmp(pi).unwrap_err().code(), "overflow");
+    let ev = Ratio::new(1_602_176_634, 1).unwrap().with_exponents(-28, 0);
+    let plain = Ratio::new(801_088_317, 5_000_000_000_000_000_000_000_000_000).unwrap();
+    assert_ne!(ev, plain, "KL-24 fixed? then `==` compares values");
+    assert!(ev.checked_eq(plain).unwrap());
+}
+
+/// KL-25 (TODO): an affine conversion with a pi or power-of-ten factor is refused when prepared.
+#[test]
+fn known_limitation_kl_25_affine_with_exponents_is_refused() {
+    let e = dimvexa::Conversion::affine(Ratio::PI, Ratio::new(1, 2).unwrap()).unwrap_err();
+    assert_eq!(
+        e.code(),
+        "invalid_definition",
+        "KL-25 fixed? then support it"
+    );
+}

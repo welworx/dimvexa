@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 'use strict';
-// Runner for js-quantities. Run in the first comparison (docs/benchmarks/comparison-run-1.md).
+// Runner for js-quantities. Run in the first comparison (docs/benchmarks/comparison/comparison-run-1.md).
 // "plain": Qty(x, from).to(to).scalar. "swift": Qty.swiftConverter(from, to), the library's own
 // documented fast path for repeated conversions.
 const c = require('./common');

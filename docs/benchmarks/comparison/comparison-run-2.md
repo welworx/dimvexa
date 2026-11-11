@@ -1,8 +1,8 @@
 # Comparison run 2 (2026-11-08): adds the Python and WASM bindings
 
-Raw data: [`benchmarks/results/`](../../benchmarks/results/). Full tables and charts:
+Raw data: [`benchmarks/results/`](../../../benchmarks/results/). Full tables and charts:
 [`comparison.md`](comparison.md) (generated; Dimvexa bars are orange in the charts). Method:
-[`../benchmarking.md`](../benchmarking.md). Run 1 ([`comparison-run-1.md`](comparison-run-1.md))
+[`../benchmarking.md`](../../benchmarking.md). Run 1 ([`comparison-run-1.md`](comparison-run-1.md))
 is superseded by this run for the data; its caveats still apply.
 
 One run on one shared cloud VM (Intel Xeon 2.30 GHz, 4 cores, governor not readable, Linux 6.18,

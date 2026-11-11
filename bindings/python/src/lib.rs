@@ -54,13 +54,14 @@ impl Conversion {
         self.inner.shape().to_string()
     }
 
-    /// The exact factor as a fraction string.
+    /// The exact factor as a fraction string. A factor with pi or a power of ten that does not
+    /// fit the fraction carries it after the fraction (`1/180 pi` for `deg` to `rad`, ADR-018).
     #[getter]
     fn factor(&self) -> String {
         self.inner.factor().to_fraction_string()
     }
 
-    /// The exact offset as a fraction string.
+    /// The exact offset as a fraction string (always a plain fraction).
     #[getter]
     fn offset(&self) -> String {
         self.inner.offset().to_fraction_string()
@@ -102,7 +103,8 @@ struct Quantity {
 
 #[pymethods]
 impl Quantity {
-    /// The exact value as a fraction string.
+    /// The exact value as a fraction string, with `pi` or a power of ten after it when the
+    /// value has one (`1/2 pi`, ADR-018).
     #[getter]
     fn value(&self) -> String {
         self.inner.value().to_fraction_string()
