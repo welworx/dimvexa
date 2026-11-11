@@ -7,6 +7,24 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-10
+### Added
+
+- Units `bbl` (petroleum barrel, 42 US gal), `psig`, `barg`, `Pag` (gauge pressure), `Nm3` (normal cubic metre, 273.15 K and 101 325 Pa) and `scf` (standard cubic foot, 60 degF and 14.696 psia), closing the gaps found by the comparison benchmark. Gauge pressures and gas volumes carry a reference state (ADR-013): `psig` to `barg`, `Nm3/h` to `Nm3/min` and `scf/min` to `scf/h` work and stay exact; `psig` to `bar`, `Nm3` to `m3`, `Nm3/h` to `m3/h` and `scf` to `Nm3` are refused with the code `refused`, never guessed. Combining two reference units in one expression is refused too.
+- `quantity_kind` gains `gauge_pressure`, `normal_volume` and `standard_volume` in `dimvexa.convert/2` and `dimvexa.units/2` (additive; the field was an enum).
+- A reference unit may end in digits (`Nm3`); `Nm3` and `Nm^3` are the same unit. Every other unit symbol is still letters only, so `m3` stays `m^3`.
+- Units gain an optional `conditions` field: the reference state a unit is defined at (`273.15 K (0 degC), 101 325 Pa` for `Nm3`). It is mandatory for gauge and gas-volume units (`validate-data` checks it), shown by `dimvexa units NAME`, and added as `unit.conditions` (string or null) to `dimvexa.units/2`.
+- A reference unit keeps the power of its reference: `Nm3/m3` and `m3/Nm3` do not convert, and the same reference cancels (`Nm3/Nm3` is a plain number). A density (`--density`) is refused for a gauge or reference volume. `Nm3` and `Nm^3` are an error (`ambiguous_expression`) while a unit `Nm` also exists, so a name never changes meaning. `(Nm3)^2` prints in a form that reads back.
+
+### Changed
+
+- `UnitDef` (a public struct, `dimvexa-core`) gains the field `conditions`; code that builds a `UnitDef` literal must add it (0.x breaking change). `quantity_kind` in `dimvexa.units/2` and `dimvexa.convert/2` gains three values.
+- `cargo xtask bench-check --against REV`: A/B regression check of REV against the working tree on the same machine, no stored baseline (for shared cloud VMs). With `--layouts N` (opt-in, default 1) a row that stays slow is rebuilt under other `-C metadata` layouts so that a code-layout effect is much less likely to fail the check (at the price of sensitivity below the layout spread; the output says so when escalation cleared a row). A failing tiny micro row prints a hint to try `--layouts 5`.
+- A config unit built on a reference unit (`MMscf` from `scf`, or `Mscfd` from `scf/d`) now also keeps its `conditions` (the reference kind was already kept), so `dimvexa units MMscf` shows the reference state and the unit stays refused against `m3` and `Nm3`. `UnitExpr::conditions()` and `Unit::with_conditions()` are new.
+- Excel add-in: the manifest version follows the release (`0.3.0.0`); CI (`ci.yml`) builds and tests the add-in and packs `dimvexa-excel-addin-X.Y.Z.zip` on every pull request, and the release workflow attaches that zip (a sideload build, nothing is hosted) to the GitHub release. `scripts/check-versions.sh` now also checks the manifest and runs in CI, not only at release time. The add-in test fixture no longer hard-codes the data version and unit count.
+- Python: `unit_info` also returns `conditions` (the reference state, or `None`).
+- Data version 14.
+
 ## [0.2.2] - 2026-11-10
 
 ### Changed

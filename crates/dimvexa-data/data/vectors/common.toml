@@ -518,3 +518,52 @@ from = "cSt"
 to = "m2/s"
 expect = "0.000001"
 source = "NIST SP 811 (2008), Appendix B.8 (stokes = 1.0 E-04 m^2/s; centistokes = 1.0 E-06 m^2/s)"
+
+[[vector]]
+unit = "bbl"
+value = "1"
+from = "bbl"
+to = "L"
+expect = "158.987294928"
+source = "NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)]) with Appendix B (gallon, U.S. = 3.785 411 784 L)"
+
+[[vector]]
+unit = "psig"
+value = "10"
+from = "psig"
+to = "barg"
+expect = "0.6894757293168361"
+rel_tol = "1e-12"
+source = "NIST SP 811 (2008), Appendix B (psi = 6.894 757 293 168 E+03 Pa) and bar = 100 kPa, both gauge"
+
+[[vector]]
+unit = "barg"
+value = "2"
+from = "barg"
+to = "kPag"
+expect = "200"
+source = "by definition: bar = 100 kPa (NIST SP 811 (2008), Appendix B), both gauge"
+
+[[vector]]
+unit = "Pag"
+value = "1"
+from = "kPag"
+to = "Pag"
+expect = "1000"
+source = "BIPM SI Brochure (2019), Table 7 (prefix kilo = 10^3), both gauge"
+
+[[vector]]
+unit = "Nm3"
+value = "60"
+from = "Nm3/h"
+to = "Nm3/min"
+expect = "1"
+source = "BIPM SI Brochure (2019), Table 8 (1 h = 60 min); the normal cubic metre keeps its reference state"
+
+[[vector]]
+unit = "scf"
+value = "1"
+from = "scf/min"
+to = "scf/h"
+expect = "60"
+source = "BIPM SI Brochure (2019), Table 8 (1 h = 60 min); the standard cubic foot keeps its reference state"

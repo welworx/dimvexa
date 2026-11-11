@@ -1,16 +1,17 @@
-# Release pipeline: after a merge to main, publish ONE version to crates.io, PyPI and npm.
+# Release pipeline: after a merge to main, publish ONE version to crates.io, PyPI and npm, and
+# attach the CLI binaries and the Excel add-in (sideload build) to the GitHub release.
 #
 # Not yet executed on GitHub (like ci.yml): expect small fixes on the first run.
 #
 # How a release happens: bump the version everywhere (Cargo.toml [workspace.package] and
-# [workspace.dependencies], bindings/python/Cargo.toml, bindings/wasm/Cargo.toml and both
-# bindings' Cargo.lock), merge to main. Every other merge to main is a no-op here: the `plan`
+# [workspace.dependencies], bindings/python/Cargo.toml, bindings/wasm/Cargo.toml, the Excel
+# manifest's <Version> (same version plus .0) and both bindings' Cargo.lock), merge to main. Every other merge to main is a no-op here: the `plan`
 # job sees that the version is already released and the rest is skipped.
 #
 # Safety:
 #   * `cargo xtask ci` and scripts/check-versions.sh must pass first.
 #   * Nothing is published before every artifact (crates package check, wheels, CLI binaries,
-#     sdist, npm package) has been built and the wheels have passed the Python tests.
+#     sdist, npm package, Excel add-in) has been built and the wheels have passed the Python tests.
 #   * Publishing jobs run in the GitHub environment `release`; give it required reviewers and
 #     the owner approves each release (AGENTS.md: publishing is an owner decision).
 #   * No long-lived tokens: crates.io, PyPI and npm trusted publishing (OIDC). One-time setup
@@ -257,6 +258,45 @@ jobs:
           path: bindings/wasm/pkg
           if-no-files-found: error
 
+  excel-addin:
+    name: excel add-in (sideload build)
+    needs: [plan, verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      - name: Install the pinned toolchain
+        run: |
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --no-self-update
+          rustup default "$v"
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: bindings/wasm
+      - name: Install wasm-bindgen-cli (the version pinned in bindings/wasm/Cargo.toml)
+        run: |
+          want=$(sed -n 's/^wasm-bindgen = "=\(.*\)"/\1/p' bindings/wasm/Cargo.toml)
+          cargo install wasm-bindgen-cli --version "$want" --locked
+      - run: bindings/excel/build.sh
+      - name: Test the functions (real WASM, mocked Excel)
+        run: |
+          node bindings/excel/test/functions.test.js
+          node bindings/excel/test/cells.test.js
+      - name: Package (the zip name carries the release version; the script checks it)
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: scripts/package-excel-addin.sh "$VERSION" excel
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: excel-addin
+          path: excel/*.zip
+          if-no-files-found: error
+
   crates-check:
     name: crates package check
     needs: [plan, verify]
@@ -278,7 +318,7 @@ jobs:
 
   publish-crates:
     name: publish to crates.io
-    needs: [plan, wheels, cli-binaries, sdist, npm-package, crates-check]
+    needs: [plan, wheels, cli-binaries, sdist, npm-package, excel-addin, crates-check]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: release
@@ -362,7 +402,7 @@ jobs:
 
   tag:
     name: tag and GitHub release
-    needs: [plan, cli-binaries, publish-crates, publish-pypi, publish-npm]
+    needs: [plan, cli-binaries, excel-addin, publish-crates, publish-pypi, publish-npm]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -376,6 +416,10 @@ jobs:
           pattern: cli-*
           path: cli
           merge-multiple: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: excel-addin
+          path: excel
       - name: Generate the Homebrew formula (copy it to the tap repo)
         env:
           VERSION: ${{ needs.plan.outputs.version }}
@@ -386,4 +430,4 @@ jobs:
           VERSION: ${{ needs.plan.outputs.version }}
         run: |
           gh release create "v$VERSION" --repo "${{ github.repository }}" --target "${{ github.sha }}" \
-            --title "v$VERSION" --generate-notes cli/*.tar.gz cli/*.zip cli/dimvexa.exe cli/*.sha256 cli/dimvexa.rb
+            --title "v$VERSION" --generate-notes cli/*.tar.gz cli/*.zip cli/dimvexa.exe cli/*.sha256 cli/dimvexa.rb excel/*.zip

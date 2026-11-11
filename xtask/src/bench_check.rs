@@ -8,7 +8,35 @@
 //! cargo xtask bench-check --input FILE     compare a saved bench output, no run, no rerun
 //! cargo xtask bench-check --threshold 15   allowed slowdown in percent (default 10)
 //! cargo xtask bench-check --runs 5         at most this many runs when a row looks slow
+//! cargo xtask bench-check --against REV    A/B: REV against the working tree, same machine
+//! cargo xtask bench-check --against REV --layouts 5   diagnose: try 5 code layouts (see below)
 //! ```
+//!
+//! **A/B mode (`--against REV`, the one to use on a shared cloud VM).** The stored baseline below
+//! is only valid on the machine and compiler that recorded it, and a cloud VM is a different
+//! machine each time. `--against` needs no baseline: it checks `REV` out into a temporary git
+//! worktree, builds its `m0` bench there, and runs the two builds one after the other, `REV` then
+//! the working tree, in rounds, so slow drift of the machine hits both alike. A row is judged by
+//! its best median per build over all rounds, with the same threshold and floor as below. Round 1
+//! always runs; further rounds (up to `--runs`, default 3) only run while a guarded row looks
+//! slow.
+//!
+//! **Layout escalation (opt-in, `--layouts N`, default 1 = off).** On tiny rows (one call, a 1000-element slice, 0.04 ns per element) the
+//! alignment of a loop decides the result, and a rebuild that changes no code can move a row by
+//! 20 percent: on 2026-11-10 a version bump alone did (`docs/benchmarks/M0.md`). A real slowdown
+//! shifts every layout, an alignment effect does not. So if a guarded row is still slow after the
+//! rounds, both sides are rebuilt under another crate-metadata salt (`RUSTFLAGS="-C
+//! metadata=bench-layout-K"`, which changes symbol hashes and with them the link order) and run
+//! once more, up to `--layouts` layouts in total, and every row is judged by its
+//! best median per side over all layouts. The same layouts are tried on both sides, so the
+//! comparison stays fair; a row that is slow in every layout is a regression. This costs
+//! sensitivity: the two builds differ in code (and version), so layout K is not the same alignment
+//! on both sides, and a real slowdown smaller than the spread between layouts (about 15 percent on
+//! the 10^3 rows) can pass. The output says so (`note:`) whenever escalation is what cleared a
+//! row. One run at a time: the worktree has a fixed path, so two concurrent runs clobber each
+//! other. The working tree may be dirty: what it contains is what is measured. The worktree is
+//! removed afterwards, also on failure; its build output lives in `target/bench-ab-base` so a
+//! second run is incremental.
 //!
 //! Baseline: `docs/benchmarks/baseline-m0.tsv` (`name<TAB>median ns/op`, one row per bench row,
 //! with the machine and compiler in `#` comment lines). It is only comparable on the machine
@@ -46,6 +74,10 @@ const DEFAULT_THRESHOLD_PCT: f64 = 10.0;
 const ABS_FLOOR_NS: f64 = 0.03;
 /// Default maximum number of runs per check.
 const DEFAULT_RUNS: usize = 3;
+/// Default number of code layouts an A/B check tries before it calls a row slow. 1 means no
+/// escalation: a flagged row fails, which is the strict choice for a guard (a missed regression
+/// is silent, a false alarm is not). `--layouts N` opts in to the diagnosis below.
+const DEFAULT_LAYOUTS: usize = 1;
 /// Number of runs a baseline update takes the median of.
 const UPDATE_RUNS: usize = 3;
 /// Baseline path relative to the repository root.
@@ -63,6 +95,12 @@ const GUARDED: &[&str] = &[
 ];
 
 type Rows = BTreeMap<String, f64>;
+
+/// Rows short enough (one call, a 1000-element slice) for the alignment of a loop to decide the
+/// result; a flagged one gets the `--layouts` hint.
+fn layout_sensitive(name: &str) -> bool {
+    name.starts_with("single call via") || name.ends_with("10^3")
+}
 
 fn guarded(name: &str) -> bool {
     GUARDED.iter().any(|p| name.starts_with(p))
@@ -140,11 +178,41 @@ fn slow_rows(base: &Rows, now: &Rows, threshold_pct: f64) -> Vec<(String, f64, f
 
 fn run_bench(root: &Path) -> Result<Rows, String> {
     println!("bench-check: running cargo bench -p dimvexa --bench m0 (about a minute)");
-    let out = Command::new("cargo")
-        .args(["bench", "-p", "dimvexa", "--bench", "m0", "--locked"])
-        .current_dir(root)
-        .output()
-        .map_err(|e| format!("cannot run cargo: {e}"))?;
+    run_bench_in(root, None)
+}
+
+/// Runs the m0 bench in `dir`, optionally with its own cargo target directory.
+fn run_bench_in(dir: &Path, target_dir: Option<&Path>) -> Result<Rows, String> {
+    run_bench_layout(dir, target_dir, 0)
+}
+
+/// Like [`run_bench_in`], in layout `layout` (0 is the normal build; another number rebuilds with
+/// a different crate-metadata salt, so symbol hashes and link order differ; code does not).
+fn run_bench_layout(dir: &Path, target_dir: Option<&Path>, layout: usize) -> Result<Rows, String> {
+    let mut cmd = Command::new("cargo");
+    cmd.args(["bench", "-p", "dimvexa", "--bench", "m0", "--locked"])
+        .current_dir(dir);
+    if let Some(t) = target_dir {
+        cmd.env("CARGO_TARGET_DIR", t);
+    }
+    if layout > 0 {
+        // The salt is appended to the user's own RUSTFLAGS, so every layout is built with the
+        // same flags as layout 0. Flags that sit in a cargo config (`build.rustflags`) are
+        // replaced by the env var; move them to RUSTFLAGS to keep them in every layout.
+        if std::env::var_os("CARGO_ENCODED_RUSTFLAGS").is_some() {
+            return Err(
+                "CARGO_ENCODED_RUSTFLAGS is set and would hide the layout salt; unset it or use --layouts 1"
+                    .to_string(),
+            );
+        }
+        let mut flags = std::env::var("RUSTFLAGS").unwrap_or_default();
+        if !flags.trim().is_empty() {
+            flags.push(' ');
+        }
+        let _ = write!(flags, "-C metadata=bench-layout-{layout}");
+        cmd.env("RUSTFLAGS", flags);
+    }
+    let out = cmd.output().map_err(|e| format!("cannot run cargo: {e}"))?;
     if !out.status.success() {
         return Err(format!(
             "bench failed:\n{}",
@@ -187,6 +255,8 @@ fn write_baseline(root: &Path, rows: &Rows) -> Result<(), String> {
 
 struct Opts {
     update: bool,
+    against: Option<String>,
+    layouts: usize,
     input: Option<String>,
     threshold: f64,
     runs: usize,
@@ -195,6 +265,8 @@ struct Opts {
 fn parse_opts(args: &[String]) -> Result<Opts, String> {
     let mut o = Opts {
         update: false,
+        against: None,
+        layouts: DEFAULT_LAYOUTS,
         input: None,
         threshold: DEFAULT_THRESHOLD_PCT,
         runs: DEFAULT_RUNS,
@@ -203,12 +275,23 @@ fn parse_opts(args: &[String]) -> Result<Opts, String> {
     while let Some(a) = it.next() {
         match a.as_str() {
             "--update" => o.update = true,
+            "--against" => {
+                o.against = Some(it.next().ok_or("--against needs a git revision")?.clone());
+            }
+            "--layouts" => {
+                o.layouts = it
+                    .next()
+                    .and_then(|v| v.parse().ok())
+                    .filter(|n| *n >= 1)
+                    .ok_or("--layouts needs a positive integer")?;
+            }
             "--input" => o.input = Some(it.next().ok_or("--input needs a file")?.clone()),
             "--threshold" => {
                 o.threshold = it
                     .next()
-                    .and_then(|v| v.parse().ok())
-                    .ok_or("--threshold needs a number (percent)")?;
+                    .and_then(|v| v.parse::<f64>().ok())
+                    .filter(|v| v.is_finite() && *v >= 0.0)
+                    .ok_or("--threshold needs a number of percent, zero or more")?;
             }
             "--runs" => {
                 o.runs = it
@@ -220,13 +303,16 @@ fn parse_opts(args: &[String]) -> Result<Opts, String> {
             other => return Err(format!("unknown option {other}")),
         }
     }
+    if o.against.is_some() && (o.update || o.input.is_some()) {
+        return Err("--against cannot be combined with --update or --input".to_string());
+    }
     Ok(o)
 }
 
-fn report(base: &Rows, now: &Rows, threshold: f64) {
+fn report(base: &Rows, now: &Rows, threshold: f64, base_label: &str) {
     println!(
         "{:<48} {:>10} {:>10} {:>8}",
-        "guarded row", "baseline", "now", "change"
+        "guarded row", base_label, "now", "change"
     );
     for (k, b) in base.iter().filter(|(k, _)| guarded(k)) {
         if let Some(n) = now.get(k) {
@@ -246,8 +332,193 @@ fn report(base: &Rows, now: &Rows, threshold: f64) {
     }
 }
 
+/// Output of a git command in `root`, or the reason it failed.
+fn git(root: &Path, args: &[&str]) -> Result<String, String> {
+    let out = Command::new("git")
+        .args(args)
+        .current_dir(root)
+        .output()
+        .map_err(|e| format!("cannot run git: {e}"))?;
+    if out.status.success() {
+        Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+    } else {
+        Err(format!(
+            "git {} failed: {}",
+            args.join(" "),
+            String::from_utf8_lossy(&out.stderr).trim()
+        ))
+    }
+}
+
+/// A temporary detached worktree of a revision, removed on drop (also after an error).
+struct Worktree {
+    root: std::path::PathBuf,
+    dir: std::path::PathBuf,
+}
+
+impl Worktree {
+    fn create(root: &Path, rev: &str) -> Result<Self, String> {
+        let commit = git(
+            root,
+            &["rev-parse", "--verify", &format!("{rev}^{{commit}}")],
+        )?;
+        let dir = root.join("target").join("bench-ab-worktree");
+        // A leftover from an interrupted run.
+        let _ = git(
+            root,
+            &["worktree", "remove", "--force", &dir.to_string_lossy()],
+        );
+        let _ = std::fs::remove_dir_all(&dir);
+        git(
+            root,
+            &[
+                "worktree",
+                "add",
+                "--detach",
+                &dir.to_string_lossy(),
+                &commit,
+            ],
+        )?;
+        Ok(Self {
+            root: root.to_path_buf(),
+            dir,
+        })
+    }
+}
+
+impl Drop for Worktree {
+    fn drop(&mut self) {
+        let _ = git(
+            &self.root,
+            &["worktree", "remove", "--force", &self.dir.to_string_lossy()],
+        );
+        let _ = git(&self.root, &["worktree", "prune"]);
+    }
+}
+
+/// A/B check: `rev` against the working tree on this machine, in alternating rounds.
+fn execute_against(rev: &str, o: &Opts, root: &Path) -> Result<bool, String> {
+    let short = git(
+        root,
+        &["rev-parse", "--short", &format!("{rev}^{{commit}}")],
+    )?;
+    let wt = Worktree::create(root, rev)?;
+    let target = root.join("target").join("bench-ab-base");
+    println!(
+        "bench-check: A/B on this machine: {rev} ({short}) against the working tree, alternating rounds"
+    );
+    let (mut a_runs, mut b_runs): (Vec<Rows>, Vec<Rows>) = (Vec::new(), Vec::new());
+    loop {
+        println!(
+            "bench-check: round {} of at most {}: {short}, then the working tree",
+            a_runs.len() + 1,
+            o.runs
+        );
+        a_runs.push(run_bench_in(&wt.dir, Some(&target))?);
+        b_runs.push(run_bench(root)?);
+        let (a, b) = (best_of(&a_runs), best_of(&b_runs));
+        if a_runs.len() >= o.runs || slow_rows(&a, &b, o.threshold).is_empty() {
+            break;
+        }
+    }
+    // Layout escalation: a row still slow may be alignment, not code. Rebuild both sides under
+    // another metadata salt and keep the best median per side over every layout tried.
+    let mut layouts_used = 1;
+    // Rows that are slow in the first layout; if escalation clears them, say so below.
+    let initially_slow: Vec<(String, f64, f64)> =
+        slow_rows(&best_of(&a_runs), &best_of(&b_runs), o.threshold);
+    // Best median per side of each layout tried; layout 0 is the rounds above.
+    let mut per_layout: Vec<(Rows, Rows)> = vec![(best_of(&a_runs), best_of(&b_runs))];
+    for layout in 1..o.layouts {
+        let (a, b) = (best_of(&a_runs), best_of(&b_runs));
+        if slow_rows(&a, &b, o.threshold).is_empty() {
+            break;
+        }
+        println!(
+            "bench-check: a guarded row is still slow; trying code layout {} of {} (same code, other link order)",
+            layout + 1,
+            o.layouts
+        );
+        let ta = root
+            .join("target")
+            .join(format!("bench-ab-base-layout{layout}"));
+        let tb = root
+            .join("target")
+            .join(format!("bench-ab-tree-layout{layout}"));
+        let ra = run_bench_layout(&wt.dir, Some(&ta), layout)?;
+        let rb = run_bench_layout(root, Some(&tb), layout)?;
+        per_layout.push((ra.clone(), rb.clone()));
+        a_runs.push(ra);
+        b_runs.push(rb);
+        layouts_used += 1;
+    }
+    let (a, b) = (best_of(&a_runs), best_of(&b_runs));
+    let missing: Vec<&String> = a
+        .keys()
+        .filter(|k| guarded(k) && !b.contains_key(*k))
+        .collect();
+    report(&a, &b, o.threshold, &short);
+    for m in &missing {
+        eprintln!(
+            "error: guarded row `{m}` exists in {rev} but not in the working tree (renamed?)"
+        );
+    }
+    let slow = slow_rows(&a, &b, o.threshold);
+    for (k, x, y) in &initially_slow {
+        if !slow.iter().any(|(s, _, _)| s == k) && layouts_used > 1 {
+            let cells: Vec<String> = per_layout
+                .iter()
+                .enumerate()
+                .filter_map(|(i, (la, lb))| {
+                    Some(format!("L{i} {:.3}|{:.3}", la.get(k)?, lb.get(k)?))
+                })
+                .collect();
+            println!(
+                "bench-check: note: `{k}` was {:.1}% slower in the first layout ({x:.3} -> {y:.3}) and passes only on the best layout per side after {layouts_used} layouts ({}); a real slowdown smaller than that spread can pass this way",
+                (y / x - 1.0) * 100.0,
+                cells.join("  ")
+            );
+        }
+    }
+    if layouts_used > 1 {
+        for (k, _, _) in &slow {
+            let cells: Vec<String> = per_layout
+                .iter()
+                .enumerate()
+                .filter_map(|(i, (la, lb))| {
+                    Some(format!("L{i} {:.3}|{:.3}", la.get(k)?, lb.get(k)?))
+                })
+                .collect();
+            println!(
+                "bench-check: `{k}` per layout ({short}|now): {}",
+                cells.join("  ")
+            );
+        }
+    }
+    println!(
+        "bench-check: {} run(s) per side in {layouts_used} layout(s), threshold {}%, floor {ABS_FLOOR_NS} ns, best median per row and side",
+        a_runs.len(),
+        o.threshold
+    );
+    if layouts_used == 1 && slow.iter().any(|(k, _, _)| layout_sensitive(k)) {
+        eprintln!(
+            "hint: a flagged row is a tiny micro row, which a rebuild alone can move by about 15 percent (code layout, docs/benchmarks/M0.md); rerun with `--layouts 5` to see whether it is only that. A row that stays slow in every layout is a regression."
+        );
+    }
+    for (k, x, y) in &slow {
+        eprintln!(
+            "error: `{k}` is {:.1}% slower than {rev} in {layouts_used} layout(s) ({x:.3} -> {y:.3} ns/op); explain it or fix it",
+            (y / x - 1.0) * 100.0
+        );
+    }
+    Ok(slow.is_empty() && missing.is_empty())
+}
+
 fn execute(args: &[String], root: &Path) -> Result<bool, String> {
     let o = parse_opts(args)?;
+    if let Some(rev) = &o.against {
+        return execute_against(rev, &o, root);
+    }
     if o.update {
         let runs: Result<Vec<Rows>, String> = (0..UPDATE_RUNS).map(|_| run_bench(root)).collect();
         let rows = median_of(&runs?);
@@ -278,7 +549,7 @@ fn execute(args: &[String], root: &Path) -> Result<bool, String> {
         .keys()
         .filter(|k| guarded(k) && !best.contains_key(*k))
         .collect();
-    report(&base, &best, o.threshold);
+    report(&base, &best, o.threshold, "baseline");
     for m in &missing {
         eprintln!(
             "error: guarded row `{m}` is in the baseline but not in the bench output (renamed? re-record with --update)"
@@ -340,6 +611,57 @@ mod tests {
         let runs = [mk(3.0), mk(1.0), mk(2.0)];
         assert!((best_of(&runs)["a"] - 1.0).abs() < 1e-12);
         assert!((median_of(&runs)["a"] - 2.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn threshold_must_be_a_sane_number() {
+        let a = |v: &[&str]| parse_opts(&v.iter().map(|s| (*s).to_string()).collect::<Vec<_>>());
+        assert!(a(&["--threshold", "NaN"]).is_err());
+        assert!(a(&["--threshold", "-5"]).is_err());
+        assert!(a(&["--threshold", "inf"]).is_err());
+        assert_eq!(a(&["--threshold", "0"]).map(|o| o.threshold), Ok(0.0));
+    }
+
+    #[test]
+    fn a_slowdown_in_every_layout_is_still_slow() {
+        // Best median per side over layouts: a real 15 percent slowdown is slow in all of them.
+        let mk = |v: f64| Rows::from([("slice affine apply_slice 10^5".to_string(), v)]);
+        let a = best_of(&[mk(1.00), mk(1.02), mk(0.99)]);
+        let b = best_of(&[mk(1.15), mk(1.17), mk(1.14)]);
+        assert_eq!(slow_rows(&a, &b, 10.0).len(), 1);
+        // A layout mode: one of the new side's layouts is as fast as the old one.
+        let b = best_of(&[mk(1.15), mk(1.00), mk(1.14)]);
+        assert_eq!(slow_rows(&a, &b, 10.0).len(), 0);
+    }
+
+    #[test]
+    fn layout_escalation_is_opt_in() {
+        let a = |v: &[&str]| parse_opts(&v.iter().map(|s| (*s).to_string()).collect::<Vec<_>>());
+        assert_eq!(a(&["--against", "main"]).map(|o| o.layouts), Ok(1));
+        assert_eq!(
+            a(&["--against", "main", "--layouts", "5"]).map(|o| o.layouts),
+            Ok(5)
+        );
+        assert!(layout_sensitive("slice affine apply_slice 10^3"));
+        assert!(layout_sensitive("single call via black_box(&conv)"));
+        assert!(!layout_sensitive("slice affine apply_slice 10^6"));
+        assert!(!layout_sensitive(
+            "apply_exact_f64 (affine, correctly rounded)"
+        ));
+    }
+
+    #[test]
+    fn against_parses_and_excludes_baseline_modes() {
+        let a = |v: &[&str]| parse_opts(&v.iter().map(|s| (*s).to_string()).collect::<Vec<_>>());
+        assert_eq!(
+            a(&["--against", "main"]).map(|o| o.against),
+            Ok(Some("main".to_string()))
+        );
+        assert!(a(&["--against"]).is_err());
+        assert!(a(&["--against", "main", "--update"]).is_err());
+        assert_eq!(a(&["--layouts", "1"]).map(|o| o.layouts), Ok(1));
+        assert!(a(&["--layouts", "0"]).is_err());
+        assert!(a(&["--against", "main", "--input", "f"]).is_err());
     }
 
     #[test]

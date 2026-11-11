@@ -208,6 +208,18 @@ P	plain	defined	si	poise	NIST SP 811 (2008), Appendix B.8 (poise = 1.0 E-01 Pa s
 ## kinematic_viscosity
 St	plain	defined	si	stokes	NIST SP 811 (2008), Appendix B.8 (stokes = 1.0 E-04 m^2/s)
 
+## volume
+bbl	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)
+
+## pressure
+psig	gauge_pressure	defined	none	-	NIST SP 811 (2008), Appendix B (pound-force per square inch); gauge pressure is measured from the ambient pressure (ADR-013)
+barg	gauge_pressure	defined	none	-	NIST SP 811 (2008), Appendix B (bar = 100 kPa); gauge pressure is measured from the ambient pressure (ADR-013)
+Pag	gauge_pressure	defined	si	-	BIPM SI Brochure (2019), Table 4 (pascal); gauge pressure is measured from the ambient pressure (ADR-013)
+
+## volume
+Nm3	normal_volume	defined	none	-	DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa
+scf	standard_volume	defined	none	-	NIST SP 811 (2008), Appendix B (foot, so the cubic foot is 0.3048^3 m^3); reference state 60 degF and 14.696 psia per GPA Standard 2145 (edition not checked)
+
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note
 ton	ton_short, ton_long, tonne	-	short ton (2000 lb), long ton (2240 lb) and metric tonne (1000 kg) are all called ton

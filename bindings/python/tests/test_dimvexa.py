@@ -76,5 +76,29 @@ def test_unit_table() -> None:
     info = dimvexa.unit_info("m")
     assert info is not None
     assert info["symbol"] == "m"
+    assert info["conditions"] is None
     assert dimvexa.unit_info("nope") is None
+
+
+def test_reference_state_units() -> None:
+    # ADR-013: gauge pressures and gas volumes carry their reference state as `conditions`.
+    nm3 = dimvexa.unit_info("Nm3")
+    assert nm3 is not None
+    assert nm3["kind"] == "normal_volume"
+    assert "273.15 K" in nm3["conditions"]
+    assert "101 325 Pa" in nm3["conditions"]
+    scf = dimvexa.unit_info("scf")
+    assert scf is not None
+    assert "14.696 psia" in scf["conditions"]
+    psig = dimvexa.unit_info("psig")
+    assert psig is not None
+    assert psig["kind"] == "gauge_pressure"
+    assert psig["conditions"]
+    # Same reference converts, a different one is refused, never guessed.
+    assert dimvexa.convert(60.0, "Nm3/h", "Nm3/min") == 1.0
+    assert dimvexa.convert(1.0, "bbl", "L") == 158.987294928
+    for a, b in [("Nm3", "m3"), ("scf", "Nm3"), ("psig", "bar")]:
+        with pytest.raises(dimvexa.DimvexaError) as err:
+            dimvexa.convert(1.0, a, b)
+        assert err.value.code == "refused"
     assert dimvexa.data_version().startswith("v")

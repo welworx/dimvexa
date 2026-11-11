@@ -321,6 +321,7 @@ impl Registry {
             unit.exactness(),
             sources,
         )
+        .with_conditions(unit.conditions())
         .with_difference(difference))
     }
 
@@ -415,7 +416,29 @@ impl Registry {
             Expr::Unit(s) => self.resolve_symbol(s),
             Expr::Mul(a, b) => self.resolve(a)?.mul(&self.resolve(b)?),
             Expr::Div(a, b) => self.resolve(a)?.div(&self.resolve(b)?),
-            Expr::Pow(a, n) => self.resolve(a)?.pow(*n),
+            Expr::Pow(a, n) => {
+                // `Nm3` lexes as `Nm` to the power 3; a registered reference unit written with
+                // trailing digits wins (ADR-013).
+                if let Expr::Unit(s) = &**a {
+                    let joined = format!("{s}{n}");
+                    if self.get(&joined).is_some_and(|u| u.kind().is_reference()) {
+                        // A unit never changes meaning: if the plain reading (`Nm`) is also a
+                        // unit, `Nm3` could be either, so it is an error, not a guess.
+                        if self.resolve_symbol(s).is_ok() {
+                            return Err(Error::AmbiguousExpression {
+                                input: joined.clone(),
+                                message: format!(
+                                    "'{s}' is a unit and '{joined}' is also a unit with a reference \
+                                     state; rename your '{s}' (a config unit) so that '{joined}' \
+                                     has one meaning"
+                                ),
+                            });
+                        }
+                        return self.resolve_symbol(&joined);
+                    }
+                }
+                self.resolve(a)?.pow(*n)
+            }
         }
     }
 

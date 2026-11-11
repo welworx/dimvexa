@@ -786,3 +786,92 @@ prefixes = "si"
 namespace = "std"
 source = "NIST SP 811 (2008), Appendix B.8 (stokes = 1.0 E-04 m^2/s)"
 note = "kinematic viscosity, CGS; 1 St = 1 cm^2/s; cSt is the SI prefix c on St"
+
+[[unit]]
+symbol = "bbl"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "9936705933/62500000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)"
+note = "petroleum (oil) barrel = 42 gal_us = 42 * 231 in^3 = 158.987294928 L exactly. The US liquid barrel (31.5 gal) and the dry barrel (7056 in^3) are different units and not included, so read bbl as the oil barrel only"
+
+[[unit]]
+symbol = "psig"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "gauge_pressure"
+shape = "linear"
+factor = "8896443230521/1290320000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (pound-force per square inch); gauge pressure is measured from the ambient pressure (ADR-013)"
+note = "same size as psi; the value is relative to the ambient pressure, which is not part of the unit, so psig converts only to other gauge units (barg, Pag) and never to absolute pressure"
+conditions = "gauge: measured from the local ambient pressure, which is not part of the unit"
+
+[[unit]]
+symbol = "barg"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "gauge_pressure"
+shape = "linear"
+factor = "100000/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (bar = 100 kPa); gauge pressure is measured from the ambient pressure (ADR-013)"
+note = "same size as bar; gauge reference, see psig"
+conditions = "gauge: measured from the local ambient pressure, which is not part of the unit"
+
+[[unit]]
+symbol = "Pag"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "gauge_pressure"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "si"
+namespace = "si"
+source = "BIPM SI Brochure (2019), Table 4 (pascal); gauge pressure is measured from the ambient pressure (ADR-013)"
+note = "same size as Pa; gauge reference, see psig. kPag and MPag are SI prefixes on Pag"
+conditions = "gauge: measured from the local ambient pressure, which is not part of the unit"
+
+[[unit]]
+symbol = "Nm3"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "normal_volume"
+shape = "linear"
+factor = "1/1"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa"
+note = "normal cubic metre: one m^3 of gas at 273.15 K and 101 325 Pa (ADR-013). Some users mean 20 degC or 15 degC; those are not this unit. Converts only to units with the same reference (Nm3/h to Nm3/min); to m3 or scf it is refused because that needs the actual state and a gas model (ADR-001)"
+conditions = "273.15 K (0 degC), 101 325 Pa (DIN 1343 normal condition)"
+
+[[unit]]
+symbol = "scf"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "standard_volume"
+shape = "linear"
+factor = "55306341/1953125000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (foot, so the cubic foot is 0.3048^3 m^3); reference state 60 degF and 14.696 psia per GPA Standard 2145 (edition not checked)"
+note = "standard cubic foot = ft^3 of gas at 60 degF and 14.696 psia (ADR-013). Some contracts use 14.73 psia; that is not this unit. Converts only within its own reference (scf/min to scf/h); to m3, ft3 or Nm3 it is refused (ADR-001)"
+conditions = "60 degF (288.706 K, rounded), 14.696 psia"

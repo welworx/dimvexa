@@ -14,7 +14,8 @@ PyPI and npm (`docs/releasing.md`).
 1. `cargo xtask ci` is green on main; the nightly workflow has no open failure issue.
 2. Bump the version in `Cargo.toml` (`[workspace.package]` and the `[workspace.dependencies]`
    entries), `bindings/python/Cargo.toml` (version and its `dimvexa` dependency) and
-   `bindings/wasm/Cargo.toml`, then refresh both bindings' `Cargo.lock` (`cargo update
+   `bindings/wasm/Cargo.toml` and the Excel manifest `bindings/excel/manifest.xml`
+   (`<Version>` = the version plus `.0`), then refresh both bindings' `Cargo.lock` (`cargo update
    --workspace` in `bindings/wasm` and `bindings/python`; a stale lock fails the release build,
    which uses `--locked`). All versions must be equal: `scripts/check-versions.sh`. Check the
    locks with `cargo metadata --locked --format-version 1 --manifest-path bindings/<x>/Cargo.toml`.

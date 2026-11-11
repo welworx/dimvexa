@@ -38,6 +38,9 @@ const quoted = (t) => t
       .map((a) => (a === null ? undefined : a));
     let got;
     try { got = String(await associated[m[1].toUpperCase()](...args)); } catch (e) { got = "error: " + e.message; }
+    // The data version, its hash and the unit count change with every unit added to the table,
+    // so the fixture holds placeholders (as the CLI snapshots do).
+    got = got.replace(/v\d+\+fnv1a64:[0-9a-f]+/, "v<N>+fnv1a64:<hash>").replace(/\d+ units/, "<N> units");
     let pass;
     if (expected.startsWith("error:")) {
       pass = got.includes(quoted(expected));

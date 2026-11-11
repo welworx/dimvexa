@@ -5,7 +5,7 @@ use core::fmt;
 
 use crate::dim::Dim;
 use crate::error::{Error, Result};
-use crate::expr::{Expr, is_valid_symbol};
+use crate::expr::{Expr, is_valid_symbol, is_valid_symbol_for};
 use crate::kind::{Exactness, Kind, Shape};
 use crate::prefix::PrefixMode;
 use crate::ratio::Ratio;
@@ -40,6 +40,9 @@ pub struct UnitDef {
     pub source: &'static str,
     /// Free-text note (derivation, caveats).
     pub note: &'static str,
+    /// The reference state the unit is defined at (ADR-013), for example
+    /// `273.15 K, 101 325 Pa`. Empty for a unit without one; required for a reference kind.
+    pub conditions: &'static str,
 }
 
 /// A bare symbol that is deliberately rejected, with the explicit symbols to use instead.
@@ -71,6 +74,7 @@ pub struct Unit {
     namespace: String,
     source: String,
     note: String,
+    conditions: String,
 }
 
 impl Unit {
@@ -103,7 +107,7 @@ impl Unit {
             symbol: symbol.to_string(),
             message: message.to_string(),
         };
-        if !is_valid_symbol(symbol) {
+        if !is_valid_symbol_for(symbol, kind) {
             return Err(bad(
                 "symbol must be non-empty and contain only letters, '_' or the degree sign",
             ));
@@ -126,6 +130,7 @@ impl Unit {
             namespace: "std".to_string(),
             source: String::new(),
             note: String::new(),
+            conditions: String::new(),
         })
     }
 
@@ -159,11 +164,15 @@ impl Unit {
             }
             unit.aliases.push((*alias).to_string());
         }
+        if def.kind.is_reference() && def.conditions.trim().is_empty() {
+            return Err(bad("a unit with a reference state needs its conditions"));
+        }
         unit.exactness = def.exactness;
         unit.prefixes = def.prefixes;
         unit.namespace = def.namespace.to_string();
         unit.source = def.source.to_string();
         unit.note = def.note.to_string();
+        unit.conditions = def.conditions.to_string();
         Ok(unit)
     }
 
@@ -200,6 +209,13 @@ impl Unit {
         self.exactness = exactness;
         self.source = source.to_string();
         self.note = note.to_string();
+        self
+    }
+
+    /// Sets the reference state text (ADR-013), for a unit that is defined from a reference unit.
+    #[must_use]
+    pub fn with_conditions(mut self, conditions: &str) -> Self {
+        self.conditions = conditions.to_string();
         self
     }
 
@@ -285,6 +301,13 @@ impl Unit {
     pub fn note(&self) -> &str {
         &self.note
     }
+
+    /// The reference state the unit is defined at (`273.15 K, 101 325 Pa` for `Nm3`), or an
+    /// empty string for a unit without one (ADR-013).
+    #[must_use]
+    pub fn conditions(&self) -> &str {
+        &self.conditions
+    }
 }
 
 /// A resolved unit expression such as `km/h` or `kW.h`: dimension, kind and the exact
@@ -297,6 +320,10 @@ pub struct UnitExpr {
     expr: Expr,
     dim: Dim,
     kind: Kind,
+    /// Signed power of the reference state: 1 for `Nm3`, -1 for `1/Nm3`, 0 without one.
+    ref_exp: i32,
+    /// The reference state text of the unit that carries the reference (ADR-013), empty without.
+    conditions: String,
     factor: Ratio,
     offset: Ratio,
     exactness: Exactness,
@@ -314,6 +341,8 @@ impl UnitExpr {
             expr: Expr::One,
             dim: Dim::NONE,
             kind: Kind::Plain,
+            ref_exp: 0,
+            conditions: String::new(),
             factor: Ratio::ONE,
             offset: Ratio::ZERO,
             exactness: Exactness::Defined,
@@ -335,11 +364,38 @@ impl UnitExpr {
             expr,
             dim,
             kind,
+            ref_exp: if kind.is_reference() { 1 } else { 0 },
+            conditions: String::new(),
             factor,
             offset,
             exactness,
             sources,
             difference: None,
+        }
+    }
+
+    pub(crate) fn with_conditions(mut self, conditions: &str) -> Self {
+        if self.kind.is_reference() {
+            self.conditions = conditions.to_string();
+        }
+        self
+    }
+
+    /// The reference state of the unit that gives this expression its reference kind
+    /// (`273.15 K (0 degC), 101 325 Pa` for `Nm3/h`), or an empty string without one.
+    #[must_use]
+    pub fn conditions(&self) -> &str {
+        &self.conditions
+    }
+
+    /// The conditions of whichever operand carries the reference, if the result has one.
+    fn composed_conditions(&self, other: &Self, kind: Kind) -> String {
+        if !kind.is_reference() {
+            String::new()
+        } else if self.kind.is_reference() {
+            self.conditions.clone()
+        } else {
+            other.conditions.clone()
         }
     }
 
@@ -383,6 +439,13 @@ impl UnitExpr {
         self.kind
     }
 
+    /// The signed power of the reference state (ADR-013): 1 for `Nm3` or `Nm3/h`, -1 for `h/Nm3`,
+    /// 0 for a unit without a reference. Two units convert only when kind and power agree.
+    #[must_use]
+    pub const fn reference_power(&self) -> i32 {
+        self.ref_exp
+    }
+
     /// Exact factor to the coherent SI unit.
     #[must_use]
     pub const fn factor(&self) -> Ratio {
@@ -415,6 +478,37 @@ impl UnitExpr {
     #[must_use]
     pub fn sources(&self) -> &[String] {
         &self.sources
+    }
+
+    /// Kind and reference power of a product (`sign` 1) or quotient (`sign` -1). A reference
+    /// survives (`Nm3/h` is still a normal volume per time) and its power is tracked, so
+    /// `Nm3/m3` and `m3/Nm3` differ; the same reference cancels; two different references in
+    /// one expression are refused.
+    fn composed_reference(&self, other: &Self, sign: i32) -> Result<(Kind, i32)> {
+        let overflow = || Error::Overflow {
+            operation: "reference power",
+        };
+        let other_exp = other.ref_exp.checked_mul(sign).ok_or_else(overflow)?;
+        match (self.kind.is_reference(), other.kind.is_reference()) {
+            (true, true) if self.kind != other.kind => Err(Error::Refused {
+                reason: format!(
+                    "'{}' ({}) and '{}' ({}) each carry a different reference state and cannot be combined",
+                    self.expr, self.kind, other.expr, other.kind
+                ),
+                suggestions: Vec::new(),
+            }),
+            (true, true) => {
+                let exp = self.ref_exp.checked_add(other_exp).ok_or_else(overflow)?;
+                Ok(if exp == 0 {
+                    (Kind::Plain, 0)
+                } else {
+                    (self.kind, exp)
+                })
+            }
+            (true, false) => Ok((self.kind, self.ref_exp)),
+            (false, true) => Ok((other.kind, other_exp)),
+            (false, false) => Ok((Kind::Plain, 0)),
+        }
     }
 
     fn merged_sources(&self, other: &Self) -> Vec<String> {
@@ -465,10 +559,14 @@ impl UnitExpr {
             return Ok(self.clone());
         }
         self.refuse_affine(rhs)?;
+        let (kind, ref_exp) = self.composed_reference(rhs, 1)?;
+        let conditions = self.composed_conditions(rhs, kind);
         Ok(Self {
             expr: Expr::Mul(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_add(rhs.dim)?,
-            kind: Kind::Plain,
+            kind,
+            ref_exp,
+            conditions,
             factor: self.factor.checked_mul(rhs.factor)?,
             offset: Ratio::ZERO,
             exactness: self.exactness.combine(rhs.exactness),
@@ -487,10 +585,14 @@ impl UnitExpr {
             return Ok(self.clone());
         }
         self.refuse_affine(rhs)?;
+        let (kind, ref_exp) = self.composed_reference(rhs, -1)?;
+        let conditions = self.composed_conditions(rhs, kind);
         Ok(Self {
             expr: Expr::Div(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_sub(rhs.dim)?,
-            kind: Kind::Plain,
+            kind,
+            ref_exp,
+            conditions,
             factor: self.factor.checked_div(rhs.factor)?,
             offset: Ratio::ZERO,
             exactness: self.exactness.combine(rhs.exactness),
@@ -511,10 +613,26 @@ impl UnitExpr {
             return Ok(self.clone());
         }
         self.refuse_affine(&Self::unity())?;
+        let ref_exp = self.ref_exp.checked_mul(exp).ok_or(Error::Overflow {
+            operation: "reference power",
+        })?;
+        // A power of 0 cancels the reference: `(scf)^0` is the plain number 1, not a
+        // dimensionless standard volume that would let an actual volume pass as `scf`.
+        let keeps_reference = self.kind.is_reference() && ref_exp != 0;
         Ok(Self {
             expr: Expr::Pow(Box::new(self.expr.clone()), exp),
             dim: self.dim.checked_scale(exp)?,
-            kind: Kind::Plain,
+            kind: if keeps_reference {
+                self.kind
+            } else {
+                Kind::Plain
+            },
+            ref_exp,
+            conditions: if keeps_reference {
+                self.conditions.clone()
+            } else {
+                String::new()
+            },
             factor: self.factor.checked_pow(exp)?,
             offset: Ratio::ZERO,
             exactness: self.exactness,
@@ -595,6 +713,7 @@ mod tests {
             namespace: "std",
             source: "test",
             note: "",
+            conditions: "",
         };
         assert_eq!(
             Unit::from_def(&d).unwrap().factor(),

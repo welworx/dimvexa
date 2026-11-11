@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # One version for everything: the Rust crates, the Python package (version comes from
 # bindings/python/Cargo.toml via maturin) and the npm package (build.sh reads
-# bindings/wasm/Cargo.toml). Fails if any of them differ from [workspace.package] version.
+# bindings/wasm/Cargo.toml) and the Excel add-in manifest (`<Version>` is the same version with
+# a fourth part `.0`, as Office requires). Fails if any of them differ from [workspace.package]
+# version.
 # Prints the version on success. Used by .github/workflows/release.yml.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -17,6 +19,8 @@ for c in dimvexa-core dimvexa-data dimvexa-config dimvexa; do
   v=$(sed -n "s/^$c = { version = \"\([^\"]*\)\".*/\1/p" Cargo.toml)
   check "Cargo.toml [workspace.dependencies] $c" "$v"
 done
+manifest=$(sed -n 's|.*<Version>\(.*\)</Version>.*|\1|p' bindings/excel/manifest.xml | head -n 1)
+check "bindings/excel/manifest.xml <Version> (workspace version plus .0)" "${manifest%.0}"
 v=$(sed -n 's/^dimvexa = "\([^"]*\)"/\1/p' bindings/python/Cargo.toml)
 check "bindings/python/Cargo.toml dependency dimvexa" "$v"
 [ "$bad" = 0 ] || exit 1

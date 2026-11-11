@@ -1367,6 +1367,8 @@ struct Detail {
     offset: String,
     sources: Vec<String>,
     note: Option<String>,
+    /// Reference state of the unit (ADR-013), only for a table unit that has one.
+    conditions: Option<String>,
     /// `(file, line)` of the config that defines the unit, if it is a user unit.
     origin: Option<(String, usize)>,
     /// `(file, line)` of the config `[map]` entry that makes the queried name mean this unit.
@@ -1394,6 +1396,7 @@ fn unit_detail(
             offset: u.offset().to_fraction_string(),
             sources: vec![u.source().to_string()],
             note: Some(u.note().to_string()),
+            conditions: Some(u.conditions().to_string()).filter(|c| !c.is_empty()),
             origin: user_unit(user, u.symbol()).map(|c| (c.origin.clone(), c.line)),
             mapping: mappings
                 .iter()
@@ -1418,6 +1421,7 @@ fn unit_detail(
         offset: e.offset().to_fraction_string(),
         sources: e.sources().to_vec(),
         note: None,
+        conditions: None,
         origin: None,
         mapping: None,
     })
@@ -1448,6 +1452,9 @@ fn detail_text(d: &Detail) -> String {
     }
     line("factor to SI", d.factor.clone());
     line("offset to SI", d.offset.clone());
+    if let Some(c) = &d.conditions {
+        line("conditions", c.clone());
+    }
     for src in &d.sources {
         line("source", src.clone());
     }
@@ -1482,7 +1489,7 @@ fn detail_json(d: &Detail) -> String {
     let opt = |v: Option<&str>| v.map_or_else(|| "null".to_string(), json_string);
     let dims: Vec<String> = d.dim.exponents().iter().map(ToString::to_string).collect();
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"symbol\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"note\":{},\"origin\":{},\"mapping\":{}}}}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"symbol\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"conditions\":{},\"note\":{},\"origin\":{},\"mapping\":{}}}}}",
         json_string(&schema_id("units")),
         json_string(&dimvexa::data_version()),
         json_string(&d.symbol),
@@ -1496,6 +1503,7 @@ fn detail_json(d: &Detail) -> String {
         json_string(&d.factor),
         json_string(&d.offset),
         list(&d.sources),
+        opt(d.conditions.as_deref()),
         opt(d.note.as_deref()),
         d.origin.as_ref().map_or_else(
             || "null".to_string(),
@@ -2058,7 +2066,7 @@ mod tests {
         assert!(out.lines().any(|l| l.starts_with("ton\t")));
         let (code, out, _) = run_str(&["units", "--groups"]);
         assert_eq!(code, 0);
-        assert!(out.lines().any(|l| l == "volume\t12"));
+        assert!(out.lines().any(|l| l == "volume\t15"));
         let (code, out, _) = run_str(&["units", "psi"]);
         assert_eq!(code, 0);
         assert!(out.contains("group         pressure"));

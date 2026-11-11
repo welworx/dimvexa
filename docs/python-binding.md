@@ -7,7 +7,7 @@ Decision record: [ADR-012](adr/012-python-binding.md). Code: `bindings/python`.
 * PyO3 + maturin crate (own Cargo workspace, `abi3-py39`), package `dimvexa`, extension
   `dimvexa._dimvexa`, type stubs and `py.typed`.
 * API: `convert`, `conversion`, `quantity`, `units`, `unit_info`, `data_version`, `DimvexaError`.
-* 10 pytest tests. Local checks that pass today: `maturin develop && pytest`, `ruff check`,
+* 14 pytest tests (`unit_info` also returns `conditions`, the reference state of gauge and gas-volume units, else `None`). Local checks that pass today: `maturin develop && pytest`, `ruff check`,
   `ruff format --check`, `mypy` (strict), `cargo clippy`, `cargo fmt`.
 * Lint and type configuration is in `bindings/python/pyproject.toml` (ruff: E, F, W, I, B, UP, N,
   SIM, PT, RUF, D with Google docstrings; mypy strict).

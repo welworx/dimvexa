@@ -4,7 +4,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use dimvexa_core::{Kind, Ratio, is_valid_symbol};
+use dimvexa_core::{Kind, Ratio, is_valid_symbol, is_valid_symbol_for};
 
 use crate::chains;
 use crate::toml_lite::{self, Table};
@@ -168,7 +168,8 @@ pub fn run(root: &Path) -> Result<Report, String> {
             }
         };
         let at = format!("{fname}:{} unit '{sym}'", t.line);
-        if !is_valid_symbol(&sym) {
+        let kind_of_row = t.str("kind").ok().and_then(Kind::from_name);
+        if !kind_of_row.map_or_else(|| is_valid_symbol(&sym), |k| is_valid_symbol_for(&sym, k)) {
             err(format!("{at}: symbol is not well-formed"));
         }
         for key in ["source", "note", "namespace"] {
@@ -188,6 +189,14 @@ pub fn run(root: &Path) -> Result<Report, String> {
         let kind = t.str("kind").ok().and_then(Kind::from_name);
         if kind.is_none() {
             err(format!("{at}: missing or unknown 'kind'"));
+        }
+        if kind.is_some_and(Kind::is_reference)
+            && t.opt_str("conditions")
+                .map_or(true, |c| c.is_none_or(|c| c.trim().is_empty()))
+        {
+            err(format!(
+                "{at}: a unit with a reference state needs 'conditions' (ADR-013)"
+            ));
         }
         let dim = match t.ints("dim") {
             Ok(d) if d.len() == 7 && d.iter().all(|e| (-20..=20).contains(e)) => d,
@@ -248,7 +257,9 @@ pub fn run(root: &Path) -> Result<Report, String> {
             Err(e) => err(format!("{at}: {e}")),
         }
         for n in &all_names {
-            if !is_valid_symbol(n) {
+            if !(is_valid_symbol(n)
+                || (n == &sym && kind_of_row.is_some_and(|k| is_valid_symbol_for(n, k))))
+            {
                 err(format!("{at}: name '{n}' is not well-formed"));
             }
             if let Some(owner) = names.insert(n.clone(), sym.clone()) {

@@ -275,3 +275,105 @@ fn kelvin_inside_a_compound_unit_is_the_difference_kind() {
 const fn r_int(n: i128) -> Ratio {
     Ratio::from_int(n)
 }
+
+/// ADR-013: reference-state units convert within their own reference and are refused
+/// everywhere else, including inside compound units.
+#[test]
+fn reference_state_units_convert_only_within_their_reference() {
+    let reg = dimvexa_data::registry().unwrap();
+    // Sizes: scf is the cubic foot, bbl the 42 US gallon barrel, psig the psi.
+    assert_eq!(
+        reg.parse("scf").unwrap().factor(),
+        Ratio::new(55_306_341, 1_953_125_000).unwrap()
+    );
+    assert_eq!(reg.parse("Nm3").unwrap().factor(), Ratio::ONE);
+    assert_eq!(
+        reg.parse("bbl").unwrap().factor(),
+        reg.parse("gal_us")
+            .unwrap()
+            .factor()
+            .checked_mul(Ratio::from_int(42))
+            .unwrap()
+    );
+    assert_eq!(
+        reg.parse("psig").unwrap().factor(),
+        reg.parse("psi").unwrap().factor()
+    );
+    // Same reference, including compounds and prefixes (`Nm^3` is the same unit as `Nm3`).
+    for (from, to) in [
+        ("Nm3/h", "Nm3/min"),
+        ("scf/min", "scf/h"),
+        ("psig", "barg"),
+        ("kPag", "psig"),
+        ("Nm^3/h", "Nm3/s"),
+    ] {
+        assert!(reg.conversion(from, to).is_ok(), "{from} -> {to}");
+    }
+    // Different reference, or an actual (unreferenced) quantity: refused, never guessed.
+    for (from, to) in [
+        ("Nm3", "m3"),
+        ("m3", "Nm3"),
+        ("Nm3/h", "m3/h"),
+        ("scf", "Nm3"),
+        ("scf", "ft3"),
+        ("psig", "bar"),
+        ("Pa", "barg"),
+        ("psig", "psi"),
+    ] {
+        let err = reg.conversion(from, to).unwrap_err();
+        assert_eq!(err.code(), "refused", "{from} -> {to}");
+    }
+    // Two references in one expression are refused.
+    assert_eq!(reg.parse("Nm3.psig").unwrap_err().code(), "refused");
+    // A digit-ending symbol exists only for reference units: `m3` is still m^3.
+    assert_eq!(reg.parse("m3").unwrap().kind().name(), "plain");
+}
+
+/// Review findings on ADR-013: the power of the reference matters, a density never turns a
+/// reference volume into an actual one, and a digit-ending name never changes meaning.
+#[test]
+fn reference_state_edge_cases_are_refused() {
+    let reg = dimvexa_data::registry().unwrap();
+    // The power of the reference is part of the unit.
+    for (from, to) in [
+        ("Nm3/m3", "m3/Nm3"),
+        ("Nm3/m3", "L/Nm3"),
+        ("psig/Pa", "Pa/psig"),
+        ("psig/Pa^2", "1/psig"),
+    ] {
+        assert_eq!(
+            reg.conversion(from, to).unwrap_err().code(),
+            "refused",
+            "{from} -> {to}"
+        );
+    }
+    // The same reference cancels to a plain number.
+    assert_eq!(reg.parse("Nm3/Nm3").unwrap().kind().name(), "plain");
+    assert!(reg.conversion("Nm3.h/Nm3", "min").is_ok());
+    // A digit-ending reference unit prints in a form that reads back.
+    let squared = reg.parse("(Nm3)^2").unwrap();
+    assert_eq!(squared.reference_power(), 2);
+    assert_eq!(
+        reg.parse(&squared.to_string()).unwrap().reference_power(),
+        2
+    );
+}
+
+/// A unit never changes meaning: if `Nm` is a unit too, `Nm3` is an error.
+#[test]
+fn nm3_is_an_error_when_nm_is_also_a_unit() {
+    use dimvexa_core::{Dim, Ratio, Unit};
+    let mut reg = dimvexa_data::registry().unwrap();
+    assert!(reg.parse("Nm3").is_ok());
+    let nm = Unit::linear("Nm", Dim::new([1, 2, -2, 0, 0, 0, 0]), Ratio::ONE).unwrap();
+    reg.register(nm).unwrap();
+    for text in ["Nm3", "Nm^3"] {
+        assert_eq!(
+            reg.parse(text).unwrap_err().code(),
+            "ambiguous_expression",
+            "{text}"
+        );
+    }
+    // The plain unit itself is untouched.
+    assert!(reg.parse("Nm").is_ok());
+}

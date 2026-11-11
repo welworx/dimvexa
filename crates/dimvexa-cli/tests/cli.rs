@@ -379,7 +379,7 @@ fn units_groups_lists_only_the_groups() {
     let r = dimvexa(&["units", "--groups"]);
     assert_eq!(r.code, 0);
     snapshot("units_groups.txt", &r.stdout);
-    assert!(r.stdout.lines().any(|l| l == "volume\t12"));
+    assert!(r.stdout.lines().any(|l| l == "volume\t15"));
     assert!(!r.stdout.contains("psi\t"));
     let v = json::parse(&dimvexa(&["units", "--groups", "--json"]).stdout).unwrap();
     json::check_units_schema(&v);
@@ -1267,8 +1267,8 @@ fn units_shows_which_units_are_yours() {
     // The group table counts it too.
     let g = dimvexa_at_root(&["units", "--groups", "--config", OIL_CFG]);
     let base = dimvexa(&["units", "--groups"]);
-    assert!(g.stdout.lines().any(|l| l == "volume\t13"));
-    assert!(base.stdout.lines().any(|l| l == "volume\t12"));
+    assert!(g.stdout.lines().any(|l| l == "volume\t16"));
+    assert!(base.stdout.lines().any(|l| l == "volume\t15"));
 
     let v =
         json::parse(&dimvexa_at_root(&["units", "--json", "--config", OIL_CFG]).stdout).unwrap();
@@ -2242,4 +2242,66 @@ fn update_command_line_is_checked_before_any_network_use() {
     }
     let r = dimvexa(&["--help"]);
     assert!(r.stdout.contains("dimvexa update [--check] [-y]"));
+}
+
+/// ADR-013: a density describes an actual volume, so it never turns a normal or standard
+/// volume into a mass (or back).
+#[test]
+fn density_does_not_apply_to_reference_state_volumes() {
+    for args in [
+        ["convert", "1", "Nm3", "kg", "--density", "1.2kg/m3"],
+        ["convert", "1", "kg", "scf", "--density", "1.2kg/m3"],
+    ] {
+        let r = dimvexa(&args);
+        assert_ne!(r.code, 0, "{args:?}");
+        assert!(
+            r.stderr.contains("error[refused]"),
+            "{args:?}: {}",
+            r.stderr
+        );
+    }
+    // An ordinary volume still works with the same density.
+    let r = dimvexa(&["convert", "1", "m3", "kg", "--density", "1.2kg/m3"]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+}
+
+/// ADR-013: `units NAME` shows the reference state of a user unit built on `scf`.
+#[test]
+fn units_shows_the_conditions_of_a_user_unit_built_on_a_reference_unit() {
+    let cfg = config_file(
+        "mmscf.toml",
+        "[[unit]]\nsymbol = \"MMscf\"\nbase = \"scf\"\nfactor = \"1000000\"\n\
+         exactness = \"defined\"\nsource = \"test\"\n",
+    );
+    let r = dimvexa(&["units", "MMscf", "--config", &cfg]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(
+        r.stdout.contains("quantity kind standard_volume"),
+        "{}",
+        r.stdout
+    );
+    assert!(
+        r.stdout
+            .lines()
+            .any(|l| l.trim_start().starts_with("conditions") && l.contains("14.696 psia")),
+        "{}",
+        r.stdout
+    );
+    let j = dimvexa(&["units", "MMscf", "--json", "--config", &cfg]);
+    let v = json::parse(&j.stdout).unwrap();
+    json::check_units_schema(&v);
+    assert!(
+        j.stdout.contains("\"conditions\":\"60 degF"),
+        "{}",
+        j.stdout
+    );
+    // The conversion itself still works within the reference and is refused across it.
+    assert_eq!(
+        dimvexa(&["convert", "1", "MMscf", "scf", "--config", &cfg]).stdout,
+        "1000000 scf\n"
+    );
+    assert_eq!(
+        dimvexa(&["convert", "1", "MMscf", "m3", "--config", &cfg]).code,
+        1
+    );
 }

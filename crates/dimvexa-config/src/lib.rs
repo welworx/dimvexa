@@ -553,6 +553,18 @@ impl Constant {
             to: to.dim(),
         };
         let direction = density_direction(from.dim(), to.dim()).ok_or_else(mismatch)?;
+        if from.kind().is_reference() || to.kind().is_reference() {
+            return Err(Error::Refused {
+                reason: format!(
+                    "'{from}' ({}) and '{to}' ({}): a density applies to an actual volume, \
+                     but a gauge pressure or a normal or standard volume is tied to a reference \
+                     state (ADR-013)",
+                    from.kind(),
+                    to.kind()
+                ),
+                suggestions: Vec::new(),
+            });
+        }
         if !from.offset().is_zero() || !to.offset().is_zero() {
             return Err(Error::Refused {
                 reason: "a density applies to linear units only, not to a unit with an offset"
@@ -854,6 +866,13 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
             u.base
         )));
     }
+    if base.kind().is_reference() && base.reference_power() != 1 {
+        return Err(bad(format!(
+            "base '{}' carries a reference state to the power {}; only a plain unit or one reference unit (power 1) can be a base",
+            u.base,
+            base.reference_power()
+        )));
+    }
     let factor = base
         .factor()
         .checked_mul(u.factor)
@@ -872,6 +891,9 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
         .map_err(|e| at(&u.origin, u.line, e))?
         .with_prefixes(u.prefixes)
         .with_provenance(base.exactness().combine(u.exactness), &u.source, &note)
+        // A unit built on a reference unit (a config `MMscf` from `scf`) keeps its reference
+        // state text, so `units MMscf` still says where the volume is measured (ADR-013).
+        .with_conditions(base.conditions())
         .with_namespace("user");
     reg.register(unit).map_err(|e| at(&u.origin, u.line, e))
 }

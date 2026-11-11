@@ -1,6 +1,6 @@
 Formula	Expected	Note
 # Basics		
-=DIMVEXA.VERSION()	dimvexa data v11+fnv1a64:6d8dbbdeecb1a854, 98 units	
+=DIMVEXA.VERSION()	dimvexa data v<N>+fnv1a64:<hash>, <N> units	
 =DIMVEXA.CONVERT(1,"km","m")	1000	
 =DIMVEXA.CONVERT(1,"mi","km")	1.609344	
 =DIMVEXA.CONVERT(10,"m/s","km/h")	36	

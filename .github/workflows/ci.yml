@@ -210,10 +210,56 @@ jobs:
 
   # The only check branch protection needs. A needed job must have succeeded; "skipped" is
   # accepted only for jobs listed in ALLOW_SKIPPED (none today).
+  excel:
+    name: excel add-in (version, build, test, package)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      - name: One version everywhere (crates, Python, npm, Excel manifest)
+        id: version
+        run: echo "version=$(scripts/check-versions.sh)" >> "$GITHUB_OUTPUT"
+      - name: Install the pinned toolchain
+        run: |
+          v=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$v" --profile minimal --no-self-update
+          rustup default "$v"
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: bindings/wasm
+      - name: Install wasm-bindgen-cli (the version pinned in bindings/wasm/Cargo.toml)
+        run: |
+          want=$(sed -n 's/^wasm-bindgen = "=\(.*\)"/\1/p' bindings/wasm/Cargo.toml)
+          cargo install wasm-bindgen-cli --version "$want" --locked
+      - name: Build the add-in
+        run: bindings/excel/build.sh
+      - name: Test the functions (real WASM, mocked Excel)
+        run: |
+          node bindings/excel/test/functions.test.js
+          node bindings/excel/test/cells.test.js
+      - name: The manifest and the function list are well formed
+        run: |
+          python3 -c "import json,sys; json.load(open('bindings/excel/functions.json'))"
+          python3 -c "import xml.dom.minidom as m; m.parse('bindings/excel/manifest.xml')"
+      - name: Package the add-in
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: scripts/package-excel-addin.sh "$VERSION" excel-out
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: excel-addin
+          path: excel-out/*.zip
+          if-no-files-found: error
+
   ci-success:
     name: ci-success
     if: always()
-    needs: [check, test-os, msrv, wasm, deny, text, package, workflows, gitleaks]
+    needs: [check, test-os, msrv, wasm, deny, text, package, excel, workflows, gitleaks]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

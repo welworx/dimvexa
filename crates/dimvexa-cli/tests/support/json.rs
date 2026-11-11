@@ -304,8 +304,15 @@ pub fn check_units_schema(v: &V) {
         assert_ne!(u.get("symbol").unwrap().as_str(), "");
         assert_eq!(u.get("dimension").unwrap().as_array().len(), 7);
         assert!(
-            ["plain", "absolute_temperature", "temperature_difference"]
-                .contains(&u.get("quantity_kind").unwrap().as_str())
+            [
+                "plain",
+                "absolute_temperature",
+                "temperature_difference",
+                "gauge_pressure",
+                "normal_volume",
+                "standard_volume",
+            ]
+            .contains(&u.get("quantity_kind").unwrap().as_str())
         );
         assert!(["defined", "measured"].contains(&u.get("exactness").unwrap().as_str()));
         assert!(["none", "si", "si_binary"].contains(&u.get("prefixes").unwrap().as_str()));

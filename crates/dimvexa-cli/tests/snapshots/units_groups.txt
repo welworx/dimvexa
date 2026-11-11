@@ -8,7 +8,7 @@ amount_of_substance	2
 luminous_intensity	2
 frequency	2
 force	4
-pressure	6
+pressure	9
 energy	7
 power	3
 electric_charge	1
@@ -19,7 +19,7 @@ conductance	1
 magnetic_flux	1
 magnetic_flux_density	1
 inductance	1
-volume	12
+volume	15
 area	3
 absorbed_dose	2
 illuminance	1
