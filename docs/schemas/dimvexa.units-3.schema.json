@@ -356,6 +356,8 @@
             "id",
             "symbol",
             "name",
+            "prefix",
+            "base",
             "group",
             "aliases",
             "dimension",
@@ -387,7 +389,60 @@
                 "string",
                 "null"
               ],
-              "description": "Full name of a table unit, `null` for an expression such as km."
+              "description": "Full name of a table unit, or of a single prefixed unit (`Kilometre`). `null` for a compound expression."
+            },
+            "prefix": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Set only for a single prefixed unit such as `km`: the prefix. `symbol` is the printed form (micro prints as the micro sign), `exp` the exponent of 10 (SI) or 2 (binary).",
+              "required": [
+                "symbol",
+                "name",
+                "exp",
+                "family"
+              ],
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "exp": {
+                  "type": "integer"
+                },
+                "family": {
+                  "enum": [
+                    "si",
+                    "binary"
+                  ]
+                }
+              }
+            },
+            "base": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Set only for a single prefixed unit: the table unit under the prefix.",
+              "required": [
+                "id",
+                "symbol",
+                "name"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "symbol": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
             },
             "group": {
               "type": "string"

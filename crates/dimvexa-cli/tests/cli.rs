@@ -2299,3 +2299,36 @@ fn units_shows_the_conditions_of_a_user_unit_built_on_a_reference_unit() {
         1
     );
 }
+
+/// A single prefixed unit is named from its prefix and its table unit (ADR-017); a compound is not.
+#[test]
+fn units_names_a_prefixed_unit_from_its_two_parts() {
+    let get = |q: &str| {
+        let v = json::parse(&dimvexa(&["units", q, "--json"]).stdout).unwrap();
+        json::check_unit_detail_schema(&v);
+        v.get("unit").unwrap().clone()
+    };
+    let km = get("km");
+    assert_eq!(km.get("name").unwrap().as_str(), "Kilometre");
+    assert_eq!(km.get("symbol").unwrap().as_str(), "km");
+    let prefix = km.get("prefix").unwrap();
+    assert_eq!(prefix.get("name").unwrap().as_str(), "kilo");
+    assert_eq!(prefix.get("exp").unwrap().as_f64(), 3.0);
+    assert_eq!(prefix.get("family").unwrap().as_str(), "si");
+    assert_eq!(km.get("base").unwrap().get("id").unwrap().as_str(), "m");
+    assert_eq!(
+        km.get("base").unwrap().get("name").unwrap().as_str(),
+        "Metre"
+    );
+    // Every input form of micro prints as the micro sign.
+    let upa = get("uPa");
+    assert_eq!(upa.get("symbol").unwrap().as_str(), "\u{b5}Pa");
+    assert_eq!(upa.get("name").unwrap().as_str(), "Micropascal");
+    // A compound and a plain table unit have no prefix or base.
+    for q in ["km/h", "psi"] {
+        let u = get(q);
+        assert!(u.get("prefix").unwrap().is_null(), "{q}");
+        assert!(u.get("base").unwrap().is_null(), "{q}");
+    }
+    assert!(get("km/h").get("name").unwrap().is_null());
+}

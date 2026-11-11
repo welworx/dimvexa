@@ -38,6 +38,10 @@ impl V {
             panic!("not a string: {self:?}")
         }
     }
+    pub fn is_null(&self) -> bool {
+        matches!(self, V::Null)
+    }
+
     pub fn as_bool(&self) -> bool {
         if let V::Bool(b) = self {
             *b
@@ -335,7 +339,7 @@ pub fn check_units_schema(v: &V) {
     }
 }
 
-fn check_unit_detail_schema(v: &V) {
+pub fn check_unit_detail_schema(v: &V) {
     assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/3");
     assert!(v.get("ok").unwrap().as_bool());
     let u = v.get("unit").unwrap();
@@ -343,6 +347,8 @@ fn check_unit_detail_schema(v: &V) {
         "id",
         "symbol",
         "name",
+        "prefix",
+        "base",
         "group",
         "aliases",
         "dimension",

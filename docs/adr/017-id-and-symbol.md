@@ -26,5 +26,6 @@ show. In SI the symbol of the degree Celsius is `°C`, so `symbol = "degC"` was 
 ## Consequences
 
 Callers that used `Unit::symbol()` as a key must call `Unit::id()`. The `units` text output has
-two new columns. Prefixed output (`km`) is not rendered with display symbols; that is a separate
-decision.
+two new columns. A single prefixed unit (`km`) is named from its parts by `dimvexa units NAME`: `Kilometre`, with
+`prefix` and `base` objects. Compound expressions (`km/h`, `kW.h`) get no name yet; a naming grammar
+(per, squared, cubed) needs its own decision.

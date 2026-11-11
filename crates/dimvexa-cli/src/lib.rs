@@ -1363,6 +1363,10 @@ struct Detail {
     id: String,
     symbol: Option<String>,
     name: Option<String>,
+    /// `(symbol, name, exponent, family)` of the prefix of a prefixed unit such as `km`.
+    prefix: Option<(String, String, i32, &'static str)>,
+    /// `(id, symbol, name)` of the table unit under the prefix.
+    base: Option<(String, String, String)>,
     group: String,
     aliases: Vec<String>,
     dim: Dim,
@@ -1395,6 +1399,8 @@ fn unit_detail(
             id: u.id().to_string(),
             symbol: Some(u.symbol().to_string()),
             name: Some(u.name().to_string()),
+            prefix: None,
+            base: None,
             group: group_name(u.dim()),
             aliases: u.aliases().to_vec(),
             dim: u.dim(),
@@ -1417,11 +1423,28 @@ fn unit_detail(
     // Not a table symbol: a prefixed or compound expression such as km or kW.h, or an
     // error (unknown, ambiguous) that the library words.
     let e = reg.parse(query)?;
+    // A single prefixed unit (`km`) is named from its two parts; a compound is not named yet.
+    let split = reg.split_prefixed(query);
     Ok(Detail {
         queried: query.to_string(),
         id: query.to_string(),
-        symbol: None,
-        name: None,
+        symbol: split.map(|(p, u)| format!("{}{}", p.display_symbol(), u.symbol())),
+        name: split.map(|(p, u)| p.compose_name(u.name())),
+        prefix: split.map(|(p, _)| {
+            (
+                p.display_symbol().to_string(),
+                p.name.to_string(),
+                p.exp,
+                p.family.name(),
+            )
+        }),
+        base: split.map(|(_, u)| {
+            (
+                u.id().to_string(),
+                u.symbol().to_string(),
+                u.name().to_string(),
+            )
+        }),
         group: group_name(e.dim()),
         aliases: Vec::new(),
         dim: e.dim(),
@@ -1457,6 +1480,13 @@ fn detail_text(d: &Detail) -> String {
     }
     if let Some(n) = d.name.as_ref().filter(|n| **n != d.id) {
         line("name", n.clone());
+    }
+    if let Some((sym, name, exp, family)) = &d.prefix {
+        let base = if *family == "binary" { 2 } else { 10 };
+        line("prefix", format!("{sym} ({name}, {base}^{exp})"));
+    }
+    if let Some((id, sym, name)) = &d.base {
+        line("base unit", format!("{id} ({sym}, {name})"));
     }
     line("group", d.group.clone());
     line("aliases", none(&d.aliases.join(", ")));
@@ -1508,12 +1538,30 @@ fn detail_json(d: &Detail) -> String {
     let opt = |v: Option<&str>| v.map_or_else(|| "null".to_string(), json_string);
     let dims: Vec<String> = d.dim.exponents().iter().map(ToString::to_string).collect();
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"id\":{},\"symbol\":{},\"name\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"conditions\":{},\"note\":{},\"origin\":{},\"mapping\":{}}}}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"id\":{},\"symbol\":{},\"name\":{},\"prefix\":{},\"base\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"conditions\":{},\"note\":{},\"origin\":{},\"mapping\":{}}}}}",
         json_string(&schema_id("units")),
         json_string(&dimvexa::data_version()),
         json_string(&d.id),
         opt(d.symbol.as_deref()),
         opt(d.name.as_deref()),
+        d.prefix.as_ref().map_or_else(
+            || "null".to_string(),
+            |(sym, name, exp, family)| format!(
+                "{{\"symbol\":{},\"name\":{},\"exp\":{exp},\"family\":{}}}",
+                json_string(sym),
+                json_string(name),
+                json_string(family)
+            ),
+        ),
+        d.base.as_ref().map_or_else(
+            || "null".to_string(),
+            |(id, sym, name)| format!(
+                "{{\"id\":{},\"symbol\":{},\"name\":{}}}",
+                json_string(id),
+                json_string(sym),
+                json_string(name)
+            ),
+        ),
         json_string(&d.group),
         list(&d.aliases),
         dims.join(","),

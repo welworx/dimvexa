@@ -12,6 +12,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Added
 
+- `dimvexa units NAME` names a single prefixed unit from its parts: `km` is `Kilometre`, symbol `km`, with `prefix` (`k`, kilo, exp 3, family `si`) and `base` (`m`, Metre) in `dimvexa.units/3`; `prefix` and `base` are null for table units and compounds. Library: `Registry::split_prefixed`, `Prefix::compose_name`, `Prefix::display_symbol` (micro always prints as the micro sign) and `PrefixFamily::name`. Compound expressions (`km/h`) are not named yet.
 - Every table unit has a full name (`Pascal` for `Pa`, `Pound-force per square inch` for `psi`). `name` is mandatory in the unit tables (`validate-data` checks it), available as `Unit::name()` and `UnitDef::name`, shown by `dimvexa units` and `dimvexa units NAME`, and added as `name` to `dimvexa.units/3` and to the Python `unit_info`. A user unit without a name reads as its symbol.
 
 ## [0.3.0] - 2026-11-10
