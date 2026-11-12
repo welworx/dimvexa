@@ -811,3 +811,23 @@ fn load_builds_the_constants_and_densities_in_one_place() {
     assert!(dimvexa_config::load(reg.clone(), std::slice::from_ref(&c), builtin).is_err());
     assert!(dimvexa_config::load(reg, &[unit, c], builtin).is_ok());
 }
+
+#[test]
+fn a_config_that_replaces_an_entry_of_an_earlier_one_gets_a_warning() {
+    let builtin = dimvexa_data::CONSTANTS;
+    let reg = registry().unwrap();
+    let (a, b) = (
+        cfg(WATER, "a.toml"),
+        cfg(&WATER.replace("9982067/10000", "1000"), "b.toml"),
+    );
+    let loaded = dimvexa_config::load(reg.clone(), &[a.clone(), b], builtin).unwrap();
+    assert_eq!(loaded.warnings.len(), 1, "{:?}", loaded.warnings);
+    assert!(
+        loaded.warnings[0]
+            .contains("constant 'water_20C' (b.toml:1) replaces the one from a.toml:1")
+    );
+    // The later one wins; the same config twice, and distinct names, are silent.
+    assert_eq!(loaded.densities[0].value, Ratio::from_int(1000));
+    let twice = dimvexa_config::load(reg, &[a.clone(), a], builtin).unwrap();
+    assert_eq!(twice.warnings, Vec::<String>::new());
+}

@@ -109,6 +109,10 @@ fn load_config(spec: &str, texts: &[String]) -> Result<Rc<Loaded>, JsValue> {
         dimvexa_config::load(registry()?.clone(), &configs, dimvexa::CONSTANTS)
             .map_err(|e| fail(&e))?,
     );
+    // Replacing an entry of an earlier config is allowed, never silent: `console.warn`.
+    for w in &loaded.warnings {
+        warn(w);
+    }
     LOADED.with(|c| {
         let mut list = c.borrow_mut();
         if list.len() >= LOADED_CAP {
@@ -117,6 +121,16 @@ fn load_config(spec: &str, texts: &[String]) -> Result<Rc<Loaded>, JsValue> {
         list.push((key, Rc::clone(&loaded)));
     });
     Ok(loaded)
+}
+
+/// `console.warn(message)`, where a console exists.
+fn warn(message: &str) {
+    let console = Reflect::get(&js_sys::global(), &"console".into()).unwrap_or(JsValue::UNDEFINED);
+    if let Ok(f) = Reflect::get(&console, &"warn".into()) {
+        if let Some(f) = f.dyn_ref::<js_sys::Function>() {
+            let _ = f.call1(&console, &format!("warning: {message}").into());
+        }
+    }
 }
 
 /// Resolves a density argument through `dimvexa-config` (a number with a unit, or the name of a

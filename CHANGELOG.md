@@ -13,6 +13,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 - Library: `ConstantDef` (core), `dimvexa_data::{CONSTANTS, constant}` (also re-exported by `dimvexa`), `dimvexa_config::{Constant, Density, reject_builtin_constants, BUILT_IN}`, `Constant::{from_def, is_density, to_density}`.
 - `dimvexa_config::load`, `Loaded` and `DensityError`: the registry, constants and densities in effect are built in one place, so the CLI and the bindings cannot differ. `Constant::value_text`.
 - WASM: `constants(config, configTexts)`, and `convertWith`/`withOptions` take your own config files as TOML text (last argument; **breaking**: pass `[]`). Python: `constants()`, and `convert`/`conversion` take `density=`, `configs=` (shipped names or file paths) and `config_texts=`. Both reject a config that redefines a built-in constant.
+- A later config may replace a name, unit or constant of an earlier one (the later wins) but now with a `warning:` on stderr (a `UserWarning` in Python, `console.warn` in WASM); `dimvexa_config::Loaded::warnings`. Built-in constants and table units still cannot be replaced.
 - A built-in constant cannot be redefined by a config (`invalid_definition`, "cannot be redefined"): a user-defined `pi` would silently change every angle.
 
 ### Changed

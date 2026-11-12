@@ -1311,6 +1311,9 @@ pub struct Loaded {
     pub constants: Vec<Constant>,
     /// The constants of a density unit among them, in kg/m^3: what a density argument can name.
     pub densities: Vec<Density>,
+    /// One warning for every name, unit or constant a later config replaces from an earlier
+    /// one. Replacing is allowed (the later config wins), never silent.
+    pub warnings: Vec<String>,
 }
 
 /// Why a density argument could not be resolved.
@@ -1388,7 +1391,44 @@ pub fn load(mut reg: Registry, configs: &[Config], builtin: &[ConstantDef]) -> R
         units: applied.units,
         constants,
         densities,
+        warnings: replacements(configs),
     })
+}
+
+/// A warning for each entry of a later config that replaces an entry of an earlier one with the
+/// same name: "constant 'w' (b.toml:3) replaces the one from a.toml:7". The same file given twice
+/// replaces itself silently.
+fn replacements(configs: &[Config]) -> Vec<String> {
+    let mut seen: Vec<(&'static str, String, String, usize)> = Vec::new();
+    let mut warnings = Vec::new();
+    let mut note = |kind: &'static str, key: &str, origin: &str, line: usize| match seen
+        .iter_mut()
+        .find(|(k, n, _, _)| *k == kind && n == key)
+    {
+        Some(prev) => {
+            if prev.2 != origin {
+                warnings.push(format!(
+                    "{kind} '{key}' ({origin}:{line}) replaces the one from {}:{}",
+                    prev.2, prev.3
+                ));
+            }
+            prev.2 = origin.to_string();
+            prev.3 = line;
+        }
+        None => seen.push((kind, key.to_string(), origin.to_string(), line)),
+    };
+    for config in configs {
+        for m in config.mappings() {
+            note("name", &m.name, &m.origin, m.line);
+        }
+        for u in config.units() {
+            note("unit", &u.symbol, &u.origin, u.line);
+        }
+        for c in config.constants() {
+            note("constant", &c.name, &c.origin, c.line);
+        }
+    }
+    warnings
 }
 
 impl Loaded {

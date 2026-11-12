@@ -101,10 +101,11 @@ Options:
   --color WHEN     auto (default: a terminal, unless NO_COLOR is set), always
                    (also CLICOLOR_FORCE=1) or never; JSON is never coloured
   --config NAME_OR_PATH
-                   (beta) apply a config; repeatable, later ones win. A shipped
-                   one is named (us, gb, metric-trade, year-julian, year-civil,
-                   water); a file has a path (./mine.toml, or anything with a /
-                   or ending in .toml). Without --config the names stay strict.
+                   (beta) apply a config; repeatable, later ones win and a
+                   warning names what they replace. A shipped one is named
+                   (us, gb, metric-trade, year-julian, year-civil, water); a
+                   file has a path (./mine.toml, or anything with a / or
+                   ending in .toml). Without --config the names stay strict.
                    See docs/adr/014-one-config-mechanism.md
   --const NAME_OR_VALUE
                    density for mass <-> volume: the name of a constant of a
@@ -148,10 +149,11 @@ Options:
   --json           machine-readable output (schema dimvexa.convert/3)
   --pretty         --json, indented for reading
   --config NAME_OR_PATH
-                   (beta) apply a config; repeatable, later ones win. A shipped
-                   one is named (us, gb, metric-trade, year-julian, year-civil,
-                   water); a file has a path (./mine.toml, or anything with a /
-                   or ending in .toml). See: dimvexa configs --help
+                   (beta) apply a config; repeatable, later ones win and a
+                   warning names what they replace. A shipped one is named
+                   (us, gb, metric-trade, year-julian, year-civil, water); a
+                   file has a path (./mine.toml, or anything with a / or
+                   ending in .toml). See: dimvexa configs --help
   --const NAME_OR_VALUE
                    density for mass <-> volume: the name of a constant of a
                    density unit (--config water --const water_25C) or your own
@@ -1258,6 +1260,14 @@ fn load(config_specs: &[String]) -> Result<Loaded, LoadError> {
     Ok(Loaded { lib: l, configs })
 }
 
+/// Prints one `warning:` line per entry a later config replaced from an earlier one, on stderr
+/// (replacing is allowed, never silent).
+fn print_warnings(loaded: &Loaded, err: &mut dyn Write) {
+    for w in &loaded.lib.warnings {
+        let _ = writeln!(err, "warning: {w}");
+    }
+}
+
 /// Prints a load failure for `schema` and returns the exit code.
 fn report_load_error(
     e: &LoadError,
@@ -2015,6 +2025,7 @@ fn run_units(
         Ok(l) => l,
         Err(e) => return report_load_error(&e, json, "units", out, err),
     };
+    print_warnings(&loaded, err);
     let mut fail = |code: &str, message: &str, suggestions: &[String], status: u8| -> u8 {
         if json {
             let _ = writeln!(
@@ -2288,6 +2299,7 @@ fn run_constants(
         Ok(l) => l,
         Err(e) => return report_load_error(&e, json, "constants", out, err),
     };
+    print_warnings(&loaded, err);
     // The built-in constants first, then the configs' own, in application order.
     let all = &loaded.lib.constants;
     let shown: Vec<&Constant> = match target {
@@ -2509,6 +2521,7 @@ where
         Ok(l) => l,
         Err(e) => return report_load_error(&e, args.json, "convert", out, err),
     };
+    print_warnings(&loaded, err);
     let density = match &args.density {
         None => None,
         Some(spec) => match loaded.lib.resolve_density(spec) {

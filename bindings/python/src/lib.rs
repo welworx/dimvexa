@@ -77,7 +77,22 @@ fn load(configs: &[String], config_texts: &[String]) -> PyResult<dimvexa_config:
         let origin = format!("config-text-{}", i.saturating_add(1));
         parsed.push(dimvexa_config::Config::parse(text, &origin).map_err(|e| to_py(&e))?);
     }
-    dimvexa_config::load(registry()?.clone(), &parsed, ::dimvexa::CONSTANTS).map_err(|e| to_py(&e))
+    let loaded = dimvexa_config::load(registry()?.clone(), &parsed, ::dimvexa::CONSTANTS)
+        .map_err(|e| to_py(&e))?;
+    // Replacing an entry of an earlier config is allowed, never silent: a Python `UserWarning`.
+    Python::attach(|py| {
+        for w in &loaded.warnings {
+            let message = std::ffi::CString::new(w.replace('\0', " ")).unwrap_or_default();
+            PyErr::warn(
+                py,
+                &py.get_type::<pyo3::exceptions::PyUserWarning>(),
+                &message,
+                1,
+            )?;
+        }
+        PyResult::Ok(())
+    })?;
+    Ok(loaded)
 }
 
 /// The ordinary conversion between two units; if it is refused for lack of a density and one

@@ -157,3 +157,9 @@ def test_a_config_cannot_redefine_a_builtin_constant() -> None:
     assert dimvexa.constants(config_texts=[unit, const])[-1]["unit"] == "blob/m3"
     with pytest.raises(dimvexa.DimvexaError):
         dimvexa.constants(config_texts=[const])
+
+
+def test_replacing_an_entry_of_an_earlier_config_warns() -> None:
+    mine = WATER_TEXT.replace("rho", "water_25C")
+    with pytest.warns(UserWarning, match="constant 'water_25C'.*replaces the one from bundled:water"):
+        dimvexa.constants(configs=["water"], config_texts=[mine])

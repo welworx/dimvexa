@@ -200,7 +200,10 @@ error[ambiguous_symbol]: 'oz' is ambiguous: use oz_av or oz_troy or fl_oz_us or 
 contains: the names it maps, the units it defines and every constant with its value, conditions
 and source. `oz` stays refused in `us` and `gb` because it means a mass or a volume in both.
 `--config` can be repeated and a later config overrides an earlier one, so
-`--config us --config ./mine.toml` starts from the US names and adds yours.
+`--config us --config ./mine.toml` starts from the US names and adds yours. Replacing is allowed
+but never silent: every name, unit or constant that replaces one of an earlier config prints
+`warning: constant 'water_25C' (./mine.toml:3) replaces the one from bundled:water:7` on stderr.
+The built-in constants (`pi`, `h`, ...) and the units of the table cannot be replaced.
 
 Your own file is the same format:
 
@@ -225,7 +228,7 @@ Rules (ADR-009, [`docs/adr/009-user-config.md`](adr/009-user-config.md), as amen
 ADR-014; what is not supported yet is in
 [`docs/known-limitations.md`](known-limitations.md)):
 - Nothing is loaded unless you name it; `--config` can be repeated and a later one overrides an
-  earlier one.
+  earlier one, with a warning on stderr.
 - A mapping only points at an existing unit, so it cannot carry a factor, and it can never
   redefine an existing symbol (`t`, `m`, `psi`, `km`): that is an error naming the file and line.
 - A mapped name behaves like an alias, so prefixes work (`kmt` is `ktonne`). A prefix on an
@@ -313,7 +316,8 @@ config defines one with a `[[constant]]` table (`name`, `value`, `unit`, `exactn
 `conditions`, `source`, and for a CODATA value the pinned `codata` edition). The value is exact:
 a decimal, a fraction, or either followed by `10^k` and `pi`. A built-in name cannot be
 redefined: a user-defined `pi` would silently change every angle. A constant is never applied
-silently; today `--const` is the only way to use one, and only a density. Constants inside a
+silently; today `--const` is the only way to use one, and only a constant of a density unit (a
+density) works there: it is the one constant that bridges mass and volume. Constants inside a
 value (`2 pi rad`) are step 3 of ADR-018 and not yet available (KL-20).
 
 ### Example: a unit of your own

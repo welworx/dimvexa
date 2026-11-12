@@ -2373,6 +2373,18 @@ fn a_user_file_overrides_a_shipped_density_and_a_shipped_name() {
     ]);
     assert_eq!((r.code, r.stdout.as_str()), (0, "1 kg\n"), "{}", r.stderr);
     assert!(r.stderr.contains("mine"), "{}", r.stderr);
+    // Replacing is allowed but never silent, and says what it replaced.
+    assert!(
+        r.stderr.contains("warning: constant 'water_25C' (")
+            && r.stderr.contains("replaces the one from bundled:water:7"),
+        "{}",
+        r.stderr
+    );
+    // The same file twice replaces itself without a warning.
+    let r = dimvexa(&[
+        "convert", "1", "ton", "kg", "--config", "us", "--config", "us",
+    ]);
+    assert!(!r.stderr.contains("warning"), "{}", r.stderr);
     let r = dimvexa(&[
         "convert", "1", "ton", "kg", "--config", "us", "--config", &cfg,
     ]);
