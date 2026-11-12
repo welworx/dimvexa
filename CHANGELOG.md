@@ -5,7 +5,7 @@ All notable changes are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Release notes are generated from Conventional
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
-## [Unreleased]
+## [0.5.1] - 2026-11-12
 ### Changed
 
 - `dimvexa --help` is reorganised to fit 80 columns: usage, one-line description, examples, commands, options, then precision and exit codes. A usage error now prints only the short usage and a pointer to `--help` instead of the whole help. `--help` and `--version` show the website (https://dimvexa.com, the package `homepage`) instead of the repository.
