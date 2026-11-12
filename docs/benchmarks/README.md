@@ -7,6 +7,8 @@ claim against another library without a link to a dated run (`docs/benchmarking.
 
 | Version | Report |
 |---|---|
+| 0.6.0 | [`v0.6.0.md`](v0.6.0.md): generated, measured on 2026-11-12 on the working tree of the release commit (35528da) with the bench file of 0.5.0; no row moved beyond the noise against 0.5.1, so there is no hand-written narrative. **Not run:** the cross-library comparison (`comparison/v0.6.0.md`, a full `benchmarks/run_all.sh`) |
+| 0.5.1 | [`v0.5.1.md`](v0.5.1.md): generated, measured afterwards at the tagged commit `c1e0be3` with the bench file of 0.5.0 |
 | 0.5.0 | cross-library comparison: [`comparison/v0.5.0.md`](comparison/v0.5.0.md); own performance: [`v0.5.0.md`](v0.5.0.md) (hand-written: number type with powers of ten and pi, ADR-018 step 1; before and after, what was not run) |
 | 0.1.0 to 0.4.0 | [`v0.1.0.md`](v0.1.0.md), [`v0.1.1.md`](v0.1.1.md), [`v0.1.2.md`](v0.1.2.md), [`v0.2.0.md`](v0.2.0.md), [`v0.2.1.md`](v0.2.1.md), [`v0.2.2.md`](v0.2.2.md), [`v0.3.0.md`](v0.3.0.md), [`v0.4.0.md`](v0.4.0.md): generated; these versions were measured **afterwards**, on 2026-11-11, at their tagged commits with the bench file of 0.5.0, not when they were released |
 
