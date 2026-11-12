@@ -49,6 +49,9 @@ A number is `num/den * 10^k * pi^m` (ADR-018). Rounding it to `f64` is correct, 
   bring `apply_exact_f64` for a pi factor close to the plain-fraction cost. Do it if the exact
   path of angles becomes a bottleneck.
 * Sums and orderings of values with different exponents (`1 + pi`) are refused with `overflow`.
+  A value with pi converted through an offset unit (`pi` in `degC` to `degF`) is refused with
+  `refused` by `Conversion::apply_exact`, because a multiple of pi plus a rational is not a
+  number of the form rational times a power of pi.
 
 ## What an ulp is
 

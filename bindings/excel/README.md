@@ -52,6 +52,7 @@ The npm tools are development aids only; nothing here is a dependency of the lib
   exact: `=DIMVEXA.CONVERTEXACT("4pi","rad","deg")` is 720, `"pi/2"` is 90. The value may use `pi`
   (also `π`), `* / ^` and parentheses; there is no addition. `1/2pi` is refused as ambiguous
   (`pi/2` or `1/(2*pi)`): write one of those. A decimal text (`"0.1"`) is exact on the way in,
-  and a number cell is read as its shortest decimal text. The result is rounded once, to a
+  and a number cell is converted from its exact double value (so `1e300` and `6.62607015e-34`
+  work too). In a German Excel write a decimal text with a point (`"0.5"`), not a comma. The result is rounded once, to a
   number. `pi` into a temperature scale with an offset is refused. `CONVERT` and `CONVERTRANGE`
   still take numbers.

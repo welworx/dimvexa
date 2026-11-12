@@ -224,6 +224,12 @@ impl Parser<'_, '_> {
             self.bump('^');
             self.skip_space();
             let exp = self.exponent()?;
+            if exp == 0 && atom.is_zero() {
+                return Err(Error::Refused {
+                    reason: "0^0 is indeterminate".to_string(),
+                    suggestions: Vec::new(),
+                });
+            }
             atom = atom.checked_pow(exp)?;
         }
         if negative {
@@ -399,6 +405,9 @@ mod tests {
         assert_eq!(val("1/0"), Err(Error::DivisionByZero));
         assert_eq!(val("pi/0"), Err(Error::DivisionByZero));
         assert!(matches!(val("2*h_P"), Err(Error::Refused { .. })));
+        assert!(matches!(val("0^0"), Err(Error::Refused { .. })));
+        assert_eq!(val("0^2").unwrap(), Ratio::ZERO);
+        assert_eq!(val("2^0").unwrap(), Ratio::ONE);
         // a constant with a unit never continues a value by juxtaposition: `2e` is a typo
         for text in ["2 h_P", "2e", "2 e"] {
             assert!(

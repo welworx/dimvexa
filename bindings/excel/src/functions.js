@@ -89,12 +89,25 @@ function convert(value, from, to, density, config) {
 function convertExact(value, from, to, density, config) {
   return whenReady(() => {
     try {
-      // The value is read as text, so "4pi", "pi/2" or "0.1" is exact on the way in. A number
-      // cell is turned into its shortest decimal text (0.1 is "0.1"), which Excel shows too.
+      // Text is read exactly, so "4pi", "pi/2" or "0.1" is exact on the way in. A number cell
+      // is a double and is converted from its exact value (see below).
       if (!given(value) || (typeof value === "string" && value.trim() === "")) {
         throw rangeError("the value is empty");
       }
-      if (typeof value === "number" && !Number.isFinite(value)) throw overflowError();
+      if (typeof value === "number") {
+        // A number cell is already a double: convert its exact value and round once, which
+        // also covers 1e300 and 6.62607015e-34 (a decimal text this long would not fit).
+        if (!Number.isFinite(value)) throw overflowError();
+        const conversion = wasm_bindgen.DimvexaConversion.withOptions(
+          unit(from), unit(to), text(density), text(config), []);
+        try {
+          const result = conversion.applyExact(value);
+          if (!Number.isFinite(result)) throw overflowError();
+          return result;
+        } finally {
+          conversion.free();
+        }
+      }
       const result = wasm_bindgen.convertExactWith(
         String(value), unit(from), unit(to), text(density), text(config), []);
       if (!Number.isFinite(result)) throw overflowError();

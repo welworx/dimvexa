@@ -37,6 +37,9 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
   assert.strictEqual(await associated.CONVERTEXACT("pi/2", "rad", "deg"), 90);
   assert.strictEqual(await associated.CONVERTEXACT(" 2*pi ", "rad", "deg"), 360);
   assert.strictEqual(await associated.CONVERTEXACT(12, "km", "m"), 12000);
+  assert.strictEqual(await associated.CONVERTEXACT(1e300, "m", "m"), 1e300);
+  assert.strictEqual(await associated.CONVERTEXACT(6.62607015e-34, "J", "J"), 6.62607015e-34);
+  assert.strictEqual(await associated.CONVERTEXACT(0.1, "m", "mm"), 100);
   assert.strictEqual(await associated.CONVERTEXACT("98.6", "degF", "degC"), 37);
   assert.strictEqual(await associated.CONVERTEXACT(1, "ton", "kg", "", "us"), 907.18474);
   for (const [v, code] of [["1/2pi", "ambiguous_expression"], ["2*h_P", "refused"],

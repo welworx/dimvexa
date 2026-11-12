@@ -12,8 +12,14 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 - Library: `Ratio::parse_expression`, `Ratio::parse_expression_prefix` and `Registry::quantity_with(input, constants)`, which reads operators as part of the value (`10 / 2 s` is 5 and `s`). `Registry::quantity` still reads a plain number and is unchanged.
 - WASM: `convertExact` and `convertQuantity` accept `pi` and operators in the value (`convertExact("4pi", "rad", "deg")` is 720), and the new `convertExactWith(value, from, to, density, config, configTexts)` does the same with the options of a worksheet. `convert`/`convertWith` take a number, unchanged.
 - Excel: `DIMVEXA.CONVERTEXACT(value, from, to, [density], [config])` takes the value as text or a number and keeps it exact (`=DIMVEXA.CONVERTEXACT("4pi","rad","deg")` is 720). `CONVERT` and `CONVERTRANGE` still take numbers.
-- Python: `convert("4pi", "rad", "deg")` (and `Conversion.__call__`) accept a string value, exact and rounded once; `quantity("pi/2 rad")` reads pi. Needs the core of this change, so the binding's `dimvexa` dependency must be the next published release (the local `.cargo/config.toml` patch already builds it against the workspace).
-- A value with pi converted through an offset (`pi degC degF`) is `refused` by `Conversion::apply_exact` (it was an `overflow` from the addition), so the CLI, WASM, Excel and Python all say so.
+- Python: `convert("4pi", "rad", "deg")` (and `Conversion.__call__`) accept a string value, exact and rounded once; `quantity("pi/2 rad")` reads pi. The binding needs `dimvexa` 0.7.0 (the local `.cargo/config.toml` patch builds it against the workspace until it is published).
+
+### Changed
+
+- `Conversion::apply_exact` (and so `Quantity::to_unit`) returns `refused` instead of `overflow` for a value with pi through a conversion with an offset (`pi` in `degC` to `degF`): a multiple of pi plus a rational is not exact. Only the error code of that edge case changes.
+- A constant that has a unit in a value (`dimvexa convert e m m`, `2*h_P`) is `refused`; it was `invalid_number`.
+- `dimvexa convert 1 / s Hz` is `invalid_number` (exit 1); it was a usage error (exit 2), because the `/` is now read as part of the value.
+- `0^0` in a value is `refused` (indeterminate).
 
 ## [0.6.0] - 2026-11-12
 ### Added

@@ -39,3 +39,10 @@ Formula	Expected	Note
 =DIMVEXA.CONVERT(1;"L";"kg";"milk";"water")	error: no density named milk	
 =DIMVEXA.CONVERT(1;"L";"kg";"5 m")	error: not a unit of density	
 =DIMVEXA.CONVERT(1;"kg";"g";"nonsense")	error: no density named nonsense	a bad density is an error even when none is needed
+# Exact value as text (CONVERTEXACT)		
+=DIMVEXA.CONVERTEXACT("4pi";"rad";"deg")	720	pi stays exact, rounded once
+=DIMVEXA.CONVERTEXACT("pi/2";"rad";"deg")	90	
+=DIMVEXA.CONVERTEXACT("1/(2*pi)";"rad";"deg")	9,118906527810399	
+=DIMVEXA.CONVERTEXACT("1/2pi";"rad";"deg")	error: ambiguous_expression	write pi/2 or 1/(2*pi)
+=DIMVEXA.CONVERTEXACT("pi";"degC";"degF")	error: refused	a multiple of pi plus an offset is not exact
+=DIMVEXA.CONVERTEXACT(1;"ton";"kg";;"us")	907,18474	

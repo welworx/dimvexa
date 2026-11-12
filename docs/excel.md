@@ -14,6 +14,7 @@ All functions live in the `DIMVEXA` namespace. Excel ignores letter case, so
 | Function | Result |
 |---|---|
 | `DIMVEXA.CONVERT(value, from, to, [density], [config])` | one number |
+| `DIMVEXA.CONVERTEXACT(value, from, to, [density], [config])` | one number; the value may be text with pi, kept exact (`"4pi"`, `"pi/2"`) |
 | `DIMVEXA.CONVERTRANGE(range, from, to, [density], [config])` | a range of numbers, spilled below and beside the formula |
 | `DIMVEXA.VERSION()` | text, the unit table version and the number of units |
 
@@ -130,7 +131,7 @@ Works in any browser on Mac or Windows, and needs no changes to Excel itself.
    entry. If you see the message "Your administrator has not installed any web add-ins" the add-ins
    list is simply empty; keep going.
 7. Wait a moment (it can take a minute the first time), click a cell and type `=DIMVEXA.`. The
-   autocomplete should list `DIMVEXA.CONVERT`, `DIMVEXA.CONVERTRANGE` and `DIMVEXA.VERSION`.
+   autocomplete should list `DIMVEXA.CONVERT`, `DIMVEXA.CONVERTEXACT`, `DIMVEXA.CONVERTRANGE` and `DIMVEXA.VERSION`.
 8. Go to [Check that it works](#check-that-it-works).
 
 The upload lasts for the browser session. After you close the workbook or sign out, repeat steps 3

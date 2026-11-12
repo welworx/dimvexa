@@ -50,7 +50,7 @@ add-in never shapes the core).
    WASM compile) is not measured.
 2. Does Excel on Mac support custom functions (Microsoft pages disagree)?
 3. Startup cost of compiling the 224 KB module on first call, and the cost of the call itself.
-4. Exact decimal input (array functions exist: `DIMVEXA.CONVERTRANGE`).
+4. Exact decimal input: done in 0.7.0 by `DIMVEXA.CONVERTEXACT` (the value as text: a decimal or an expression with pi, kept exact). Array functions: `DIMVEXA.CONVERTRANGE`.
 5. Distribution: sideload only, centralized deployment, or AppSource (needs test instructions
    for each function). Current policy numbers differ between sources; check Partner Center.
    Hosting plan (nothing hosted yet; points marked "verify" are untested): static files on

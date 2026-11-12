@@ -21,7 +21,10 @@ PyPI and npm (`docs/releasing.md`).
    (`<Version>` = the version plus `.0`), then refresh the root `Cargo.lock` (`cargo update --workspace`) and both bindings' `Cargo.lock` (`cargo update
    --workspace` in `bindings/wasm` and `bindings/python`; a stale lock fails the release build,
    which uses `--locked`). All versions must be equal: `scripts/check-versions.sh`. Check the
-   locks with `cargo metadata --locked --format-version 1 --manifest-path bindings/<x>/Cargo.toml`.
+   locks with `cargo metadata --locked --format-version 1 --manifest-path bindings/<x>/Cargo.toml`;
+   for Python run it from `bindings/python` (`cd bindings/python && cargo metadata --locked
+   --format-version 1`), because the `[patch.crates-io]` of its `.cargo/config.toml`, which
+   resolves the version being released before it is on crates.io, is read only from there.
    Keep `rust-version` at 1.85.
 3. `CHANGELOG.md`: move Unreleased to the version with the date. `CITATION.cff`: add `version`
    and `date-released` (YYYY-MM-DD) and keep `README.md` "How to cite" consistent. No DOI is
