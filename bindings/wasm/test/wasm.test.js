@@ -11,7 +11,7 @@ const realWarn = console.warn;
 console.warn = (m) => warnings.push(String(m));
 
 const constant = (name, value, unit = "kg/m3") =>
-  `[[constant]]\nid = "${name}"\nvalue = "${value}"\nunit = "${unit}"\n` +
+  `[[constant]]\nid = "${name}"\nname = "${name}"\nvalue = "${value}"\nunit = "${unit}"\n` +
   `exactness = "measured"\nconditions = "c"\nsource = "s"\n`;
 const code = (f) => {
   try { f(); } catch (e) { return e.code; }

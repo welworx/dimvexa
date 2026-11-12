@@ -112,7 +112,7 @@ def test_reference_state_units() -> None:
 
 
 WATER_TEXT = (
-    '[[constant]]\nid = "rho"\nvalue = "0.9982067"\nunit = "g/cm3"\nexactness = "measured"\n'
+    '[[constant]]\nid = "rho"\nname = "rho"\nvalue = "0.9982067"\nunit = "g/cm3"\nexactness = "measured"\n'
     'conditions = "c"\nsource = "s"\n'
 )
 

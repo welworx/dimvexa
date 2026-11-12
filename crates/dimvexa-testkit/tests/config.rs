@@ -127,7 +127,7 @@ fn applying_twice_is_refused_so_overrides_stay_explicit() {
     assert!(err.to_string().contains("already means a unit"), "{err}");
 }
 
-const WATER: &str = "[[constant]]\nid = \"water_20C\"\n\
+const WATER: &str = "[[constant]]\nid = \"water_20C\"\nname = \"water_20C\"\n\
 value = \"9982067/10000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\n\
 source = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
 

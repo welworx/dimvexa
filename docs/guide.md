@@ -313,8 +313,8 @@ k_B	Boltzmann constant	1.380649e-23	J/K	defined	none (defined)	BIPM SI Brochure,
 ```
 
 `dimvexa constants` lists them all, and `--config NAME_OR_PATH` adds those of a config. Your own
-config defines one with a `[[constant]]` table (`id`, `value`, `unit`, `exactness`,
-`conditions`, `source`, an optional full `name`, and for a CODATA value the pinned `codata` edition). The value is exact:
+config defines one with a `[[constant]]` table (`id`, `name`, `value`, `unit`, `exactness`,
+`conditions`, `source`, a full `name` such as `Planck constant`, and for a CODATA value the pinned `codata` edition). The value is exact:
 a decimal, a fraction, or either followed by `10^k` and `pi`. A built-in name cannot be
 redefined: a user-defined `pi` would silently change every angle. A constant is never applied
 silently; today `--const` is the only way to use one, and only a constant of a density unit (a

@@ -17,7 +17,7 @@
 //! form.
 //!
 //! A config can also hold **constants** (ADR-018): named, exact, cited numbers the caller
-//! supplies. A constant has an `id` (what you select), an optional `name`, a `unit` (which gives its dimension), an `exactness`, mandatory
+//! supplies. A constant has an `id` (what you select), a full `name`, a `unit` (which gives its dimension), an `exactness`, mandatory
 //! `conditions` and `source`, and, for a CODATA value, the pinned `codata` edition. A constant
 //! of a density unit is what a conversion the core refuses (ADR-001) needs, such as litres to
 //! kilograms; the library multiplies by it and never derives it from temperature or pressure.
@@ -26,7 +26,7 @@
 //! ```text
 //! [[constant]]
 //! id = "water_20C"
-//! name = "Water at 20 degC"          # optional full name
+//! name = "Water density at 20 degC"
 //! value = "998.2067"
 //! unit = "kg/m3"
 //! exactness = "measured"
@@ -112,7 +112,7 @@ pub struct Constant {
     /// The identifier selected with `--const`, for example `water_20C` or `k_B`. Never also a
     /// unit's name.
     pub id: String,
-    /// The full name, for example `Boltzmann constant` (may be empty for a config constant).
+    /// The full name, for example `Boltzmann constant`. Never empty.
     pub name: String,
     /// The exact value, a number of [`unit`](Self::unit).
     pub value: Ratio,
@@ -431,6 +431,7 @@ fn finish_constant(
              (a --const value that starts with a digit is a number)"
         ));
     }
+    let name = p.need("name")?;
     let text = p.need("value")?;
     let value = Ratio::parse_symbolic(&text).map_err(|e| number_problem("value", &text, &e))?;
     if value.signum() <= 0 {
@@ -457,7 +458,7 @@ fn finish_constant(
     }
     constants.push(Constant {
         id,
-        name: p.get("name").unwrap_or_default().to_string(),
+        name,
         value,
         unit,
         exactness,
@@ -533,7 +534,7 @@ fn finish_unit(
 ///
 /// ```
 /// use dimvexa_config::{Config, constants};
-/// let entry = |v: &str| format!("[[constant]]\nid = \"w\"\nvalue = \"{v}\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n");
+/// let entry = |v: &str| format!("[[constant]]\nid = \"w\"\nname = \"w\"\nvalue = \"{v}\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n");
 /// let a = Config::parse(&entry("1000"), "a.toml")?;
 /// let b = Config::parse(&entry("998"), "b.toml")?;
 /// let effective = constants(&[a, b]);
@@ -561,7 +562,7 @@ impl Constant {
     /// ```
     /// use dimvexa_config::Config;
     /// let cfg = Config::parse(
-    ///     "[[constant]]\nid = \"h\"\nvalue = \"6.62607015 10^-34\"\nunit = \"J.s\"\n\
+    ///     "[[constant]]\nid = \"h\"\nname = \"h\"\nvalue = \"6.62607015 10^-34\"\nunit = \"J.s\"\n\
     ///      exactness = \"defined\"\nconditions = \"none (defined)\"\nsource = \"s\"\n",
     ///     "h.toml",
     /// )?;
@@ -734,7 +735,7 @@ pub const BUILT_IN: &str = "built-in";
 /// ```
 /// use dimvexa_config::{Config, reject_builtin_constants};
 /// let cfg = Config::parse(
-///     "[[constant]]\nid = \"pi\"\nvalue = \"3\"\nunit = \"1\"\nexactness = \"defined\"\n\
+///     "[[constant]]\nid = \"pi\"\nname = \"pi\"\nvalue = \"3\"\nunit = \"1\"\nexactness = \"defined\"\n\
 ///      conditions = \"none (defined)\"\nsource = \"s\"\n",
 ///     "mine.toml",
 /// )?;
@@ -1362,7 +1363,7 @@ pub enum DensityError {
 /// reg.register(Unit::linear("m", Dim::M, Ratio::ONE)?)?;
 /// reg.register(Unit::linear("g", Dim::KG, Ratio::new(1, 1000)?)?.with_prefixes(PrefixMode::Si))?;
 /// let cfg = Config::parse(
-///     "[[constant]]\nid = \"w\"\nvalue = \"998\"\nunit = \"kg/m3\"\nexactness = \"measured\"\n\
+///     "[[constant]]\nid = \"w\"\nname = \"w\"\nvalue = \"998\"\nunit = \"kg/m3\"\nexactness = \"measured\"\n\
 ///      conditions = \"c\"\nsource = \"s\"\n",
 ///     "w.toml",
 /// )?;
@@ -1570,7 +1571,7 @@ mod tests {
         }
     }
 
-    const WATER: &str = "[[constant]]\nid = \"water_20C\"\nvalue = \"9982067/10000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\nsource = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
+    const WATER: &str = "[[constant]]\nid = \"water_20C\"\nname = \"water_20C\"\nvalue = \"9982067/10000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\nsource = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
 
     #[test]
     fn parses_a_density_with_its_conditions_and_source() {
@@ -1600,7 +1601,15 @@ mod tests {
                 .collect::<Vec<_>>()
                 .join("\n")
         };
-        for key in ["id", "value", "unit", "exactness", "conditions", "source"] {
+        for key in [
+            "id",
+            "name",
+            "value",
+            "unit",
+            "exactness",
+            "conditions",
+            "source",
+        ] {
             let err = Config::parse(&field(key), "w.toml").unwrap_err();
             let msg = err.to_string();
             assert!(

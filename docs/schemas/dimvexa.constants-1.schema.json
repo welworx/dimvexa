@@ -47,7 +47,8 @@
               },
               "name": {
                 "type": "string",
-                "description": "The full name, for example `Planck constant`; may be empty for a config constant."
+                "description": "The full name, for example `Planck constant`. Never empty.",
+                "minLength": 1
               },
               "value": {
                 "type": "string",

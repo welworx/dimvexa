@@ -1291,17 +1291,17 @@ fn density_misuse_is_loud() {
     for (name, text, needle) in [
         (
             "nocond.toml",
-            "[[constant]]\nid = \"dens\"\nvalue = \"1000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nsource = \"s\"\n",
+            "[[constant]]\nid = \"dens\"\nname = \"dens\"\nvalue = \"1000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nsource = \"s\"\n",
             "'conditions'",
         ),
         (
             "nosrc.toml",
-            "[[constant]]\nid = \"dens\"\nvalue = \"1000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\n",
+            "[[constant]]\nid = \"dens\"\nname = \"dens\"\nvalue = \"1000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\n",
             "'source'",
         ),
         (
             "zero.toml",
-            "[[constant]]\nid = \"dens\"\nvalue = \"0\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n",
+            "[[constant]]\nid = \"dens\"\nname = \"dens\"\nvalue = \"0\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n",
             "must be positive",
         ),
     ] {
@@ -1967,7 +1967,7 @@ fn known_limitation_kl_18_end_of_options_and_short_options() {
 fn a_density_note_never_misstates_the_density() {
     let tiny = config_file(
         "tiny.toml",
-        "[[constant]]\nid = \"tiny\"\nvalue = \"1/1000000000000000000000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n",
+        "[[constant]]\nid = \"tiny\"\nname = \"tiny\"\nvalue = \"1/1000000000000000000000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n",
     );
     let r = dimvexa(&[
         "convert", "1", "kg", "m3", "--config", &tiny, "--const", "tiny",
@@ -1981,7 +1981,7 @@ fn a_density_note_never_misstates_the_density() {
     );
     let third = config_file(
         "third.toml",
-        "[[constant]]\nid = \"third\"\nvalue = \"1000/3\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n",
+        "[[constant]]\nid = \"third\"\nname = \"third\"\nvalue = \"1000/3\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n",
     );
     let r = dimvexa(&[
         "convert", "3", "L", "kg", "--config", &third, "--const", "third", "--exact",
@@ -1994,7 +1994,7 @@ fn a_density_note_never_misstates_the_density() {
     // A short exact decimal is shown plainly, and control characters in the config text are cleaned.
     let cfg = config_file(
         "ctl.toml",
-        "[[constant]]\nid = \"dens\"\nvalue = \"998.2067\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"a\tb\"\nsource = \"s\"\n",
+        "[[constant]]\nid = \"dens\"\nname = \"dens\"\nvalue = \"998.2067\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"a\tb\"\nsource = \"s\"\n",
     );
     let r = dimvexa(&[
         "convert", "1", "L", "kg", "--config", &cfg, "--const", "dens",
@@ -2362,7 +2362,7 @@ const OIL_CFG_PATH_FROM_ROOT: &str = concat!(
 fn a_user_file_overrides_a_shipped_density_and_a_shipped_name() {
     let cfg = config_file(
         "override_water.toml",
-        "[map]\nton = \"tonne\"\n\n[[constant]]\nid = \"water_25C\"\nvalue = \"1000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"mine\"\nsource = \"mine\"\n",
+        "[map]\nton = \"tonne\"\n\n[[constant]]\nid = \"water_25C\"\nname = \"water_25C\"\nvalue = \"1000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"mine\"\nsource = \"mine\"\n",
     );
     let r = dimvexa(&[
         "convert",
@@ -2672,7 +2672,7 @@ fn a_config_cannot_redefine_a_built_in_constant() {
         let cfg = config_file(
             &format!("redefine_{name}.toml"),
             &format!(
-                "[[constant]]\nid = \"{name}\"\nvalue = \"3\"\nunit = \"1\"\nexactness = \"defined\"\nconditions = \"none (defined)\"\nsource = \"mine\"\n"
+                "[[constant]]\nid = \"{name}\"\nname = \"{name}\"\nvalue = \"3\"\nunit = \"1\"\nexactness = \"defined\"\nconditions = \"none (defined)\"\nsource = \"mine\"\n"
             ),
         );
         for args in [
@@ -2690,7 +2690,7 @@ fn a_config_cannot_redefine_a_built_in_constant() {
     }
     let cfg = config_file(
         "redefine_pi_message.toml",
-        "[[constant]]\nid = \"pi\"\nvalue = \"3\"\nunit = \"1\"\nexactness = \"defined\"\nconditions = \"c\"\nsource = \"s\"\n",
+        "[[constant]]\nid = \"pi\"\nname = \"pi\"\nvalue = \"3\"\nunit = \"1\"\nexactness = \"defined\"\nconditions = \"c\"\nsource = \"s\"\n",
     );
     let r = dimvexa(&["constants", "--config", &cfg]);
     assert!(
@@ -2704,13 +2704,13 @@ fn a_config_cannot_redefine_a_built_in_constant() {
 fn a_config_constant_of_any_unit_is_listed_but_only_a_density_feeds_const() {
     let cfg = config_file(
         "gas_constant.toml",
-        "[[constant]]\nid = \"gas_R\"\nvalue = \"8.314462618\"\nunit = \"J/(mol.K)\"\nexactness = \"measured\"\ncodata = \"CODATA 2022\"\nconditions = \"none\"\nsource = \"CODATA 2022\"\n",
+        "[[constant]]\nid = \"gas_R\"\nname = \"gas_R\"\nvalue = \"8.314462618\"\nunit = \"J/(mol.K)\"\nexactness = \"measured\"\ncodata = \"CODATA 2022\"\nconditions = \"none\"\nsource = \"CODATA 2022\"\n",
     );
     let r = dimvexa(&["constants", "gas_R", "--config", &cfg]);
     assert_eq!(r.code, 0, "{}", r.stderr);
     assert!(
         r.stdout
-            .contains("gas_R\t-\t8.314462618\tJ/(mol.K)\tmeasured"),
+            .contains("gas_R\tgas_R\t8.314462618\tJ/(mol.K)\tmeasured"),
         "{}",
         r.stdout
     );
@@ -2729,7 +2729,7 @@ fn a_config_constant_of_any_unit_is_listed_but_only_a_density_feeds_const() {
     // A constant whose unit is unknown is a loud error when the config is loaded.
     let bad = config_file(
         "unknown_unit_constant.toml",
-        "[[constant]]\nid = \"x\"\nvalue = \"1\"\nunit = \"Zorp\"\nexactness = \"defined\"\nconditions = \"c\"\nsource = \"s\"\n",
+        "[[constant]]\nid = \"x\"\nname = \"x\"\nvalue = \"1\"\nunit = \"Zorp\"\nexactness = \"defined\"\nconditions = \"c\"\nsource = \"s\"\n",
     );
     let r = dimvexa(&["constants", "--config", &bad]);
     assert_eq!(r.code, 1);
@@ -2743,7 +2743,7 @@ fn a_density_constant_in_g_per_cm3_gives_the_same_result_as_kg_per_m3() {
         config_file(
             name,
             &format!(
-                "[[constant]]\nid = \"dens\"\nvalue = \"{value}\"\nunit = \"{unit}\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n"
+                "[[constant]]\nid = \"dens\"\nname = \"dens\"\nvalue = \"{value}\"\nunit = \"{unit}\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n"
             ),
         )
     };
@@ -2766,7 +2766,7 @@ fn a_density_constant_in_g_per_cm3_gives_the_same_result_as_kg_per_m3() {
 fn configs_path_refuses_a_redefined_built_in_constant() {
     let cfg = config_file(
         "configs_redefine_pi.toml",
-        "[[constant]]\nid = \"pi\"\nvalue = \"3\"\nunit = \"1\"\nexactness = \"defined\"\nconditions = \"c\"\nsource = \"s\"\n",
+        "[[constant]]\nid = \"pi\"\nname = \"pi\"\nvalue = \"3\"\nunit = \"1\"\nexactness = \"defined\"\nconditions = \"c\"\nsource = \"s\"\n",
     );
     let r = dimvexa(&["configs", &cfg]);
     assert_eq!(r.code, 1, "{}", r.stdout);
@@ -2780,7 +2780,7 @@ fn a_config_density_is_measured_and_a_plain_number() {
         config_file(
             name,
             &format!(
-                "[[constant]]\nid = \"rho\"\nvalue = \"{value}\"\nunit = \"kg/m3\"\nexactness = \"{exactness}\"\nconditions = \"c\"\nsource = \"s\"\n"
+                "[[constant]]\nid = \"rho\"\nname = \"rho\"\nvalue = \"{value}\"\nunit = \"kg/m3\"\nexactness = \"{exactness}\"\nconditions = \"c\"\nsource = \"s\"\n"
             ),
         )
     };
@@ -2811,7 +2811,7 @@ fn a_config_density_is_measured_and_a_plain_number() {
 fn json_output_lists_what_a_later_config_replaced() {
     let cfg = config_file(
         "json_override_water.toml",
-        "[[constant]]\nid = \"water_25C\"\nvalue = \"1000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"mine\"\nsource = \"mine\"\n",
+        "[[constant]]\nid = \"water_25C\"\nname = \"water_25C\"\nvalue = \"1000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"mine\"\nsource = \"mine\"\n",
     );
     let twice = ["--config", "water", "--config", &cfg];
     for args in [
