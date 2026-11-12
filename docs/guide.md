@@ -319,7 +319,8 @@ a decimal, a fraction, or either followed by `10^k` and `pi`. A built-in name ca
 redefined: a user-defined `pi` would silently change every angle. A constant is never applied
 silently; today `--const` is the only way to use one, and only a constant of a density unit (a
 density) works there: it is the one constant that bridges mass and volume. Constants inside a
-value (`2 pi rad`) are step 3 of ADR-018 and not yet available (KL-20).
+value (`2 pi rad`) work for the dimensionless constants (`pi`), see "Angles and pi"; a constant
+that has a unit (`h_P`) cannot be written in a value.
 
 ### Example: a unit of your own
 
@@ -398,11 +399,26 @@ What to know:
    once, at the end, to the nearest `f64`. These units are `defined` in `dimvexa units deg`.
 2. **Addition is not defined for values with different exponents.** Combining `pi` with a plain
    number in a sum (`1 + pi`) is refused with `overflow`, never approximated. A conversion only
-   multiplies, so this shows up only through the library (`Ratio::checked_add`).
-3. **You cannot type `2*pi` or `2pi` as a value.** A value is a plain number (`6.283185307179586`)
-   or a fraction (`1/3`); the decimal is not exactly 2 pi, so `--exact` shows a tiny difference
-   (about 1.8e-14 deg). Use degrees (`360 deg`), or define `pirad` and `turn` with the shipped
-   example config, which defines them on `deg` and so keeps them exact:
+   multiplies, so this shows up only through the library (`Ratio::checked_add`). The one conversion that adds is a temperature scale with an offset, so `dimvexa convert pi degC degF` is refused (`refused`): use a decimal.
+3. **A value may contain `pi`** (ADR-018, step 3). `4pi`, `4π`, `4 pi`, `pi/2`, `1/2*pi`,
+   `2*pi^2` and `1/(2*pi)` are all values; so are `4 pi rad deg` and `2 * pi rad deg` written
+   with spaces. A value may use `*`, `/`, an integer power `^`, a leading sign and parentheses.
+   There is no addition and no other function, and only a constant without a unit (`pi`) can be
+   written in a value: `2*h_P` is refused (`refused`), an unknown name such as `tau` is
+   `invalid_number`. A constant right after a quotient (`1/2 pi`, `1/2pi`) is
+   `ambiguous_expression`: it could be `pi/2` or `1/(2 pi)`, so write `pi/2` or `1/(2*pi)`. Pi stays symbolic, so nothing is rounded on the way in:
+
+   ```console
+   $ dimvexa convert 4pi rad deg
+   720 deg
+   $ dimvexa convert pi/2 rad deg
+   90 deg
+   $ dimvexa convert 4pi m m --exact
+   4 pi = 12.566370614359172 m
+   ```
+
+   A decimal such as `6.283185307179586` is still not exactly 2 pi. Turn and pi-radian units
+   can also be defined with the shipped example config, on `deg`, which keeps them exact:
 
    ```console
    $ dimvexa convert 2 pirad deg --config examples/configs/angle.toml

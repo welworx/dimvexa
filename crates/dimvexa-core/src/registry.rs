@@ -3,6 +3,7 @@
 
 use std::collections::HashMap;
 
+use crate::constant::ConstantDef;
 use crate::conversion::Conversion;
 use crate::error::{Error, Result};
 use crate::expr::{Expr, is_valid_symbol};
@@ -530,6 +531,45 @@ impl Registry {
     /// ```
     pub fn quantity(&self, input: &str) -> Result<Quantity> {
         let (value, rest) = Ratio::parse_prefix(input.trim())?;
+        self.finish_quantity(value, rest)
+    }
+
+    /// Parses a quantity whose value may contain constants and operators, such as `2 pi rad`
+    /// or `pi/2 rad` (ADR-018, step 3).
+    ///
+    /// `constants` is the table the value may name, for example `dimvexa::CONSTANTS`; the value
+    /// ends at the first word that is not one of its dimensionless constants, which is where
+    /// the unit starts. See [`Ratio::parse_expression`] for the grammar. Unlike
+    /// [`quantity`](Self::quantity), which reads a plain number, the operators are read as part
+    /// of the value: `10 / 2 s` is the value 5 and the unit `s`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidNumber`], [`Error::AmbiguousExpression`] for a constant after a
+    /// quotient, [`Error::Refused`] for a constant that has a unit after an operator, the
+    /// arithmetic errors of the value, and any error of [`parse`](Self::parse).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_core::{ConstantDef, Dim, Exactness, Ratio, Registry, Unit};
+    /// let pi = ConstantDef {
+    ///     id: "pi", name: "Pi", value: (1, 1), value_exp: (0, 1), unit: "1",
+    ///     exactness: Exactness::Defined, codata: "", conditions: "none (defined)",
+    ///     source: "ISO 80000-2:2019", note: "",
+    /// };
+    /// let mut reg = Registry::new();
+    /// reg.register(Unit::linear("rad", Dim::NONE, Ratio::ONE)?)?;
+    /// let q = reg.quantity_with("pi/2 rad", &[pi])?;
+    /// assert_eq!(q.value(), Ratio::parse_symbolic("1/2 pi")?);
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn quantity_with(&self, input: &str, constants: &[ConstantDef]) -> Result<Quantity> {
+        let (value, rest) = Ratio::parse_expression_prefix(input.trim(), constants)?;
+        self.finish_quantity(value, rest)
+    }
+
+    fn finish_quantity(&self, value: Ratio, rest: &str) -> Result<Quantity> {
         let rest = rest.trim();
         let unit = if rest.is_empty() {
             UnitExpr::unity()

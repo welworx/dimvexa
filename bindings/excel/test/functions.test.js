@@ -32,6 +32,28 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
   assert.strictEqual(await associated.CONVERT(100, "degC", "K"), 373.15);
   assert.match(await associated.VERSION(), /units/);
 
+  // CONVERTEXACT: the value is text, pi stays exact
+  assert.strictEqual(await associated.CONVERTEXACT("4pi", "rad", "deg"), 720);
+  assert.strictEqual(await associated.CONVERTEXACT("pi/2", "rad", "deg"), 90);
+  assert.strictEqual(await associated.CONVERTEXACT(" 2*pi ", "rad", "deg"), 360);
+  assert.strictEqual(await associated.CONVERTEXACT(12, "km", "m"), 12000);
+  assert.strictEqual(await associated.CONVERTEXACT(1e300, "m", "m"), 1e300);
+  assert.strictEqual(await associated.CONVERTEXACT(6.62607015e-34, "J", "J"), 6.62607015e-34);
+  assert.strictEqual(await associated.CONVERTEXACT(0.1, "m", "mm"), 100);
+  assert.strictEqual(await associated.CONVERTEXACT("98.6", "degF", "degC"), 37);
+  assert.strictEqual(await associated.CONVERTEXACT(1, "ton", "kg", "", "us"), 907.18474);
+  for (const [v, code] of [["1/2pi", "ambiguous_expression"], ["2*h_P", "refused"],
+    ["tau", "invalid_number"], ["", "invalid_number"], [undefined, "invalid_number"]]) {
+    await assert.rejects(async () => associated.CONVERTEXACT(v, "rad", "deg"), (e) => {
+      assert.match(e.message, new RegExp("^dimvexa " + code + ":"), String(v));
+      return true;
+    });
+  }
+  await assert.rejects(async () => associated.CONVERTEXACT("pi", "degC", "degF"), (e) => {
+    assert.match(e.message, /^dimvexa refused:/);
+    return true;
+  });
+
   assert.deepStrictEqual(
     await associated.CONVERTRANGE([[1, 2], [3, 4], [0.5, 10]], "km", "m"),
     [[1000, 2000], [3000, 4000], [500, 10000]],

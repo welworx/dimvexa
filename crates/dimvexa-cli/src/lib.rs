@@ -61,6 +61,7 @@ update) for details.
 Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
+  dimvexa convert 4pi rad deg
   dimvexa convert 100 degC degF --json
   dimvexa convert 1 ton kg --config us
   dimvexa convert 1 L kg --config water --const water_25C
@@ -131,12 +132,17 @@ Usage:
   dimvexa [convert] VALUE FROM TO [--exact] [--json | --pretty]
       [--config NAME_OR_PATH]... [--const NAME_OR_VALUE]
 
-VALUE is a number; FROM and TO are units or unit expressions (m/s, kW.h, psi).
+VALUE is a number, or a number with pi: 4pi, 4 pi, pi/2, 2*pi^2, 1/(2*pi). It
+may use * / ^ (integer power) and parentheses; there is no addition, and only
+a constant without a unit (pi) is allowed. pi stays exact: 4 pi rad is
+exactly 720 deg. FROM and TO are units or unit expressions (m/s, kW.h, psi).
 Units of different quantities, or an ambiguous symbol, are an error.
 
 Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
+  dimvexa convert 4pi rad deg
+  dimvexa convert pi/2 rad deg --exact
   dimvexa convert 100 degC degF --json
   dimvexa convert 1 ton kg --config us
   dimvexa convert 1 L kg --config water --const water_25C
@@ -952,12 +958,68 @@ fn normalize_convert(words: &[&str]) -> Vec<String> {
         }
         out.push(w.to_string());
     }
+    fold_value_words(&mut out);
     if let [value, from, to, dest] = out.as_slice() {
         if to == "to" {
             return vec![value.clone(), from.clone(), dest.clone()];
         }
     }
     out
+}
+
+/// Joins the words of a value written with spaces, `4 pi rad deg` or `2 * pi rad deg`, into
+/// the one value argument `4 pi`, `2 * pi`. A word is joined when it is made only of a
+/// dimensionless constant (`pi`, `π`), operators (`* / ^`), parentheses, digits and signs and
+/// has a constant or an operator in it (`pi`, `pi/2`, `*`, `^2`), or when it is the operand
+/// after a word that ends in an operator. A unit is never mistaken for them: a constant's name
+/// is never also a unit's. The words from and to stay.
+fn fold_value_words(out: &mut Vec<String>) {
+    let is_constant = |w: &str| {
+        w == "π"
+            || dimvexa::CONSTANTS
+                .iter()
+                .any(|c| c.id == w && c.unit == "1")
+    };
+    let is_operator = |c: char| matches!(c, '*' | '/' | '^');
+    // `Some(true)` if the word is a value continuation that has a constant or an operator
+    let continues = |w: &str| {
+        let mut rest = w;
+        let mut marked = false;
+        while let Some(c) = rest.chars().next() {
+            if c.is_alphabetic() || c == '_' || c == 'π' {
+                let end = rest
+                    .find(|d: char| !(d.is_alphanumeric() || d == '_'))
+                    .unwrap_or(rest.len());
+                let (ident, tail) = rest.split_at(end);
+                if !is_constant(ident) {
+                    return false;
+                }
+                marked = true;
+                rest = tail;
+            } else if is_operator(c) {
+                marked = true;
+                rest = rest.get(c.len_utf8()..).unwrap_or("");
+            } else if c.is_ascii_digit() || matches!(c, '(' | ')' | '.' | '+' | '-') {
+                rest = rest.get(c.len_utf8()..).unwrap_or("");
+            } else {
+                return false;
+            }
+        }
+        marked
+    };
+    let mut operand_due = false;
+    while out.len() > 3 {
+        let Some(word) = out.get(1) else { break };
+        if !(operand_due || continues(word)) {
+            break;
+        }
+        operand_due = word.ends_with(is_operator);
+        let word = out.remove(1);
+        if let Some(first) = out.first_mut() {
+            first.push(' ');
+            first.push_str(&word);
+        }
+    }
 }
 
 /// What `--help`, `--version`, `help COMMAND` or a mistyped option ask for: `Some` when the
@@ -1334,7 +1396,7 @@ fn compute<'a>(
     density: Option<&'a Density>,
 ) -> Result<Outcome<'a>, Error> {
     let reg = &loaded.lib.reg;
-    let value: Ratio = args.value.parse()?;
+    let value = Ratio::parse_expression(&args.value, dimvexa::CONSTANTS)?;
     let from = reg.parse(&args.from)?;
     let to = reg.parse(&args.to)?;
     // A density is used only when asked for and only when the plain conversion is refused

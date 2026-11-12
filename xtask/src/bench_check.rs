@@ -195,21 +195,33 @@ fn run_bench_layout(dir: &Path, target_dir: Option<&Path>, layout: usize) -> Res
     if let Some(t) = target_dir {
         cmd.env("CARGO_TARGET_DIR", t);
     }
-    if layout > 0 {
-        // The salt is appended to the user's own RUSTFLAGS, so every layout is built with the
-        // same flags as layout 0. Flags that sit in a cargo config (`build.rustflags`) are
+    // The bench file is one for every release (see bench_matrix.rs). A row that needs an API an
+    // older release does not have is compiled out with `--cfg dimvexa_no_value_expr`: values with
+    // constants (`Ratio::parse_expression`, 0.7.0) are the first such API. The row then shows `-`.
+    let no_value_expr = !dir.join("crates/dimvexa-core/src/value_expr.rs").is_file();
+    if layout > 0 && std::env::var_os("CARGO_ENCODED_RUSTFLAGS").is_some() {
+        return Err(
+            "CARGO_ENCODED_RUSTFLAGS is set and would hide the layout salt; unset it or use --layouts 1"
+                .to_string(),
+        );
+    }
+    if layout > 0 || no_value_expr {
+        // The extra flags are appended to the user's own RUSTFLAGS, so every layout is built with
+        // the same flags as layout 0. Flags that sit in a cargo config (`build.rustflags`) are
         // replaced by the env var; move them to RUSTFLAGS to keep them in every layout.
-        if std::env::var_os("CARGO_ENCODED_RUSTFLAGS").is_some() {
-            return Err(
-                "CARGO_ENCODED_RUSTFLAGS is set and would hide the layout salt; unset it or use --layouts 1"
-                    .to_string(),
-            );
-        }
         let mut flags = std::env::var("RUSTFLAGS").unwrap_or_default();
-        if !flags.trim().is_empty() {
-            flags.push(' ');
+        let mut add = |extra: &str| {
+            if !flags.trim().is_empty() {
+                flags.push(' ');
+            }
+            flags.push_str(extra);
+        };
+        if no_value_expr {
+            add("--cfg dimvexa_no_value_expr");
         }
-        let _ = write!(flags, "-C metadata=bench-layout-{layout}");
+        if layout > 0 {
+            add(&format!("-C metadata=bench-layout-{layout}"));
+        }
         cmd.env("RUSTFLAGS", flags);
     }
     let out = cmd.output().map_err(|e| format!("cannot run cargo: {e}"))?;

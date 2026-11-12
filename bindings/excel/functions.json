@@ -15,6 +15,19 @@
       ]
     },
     {
+      "id": "CONVERTEXACT",
+      "name": "CONVERTEXACT",
+      "description": "Like CONVERT, but the value may be text with pi, kept exact: \"4pi\", \"pi/2\", \"2*pi^2\", or a decimal such as \"0.1\". Allows * / ^ and parentheses, no addition. Rounded once at the end. A unit or expression that is unknown or ambiguous is an error, never a guess.",
+      "result": { "type": "number", "dimensionality": "scalar" },
+      "parameters": [
+        { "name": "value", "description": "The value to convert: a number, or text such as \"4pi\" or \"pi/2\". Write 1/(2*pi), not 1/2pi (ambiguous, refused).", "type": "any", "dimensionality": "scalar" },
+        { "name": "from", "description": "Unit to convert from, for example rad.", "type": "string", "dimensionality": "scalar" },
+        { "name": "to", "description": "Unit to convert to, for example deg.", "type": "string", "dimensionality": "scalar" },
+        { "name": "density", "description": "Optional, only for mass to volume (or back): your own density, for example 998.2067kg/m3, or the name of a density in a loaded config such as water_25C (needs config water). Ignored when no density is needed. Nothing is assumed when it is left out.", "type": "string", "dimensionality": "scalar", "optional": true },
+        { "name": "config", "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us (ton, mile, gal), gb, metric-trade, year-julian, year-civil, or water for its densities. Several: us,water.", "type": "string", "dimensionality": "scalar", "optional": true }
+      ]
+    },
+    {
       "id": "CONVERTRANGE",
       "name": "CONVERTRANGE",
       "description": "Converts every number in a range between units with one exact factor, and spills the results. Blank cells stay blank; a cell with text is an error that names its position. A unit that is unknown or ambiguous is an error, never a guess.",

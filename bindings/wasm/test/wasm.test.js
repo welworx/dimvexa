@@ -67,5 +67,17 @@ const b = `[map]\nfoo = "ft"\n`;
 assert.strictEqual(d.convertWith(1, "foo", "m", "", "", [a, b]), 0.3048);
 assert.strictEqual(code(() => d.convertWith(1, "foo", "m", "", "", [a + "\0" + b])), "invalid_definition");
 
+// pi in a value stays exact (ADR-018 step 3); an ambiguous or unitful constant is an error
+assert.strictEqual(d.convertExact("4pi", "rad", "deg"), 720);
+assert.strictEqual(d.convertQuantity("pi/2 rad", "deg"), "90 deg");
+assert.strictEqual(code(() => d.convertExact("1/2pi", "rad", "deg")), "ambiguous_expression");
+assert.strictEqual(code(() => d.convertExact("2*h_P", "rad", "deg")), "refused");
+assert.strictEqual(code(() => d.convertExact("tau", "rad", "deg")), "invalid_number");
+
+assert.strictEqual(d.convertExactWith("4pi", "rad", "deg", "", "", []), 720);
+assert.strictEqual(d.convertExactWith("1", "ton", "kg", "", "us", []), 907.18474);
+assert.strictEqual(code(() => d.convertExactWith("pi", "degC", "degF", "", "", [])), "refused");
+assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", [])), "ambiguous_expression");
+
 console.warn = realWarn;
 console.log("wasm: ok");

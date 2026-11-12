@@ -29,7 +29,7 @@ class Quantity:
     def __truediv__(self, other: Quantity) -> Quantity: ...
 
 def convert(
-    value: Any,
+    value: Any,  # float, sequence, ndarray, or str: "4pi", "pi/2", "0.1" (exact)
     from_unit: str,
     to_unit: str,
     *,

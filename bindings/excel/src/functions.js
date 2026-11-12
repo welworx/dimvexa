@@ -85,6 +85,39 @@ function convert(value, from, to, density, config) {
   });
 }
 
+/** @customfunction CONVERTEXACT */
+function convertExact(value, from, to, density, config) {
+  return whenReady(() => {
+    try {
+      // Text is read exactly, so "4pi", "pi/2" or "0.1" is exact on the way in. A number cell
+      // is a double and is converted from its exact value (see below).
+      if (!given(value) || (typeof value === "string" && value.trim() === "")) {
+        throw rangeError("the value is empty");
+      }
+      if (typeof value === "number") {
+        // A number cell is already a double: convert its exact value and round once, which
+        // also covers 1e300 and 6.62607015e-34 (a decimal text this long would not fit).
+        if (!Number.isFinite(value)) throw overflowError();
+        const conversion = wasm_bindgen.DimvexaConversion.withOptions(
+          unit(from), unit(to), text(density), text(config), []);
+        try {
+          const result = conversion.applyExact(value);
+          if (!Number.isFinite(result)) throw overflowError();
+          return result;
+        } finally {
+          conversion.free();
+        }
+      }
+      const result = wasm_bindgen.convertExactWith(
+        String(value), unit(from), unit(to), text(density), text(config), []);
+      if (!Number.isFinite(result)) throw overflowError();
+      return result;
+    } catch (e) {
+      throw toExcelError(e);
+    }
+  });
+}
+
 // The range is declared `any` so a blank cell can be told from a 0 (a `number` range makes Excel
 // pass blanks as 0 and refuse text itself). A cell of only spaces counts as blank.
 function isBlank(v) {
@@ -168,5 +201,6 @@ function version() {
 }
 
 CustomFunctions.associate("CONVERT", convert);
+CustomFunctions.associate("CONVERTEXACT", convertExact);
 CustomFunctions.associate("CONVERTRANGE", convertRange);
 CustomFunctions.associate("VERSION", version);

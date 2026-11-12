@@ -2,7 +2,7 @@
 # offline, and this crate needs PyO3 and NumPy from the registry. See README.md and ADR-012.
 [package]
 name = "dimvexa-python"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2024"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
@@ -17,8 +17,8 @@ name = "_dimvexa"
 crate-type = ["cdylib"]
 
 [dependencies]
-dimvexa = "0.6.0"
-dimvexa-config = "0.6.0"
+dimvexa = "0.7.0"
+dimvexa-config = "0.7.0"
 pyo3 = { version = "0.30", features = ["abi3-py39", "extension-module"] }
 numpy = "0.30"
 

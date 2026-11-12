@@ -2092,6 +2092,18 @@ fn guide_angle_examples_are_real() {
         assert_eq!((r.code, r.stdout.trim_end()), (0, out), "{}", r.stderr);
         assert!(section.contains(&format!("$ dimvexa {}\n   {out}", args.join(" "))));
     }
+    for (args, out) in [
+        (&["convert", "4pi", "rad", "deg"][..], "720 deg"),
+        (&["convert", "pi/2", "rad", "deg"][..], "90 deg"),
+        (
+            &["convert", "4pi", "m", "m", "--exact"][..],
+            "4 pi = 12.566370614359172 m",
+        ),
+    ] {
+        let r = dimvexa_at_root(args);
+        assert_eq!((r.code, r.stdout.trim_end()), (0, out), "{}", r.stderr);
+        assert!(section.contains(&format!("$ dimvexa {}\n   {out}", args.join(" "))));
+    }
     let r = dimvexa_at_root(&["convert", "2", "pirad", "deg", "--config", CFG, "--exact"]);
     assert_eq!(r.stdout.trim_end(), "360 deg");
     // `turn` is exactly 2 pi rad (the config defines it as 360 deg).
@@ -2107,13 +2119,97 @@ fn guide_angle_examples_are_real() {
     );
 }
 
-/// KL-20 and KL-21: no `2pi` in a value, and angle is dimensionless.
+/// KL-21: angle is dimensionless.
 #[test]
-fn known_limitation_kl_20_21_pi_input_and_dimensionless_angle() {
-    let r = dimvexa(&["convert", "2*pi", "rad", "deg"]);
-    assert_eq!(r.code, 1, "KL-20 fixed? then pi is a constant");
-    assert!(r.stderr.starts_with("error[invalid_number]"));
+fn known_limitation_kl_21_dimensionless_angle() {
     assert_eq!(dimvexa(&["convert", "1", "rad/s", "Hz"]).stdout, "1 Hz\n");
+}
+
+/// ADR-018 step 3 (KL-20 fixed): pi and operators in a value, exact.
+#[test]
+fn a_value_may_contain_pi_and_operators() {
+    for (value, want) in [
+        ("4pi", "720 deg"),
+        ("4π", "720 deg"),
+        ("4 pi", "720 deg"),
+        ("4*pi", "720 deg"),
+        ("pi/2", "90 deg"),
+        ("1/2*pi", "90 deg"),
+        ("pi ^ 2 / pi", "180 deg"),
+        ("1/(2*pi)", "9.118906527810399 deg"),
+        ("-pi", "-180 deg"),
+        ("(pi)^2/pi", "180 deg"),
+    ] {
+        let r = dimvexa(&["convert", value, "rad", "deg"]);
+        assert_eq!(r.code, 0, "{value}: {}", r.stderr);
+        assert_eq!(r.stdout.trim_end(), want, "{value}");
+    }
+    // the value written with spaces is several words on the command line
+    for words in [
+        &["4", "pi", "rad", "deg"][..],
+        &["4", "pi", "rad", "to", "deg"],
+        &["4", "*", "pi", "rad", "deg"],
+        &["2", "*", "pi", "rad", "deg"][..],
+        &["pi", "^", "2", "/", "pi", "rad", "deg"],
+        &["4", "pi/2", "rad", "deg"],
+        &["4", "*pi", "rad", "deg"],
+        &["pi", "^2", "rad", "deg"],
+    ] {
+        let mut args = vec!["convert"];
+        args.extend_from_slice(words);
+        let r = dimvexa(&args);
+        assert_eq!(r.code, 0, "{words:?}: {}", r.stderr);
+        assert!(r.stdout.ends_with(" deg\n"), "{words:?}");
+    }
+    assert_eq!(dimvexa(&["4", "pi", "rad", "deg"]).stdout, "720 deg\n");
+    // a unit written with an operator is not folded into the value
+    assert_eq!(
+        dimvexa(&["convert", "5", "1/s", "to", "Hz"]).stdout,
+        "5 Hz\n"
+    );
+    // pi into a temperature scale with an offset is refused with its own message
+    let r = dimvexa(&["convert", "pi", "degC", "degF"]);
+    assert!(r.stderr.starts_with("error[refused]"), "{}", r.stderr);
+    // pi is not rounded in the input: 2 pi rad is exactly a turn
+    let r = dimvexa_at_root(&[
+        "convert",
+        "2pi",
+        "rad",
+        "turn",
+        "--config",
+        "examples/configs/angle.toml",
+        "--exact",
+    ]);
+    assert_eq!(r.stdout.trim_end(), "1 turn");
+    // the exact result keeps pi, the decimal is rounded once
+    let r = dimvexa(&["convert", "720", "deg", "rad", "--exact"]);
+    assert_eq!(r.stdout.trim_end(), "4 pi = 12.566370614359172 rad");
+    let r = dimvexa(&["convert", "4pi", "m", "m", "--exact"]);
+    assert_eq!(r.stdout.trim_end(), "4 pi = 12.566370614359172 m");
+}
+
+#[test]
+fn a_value_with_a_bad_constant_or_operator_is_loud() {
+    for (value, code) in [
+        ("2*tau", "invalid_number"),
+        ("2+3", "invalid_number"),
+        ("pi/", "invalid_number"),
+        ("(pi", "invalid_number"),
+        ("pi/0", "division_by_zero"),
+        ("2*h_P", "refused"),
+        ("1/2pi", "ambiguous_expression"),
+        ("1/2 pi", "ambiguous_expression"),
+        ("2e", "invalid_number"),
+        ("2*k_B", "refused"),
+    ] {
+        let r = dimvexa(&["convert", value, "rad", "deg"]);
+        assert_eq!(r.code, 1, "{value}");
+        assert!(
+            r.stderr.starts_with(&format!("error[{code}]")),
+            "{value}: {}",
+            r.stderr
+        );
+    }
 }
 
 // ---- one --config for shipped names and paths, --const, `configs` (ADR-014) ----
