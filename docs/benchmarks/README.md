@@ -8,7 +8,7 @@ claim against another library without a link to a dated run (`docs/benchmarking.
 | Version | Report |
 |---|---|
 | 0.5.0 | [`v0.5.0.md`](v0.5.0.md) (hand-written: number type with powers of ten and pi, ADR-018 step 1; before and after, what was not run) |
-| 0.1.0 to 0.4.0 | [`v0.1.0.md`](v0.1.0.md), [`v0.1.1.md`](v0.1.1.md), [`v0.1.2.md`](v0.1.2.md), [`v0.2.0.md`](v0.2.0.md), [`v0.2.1.md`](v0.2.1.md), [`v0.2.2.md`](v0.2.2.md), [`v0.3.0.md`](v0.3.0.md), [`v0.4.0.md`](v0.4.0.md): generated; these versions were measured **afterwards**, on 2026-11-11, with the bench file of 0.5.0, not when they were released |
+| 0.1.0 to 0.4.0 | [`v0.1.0.md`](v0.1.0.md), [`v0.1.1.md`](v0.1.1.md), [`v0.1.2.md`](v0.1.2.md), [`v0.2.0.md`](v0.2.0.md), [`v0.2.1.md`](v0.2.1.md), [`v0.2.2.md`](v0.2.2.md), [`v0.3.0.md`](v0.3.0.md), [`v0.4.0.md`](v0.4.0.md): generated; these versions were measured **afterwards**, on 2026-11-11, at their tagged commits with the bench file of 0.5.0, not when they were released |
 
 All versions side by side, with the spread of every number and the change against the previous version:
 [`matrix.md`](matrix.md) (raw runs: [`matrix-raw.tsv`](matrix-raw.tsv)). It is produced by

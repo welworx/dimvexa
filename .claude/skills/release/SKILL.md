@@ -35,8 +35,8 @@ PyPI and npm (`docs/releasing.md`).
    version and this one were measured with one bench file, 6 alternating runs each), the generated
    `docs/benchmarks/matrix.md`, `matrix-raw.tsv` and `vX.Y.Z.md` reports are committed (one report per
    release, listed in `docs/benchmarks/README.md`), and a hand-written narrative exists for this
-   version if a row moved beyond the noise. After the release is published, add its commit to
-   `docs/benchmarks/releases.tsv`.
+   version if a row moved beyond the noise. After the release is published, add the commit its tag points to
+   (`git rev-list -n1 vX.Y.Z`) to `docs/benchmarks/releases.tsv` and rerun the matrix.
 8. After the merge, the owner approves the run. Verify, do not assume: the five crates on
    crates.io, `dimvexa` on PyPI (5 wheels + sdist), `@dimvexa/wasm` on npm and the tag `vX.Y.Z`.
    Known gap: crates.io trusted publishing is not confirmed to work yet (the first release

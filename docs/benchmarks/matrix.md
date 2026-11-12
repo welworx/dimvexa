@@ -5,135 +5,136 @@
 * Machine: Intel(R) Xeon(R) Processor @ 2.10GHz, 4 logical CPUs, Linux 6.18.44-fc-v378
 * Compiler: rustc 1.99.1 (58cf8f9c3 2026-10-13)
 * Profile: `bench` (release, thin LTO)
-* Bench file: `crates/dimvexa/benches/m0.rs` at 0ab1591 copied into every version
-* Commits: 0.1.0 = bf07121, 0.1.1 = 1c37729, 0.1.2 = e02ecaf, 0.2.0 = 2aac456, 0.2.1 = 8e18fd8, 0.2.2 = 3e59c3b, 0.3.0 = 973eba2, 0.4.0 = 1ca7d0d, 0.5.0 = e4a1b4a (working tree)
+* Bench file: `crates/dimvexa/benches/m0.rs` at 4750b32 copied into every version
+* Commits: 0.1.0 = a897064, 0.1.1 = fc9bd47, 0.1.2 = e02ecaf, 0.2.0 = 2aac456, 0.2.1 = 8e18fd8, 0.2.2 = 3e59c3b, 0.3.0 = 973eba2, 0.4.0 = 1ca7d0d, 0.5.0 = 4750b32
 
-Statistic: the median over 6 runs of each run's median ns/op; spread = (max - min) / median of those runs. Rounds alternate: round r runs every version once, in the order of the columns, so drift of the machine hits all of them. A change marked `(noise)` is not larger than the spread of either side and says nothing about the code.
+
+Statistic: the median over 6 runs of each run's median ns/op; spread = (max - min) / median of those runs. Rounds alternate: round r runs every version once, in the order of the columns, so drift of the machine hits all of them. A change marked `(noise)` is not larger than the spread of either side, or the runs of the two versions overlap, and says nothing about the code.
 
 ## Medians (ns/op), and the last version against the one before
 
 | row | 0.1.0 | 0.1.1 | 0.1.2 | 0.2.0 | 0.2.1 | 0.2.2 | 0.3.0 | 0.4.0 | 0.5.0 | change |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Dim::checked_add | 15.198 | 14.735 | 15.140 | 16.069 | 16.943 | 14.780 | 15.221 | 16.247 | 15.547 | -4.3% (noise) |
-| Dim::checked_scale(3) | 19.049 | 19.258 | 17.565 | 17.897 | 18.787 | 17.992 | 20.082 | 18.826 | 19.862 | +5.5% (noise) |
-| Dim::checked_sub | 15.948 | 17.498 | 15.074 | 16.249 | 15.128 | 16.681 | 16.488 | 15.282 | 15.862 | +3.8% (noise) |
-| Quantity mul (kW * h) | 275.938 | 291.567 | 286.268 | 268.414 | 292.115 | 251.544 | 306.845 | 310.554 | 297.842 | -4.1% (noise) |
-| Quantity::to_unit (kW.h -> kWh) | 457.187 | 461.452 | 423.433 | 433.879 | 428.979 | 417.935 | 570.977 | 410.601 | 369.592 | -10.0% (noise) |
-| Ratio::checked_add | 133.375 | 130.507 | 127.847 | 135.548 | 134.010 | 127.101 | 134.759 | 130.466 | 95.522 | -26.8% (noise) |
-| Ratio::checked_mul | 118.205 | 118.968 | 66.358 | 68.629 | 62.742 | 64.969 | 63.162 | 62.543 | 73.760 | +17.9% (noise) |
-| Ratio::to_f64 | 285.586 | 271.113 | 43.837 | 43.740 | 44.299 | 39.919 | 44.561 | 44.691 | 50.440 | +12.9% (noise) |
-| apply_exact (Ratio, deg -> rad) | 294.159 | 256.125 | 184.544 | 159.326 | 191.821 | 186.900 | 195.016 | 163.357 | 44.432 | -72.8% (noise) |
-| apply_exact (Ratio, linear) | 76.703 | 73.728 | 68.045 | 98.677 | 68.367 | 68.681 | 67.586 | 97.920 | 48.599 | -50.4% (noise) |
-| apply_exact_f64 (affine, correctly rounded) | 460.631 | 450.616 | 57.385 | 59.536 | 60.796 | 64.915 | 57.898 | 74.638 | 77.116 | +3.3% (noise) |
-| apply_exact_f64 (deg -> rad, correctly rounded) | 826.964 | 745.861 | 44.836 | 44.134 | 53.144 | 45.899 | 45.803 | 46.731 | 658.587 | +1309.3% |
-| apply_exact_f64 (eV -> J, correctly rounded) | - | - | - | - | - | - | - | - | 100.532 | - |
-| apply_exact_f64 (linear, correctly rounded) | 372.944 | 376.663 | 45.295 | 46.013 | 45.385 | 46.713 | 47.519 | 45.281 | 51.789 | +14.4% (noise) |
-| conversion("deg","rad") (parse+prepare) | 1335 | 1229 | 1076 | 879.832 | 950.531 | 886.980 | 974.098 | 979.167 | 1384 | +41.4% (noise) |
-| conversion("degF","degC") | 1548 | 1484 | 1087 | 920.325 | 991.480 | 910.360 | 1300 | 1043 | 1111 | +6.6% (noise) |
-| conversion("eV","J") (parse+prepare) | - | - | - | - | - | - | - | - | 1225 | - |
-| conversion("m/s","km/h") (parse+compose both) | 2480 | 3073 | 2395 | 2085 | 2153 | 3362 | 2571 | 3214 | 2439 | -24.1% (noise) |
-| parse `Btu_IT/(h.ft2.delta_degF)` (cold) | 2894 | 3192 | 2859 | 2919 | 3085 | 2946 | 3420 | 3960 | 3566 | -10.0% (noise) |
-| parse unit `kg.m2/s2` (cold) | 2207 | 2213 | 2113 | 2419 | 2050 | 2091 | 2664 | 3328 | 3113 | -6.5% (noise) |
-| parse unit `psi` (cold, every call) | 213.839 | 229.102 | 214.065 | 221.014 | 272.170 | 214.806 | 239.658 | 293.692 | 323.956 | +10.3% (noise) |
-| plain multiply `x * 3.6` (reference) | 1.011 | 0.747 | 0.738 | 0.747 | 0.772 | 0.896 | 0.718 | 0.763 | 0.774 | +1.4% (noise) |
-| registry construction, all table units (cold start) | 95046 | 106637 | 100513 | 113093 | 108423 | 104914 | 132832 | 149341 | 135208 | -9.5% (noise) |
-| registry get() with 10 units | 18.762 | 22.089 | 18.965 | 19.930 | 18.887 | 18.508 | 22.028 | 21.195 | 21.650 | +2.1% (noise) |
-| registry get() with 10000 units | 19.475 | 19.319 | 25.391 | 18.092 | 21.375 | 24.701 | 21.178 | 29.864 | 24.913 | -16.6% (noise) |
-| registry miss (unknown symbol) with 10 units | 659.407 | 444.811 | 452.995 | 572.295 | 538.673 | 461.997 | 618.201 | 888.794 | 569.264 | -36.0% (noise) |
-| registry miss (unknown symbol) with 10000 units | 588.894 | 490.248 | 463.952 | 638.899 | 523.348 | 665.364 | 801.029 | 715.733 | 721.717 | +0.8% (noise) |
-| registry miss, valid-looking, 10 units | 348.533 | 365.797 | 365.495 | 343.591 | 396.025 | 352.155 | 405.051 | 386.739 | 354.991 | -8.2% (noise) |
-| registry miss, valid-looking, 10000 units | 369.010 | 343.128 | 348.081 | 362.379 | 543.410 | 500.817 | 348.178 | 357.126 | 439.780 | +23.1% (noise) |
-| registry parse() with 10 units | 185.229 | 230.320 | 200.025 | 181.466 | 225.766 | 209.767 | 263.124 | 185.090 | 236.770 | +27.9% (noise) |
-| registry parse() with 10000 units | 184.051 | 229.357 | 200.191 | 184.185 | 182.585 | 183.677 | 185.404 | 200.734 | 236.043 | +17.6% (noise) |
-| reuse prepared handle (`cached` by the caller) | 1.183 | 1.204 | 1.115 | 1.065 | 1.365 | 1.349 | 1.175 | 1.258 | 1.176 | -6.5% (noise) |
-| scalar affine apply (latency chain) | 6.297 | 6.274 | 6.040 | 6.181 | 6.061 | 6.208 | 6.206 | 6.128 | 6.096 | -0.5% (noise) |
-| scalar affine apply (throughput) | 0.815 | 0.775 | 0.805 | 0.769 | 0.781 | 0.788 | 0.863 | 0.834 | 0.898 | +7.7% (noise) |
-| scalar linear apply (latency chain) | 4.706 | 4.639 | 4.963 | 4.619 | 4.629 | 4.718 | 4.686 | 4.634 | 4.666 | +0.7% (noise) |
-| scalar linear apply (throughput) | 0.861 | 0.750 | 0.833 | 0.741 | 0.841 | 0.766 | 0.754 | 0.903 | 0.707 | -21.7% (noise) |
-| scalar linear apply, deg -> rad (throughput) | 0.707 | 0.811 | 0.912 | 0.760 | 0.735 | 0.800 | 0.771 | 0.722 | 0.871 | +20.6% (noise) |
-| single call via black_box(&conv) | 1.145 | 0.893 | 0.971 | 0.938 | 0.954 | 1.088 | 0.841 | 0.904 | 0.953 | +5.4% (noise) |
-| slice affine apply_slice 10^3 | 0.222 | 0.267 | 0.222 | 0.335 | 0.229 | 0.316 | 0.267 | 0.216 | 0.336 | +55.6% (noise) |
-| slice affine apply_slice 10^5 | 0.262 | 0.271 | 0.303 | 0.324 | 0.381 | 0.306 | 0.347 | 0.357 | 0.283 | -20.7% (noise) |
-| slice affine apply_slice 10^6 | 0.561 | 0.546 | 0.554 | 0.541 | 0.558 | 0.534 | 0.564 | 0.548 | 0.565 | +3.1% (noise) |
-| slice clone only 10^3 | 0.088 | 0.103 | 0.118 | 0.118 | 0.088 | 0.113 | 0.091 | 0.105 | 0.106 | +1.0% (noise) |
-| slice clone only 10^5 | 0.252 | 0.264 | 0.247 | 0.261 | 0.276 | 0.278 | 0.257 | 0.239 | 0.243 | +1.7% (noise) |
-| slice clone only 10^6 | 0.575 | 0.551 | 0.556 | 0.544 | 0.590 | 0.553 | 0.560 | 0.548 | 0.539 | -1.6% (noise) |
-| slice linear apply_in_place 10^3 | 0.346 | 0.286 | 0.343 | 0.302 | 0.231 | 0.233 | 0.292 | 0.306 | 0.401 | +31.0% (noise) |
-| slice linear apply_in_place 10^5 | 0.449 | 0.534 | 0.437 | 0.454 | 0.481 | 0.455 | 0.480 | 0.551 | 0.555 | +0.7% (noise) |
-| slice linear apply_in_place 10^6 | 0.914 | 0.960 | 0.943 | 0.976 | 0.945 | 0.901 | 0.949 | 0.930 | 0.920 | -1.1% (noise) |
-| slice linear apply_slice 10^3 | 0.156 | 0.158 | 0.186 | 0.150 | 0.169 | 0.164 | 0.197 | 0.159 | 0.139 | -12.6% (noise) |
-| slice linear apply_slice 10^5 | 0.279 | 0.290 | 0.269 | 0.278 | 0.322 | 0.333 | 0.330 | 0.269 | 0.309 | +14.9% (noise) |
-| slice linear apply_slice 10^6 | 0.626 | 0.636 | 0.618 | 0.618 | 0.622 | 0.613 | 0.628 | 0.605 | 0.601 | -0.7% (noise) |
-| slice memcpy ceiling 10^3 | 0.085 | 0.089 | 0.068 | 0.075 | 0.070 | 0.072 | 0.069 | 0.072 | 0.085 | +18.1% (noise) |
-| slice memcpy ceiling 10^5 | 0.254 | 0.268 | 0.257 | 0.273 | 0.248 | 0.263 | 0.300 | 0.258 | 0.263 | +1.9% (noise) |
-| slice memcpy ceiling 10^6 | 0.556 | 0.550 | 0.559 | 0.548 | 0.552 | 0.543 | 0.557 | 0.549 | 0.550 | +0.2% (noise) |
-| slice plain (x - 32) * 5/9 loop 10^3 | 0.208 | 0.202 | 0.224 | 0.305 | 0.199 | 0.290 | 0.218 | 0.325 | 0.310 | -4.6% (noise) |
-| slice plain (x - 32) * 5/9 loop 10^5 | 0.285 | 0.317 | 0.278 | 0.304 | 0.317 | 0.276 | 0.280 | 0.290 | 0.351 | +21.0% (noise) |
-| slice plain (x - 32) * 5/9 loop 10^6 | 0.559 | 0.565 | 0.538 | 0.544 | 0.551 | 0.548 | 0.542 | 0.566 | 0.553 | -2.3% (noise) |
-| slice plain multiply loop 10^3 | 0.159 | 0.149 | 0.180 | 0.199 | 0.186 | 0.165 | 0.224 | 0.142 | 0.171 | +20.4% (noise) |
-| slice plain multiply loop 10^5 | 0.276 | 0.288 | 0.270 | 0.311 | 0.330 | 0.302 | 0.303 | 0.316 | 0.266 | -15.8% (noise) |
-| slice plain multiply loop 10^6 | 0.585 | 0.579 | 0.583 | 0.579 | 0.604 | 0.567 | 0.566 | 0.570 | 0.576 | +1.1% (noise) |
+| Dim::checked_add | 16.732 | 14.380 | 14.469 | 15.362 | 15.057 | 14.663 | 14.921 | 14.778 | 15.015 | +1.6% (noise) |
+| Dim::checked_scale(3) | 17.814 | 18.750 | 17.705 | 17.433 | 18.662 | 19.279 | 19.144 | 18.767 | 19.248 | +2.6% (noise) |
+| Dim::checked_sub | 17.521 | 14.653 | 14.962 | 14.860 | 14.805 | 15.087 | 17.386 | 14.531 | 15.587 | +7.3% (noise) |
+| Quantity mul (kW * h) | 286.818 | 295.569 | 304.029 | 249.501 | 248.730 | 248.843 | 408.353 | 243.800 | 309.550 | +27.0% (noise) |
+| Quantity::to_unit (kW.h -> kWh) | 446.169 | 375.693 | 638.390 | 385.428 | 394.268 | 369.716 | 485.364 | 399.980 | 387.188 | -3.2% (noise) |
+| Ratio::checked_add | 132.613 | 132.639 | 134.170 | 124.841 | 129.614 | 131.123 | 124.843 | 126.285 | 94.800 | -24.9% (noise) |
+| Ratio::checked_mul | 116.592 | 62.755 | 61.630 | 59.719 | 71.853 | 59.710 | 57.298 | 60.774 | 76.144 | +25.3% (noise) |
+| Ratio::to_f64 | 270.214 | 41.804 | 40.663 | 39.906 | 41.608 | 40.213 | 41.563 | 39.186 | 42.415 | +8.2% (noise) |
+| apply_exact (Ratio, deg -> rad) | 253.762 | 157.250 | 158.835 | 165.002 | 159.591 | 160.074 | 167.235 | 164.612 | 44.130 | -73.2% |
+| apply_exact (Ratio, linear) | 82.784 | 71.740 | 65.939 | 71.243 | 79.416 | 74.147 | 71.514 | 71.531 | 41.186 | -42.4% |
+| apply_exact_f64 (affine, correctly rounded) | 473.339 | 60.851 | 56.604 | 55.991 | 70.500 | 61.204 | 59.321 | 59.696 | 60.935 | +2.1% (noise) |
+| apply_exact_f64 (deg -> rad, correctly rounded) | 819.911 | 46.979 | 54.063 | 43.969 | 43.024 | 53.974 | 46.050 | 43.311 | 634.595 | +1365.2% |
+| apply_exact_f64 (eV -> J, correctly rounded) | - | - | - | - | - | - | - | - | 98.606 | - |
+| apply_exact_f64 (linear, correctly rounded) | 422.385 | 44.857 | 44.520 | 47.457 | 44.087 | 44.879 | 46.006 | 44.355 | 46.424 | +4.7% (noise) |
+| conversion("deg","rad") (parse+prepare) | 1270 | 1140 | 784.572 | 947.039 | 795.864 | 794.806 | 933.916 | 842.113 | 1613 | +91.5% (noise) |
+| conversion("degF","degC") | 1485 | 1421 | 889.492 | 955.533 | 883.456 | 1017 | 1205 | 945.284 | 1408 | +48.9% (noise) |
+| conversion("eV","J") (parse+prepare) | - | - | - | - | - | - | - | - | 1206 | - |
+| conversion("m/s","km/h") (parse+compose both) | 3107 | 2047 | 2087 | 2030 | 2121 | 2654 | 2092 | 2436 | 2177 | -10.6% (noise) |
+| parse `Btu_IT/(h.ft2.delta_degF)` (cold) | 3064 | 3688 | 2963 | 2963 | 2878 | 3147 | 3250 | 3105 | 3242 | +4.4% (noise) |
+| parse unit `kg.m2/s2` (cold) | 2309 | 2148 | 2047 | 2047 | 2118 | 2190 | 2781 | 2571 | 2915 | +13.4% (noise) |
+| parse unit `psi` (cold, every call) | 229.244 | 199.476 | 208.842 | 215.896 | 213.282 | 247.065 | 233.129 | 214.981 | 215.606 | +0.3% (noise) |
+| plain multiply `x * 3.6` (reference) | 0.741 | 0.775 | 0.723 | 0.716 | 0.898 | 0.789 | 0.709 | 0.752 | 0.855 | +13.7% (noise) |
+| registry construction, all table units (cold start) | 95736 | 105747 | 101749 | 100216 | 119648 | 103060 | 128787 | 130547 | 131498 | +0.7% (noise) |
+| registry get() with 10 units | 19.156 | 18.703 | 18.306 | 20.044 | 18.706 | 20.320 | 25.477 | 21.744 | 19.110 | -12.1% (noise) |
+| registry get() with 10000 units | 18.312 | 28.130 | 25.456 | 18.836 | 18.283 | 19.869 | 25.707 | 18.517 | 19.765 | +6.7% (noise) |
+| registry miss (unknown symbol) with 10 units | 444.936 | 442.384 | 770.810 | 436.581 | 443.351 | 449.159 | 615.090 | 547.286 | 585.593 | +7.0% (noise) |
+| registry miss (unknown symbol) with 10000 units | 522.717 | 582.115 | 492.487 | 463.418 | 457.252 | 492.883 | 527.890 | 669.267 | 542.300 | -19.0% (noise) |
+| registry miss, valid-looking, 10 units | 358.084 | 361.101 | 417.847 | 416.970 | 337.324 | 353.260 | 375.422 | 389.061 | 385.972 | -0.8% (noise) |
+| registry miss, valid-looking, 10000 units | 343.686 | 395.347 | 389.344 | 351.033 | 344.139 | 369.584 | 334.593 | 353.067 | 539.846 | +52.9% (noise) |
+| registry parse() with 10 units | 176.947 | 172.573 | 182.388 | 179.027 | 190.571 | 179.522 | 241.994 | 180.619 | 176.968 | -2.0% (noise) |
+| registry parse() with 10000 units | 185.476 | 184.895 | 184.491 | 185.051 | 181.282 | 179.222 | 179.264 | 182.741 | 203.939 | +11.6% (noise) |
+| reuse prepared handle (`cached` by the caller) | 1.076 | 1.216 | 1.015 | 1.007 | 1.004 | 1.022 | 1.185 | 1.201 | 1.051 | -12.5% (noise) |
+| scalar affine apply (latency chain) | 6.270 | 6.324 | 6.161 | 6.191 | 6.330 | 6.092 | 6.158 | 5.981 | 6.238 | +4.3% (noise) |
+| scalar affine apply (throughput) | 1.051 | 0.833 | 0.799 | 0.862 | 0.757 | 0.764 | 0.845 | 0.746 | 1.279 | +71.4% (noise) |
+| scalar linear apply (latency chain) | 4.901 | 4.689 | 4.592 | 4.581 | 4.616 | 4.473 | 4.618 | 4.806 | 4.897 | +1.9% (noise) |
+| scalar linear apply (throughput) | 1.015 | 0.743 | 0.710 | 0.810 | 0.743 | 0.718 | 0.948 | 0.943 | 0.758 | -19.6% (noise) |
+| scalar linear apply, deg -> rad (throughput) | 0.721 | 0.721 | 0.730 | 0.806 | 0.702 | 0.739 | 0.868 | 0.703 | 0.697 | -0.9% (noise) |
+| single call via black_box(&conv) | 1.078 | 1.371 | 0.939 | 0.919 | 1.273 | 0.954 | 0.943 | 0.889 | 0.949 | +6.7% (noise) |
+| slice affine apply_slice 10^3 | 0.211 | 0.244 | 0.231 | 0.220 | 0.221 | 0.222 | 0.254 | 0.217 | 0.234 | +7.8% (noise) |
+| slice affine apply_slice 10^5 | 0.320 | 0.287 | 0.368 | 0.281 | 0.381 | 0.265 | 0.372 | 0.265 | 0.285 | +7.5% (noise) |
+| slice affine apply_slice 10^6 | 0.552 | 0.533 | 0.552 | 0.539 | 0.542 | 0.555 | 0.568 | 0.583 | 0.553 | -5.1% (noise) |
+| slice clone only 10^3 | 0.103 | 0.086 | 0.083 | 0.102 | 0.087 | 0.087 | 0.093 | 0.085 | 0.103 | +21.2% (noise) |
+| slice clone only 10^5 | 0.247 | 0.255 | 0.277 | 0.275 | 0.248 | 0.237 | 0.257 | 0.252 | 0.263 | +4.4% (noise) |
+| slice clone only 10^6 | 0.552 | 0.561 | 0.551 | 0.539 | 0.539 | 0.549 | 0.540 | 0.561 | 0.544 | -3.0% (noise) |
+| slice linear apply_in_place 10^3 | 0.384 | 0.224 | 0.232 | 0.226 | 0.239 | 0.235 | 0.259 | 0.245 | 0.249 | +1.6% (noise) |
+| slice linear apply_in_place 10^5 | 0.471 | 0.468 | 0.449 | 0.428 | 0.436 | 0.419 | 0.446 | 0.449 | 0.441 | -1.8% (noise) |
+| slice linear apply_in_place 10^6 | 0.932 | 0.913 | 0.932 | 0.900 | 0.903 | 0.935 | 0.906 | 0.896 | 0.890 | -0.7% (noise) |
+| slice linear apply_slice 10^3 | 0.166 | 0.140 | 0.144 | 0.141 | 0.144 | 0.145 | 0.145 | 0.163 | 0.155 | -4.9% (noise) |
+| slice linear apply_slice 10^5 | 0.261 | 0.304 | 0.258 | 0.262 | 0.258 | 0.257 | 0.252 | 0.255 | 0.257 | +0.8% (noise) |
+| slice linear apply_slice 10^6 | 0.601 | 0.605 | 0.595 | 0.575 | 0.600 | 0.591 | 0.590 | 0.593 | 0.599 | +1.0% (noise) |
+| slice memcpy ceiling 10^3 | 0.069 | 0.068 | 0.067 | 0.068 | 0.068 | 0.083 | 0.071 | 0.070 | 0.070 | +0.0% (noise) |
+| slice memcpy ceiling 10^5 | 0.248 | 0.270 | 0.245 | 0.253 | 0.250 | 0.235 | 0.240 | 0.245 | 0.258 | +5.3% (noise) |
+| slice memcpy ceiling 10^6 | 0.536 | 0.549 | 0.547 | 0.537 | 0.529 | 0.540 | 0.526 | 0.543 | 0.546 | +0.6% (noise) |
+| slice plain (x - 32) * 5/9 loop 10^3 | 0.199 | 0.212 | 0.207 | 0.199 | 0.206 | 0.207 | 0.208 | 0.208 | 0.200 | -3.8% (noise) |
+| slice plain (x - 32) * 5/9 loop 10^5 | 0.297 | 0.291 | 0.287 | 0.276 | 0.261 | 0.269 | 0.262 | 0.252 | 0.287 | +13.9% (noise) |
+| slice plain (x - 32) * 5/9 loop 10^6 | 0.566 | 0.530 | 0.559 | 0.545 | 0.538 | 0.533 | 0.548 | 0.543 | 0.551 | +1.5% (noise) |
+| slice plain multiply loop 10^3 | 0.186 | 0.179 | 0.170 | 0.173 | 0.133 | 0.147 | 0.210 | 0.138 | 0.155 | +12.3% (noise) |
+| slice plain multiply loop 10^5 | 0.264 | 0.284 | 0.255 | 0.256 | 0.285 | 0.259 | 0.255 | 0.274 | 0.272 | -0.7% (noise) |
+| slice plain multiply loop 10^6 | 0.576 | 0.570 | 0.554 | 0.557 | 0.552 | 0.579 | 0.563 | 0.578 | 0.574 | -0.7% (noise) |
 
 ## Spread (percent of the median)
 
 | row | 0.1.0 | 0.1.1 | 0.1.2 | 0.2.0 | 0.2.1 | 0.2.2 | 0.3.0 | 0.4.0 | 0.5.0 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Dim::checked_add | 22 | 27 | 21 | 25 | 21 | 32 | 25 | 13 | 23 |
-| Dim::checked_scale(3) | 12 | 14 | 15 | 8 | 10 | 14 | 16 | 30 | 7 |
-| Dim::checked_sub | 24 | 22 | 20 | 19 | 23 | 18 | 24 | 21 | 18 |
-| Quantity mul (kW * h) | 99 | 84 | 76 | 84 | 73 | 41 | 69 | 57 | 74 |
-| Quantity::to_unit (kW.h -> kWh) | 83 | 65 | 83 | 32 | 71 | 31 | 59 | 86 | 71 |
-| Ratio::checked_add | 6 | 8 | 7 | 9 | 8 | 2 | 6 | 7 | 37 |
-| Ratio::checked_mul | 15 | 9 | 28 | 23 | 28 | 33 | 26 | 29 | 47 |
-| Ratio::to_f64 | 14 | 11 | 27 | 25 | 28 | 11 | 29 | 27 | 22 |
-| apply_exact (Ratio, deg -> rad) | 20 | 6 | 26 | 12 | 25 | 27 | 25 | 13 | 86 |
-| apply_exact (Ratio, linear) | 61 | 23 | 63 | 60 | 19 | 71 | 71 | 52 | 62 |
-| apply_exact_f64 (affine, correctly rounded) | 15 | 23 | 58 | 45 | 15 | 33 | 31 | 50 | 38 |
-| apply_exact_f64 (deg -> rad, correctly rounded) | 12 | 13 | 10 | 5 | 24 | 21 | 25 | 35 | 52 |
-| apply_exact_f64 (eV -> J, correctly rounded) | - | - | - | - | - | - | - | - | 19 |
-| apply_exact_f64 (linear, correctly rounded) | 27 | 7 | 22 | 22 | 23 | 30 | 24 | 22 | 28 |
-| conversion("deg","rad") (parse+prepare) | 48 | 20 | 50 | 59 | 50 | 66 | 50 | 61 | 70 |
-| conversion("degF","degC") | 54 | 55 | 65 | 84 | 79 | 71 | 75 | 36 | 25 |
-| conversion("eV","J") (parse+prepare) | - | - | - | - | - | - | - | - | 33 |
-| conversion("m/s","km/h") (parse+compose both) | 60 | 46 | 55 | 71 | 74 | 46 | 57 | 50 | 63 |
-| parse `Btu_IT/(h.ft2.delta_degF)` (cold) | 48 | 55 | 10 | 78 | 54 | 68 | 58 | 56 | 57 |
-| parse unit `kg.m2/s2` (cold) | 20 | 62 | 21 | 59 | 29 | 16 | 60 | 63 | 69 |
-| parse unit `psi` (cold, every call) | 38 | 53 | 46 | 56 | 44 | 61 | 31 | 43 | 42 |
-| plain multiply `x * 3.6` (reference) | 22 | 33 | 45 | 19 | 51 | 39 | 49 | 18 | 21 |
-| registry construction, all table units (cold start) | 44 | 24 | 6 | 26 | 61 | 54 | 35 | 43 | 16 |
-| registry get() with 10 units | 68 | 55 | 66 | 39 | 56 | 33 | 56 | 62 | 61 |
-| registry get() with 10000 units | 43 | 73 | 46 | 13 | 17 | 55 | 53 | 44 | 55 |
-| registry miss (unknown symbol) with 10 units | 57 | 50 | 31 | 62 | 35 | 69 | 68 | 46 | 72 |
-| registry miss (unknown symbol) with 10000 units | 53 | 82 | 70 | 56 | 73 | 74 | 55 | 55 | 52 |
-| registry miss, valid-looking, 10 units | 32 | 67 | 110 | 63 | 57 | 28 | 30 | 66 | 28 |
-| registry miss, valid-looking, 10000 units | 28 | 54 | 26 | 57 | 42 | 54 | 68 | 64 | 45 |
-| registry parse() with 10 units | 22 | 37 | 46 | 43 | 29 | 62 | 41 | 43 | 37 |
-| registry parse() with 10000 units | 30 | 41 | 28 | 31 | 23 | 52 | 49 | 43 | 43 |
-| reuse prepared handle (`cached` by the caller) | 35 | 17 | 41 | 28 | 36 | 41 | 39 | 18 | 16 |
-| scalar affine apply (latency chain) | 13 | 11 | 10 | 10 | 13 | 12 | 7 | 12 | 6 |
-| scalar affine apply (throughput) | 41 | 60 | 58 | 61 | 67 | 68 | 66 | 68 | 30 |
-| scalar linear apply (latency chain) | 12 | 8 | 13 | 5 | 8 | 13 | 10 | 11 | 8 |
-| scalar linear apply (throughput) | 35 | 17 | 22 | 27 | 29 | 12 | 53 | 34 | 19 |
-| scalar linear apply, deg -> rad (throughput) | 6 | 24 | 16 | 26 | 15 | 18 | 42 | 15 | 55 |
-| single call via black_box(&conv) | 27 | 41 | 35 | 45 | 43 | 44 | 12 | 12 | 51 |
-| slice affine apply_slice 10^3 | 59 | 55 | 44 | 50 | 16 | 59 | 63 | 83 | 53 |
-| slice affine apply_slice 10^5 | 22 | 16 | 30 | 36 | 35 | 27 | 29 | 33 | 49 |
-| slice affine apply_slice 10^6 | 5 | 7 | 10 | 4 | 14 | 18 | 21 | 8 | 8 |
-| slice clone only 10^3 | 45 | 46 | 46 | 37 | 48 | 34 | 42 | 57 | 43 |
-| slice clone only 10^5 | 33 | 24 | 11 | 18 | 28 | 27 | 18 | 23 | 24 |
-| slice clone only 10^6 | 10 | 12 | 7 | 3 | 13 | 5 | 4 | 8 | 5 |
-| slice linear apply_in_place 10^3 | 53 | 39 | 43 | 48 | 8 | 42 | 59 | 64 | 57 |
-| slice linear apply_in_place 10^5 | 34 | 27 | 27 | 20 | 21 | 37 | 28 | 29 | 28 |
-| slice linear apply_in_place 10^6 | 6 | 20 | 9 | 17 | 13 | 9 | 11 | 11 | 18 |
-| slice linear apply_slice 10^3 | 118 | 74 | 49 | 50 | 101 | 102 | 52 | 94 | 40 |
-| slice linear apply_slice 10^5 | 41 | 43 | 26 | 27 | 30 | 44 | 69 | 16 | 32 |
-| slice linear apply_slice 10^6 | 9 | 18 | 11 | 14 | 5 | 14 | 9 | 12 | 10 |
-| slice memcpy ceiling 10^3 | 21 | 51 | 44 | 21 | 50 | 21 | 33 | 54 | 25 |
-| slice memcpy ceiling 10^5 | 7 | 16 | 17 | 35 | 27 | 39 | 35 | 21 | 9 |
-| slice memcpy ceiling 10^6 | 5 | 9 | 7 | 9 | 6 | 4 | 9 | 10 | 4 |
-| slice plain (x - 32) * 5/9 loop 10^3 | 12 | 12 | 59 | 52 | 77 | 46 | 30 | 54 | 40 |
-| slice plain (x - 32) * 5/9 loop 10^5 | 27 | 32 | 38 | 32 | 32 | 44 | 40 | 22 | 31 |
-| slice plain (x - 32) * 5/9 loop 10^6 | 16 | 10 | 6 | 6 | 4 | 18 | 12 | 6 | 9 |
-| slice plain multiply loop 10^3 | 48 | 46 | 68 | 59 | 31 | 48 | 44 | 42 | 101 |
-| slice plain multiply loop 10^5 | 30 | 35 | 28 | 35 | 22 | 60 | 30 | 28 | 35 |
-| slice plain multiply loop 10^6 | 5 | 18 | 9 | 10 | 13 | 9 | 9 | 8 | 5 |
+| Dim::checked_add | 21 | 28 | 27 | 25 | 30 | 13 | 23 | 11 | 28 |
+| Dim::checked_scale(3) | 13 | 11 | 19 | 12 | 8 | 38 | 12 | 12 | 12 |
+| Dim::checked_sub | 21 | 29 | 33 | 17 | 15 | 13 | 20 | 20 | 10 |
+| Quantity mul (kW * h) | 73 | 48 | 60 | 18 | 108 | 52 | 56 | 33 | 84 |
+| Quantity::to_unit (kW.h -> kWh) | 80 | 9 | 55 | 14 | 81 | 3 | 61 | 21 | 75 |
+| Ratio::checked_add | 9 | 9 | 10 | 10 | 8 | 8 | 7 | 6 | 40 |
+| Ratio::checked_mul | 16 | 24 | 30 | 27 | 28 | 5 | 31 | 27 | 50 |
+| Ratio::to_f64 | 30 | 23 | 26 | 34 | 34 | 21 | 41 | 27 | 35 |
+| apply_exact (Ratio, deg -> rad) | 19 | 29 | 37 | 25 | 23 | 23 | 12 | 32 | 50 |
+| apply_exact (Ratio, linear) | 48 | 74 | 51 | 70 | 29 | 29 | 13 | 18 | 17 |
+| apply_exact_f64 (affine, correctly rounded) | 16 | 18 | 44 | 43 | 29 | 13 | 26 | 13 | 34 |
+| apply_exact_f64 (deg -> rad, correctly rounded) | 13 | 32 | 32 | 18 | 8 | 23 | 26 | 15 | 10 |
+| apply_exact_f64 (eV -> J, correctly rounded) | - | - | - | - | - | - | - | - | 8 |
+| apply_exact_f64 (linear, correctly rounded) | 30 | 33 | 5 | 33 | 3 | 9 | 28 | 8 | 8 |
+| conversion("deg","rad") (parse+prepare) | 39 | 61 | 40 | 46 | 76 | 22 | 57 | 61 | 67 |
+| conversion("degF","degC") | 50 | 50 | 78 | 80 | 91 | 42 | 65 | 27 | 51 |
+| conversion("eV","J") (parse+prepare) | - | - | - | - | - | - | - | - | 18 |
+| conversion("m/s","km/h") (parse+compose both) | 28 | 27 | 19 | 52 | 80 | 71 | 8 | 68 | 54 |
+| parse `Btu_IT/(h.ft2.delta_degF)` (cold) | 25 | 59 | 19 | 10 | 61 | 35 | 59 | 6 | 70 |
+| parse unit `kg.m2/s2` (cold) | 30 | 61 | 14 | 78 | 22 | 83 | 59 | 3 | 15 |
+| parse unit `psi` (cold, every call) | 74 | 11 | 53 | 25 | 68 | 62 | 20 | 39 | 7 |
+| plain multiply `x * 3.6` (reference) | 43 | 28 | 21 | 25 | 37 | 46 | 36 | 11 | 68 |
+| registry construction, all table units (cold start) | 60 | 59 | 11 | 9 | 38 | 6 | 38 | 49 | 16 |
+| registry get() with 10 units | 17 | 62 | 71 | 54 | 37 | 61 | 51 | 61 | 41 |
+| registry get() with 10000 units | 88 | 59 | 63 | 70 | 47 | 46 | 52 | 39 | 67 |
+| registry miss (unknown symbol) with 10 units | 84 | 34 | 46 | 27 | 10 | 73 | 59 | 31 | 68 |
+| registry miss (unknown symbol) with 10000 units | 14 | 26 | 84 | 26 | 14 | 26 | 64 | 61 | 83 |
+| registry miss, valid-looking, 10 units | 63 | 45 | 64 | 61 | 31 | 29 | 58 | 63 | 60 |
+| registry miss, valid-looking, 10000 units | 11 | 33 | 60 | 70 | 69 | 30 | 27 | 25 | 44 |
+| registry parse() with 10 units | 28 | 36 | 45 | 41 | 42 | 44 | 33 | 21 | 11 |
+| registry parse() with 10000 units | 65 | 51 | 47 | 30 | 23 | 23 | 62 | 13 | 39 |
+| reuse prepared handle (`cached` by the caller) | 11 | 39 | 12 | 9 | 56 | 48 | 45 | 52 | 23 |
+| scalar affine apply (latency chain) | 8 | 5 | 10 | 7 | 7 | 8 | 4 | 13 | 8 |
+| scalar affine apply (throughput) | 45 | 63 | 68 | 65 | 3 | 79 | 82 | 70 | 45 |
+| scalar linear apply (latency chain) | 29 | 7 | 17 | 26 | 6 | 10 | 19 | 10 | 11 |
+| scalar linear apply (throughput) | 36 | 17 | 23 | 38 | 31 | 50 | 32 | 27 | 11 |
+| scalar linear apply, deg -> rad (throughput) | 22 | 15 | 5 | 51 | 4 | 18 | 29 | 7 | 4 |
+| single call via black_box(&conv) | 37 | 36 | 42 | 37 | 41 | 34 | 58 | 18 | 44 |
+| slice affine apply_slice 10^3 | 40 | 64 | 26 | 74 | 37 | 57 | 69 | 57 | 21 |
+| slice affine apply_slice 10^5 | 34 | 30 | 93 | 50 | 62 | 39 | 43 | 46 | 41 |
+| slice affine apply_slice 10^6 | 12 | 6 | 9 | 4 | 9 | 11 | 20 | 17 | 10 |
+| slice clone only 10^3 | 39 | 9 | 17 | 39 | 23 | 40 | 38 | 18 | 21 |
+| slice clone only 10^5 | 20 | 13 | 52 | 20 | 13 | 15 | 14 | 17 | 26 |
+| slice clone only 10^6 | 8 | 10 | 10 | 9 | 4 | 7 | 5 | 4 | 12 |
+| slice linear apply_in_place 10^3 | 61 | 22 | 31 | 23 | 15 | 44 | 70 | 20 | 14 |
+| slice linear apply_in_place 10^5 | 38 | 31 | 18 | 14 | 17 | 9 | 38 | 17 | 27 |
+| slice linear apply_in_place 10^6 | 7 | 12 | 12 | 19 | 8 | 14 | 8 | 16 | 14 |
+| slice linear apply_slice 10^3 | 90 | 13 | 6 | 6 | 100 | 17 | 59 | 48 | 52 |
+| slice linear apply_slice 10^5 | 43 | 41 | 35 | 10 | 37 | 47 | 16 | 23 | 31 |
+| slice linear apply_slice 10^6 | 16 | 12 | 8 | 7 | 19 | 9 | 12 | 4 | 12 |
+| slice memcpy ceiling 10^3 | 43 | 4 | 27 | 34 | 4 | 28 | 54 | 44 | 13 |
+| slice memcpy ceiling 10^5 | 16 | 38 | 22 | 20 | 15 | 23 | 27 | 25 | 29 |
+| slice memcpy ceiling 10^6 | 5 | 6 | 3 | 6 | 3 | 7 | 3 | 6 | 12 |
+| slice plain (x - 32) * 5/9 loop 10^3 | 33 | 25 | 18 | 11 | 9 | 57 | 16 | 52 | 71 |
+| slice plain (x - 32) * 5/9 loop 10^5 | 42 | 24 | 92 | 44 | 14 | 45 | 24 | 8 | 34 |
+| slice plain (x - 32) * 5/9 loop 10^6 | 7 | 4 | 10 | 5 | 5 | 11 | 7 | 19 | 8 |
+| slice plain multiply loop 10^3 | 32 | 25 | 8 | 54 | 19 | 61 | 53 | 9 | 39 |
+| slice plain multiply loop 10^5 | 19 | 54 | 47 | 16 | 19 | 42 | 11 | 26 | 36 |
+| slice plain multiply loop 10^6 | 9 | 4 | 8 | 8 | 6 | 20 | 9 | 12 | 18 |

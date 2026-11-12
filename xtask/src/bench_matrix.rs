@@ -6,6 +6,7 @@
 //! cargo xtask bench-matrix --runs 8         # runs per version (default 6)
 //! cargo xtask bench-matrix --reports        # also (re)write the generated vX.Y.Z.md reports
 //! cargo xtask bench-matrix --only 0.4.0     # only these versions (repeatable); the working tree stays
+//! cargo xtask bench-matrix --rerender --reports   # rebuild the files from matrix-raw.tsv, no measuring
 //! ```
 //!
 //! Why: a number is only comparable with another one if both came from the same bench file, the
@@ -45,6 +46,7 @@ const DEFAULT_RUNS: usize = 6;
 struct Opts {
     runs: usize,
     reports: bool,
+    rerender: bool,
     only: Vec<String>,
 }
 
@@ -52,12 +54,14 @@ fn parse_opts(args: &[String]) -> Result<Opts, String> {
     let mut o = Opts {
         runs: DEFAULT_RUNS,
         reports: false,
+        rerender: false,
         only: Vec::new(),
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
             "--reports" => o.reports = true,
+            "--rerender" => o.rerender = true,
             "--runs" => {
                 o.runs = it
                     .next()
@@ -150,15 +154,25 @@ fn stat(values: &[f64]) -> (f64, f64) {
     (m, if m > 0.0 { (hi - lo) / m * 100.0 } else { 0.0 })
 }
 
-/// A change in percent, marked when it is inside the larger of the two spreads (so it cannot be
-/// told from the noise of this machine).
-fn change(prev: (f64, f64), now: (f64, f64)) -> String {
+/// A change in percent, marked `(noise)` when it cannot be told from the noise of this machine:
+/// it is not larger than the spread of either side, or the runs of the two versions overlap (a
+/// bimodal row, whose median jumps between its modes, is then not a difference either).
+fn change(prev_runs: &[f64], now_runs: &[f64]) -> String {
+    let (prev, now) = (stat(prev_runs), stat(now_runs));
     if prev.0 <= 0.0 {
         return "-".to_string();
     }
     let pct = (now.0 / prev.0 - 1.0) * 100.0;
     let noise = prev.1.max(now.1);
-    if pct.abs() <= noise {
+    let range = |v: &[f64]| {
+        v.iter()
+            .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), x| {
+                (lo.min(*x), hi.max(*x))
+            })
+    };
+    let (p, n) = (range(prev_runs), range(now_runs));
+    let overlap = p.0 <= n.1 && n.0 <= p.1;
+    if pct.abs() <= noise || overlap {
         format!("{pct:+.1}% (noise)")
     } else {
         format!("{pct:+.1}%")
@@ -189,14 +203,15 @@ fn matrix_md(
         .into_iter()
         .collect();
     rows.sort();
-    let cell = |v: &str, r: &str| series.get(v).and_then(|m| m.get(r)).map(|x| stat(x));
+    let runs_of = |v: &str, r: &str| series.get(v).and_then(|m| m.get(r));
+    let cell = |v: &str, r: &str| runs_of(v, r).map(|x| stat(x));
     let mut s =
         format!("{MARKER}\n# Benchmark matrix: every released version, one bench file\n\n{meta}\n");
     let _ = writeln!(
         s,
         "Statistic: the median over {runs} runs of each run's median ns/op; spread = (max - min) / median of those runs. \
          Rounds alternate: round r runs every version once, in the order of the columns, so drift of the machine hits all of them. \
-         A change marked `(noise)` is not larger than the spread of either side and says nothing about the code.\n"
+         A change marked `(noise)` is not larger than the spread of either side, or the runs of the two versions overlap, and says nothing about the code.\n"
     );
     if !failed.is_empty() {
         s.push_str("Versions that did not build or run with this bench file (not hidden):\n\n");
@@ -215,8 +230,8 @@ fn matrix_md(
             .collect();
         let delta = if versions.len() >= 2 {
             match (
-                cell(&versions[versions.len() - 2], r),
-                cell(&versions[versions.len() - 1], r),
+                runs_of(&versions[versions.len() - 2], r),
+                runs_of(&versions[versions.len() - 1], r),
             ) {
                 (Some(a), Some(b)) => change(a, b),
                 _ => "-".to_string(),
@@ -264,7 +279,7 @@ fn report_md(
             let delta = prev
                 .and_then(|p| series.get(p))
                 .and_then(|m| m.get(r))
-                .map_or_else(|| "-".to_string(), |x| change(stat(x), now));
+                .map_or_else(|| "-".to_string(), |x| change(x, runs_v));
             let _ = writeln!(s, "| {r} | {} | {:.0} | {delta} |", fmt_ns(now.0), now.1);
         }
     }
@@ -274,6 +289,9 @@ fn report_md(
 
 fn execute(args: &[String], root: &Path) -> Result<(), String> {
     let o = parse_opts(args)?;
+    if o.rerender {
+        return rerender(root, o.reports);
+    }
     let releases: Vec<(String, String)> = read_releases(root)?
         .into_iter()
         .filter(|(v, _)| o.only.is_empty() || o.only.contains(v))
@@ -312,13 +330,16 @@ fn execute(args: &[String], root: &Path) -> Result<(), String> {
     }
     let current = cargo_version(root);
     let head = git(root, &["rev-parse", "--short", "HEAD"])?;
-    subjects.retain(|s| s.label != current);
-    subjects.push(Subject {
-        label: current.clone(),
-        commit: format!("{head} (working tree)"),
-        dir: root.to_path_buf(),
-        temporary: false,
-    });
+    // The working tree is measured only when its version is not a listed release (a version
+    // being prepared); a released version is always measured at its released commit.
+    if !subjects.iter().any(|s| s.label == current) {
+        subjects.push(Subject {
+            label: current,
+            commit: format!("{head} (working tree)"),
+            dir: root.to_path_buf(),
+            temporary: false,
+        });
+    }
 
     let mut series: Series = BTreeMap::new();
     let mut failed: Vec<(String, String)> = Vec::new();
@@ -381,14 +402,26 @@ fn execute(args: &[String], root: &Path) -> Result<(), String> {
         },
         commits.join(", "),
     );
+    write_outputs(root, &versions, &series, &failed, &meta, o.runs, o.reports)
+}
+
+fn write_outputs(
+    root: &Path,
+    versions: &[String],
+    series: &Series,
+    failed: &[(String, String)],
+    meta: &str,
+    runs: usize,
+    reports: bool,
+) -> Result<(), String> {
     let dir = root.join("docs").join("benchmarks");
     std::fs::write(
         dir.join("matrix.md"),
-        matrix_md(&versions, &series, &failed, &meta, o.runs),
+        matrix_md(versions, series, failed, meta, runs),
     )
     .map_err(|e| e.to_string())?;
     let mut raw = String::from("version\trun\trow\tmedian_ns_per_op\n");
-    for (v, rows) in &series {
+    for (v, rows) in series {
         for (r, vals) in rows {
             for (i, x) in vals.iter().enumerate() {
                 let _ = writeln!(raw, "{v}\t{}\t{r}\t{x}", i + 1);
@@ -397,7 +430,7 @@ fn execute(args: &[String], root: &Path) -> Result<(), String> {
     }
     std::fs::write(dir.join("matrix-raw.tsv"), raw).map_err(|e| e.to_string())?;
     println!("bench-matrix: wrote docs/benchmarks/matrix.md and matrix-raw.tsv");
-    if o.reports {
+    if reports {
         for (i, v) in versions.iter().enumerate() {
             let path = dir.join(format!("v{v}.md"));
             let hand_written = std::fs::read_to_string(&path).is_ok_and(|t| !t.starts_with(MARKER));
@@ -406,12 +439,56 @@ fn execute(args: &[String], root: &Path) -> Result<(), String> {
                 continue;
             }
             let prev = i.checked_sub(1).map(|j| versions[j].as_str());
-            std::fs::write(&path, report_md(v, prev, &series, &meta, o.runs))
+            std::fs::write(&path, report_md(v, prev, series, meta, runs))
                 .map_err(|e| e.to_string())?;
             println!("bench-matrix: wrote v{v}.md");
         }
     }
     Ok(())
+}
+
+/// `--rerender`: rebuild matrix.md and the generated reports from `matrix-raw.tsv` and the
+/// header of the existing matrix.md, without measuring anything.
+fn rerender(root: &Path, reports: bool) -> Result<(), String> {
+    let dir = root.join("docs").join("benchmarks");
+    let md = std::fs::read_to_string(dir.join("matrix.md")).map_err(|e| e.to_string())?;
+    if md.contains("did not build or run") {
+        return Err(
+            "matrix.md lists versions that failed; measure again instead of --rerender".to_string(),
+        );
+    }
+    let start = md.find("\n* Date:").ok_or("matrix.md has no header")? + 1;
+    let end = md
+        .find("\nStatistic:")
+        .ok_or("matrix.md has no statistic line")?
+        + 1;
+    let meta = md[start..end].to_string();
+    let raw = std::fs::read_to_string(dir.join("matrix-raw.tsv")).map_err(|e| e.to_string())?;
+    let mut series: Series = BTreeMap::new();
+    let mut runs = 0_usize;
+    for line in raw.lines().skip(1) {
+        let cells: Vec<&str> = line.split('\t').collect();
+        if let [v, run, row, x] = cells[..] {
+            let (run, x): (usize, f64) = (
+                run.parse().map_err(|_| format!("bad run in '{line}'"))?,
+                x.parse().map_err(|_| format!("bad value in '{line}'"))?,
+            );
+            runs = runs.max(run);
+            series
+                .entry(v.to_string())
+                .or_default()
+                .entry(row.to_string())
+                .or_default()
+                .push(x);
+        }
+    }
+    let mut versions: Vec<String> = read_releases(root)?.into_iter().map(|(v, _)| v).collect();
+    let current = cargo_version(root);
+    if !versions.contains(&current) {
+        versions.push(current);
+    }
+    versions.retain(|v| series.contains_key(v));
+    write_outputs(root, &versions, &series, &[], &meta, runs, reports)
 }
 
 fn record(series: &mut Series, label: &str, rows: &Rows) {
@@ -445,9 +522,23 @@ mod tests {
 
     #[test]
     fn a_change_inside_the_noise_is_marked() {
-        assert_eq!(change((100.0, 8.0), (105.0, 3.0)), "+5.0% (noise)");
-        assert_eq!(change((100.0, 3.0), (130.0, 4.0)), "+30.0%");
-        assert_eq!(change((0.0, 0.0), (1.0, 0.0)), "-");
+        let tight = |m: f64| [m * 0.99, m, m * 1.01];
+        assert_eq!(change(&tight(100.0), &tight(130.0)), "+30.0%");
+        assert_eq!(change(&tight(100.0), &tight(100.5)), "+0.5% (noise)");
+        // a spread of 60 percent makes a 30 percent change noise
+        assert_eq!(
+            change(&[70.0, 100.0, 130.0], &[100.0, 130.0, 160.0]),
+            "+30.0% (noise)"
+        );
+        // a bimodal row: the medians differ by 70 percent but the runs overlap
+        assert!(
+            change(
+                &[0.73, 0.74, 0.75, 1.2, 1.4, 0.74],
+                &[0.74, 1.3, 1.29, 0.75, 1.3, 0.9]
+            )
+            .ends_with("(noise)")
+        );
+        assert_eq!(change(&[0.0], &[1.0]), "-");
     }
 
     #[test]

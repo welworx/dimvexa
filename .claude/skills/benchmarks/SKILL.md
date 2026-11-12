@@ -21,8 +21,8 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
   `crates/dimvexa/benches/m0.rs`, rerun `cargo xtask bench-matrix --reports` (all versions, new
   bench file) and commit the regenerated files; a version that does not build with the new file is
   listed in `matrix.md`, not dropped silently. A row an old version cannot express shows `-`.
-* **When a version is released**, add `version<TAB>commit` to `docs/benchmarks/releases.tsv` (the
-  commit that was released) and rerun the matrix so it is measured as a released version.
+* **When a version is released**, add `version<TAB>commit` to `docs/benchmarks/releases.tsv` (the commit
+  the tag points to: `git rev-list -n1 vX.Y.Z`; not a version-bump commit) and rerun the matrix so it is measured as a released version.
 * **Read numbers with the spread.** A change is "faster" or "slower" only if it is larger than the
   spread of both sides; the matrix marks the others `(noise)`. Do not write a performance claim for
   a `(noise)` row, and say what is inside the noise instead. A hand-written narrative for a version
