@@ -38,7 +38,7 @@ PyPI and npm (`docs/releasing.md`).
    version if a row moved beyond the noise. The cross-library comparison of this version exists too:
    a full `benchmarks/run_all.sh` on a clean checkout of the release commit (it refuses unpinned
    competitor versions), the regenerated `docs/benchmarks/comparison/comparison.md`, `img/` and
-   `benchmarks/results/` committed, and `docs/benchmarks/comparison/vX.Y.Z.md` written by hand from them
+   `benchmarks/results/` committed, and the hand-written `vX.Y.Z.md` in the `docs/benchmarks/comparison` folder from them
    (`docs/benchmarking.md`, rule 5). After the release is published, add the commit its tag points to
    (`git rev-list -n1 vX.Y.Z`) to `docs/benchmarks/releases.tsv` and rerun the matrix.
 8. After the merge, the owner approves the run. Verify, do not assume: the five crates on

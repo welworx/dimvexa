@@ -87,7 +87,7 @@ def check_env(venv):
 def check_results(results):
     problems = []
     py = python_pins(BENCH / "python" / "requirements.lock.txt")
-    nd = node_pins(BENCH / "node" / "package-lock.json")
+    js = node_pins(BENCH / "node" / "package-lock.json")
     files = sorted(Path(results).glob("*.json"))
     if not files:
         return [f"no result files in {results}"]
@@ -102,7 +102,7 @@ def check_results(results):
         if lang == "python":
             want = py.get(norm(name))
         elif lang == "javascript":
-            want = nd.get(name)
+            want = js.get(name)
         elif name in CRATE_LOCKS:
             want = crate_pin(CRATE_LOCKS[name], name)
         else:
