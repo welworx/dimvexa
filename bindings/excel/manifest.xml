@@ -8,7 +8,7 @@
            xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
            xsi:type="TaskPaneApp">
   <Id>876d70e8-47f9-44f2-9db7-01d8a77a563a</Id>
-  <Version>0.5.1.0</Version>
+  <Version>0.6.0.0</Version>
   <ProviderName>Dimvexa</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Dimvexa unit conversion"/>

@@ -5,7 +5,7 @@ All notable changes are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Release notes are generated from Conventional
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
-## [Unreleased]
+## [0.6.0] - 2026-11-12
 ### Added
 
 - **Constants table (ADR-018, step 2).** A new `[[constant]]` entry type: `id` (what you select, like a unit's id), a full `name` (`Planck constant`; never empty), an exact `value` (a fraction or decimal, optionally followed by `10^k` and `pi`), a `unit` (which gives the dimension), `exactness`, `conditions` (`none (defined)` for a defined value), `source`, and for a measured value the pinned `codata` edition. Built-in constants live in `crates/dimvexa-data/data/constants/*.toml` (`pi`, `h_P`, `e`, `k_B`, `N_A`; the SI defining constants are `defined`), are compiled by `build.rs`, covered by the data hash (data version 20) and checked by `cargo xtask validate-data`; each has a golden vector with its own citation in `data/vectors/constants.toml`.
