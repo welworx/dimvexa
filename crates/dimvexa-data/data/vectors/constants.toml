@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Golden vectors for the constants table: the value of constant `constant`, converted to the
+# coherent SI unit, must equal `expect` exactly. `expect` is written the way the source prints
+# it (a decimal mantissa and a power of ten), not the way the table stores it, so a typo in
+# either form is caught. `dim` is the dimension, exponents of [kg, m, s, A, K, mol, cd], written
+# independently of the unit text, so a unit typo such as J.K for J/K is caught. `source` is the citation of this vector, separate from the table's.
+
+[[constant_vector]]
+constant = "pi"
+dim = [0, 0, 0, 0, 0, 0, 0]
+expect = "pi"
+source = "ISO 80000-2:2019, mathematical constants (pi; kept symbolic, not a decimal)"
+
+[[constant_vector]]
+constant = "h_P"
+dim = [1, 2, -1, 0, 0, 0, 0]
+expect = "6.62607015 10^-34"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: h = 6.626 070 15 x 10^-34 J s"
+
+[[constant_vector]]
+constant = "e"
+dim = [0, 0, 1, 1, 0, 0, 0]
+expect = "1.602176634 10^-19"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: e = 1.602 176 634 x 10^-19 C"
+
+[[constant_vector]]
+constant = "k_B"
+dim = [1, 2, -2, 0, -1, 0, 0]
+expect = "1.380649 10^-23"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: k = 1.380 649 x 10^-23 J K^-1"
+
+[[constant_vector]]
+constant = "N_A"
+dim = [0, 0, 0, 0, 0, -1, 0]
+expect = "6.02214076 10^23"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: N_A = 6.022 140 76 x 10^23 mol^-1"

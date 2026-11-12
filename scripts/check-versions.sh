@@ -21,7 +21,9 @@ for c in dimvexa-core dimvexa-data dimvexa-config dimvexa; do
 done
 manifest=$(sed -n 's|.*<Version>\(.*\)</Version>.*|\1|p' bindings/excel/manifest.xml | head -n 1)
 check "bindings/excel/manifest.xml <Version> (workspace version plus .0)" "${manifest%.0}"
-v=$(sed -n 's/^dimvexa = "\([^"]*\)"/\1/p' bindings/python/Cargo.toml)
-check "bindings/python/Cargo.toml dependency dimvexa" "$v"
+for c in dimvexa dimvexa-config; do
+  v=$(sed -n "s/^$c = \"\([^\"]*\)\"/\1/p" bindings/python/Cargo.toml)
+  check "bindings/python/Cargo.toml dependency $c" "$v"
+done
 [ "$bad" = 0 ] || exit 1
 echo "$want"

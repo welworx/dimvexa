@@ -68,6 +68,7 @@ Usage:
   dimvexa [convert] VALUE FROM TO [OPTIONS]
   dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
+  dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]
   dimvexa update [--check] [-y]
 
 Run 'dimvexa --help' for commands, options and examples.

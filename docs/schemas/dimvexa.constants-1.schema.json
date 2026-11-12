@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dimvexa.constants/1",
+  "title": "dimvexa.constants/1",
+  "description": "Output of `dimvexa constants --json` (ADR-018): the built-in constants followed by those of the `--config` files, or one named constant, or a usage error. Adding fields is allowed within a schema version; removing or changing them requires a new version. Exact numbers are strings so no JSON parser rounds them.",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "ok",
+        "data_version",
+        "constants",
+        "config"
+      ],
+      "properties": {
+        "schema": {
+          "const": "dimvexa.constants/1"
+        },
+        "ok": {
+          "const": true
+        },
+        "data_version": {
+          "type": "string"
+        },
+        "constants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "value",
+              "unit",
+              "exactness",
+              "codata",
+              "conditions",
+              "source",
+              "note",
+              "file",
+              "line"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The identifier the user selects (never also a unit's name)."
+              },
+              "name": {
+                "type": "string",
+                "description": "The full name, for example `Planck constant`. Never empty.",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^([0-9]+(/[0-9]+)?)?( ?10\\^-?[0-9]+)?( ?pi(\\^-?[0-9]+)?)?$",
+                "description": "The exact value: a fraction, optionally followed by 10^k and pi^m (for example `662607015 10^-42`)."
+              },
+              "unit": {
+                "type": "string",
+                "description": "The unit expression the value is a number of; it gives the dimension."
+              },
+              "exactness": {
+                "enum": [
+                  "defined",
+                  "measured"
+                ]
+              },
+              "codata": {
+                "type": "string",
+                "description": "Pinned CODATA edition of a measured value; may be empty."
+              },
+              "conditions": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              },
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "config": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "file",
+              "hash"
+            ],
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "hash": {
+                "type": "string",
+                "pattern": "^fnv1a64:[0-9a-f]{16}$"
+              }
+            }
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "One entry for every name, unit or constant a later --config replaced from an earlier one (the later wins). Empty when nothing was replaced."
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "dimvexa.constants/1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "object",
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "suggestions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

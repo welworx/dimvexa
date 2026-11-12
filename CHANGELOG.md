@@ -5,6 +5,25 @@ All notable changes are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Release notes are generated from Conventional
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
+## [0.6.0] - 2026-11-12
+### Added
+
+- **Constants table (ADR-018, step 2).** A new `[[constant]]` entry type: `id` (what you select, like a unit's id), a full `name` (`Planck constant`; never empty), an exact `value` (a fraction or decimal, optionally followed by `10^k` and `pi`), a `unit` (which gives the dimension), `exactness`, `conditions` (`none (defined)` for a defined value), `source`, and for a measured value the pinned `codata` edition. Built-in constants live in `crates/dimvexa-data/data/constants/*.toml` (`pi`, `h_P`, `e`, `k_B`, `N_A`; the SI defining constants are `defined`), are compiled by `build.rs`, covered by the data hash (data version 20) and checked by `cargo xtask validate-data`; each has a golden vector with its own citation in `data/vectors/constants.toml`.
+- `dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]` lists name, value, unit, exactness, conditions, source and origin; JSON schema `dimvexa.constants/1`.
+- Library: `ConstantDef` (core), `dimvexa_data::{CONSTANTS, constant}` (also re-exported by `dimvexa`), `dimvexa_config::{Constant, Density, reject_builtin_constants, BUILT_IN}`, `Constant::{from_def, is_density, to_density}`.
+- `dimvexa_config::load`, `Loaded` and `DensityError`: the registry, constants and densities in effect are built in one place, so the CLI and the bindings cannot differ. `Constant::value_text`.
+- WASM: `constants(config, configTexts)`, and `convertWith`/`withOptions` take your own config files as TOML text (last argument; **breaking**: pass `[]`). Python: `constants()`, and `convert`/`conversion` take `density=`, `configs=` (shipped names or file paths) and `config_texts=`. Both reject a config that redefines a built-in constant.
+- **Breaking:** a constant's name is never also a unit's. The Planck constant is `h_P` (`h` is the hour); `load` refuses a constant named like a unit (an ambiguous bare symbol such as `ton` counts), and `validate-data` checks the built-in table. `examples/configs/angle.toml` names its unit `pirad` instead of `pi`, which is the constant. Python: `quantity()` takes `density=`, `configs=` and `config_texts=` (and `.to()` uses the density), `units()` and `unit_info()` take the configs and list their units (`defined_in`).
+- A later config may replace a name, unit or constant of an earlier one (the later wins) but now with a `warning:` on stderr and a `warnings` array in the `--json` output of `convert`, `units` and `constants` (a field added within the current schema versions); a `UserWarning` in Python, `console.warn` in WASM; `dimvexa_config::Loaded::warnings`. Built-in constants and table units still cannot be replaced.
+- A built-in constant cannot be redefined by a config (`invalid_definition`, "cannot be redefined"): a user-defined `pi` would silently change every angle.
+
+### Changed
+
+- **Breaking:** `[[density]]` is now a `[[constant]]` of a density unit (`unit = "kg/m3"`, `exactness = "measured"`); `[[density]]` is no longer a table. Config constants are checked when the config is loaded: an unknown unit is an `invalid_definition` with file and line.
+- **Breaking:** `--const NAME_OR_VALUE` replaces `--density`, which is gone. It takes the name of a constant of a density unit or your own number (`998.2067kg/m3`); a constant of another dimension (`h_P`, `k_B`) is refused, and a constant is never applied silently. The convert JSON (`dimvexa.convert/3`) is unchanged except that the `file` of a number written on the command line is `--const`.
+- **Breaking:** `dimvexa.configs/2` (new schema file; `/1` stays): the `densities` entries and count are now `constants`, each with `unit`, `exactness`, `codata`, `note`, `file` and `line`. `dimvexa.units/4` is unchanged: its `densities` still lists the constants of a density unit.
+- **Breaking (library):** `dimvexa_config::Constant` is now the general constant and `ConstantKind` is gone; the old density-only type is `Density` (`density_needed`, `conversion`, `density_from_text`).
+
 ## [0.5.1] - 2026-11-12
 ### Changed
 

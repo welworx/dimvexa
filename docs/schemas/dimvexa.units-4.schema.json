@@ -326,6 +326,13 @@
               }
             }
           }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "One entry for every name, unit or constant a later --config replaced from an earlier one (the later wins). Empty when nothing was replaced."
         }
       },
       "additionalProperties": true,
@@ -574,6 +581,13 @@
               ]
             }
           }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "One entry for every name, unit or constant a later --config replaced from an earlier one (the later wins). Empty when nothing was replaced."
         }
       }
     },

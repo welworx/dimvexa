@@ -38,7 +38,7 @@ they are not added.
 ## Parked
 
 Multiples of pi as a built-in (`2 pi`, an exact `turn`) are parked by the owner for later; option 2
-above is the way to do it. Until then `examples/configs/angle.toml` defines `pi` and `turn`.
+above is the way to do it. Until then `examples/configs/angle.toml` defines `pirad` and `turn`.
 
 ## Consequences
 

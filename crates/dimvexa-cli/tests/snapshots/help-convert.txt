@@ -2,7 +2,7 @@ dimvexa convert - convert a value from one unit to another
 
 Usage:
   dimvexa [convert] VALUE FROM TO [--exact] [--json | --pretty]
-      [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
+      [--config NAME_OR_PATH]... [--const NAME_OR_VALUE]
 
 VALUE is a number; FROM and TO are units or unit expressions (m/s, kW.h, psi).
 Units of different quantities, or an ambiguous symbol, are an error.
@@ -12,8 +12,8 @@ Examples:
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
   dimvexa convert 1 ton kg --config us
-  dimvexa convert 1 L kg --config water --density water_25C
-  dimvexa convert 1 L kg --density 998.2067kg/m3
+  dimvexa convert 1 L kg --config water --const water_25C
+  dimvexa convert 1 L kg --const 998.2067kg/m3
 
 Options:
   --exact          print the exact result and its decimal: a fraction, with pi
@@ -22,14 +22,15 @@ Options:
   --json           machine-readable output (schema dimvexa.convert/3)
   --pretty         --json, indented for reading
   --config NAME_OR_PATH
-                   (beta) apply a config; repeatable, later ones win. A shipped
-                   one is named (us, gb, metric-trade, year-julian, year-civil,
-                   water); a file has a path (./mine.toml, or anything with a /
-                   or ending in .toml). See: dimvexa configs --help
-  --density NAME_OR_VALUE
-                   density for mass <-> volume: a name from a loaded config
-                   (--config water --density water_25C) or your own number
-                   (--density 998.2067kg/m3). The assumption is printed
+                   (beta) apply a config; repeatable, later ones win and a
+                   warning names what they replace. A shipped one is named
+                   (us, gb, metric-trade, year-julian, year-civil, water); a
+                   file has a path (./mine.toml, or anything with a / or
+                   ending in .toml). See: dimvexa configs --help
+  --const NAME_OR_VALUE
+                   density for mass <-> volume: the name of a constant of a
+                   density unit (--config water --const water_25C) or your own
+                   number (--const 998.2067kg/m3). The assumption is printed
   --color WHEN     auto, always or never (see: dimvexa --help)
 
 Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.

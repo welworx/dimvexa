@@ -48,10 +48,10 @@ dependency without an issue and an ADR. Edition 2024, MSRV 1.85 (do not change i
 | Path | What |
 |---|---|
 | `crates/dimvexa-core/src` | `Dim`, `Ratio` (checked i128), `Kind`, parser (`expr.rs`), `Registry`, `Conversion`, `Quantity`, `Error` |
-| `crates/dimvexa-data` | `data/units/*.toml`, `data/vectors/*.toml`, `data/data_version.toml`; `build.rs` compiles the tables |
+| `crates/dimvexa-data` | `data/units/*.toml`, `data/constants/*.toml`, `data/vectors/*.toml`, `data/data_version.toml`; `build.rs` compiles the tables |
 | `crates/dimvexa-config` | user config files (ADR-009): `Config`, `apply`; the core only offers `Registry::add_alias` and the helpers `name_is_free`, `prefix_clash` |
 | `crates/dimvexa` | facade crate (re-exports core + data) |
-| `crates/dimvexa-cli` | `dimvexa convert`, `units`, `configs`, `update` (self-update, ADR-015); no conversion logic of its own; snapshots in `tests/snapshots` |
+| `crates/dimvexa-cli` | `dimvexa convert`, `units`, `configs`, `constants`, `update` (self-update, ADR-015); no conversion logic of its own; snapshots in `tests/snapshots` |
 | `crates/dimvexa-testkit` | test helpers; differential, exact-path, property, overflow and zero-allocation tests |
 | `xtask` | `ci`, `validate-data`, `update-data-hash`, `bench-check` |
 | `docs/` | `guide.md` (CLI user guide; its examples are tested in `crates/dimvexa-cli/tests/cli.rs`), `PLAN.md`, `DESIGN.md`, `adr/`, `excel.md`, `brand/` (logo, icons, design guidelines), `precision.md`, `benchmarks/`, `ci-pinning.md`, `schemas/` |
@@ -77,6 +77,13 @@ Read the matching skill in `.claude/skills/<name>/SKILL.md` before the task.
 
 ## Conventions
 
+* The pull request title is checked by `.github/workflows/pr-title.yml` (the `conventional-title`
+  check) and becomes the squash commit. It must match
+  `^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._/-]+\))?!?: [^ ].{0,100}$`:
+  **one** scope only, lower case letters, digits and `. _ / -` (no comma, no space, no
+  upper case: `feat(config)!: ...`, not `feat(data,config,cli)!: ...`), `!` for a breaking
+  change, a subject of at most 101 characters. Check the title against this pattern before you
+  create or rename a pull request, and read the check runs afterwards.
 * Conventional Commits (`feat(core): ...`). Do not add `Signed-off-by` lines for the owner (the
   owner is the sole maintainer and exempt from the DCO check; outside contributors sign off).
   End commits with the attribution lines your environment asks for.
@@ -90,11 +97,11 @@ Read the matching skill in `.claude/skills/<name>/SKILL.md` before the task.
   passes locally but fails in CI (a different toolchain, OS or lock state) means the local
   gate is missing something: add it to `cargo xtask ci` or the hook, not only a fix.
 * Keep error codes stable (`Error::ALL_CODES`); adding a field to the JSON schema is allowed
-  within the current schema version (`dimvexa.convert/3`, `dimvexa.units/4`, `dimvexa.configs/1`);
+  within the current schema version (`dimvexa.convert/3`, `dimvexa.units/4`, `dimvexa.configs/2`, `dimvexa.constants/1`);
   removing or renaming one needs a new version (ADR-014 did that for `/2`).
 * The CLI help is part of the interface. A new or changed command, option, config, JSON schema,
   exit code or error behaviour updates, in the same change: the overview (`HELP`) and the page
-  of that command (`HELP_CONVERT`, `HELP_UNITS`, `HELP_CONFIGS`, `HELP_UPDATE`) in
+  of that command (`HELP_CONVERT`, `HELP_UNITS`, `HELP_CONFIGS`, `HELP_CONSTANTS`, `HELP_UPDATE`) in
   `crates/dimvexa-cli/src/lib.rs`, its `Examples:` and `docs/guide.md`. A new command also needs a
   page, an entry in `HELP_PAGES` in `crates/dimvexa-cli/tests/cli.rs` and a line in the overview.
   Help lines stay within 80 columns and every example must run as typed from an empty

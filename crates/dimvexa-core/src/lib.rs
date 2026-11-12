@@ -50,6 +50,7 @@
 //! ```
 
 mod approx;
+mod constant;
 mod conversion;
 mod dim;
 mod error;
@@ -61,6 +62,7 @@ mod ratio;
 mod registry;
 mod unit;
 
+pub use constant::ConstantDef;
 pub use conversion::Conversion;
 pub use dim::Dim;
 pub use error::{Error, Result};

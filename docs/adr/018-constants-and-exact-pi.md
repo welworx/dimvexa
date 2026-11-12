@@ -4,7 +4,7 @@ Status: Accepted by the owner on 2026-11-11, including the two recommended defau
 
 Supersedes the pi, `eV` and `Da` part of [ADR-010](010-units-that-do-not-fit-i128.md) (its option 2).
 
-Implementation: step 1 (the number type, exact angles, `eV`, `Da`) is released in 0.5.0; the measurements are in [`docs/benchmarks/v0.5.0.md`](../benchmarks/v0.5.0.md). Steps 2 and 3 are not started.
+Implementation: step 1 (the number type, exact angles, `eV`, `Da`) is released in 0.5.0; the measurements are in [`docs/benchmarks/v0.5.0.md`](../benchmarks/v0.5.0.md). Step 2 (the constants table, `--const`, `dimvexa constants`, `dimvexa.configs/2`) is released in 0.6.0; step 3 is not started.
 
 ## Context
 
@@ -34,7 +34,7 @@ Delivered in three steps, each a separate change that can be released and benchm
    DESIGN.md asks), `h` and `e` become representable. KL-19 closes. Breaking: `Ratio` and the
    table format change; handled with the `api-change` skill (new schema versions, CHANGELOG
    `Changed`, snapshots).
-2. **Constants table.** A `[[constant]]` entry has `name`, an exact `value` (a number in the form
+2. **Constants table.** A `[[constant]]` entry has an `id` (what the user writes), a full `name`, an exact `value` (a number in the form
    of step 1), a `unit` (which gives the dimension), `exactness`, `conditions` (`none (defined)`
    for a defined value), `source`, and for a `measured` value the pinned CODATA edition. Built-in
    constants live in `crates/dimvexa-data/data/constants/*.toml` (compiled by `build.rs`, covered
@@ -49,6 +49,10 @@ Delivered in three steps, each a separate change that can be released and benchm
 
 Output (confirmed): `--exact` prints both the symbolic fraction (`1/2 pi`) and
 the correctly rounded decimal; `--json` carries both (`exact` and `decimal`).
+
+A constant's name is never also a unit's, so a name in a value (step 3) is unambiguous: the Planck
+constant is `h_P` because `h` is the hour, `load` refuses a constant named like a unit, and
+`validate-data` checks the built-in table.
 
 Confirmed: pi is a built-in constant `pi` in step 2 and is not redefinable by a config
 (a user pi would silently change the meaning of every angle).

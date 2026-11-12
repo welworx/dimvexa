@@ -169,7 +169,7 @@
           }
         },
         "density": {
-          "description": "The density the conversion went through (ADR-014), or null. A density is used only when requested with --density and only when the plain conversion is refused (mass <-> volume needs a density). The result's exactness is then `measured`, and the density's source is also listed in `sources`. A number written on the command line (`--density 998.2067kg/m3`) has file `--density` and line 0.",
+          "description": "The density the conversion went through (ADR-014), or null. A density is used only when requested with --const and only when the plain conversion is refused (mass <-> volume needs a density). The result's exactness is then `measured`, and the density's source is also listed in `sources`. A number written on the command line (`--density 998.2067kg/m3`) has file `--density` and line 0.",
           "oneOf": [
             {
               "type": "null"
@@ -220,6 +220,13 @@
               }
             }
           ]
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "One entry for every name, unit or constant a later --config replaced from an earlier one (the later wins). Empty when nothing was replaced."
         }
       }
     },

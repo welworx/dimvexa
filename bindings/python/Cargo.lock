@@ -10,28 +10,36 @@ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
 name = "dimvexa"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "dimvexa-core",
  "dimvexa-data",
 ]
 
 [[package]]
+name = "dimvexa-config"
+version = "0.6.0"
+dependencies = [
+ "dimvexa-core",
+]
+
+[[package]]
 name = "dimvexa-core"
-version = "0.5.1"
+version = "0.6.0"
 
 [[package]]
 name = "dimvexa-data"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "dimvexa-core",
 ]
 
 [[package]]
 name = "dimvexa-python"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "dimvexa",
+ "dimvexa-config",
  "numpy",
  "pyo3",
 ]
@@ -246,7 +254,3 @@ name = "unicode-ident"
 version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
-
-[[patch.unused]]
-name = "dimvexa-config"
-version = "0.5.1"

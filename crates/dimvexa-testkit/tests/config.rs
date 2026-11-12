@@ -127,12 +127,15 @@ fn applying_twice_is_refused_so_overrides_stay_explicit() {
     assert!(err.to_string().contains("already means a unit"), "{err}");
 }
 
-const WATER: &str = "[[density]]\nname = \"water_20C\"\n\
-value = \"9982067/10000\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\n\
+const WATER: &str = "[[constant]]\nid = \"water_20C\"\nname = \"water_20C\"\n\
+value = \"9982067/10000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\n\
 source = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
 
-fn water() -> dimvexa_config::Constant {
-    cfg(WATER, "water.toml").constants()[0].clone()
+fn water() -> dimvexa_config::Density {
+    let reg = registry().unwrap();
+    cfg(WATER, "water.toml").constants()[0]
+        .to_density(&reg)
+        .unwrap()
 }
 
 #[test]
@@ -184,14 +187,11 @@ fn a_density_does_nothing_for_anything_but_a_density() {
     // A temperature is neither a mass nor a volume, so a density cannot touch it.
     let (degc, kg) = (reg.parse("degC").unwrap(), reg.parse("kg").unwrap());
     assert!(b.conversion(&degc, &kg).is_err());
-    assert!(dimvexa_config::Constant::density_needed(
+    assert!(dimvexa_config::Density::density_needed(
         reg.parse("L").unwrap().dim(),
         kg.dim()
     ));
-    assert!(!dimvexa_config::Constant::density_needed(
-        kg.dim(),
-        kg.dim()
-    ));
+    assert!(!dimvexa_config::Density::density_needed(kg.dim(), kg.dim()));
 }
 
 const BARREL: &str = "[[unit]]\nsymbol = \"bbl_oil\"\nbase = \"gal_us\"\nfactor = \"42\"\n\
@@ -361,7 +361,7 @@ fn a_density_only_turns_mass_into_volume_not_other_dimensions_that_differ_by_a_d
         ("kg", "m3/s"),
     ] {
         assert!(
-            !dimvexa_config::Constant::density_needed(dim(from), dim(to)),
+            !dimvexa_config::Density::density_needed(dim(from), dim(to)),
             "{from} -> {to}"
         );
         let (f, t) = (reg.parse(from).unwrap(), reg.parse(to).unwrap());
@@ -370,12 +370,12 @@ fn a_density_only_turns_mass_into_volume_not_other_dimensions_that_differ_by_a_d
     // Mass <-> volume with the same power of time still works.
     for (from, to) in [("kg", "L"), ("L", "kg"), ("kg/h", "m3/h"), ("m3/s", "kg/s")] {
         assert!(
-            dimvexa_config::Constant::density_needed(dim(from), dim(to)),
+            dimvexa_config::Density::density_needed(dim(from), dim(to)),
             "{from} -> {to}"
         );
     }
     // A different power of time on the two sides does not.
-    assert!(!dimvexa_config::Constant::density_needed(
+    assert!(!dimvexa_config::Density::density_needed(
         dim("kg/h"),
         dim("m3")
     ));
@@ -595,21 +595,14 @@ fn only_the_water_config_carries_densities() {
     assert_ne!(water.constants(), []);
     for c in water.constants() {
         assert!(!c.conditions.trim().is_empty() && !c.source.trim().is_empty());
-        assert!(c.conditions.contains("air-free"), "{}", c.name);
+        assert!(c.conditions.contains("air-free"), "{}", c.id);
     }
     for b in dimvexa_config::BUNDLED.iter().filter(|b| b.name != "water") {
         let cfg = b.config().unwrap();
-        assert!(cfg.constants().is_empty(), "{} carries a density", b.name);
+        assert!(cfg.constants().is_empty(), "{} carries a constant", b.name);
     }
     // 25 degC: 997.04702 kg/m3; maximum density: 999.97495 kg/m3
-    let get = |n: &str| {
-        water
-            .constants()
-            .iter()
-            .find(|c| c.name == n)
-            .unwrap()
-            .value
-    };
+    let get = |n: &str| water.constants().iter().find(|c| c.id == n).unwrap().value;
     assert_eq!(get("water_25C"), Ratio::new(99_704_702, 100_000).unwrap());
     assert_eq!(
         get("water_max_density"),
@@ -619,13 +612,13 @@ fn only_the_water_config_carries_densities() {
 
 #[test]
 fn a_density_literal_is_converted_to_kg_per_m3_exactly() {
-    use dimvexa_config::Constant;
+    use dimvexa_config::Density;
     let reg = registry().unwrap();
-    let d = Constant::density_from_text(&reg, "998.2067kg/m3").unwrap();
+    let d = Density::density_from_text(&reg, "998.2067kg/m3").unwrap();
     assert_eq!(d.value, Ratio::new(9_982_067, 10_000).unwrap());
-    let g = Constant::density_from_text(&reg, "0.7 g/cm3").unwrap();
+    let g = Density::density_from_text(&reg, "0.7 g/cm3").unwrap();
     assert_eq!(g.value, Ratio::from_int(700));
-    let l = Constant::density_from_text(&reg, "1 kg/L").unwrap();
+    let l = Density::density_from_text(&reg, "1 kg/L").unwrap();
     assert_eq!(l.value, Ratio::from_int(1000));
     for (text, want) in [
         ("1e3 kg/m3", Ratio::from_int(1000)),
@@ -635,7 +628,7 @@ fn a_density_literal_is_converted_to_kg_per_m3_exactly() {
         ("1/2 kg/m3", Ratio::new(1, 2).unwrap()),
     ] {
         assert_eq!(
-            Constant::density_from_text(&reg, text).unwrap().value,
+            Density::density_from_text(&reg, text).unwrap().value,
             want,
             "{text}"
         );
@@ -643,7 +636,7 @@ fn a_density_literal_is_converted_to_kg_per_m3_exactly() {
     for bad in [
         "998", "kg/m3", "0 kg/m3", "-1 kg/m3", "5 m", "5 degC", "x kg/m3",
     ] {
-        assert!(Constant::density_from_text(&reg, bad).is_err(), "{bad}");
+        assert!(Density::density_from_text(&reg, bad).is_err(), "{bad}");
     }
 }
 
@@ -727,4 +720,107 @@ fn a_power_zero_of_a_reference_unit_is_plain_and_cannot_reach_the_reference() {
         let outcome = apply(&mut reg, &[cfg(&text, "test.toml")]);
         assert!(outcome.is_err(), "{base}");
     }
+}
+
+#[test]
+fn a_constant_is_a_density_only_if_its_unit_is_one() {
+    let reg = registry().unwrap();
+    // Any density unit works: 0.9982067 g/cm3 is 998.2067 kg/m3.
+    let cfg_g = cfg(
+        &WATER
+            .replace("9982067/10000", "9982067/10000000")
+            .replace("kg/m3", "g/cm3"),
+        "g.toml",
+    );
+    let d = cfg_g.constants()[0].to_density(&reg).unwrap();
+    assert_eq!(d.value, Ratio::new(9_982_067, 10_000).unwrap());
+    // A constant of another dimension is refused, not guessed.
+    let planck = cfg_g.constants()[0].clone();
+    let not_density = dimvexa_config::Constant {
+        unit: "J.s".to_string(),
+        ..planck
+    };
+    let err = not_density.to_density(&reg).unwrap_err();
+    assert_eq!(err.code(), "refused", "{err}");
+    assert!(err.to_string().contains("not a density"), "{err}");
+    // An unknown unit is an error of the registry, not a silent pass.
+    let unknown = dimvexa_config::Constant {
+        unit: "Zorp/m3".to_string(),
+        ..not_density
+    };
+    assert!(unknown.to_density(&reg).is_err());
+}
+
+#[test]
+fn a_config_cannot_redefine_a_built_in_constant() {
+    let builtin: Vec<&str> = dimvexa_data::CONSTANTS.iter().map(|c| c.id).collect();
+    assert!(builtin.contains(&"pi") && builtin.contains(&"N_A"));
+    for name in &builtin {
+        let c = cfg(&WATER.replace("water_20C", name), "mine.toml");
+        let err = dimvexa_config::reject_builtin_constants(&c, &builtin).unwrap_err();
+        assert!(
+            err.to_string().contains("cannot be redefined"),
+            "{name}: {err}"
+        );
+    }
+    let ok = cfg(WATER, "mine.toml");
+    assert!(dimvexa_config::reject_builtin_constants(&ok, &builtin).is_ok());
+}
+
+#[test]
+fn load_builds_the_constants_and_densities_in_one_place() {
+    let builtin = dimvexa_data::CONSTANTS;
+    let reg = registry().unwrap();
+    let loaded = dimvexa_config::load(reg.clone(), &[cfg(WATER, "w.toml")], builtin).unwrap();
+    let names: Vec<&str> = loaded.constants.iter().map(|c| c.id.as_str()).collect();
+    assert_eq!(names, ["pi", "h_P", "e", "k_B", "N_A", "water_20C"]);
+    assert_eq!(loaded.densities.len(), 1);
+    // A named density, a literal, and the two refusals.
+    assert_eq!(
+        loaded.resolve_density("water_20C").unwrap().value,
+        Ratio::new(9_982_067, 10_000).unwrap()
+    );
+    assert_eq!(
+        loaded.resolve_density("0.7 g/cm3").unwrap().value,
+        Ratio::from_int(700)
+    );
+    for bad in ["h", "nope"] {
+        assert!(
+            matches!(
+                loaded.resolve_density(bad),
+                Err(dimvexa_config::DensityError::Unknown { .. })
+            ),
+            "{bad}"
+        );
+    }
+    // A built-in name and an unknown unit are refused at load; a unit from a later config works.
+    let pi = cfg(&WATER.replace("water_20C", "pi"), "pi.toml");
+    assert!(dimvexa_config::load(reg.clone(), &[pi], builtin).is_err());
+    let unit = cfg(
+        "[[unit]]\nsymbol = \"blob\"\nbase = \"g\"\nfactor = \"7\"\nexactness = \"defined\"\nsource = \"s\"\n",
+        "u.toml",
+    );
+    let c = cfg(&WATER.replace("kg/m3", "blob/m3"), "c.toml");
+    assert!(dimvexa_config::load(reg.clone(), std::slice::from_ref(&c), builtin).is_err());
+    assert!(dimvexa_config::load(reg, &[unit, c], builtin).is_ok());
+}
+
+#[test]
+fn a_config_that_replaces_an_entry_of_an_earlier_one_gets_a_warning() {
+    let builtin = dimvexa_data::CONSTANTS;
+    let reg = registry().unwrap();
+    let (a, b) = (
+        cfg(WATER, "a.toml"),
+        cfg(&WATER.replace("9982067/10000", "1000"), "b.toml"),
+    );
+    let loaded = dimvexa_config::load(reg.clone(), &[a.clone(), b], builtin).unwrap();
+    assert_eq!(loaded.warnings.len(), 1, "{:?}", loaded.warnings);
+    assert!(
+        loaded.warnings[0]
+            .contains("constant 'water_20C' (b.toml:1) replaces the one from a.toml:1")
+    );
+    // The later one wins; the same config twice, and distinct names, are silent.
+    assert_eq!(loaded.densities[0].value, Ratio::from_int(1000));
+    let twice = dimvexa_config::load(reg, &[a.clone(), a], builtin).unwrap();
+    assert_eq!(twice.warnings, Vec::<String>::new());
 }

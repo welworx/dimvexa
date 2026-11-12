@@ -8,6 +8,7 @@ to the Rust API. Own workspace, needs network to build, not part of `cargo xtask
 ```console
 cargo install wasm-bindgen-cli --version 0.2.130 --locked   # once; must equal the pin in Cargo.toml
 bindings/wasm/build.sh                                      # writes bindings/wasm/pkg (Node.js target)
+node bindings/wasm/test/wasm.test.js                        # configs, densities, constants, warnings
 ```
 
 ```js
@@ -15,9 +16,11 @@ const d = require('@dimvexa/wasm');   // after `npm install @dimvexa/wasm`; loca
 d.convert(212, 'degF', 'degC');            // 100  (fast path, f64)
 d.convertExact('98.6', 'degF', 'degC');    // 37   (exact rational, rounded once)
 d.convertQuantity('5 ft', 'm');            // "1.524 m"
-d.convertWith(1, 'ton', 'kg', '', 'us');   // 907.18474 (a shipped config resolves the ambiguous name)
-d.convertWith(1, 'L', 'kg', '998.2067kg/m3', '');  // 0.9982067 (your own density; never assumed)
-d.convertWith(1, 'L', 'kg', 'water_25C', 'water'); // a density from a loaded config
+d.convertWith(1, 'ton', 'kg', '', 'us', []);   // 907.18474 (a shipped config resolves the ambiguous name)
+d.convertWith(1, 'L', 'kg', '998.2067kg/m3', '', []);  // 0.9982067 (your own density; never assumed)
+d.convertWith(1, 'L', 'kg', 'water_25C', 'water', []); // a density from a loaded config
+d.convertWith(1, 'L', 'kg', 'rho', '', [tomlText]);   // your own config file, passed as TOML text
+d.constants('water', [tomlText]);  // built-in constants (pi, h_P, e, k_B, N_A), then the configs'
 
 const c = new d.DimvexaConversion('m/s', 'km/h');   // parse and compose once
 c.apply(10);                               // 36

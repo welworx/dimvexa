@@ -2,7 +2,7 @@
 //! The command-line front end of dimvexa.
 //!
 //! ```text
-//! dimvexa convert VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
+//! dimvexa convert VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--const NAME_OR_VALUE]
 //! dimvexa VALUE FROM TO [--exact] [--json]        shorthand
 //! dimvexa units [--groups | GROUP | UNIT] [--json]  list units by quantity, one group, or one unit
 //! dimvexa configs [NAME_OR_PATH] [--json]          what the shipped configs (or a file) contain
@@ -16,7 +16,7 @@
 //!
 //! Exit codes: `0` success, `1` conversion refused or invalid input, `2` usage error.
 //! With `--json`, errors are printed to stdout as JSON (schema `dimvexa.convert/3`, see
-//! `docs/schemas/`; `units --json` uses `dimvexa.units/4`, `configs --json` `dimvexa.configs/1`) and the exit code stays non-zero. The error `code` is one of the
+//! `docs/schemas/`; `units --json` uses `dimvexa.units/4`, `configs --json` `dimvexa.configs/2`, `constants --json` `dimvexa.constants/1`) and the exit code stays non-zero. The error `code` is one of the
 //! library's stable codes ([`dimvexa::Error::ALL_CODES`]) or `usage`.
 #![forbid(unsafe_code)]
 #![doc(
@@ -28,7 +28,7 @@ use std::fmt::Write as _;
 use std::io::Write;
 
 use dimvexa::{Conversion, Dim, Error, Ratio, Registry, Unit, UnitExpr, registry};
-use dimvexa_config::{Config, ConfigUnit, Constant, Mapping};
+use dimvexa_config::{Config, ConfigUnit, Constant, Density, DensityError, Mapping};
 
 mod update;
 
@@ -38,6 +38,7 @@ Usage:
   dimvexa [convert] VALUE FROM TO [OPTIONS]
   dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
+  dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]
   dimvexa update [--check] [-y]
 
 Run 'dimvexa --help' for commands, options and examples.
@@ -50,21 +51,25 @@ Usage:
   dimvexa [convert] VALUE FROM TO [OPTIONS]
   dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
+  dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]
   dimvexa update [--check] [-y]
 
 Converts VALUE from unit FROM to unit TO. Ambiguous input is an error.
-Run 'dimvexa COMMAND --help' (convert, units, configs, update) for details.
+Run 'dimvexa COMMAND --help' (convert, units, configs, constants,
+update) for details.
 
 Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
   dimvexa convert 1 ton kg --config us
-  dimvexa convert 1 L kg --config water --density water_25C
-  dimvexa convert 1 L kg --density 998.2067kg/m3
+  dimvexa convert 1 L kg --config water --const water_25C
+  dimvexa convert 1 L kg --const 998.2067kg/m3
   dimvexa units volume
   dimvexa units psi
   dimvexa configs water
+  dimvexa constants
+  dimvexa constants k_B
 
 Commands:
   convert          convert VALUE from FROM to TO ('convert' may be left out)
@@ -73,8 +78,11 @@ Commands:
   units GROUP      list one group, for example: dimvexa units volume
   units UNIT       show one unit in detail, for example: dimvexa units psi
   configs          list the configs that ship with dimvexa (us, gb, water, ...)
-  configs NAME     show what a config contains: names, units, densities with
+  configs NAME     show what a config contains: names, units, constants with
                    their conditions and sources; a path shows your own file
+  constants        list the constants: name, exact value, unit, conditions and
+                   source (built in, plus those of any --config)
+  constants NAME   show one constant, for example: dimvexa constants h_P
   update           replace this binary with the latest GitHub release (needs
                    curl and tar; checks the published SHA-256 first; see
                    docs/adr/015-update-command.md)
@@ -87,20 +95,22 @@ Options:
                    or a power of ten when the value has one
                    (1/2 pi = 1.5707963267948966)
   --json           machine-readable output (schemas dimvexa.convert/3,
-                   dimvexa.units/4, dimvexa.configs/1)
+                   dimvexa.units/4, dimvexa.configs/2,
+                   dimvexa.constants/1)
   --pretty         --json, indented for reading (same fields, same order)
   --color WHEN     auto (default: a terminal, unless NO_COLOR is set), always
                    (also CLICOLOR_FORCE=1) or never; JSON is never coloured
   --config NAME_OR_PATH
-                   (beta) apply a config; repeatable, later ones win. A shipped
-                   one is named (us, gb, metric-trade, year-julian, year-civil,
-                   water); a file has a path (./mine.toml, or anything with a /
-                   or ending in .toml). Without --config the names stay strict.
+                   (beta) apply a config; repeatable, later ones win and a
+                   warning names what they replace. A shipped one is named
+                   (us, gb, metric-trade, year-julian, year-civil, water); a
+                   file has a path (./mine.toml, or anything with a / or
+                   ending in .toml). Without --config the names stay strict.
                    See docs/adr/014-one-config-mechanism.md
-  --density NAME_OR_VALUE
-                   density for mass <-> volume: a name from a loaded config
-                   (--config water --density water_25C) or your own number
-                   (--density 998.2067kg/m3). The assumption is printed
+  --const NAME_OR_VALUE
+                   density for mass <-> volume: the name of a constant of a
+                   density unit (--config water --const water_25C) or your own
+                   number (--const 998.2067kg/m3). The assumption is printed
   --version        print the version and the data table version
   -h, --help       print this help
 
@@ -119,7 +129,7 @@ dimvexa convert - convert a value from one unit to another
 
 Usage:
   dimvexa [convert] VALUE FROM TO [--exact] [--json | --pretty]
-      [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
+      [--config NAME_OR_PATH]... [--const NAME_OR_VALUE]
 
 VALUE is a number; FROM and TO are units or unit expressions (m/s, kW.h, psi).
 Units of different quantities, or an ambiguous symbol, are an error.
@@ -129,8 +139,8 @@ Examples:
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
   dimvexa convert 1 ton kg --config us
-  dimvexa convert 1 L kg --config water --density water_25C
-  dimvexa convert 1 L kg --density 998.2067kg/m3
+  dimvexa convert 1 L kg --config water --const water_25C
+  dimvexa convert 1 L kg --const 998.2067kg/m3
 
 Options:
   --exact          print the exact result and its decimal: a fraction, with pi
@@ -139,14 +149,15 @@ Options:
   --json           machine-readable output (schema dimvexa.convert/3)
   --pretty         --json, indented for reading
   --config NAME_OR_PATH
-                   (beta) apply a config; repeatable, later ones win. A shipped
-                   one is named (us, gb, metric-trade, year-julian, year-civil,
-                   water); a file has a path (./mine.toml, or anything with a /
-                   or ending in .toml). See: dimvexa configs --help
-  --density NAME_OR_VALUE
-                   density for mass <-> volume: a name from a loaded config
-                   (--config water --density water_25C) or your own number
-                   (--density 998.2067kg/m3). The assumption is printed
+                   (beta) apply a config; repeatable, later ones win and a
+                   warning names what they replace. A shipped one is named
+                   (us, gb, metric-trade, year-julian, year-civil, water); a
+                   file has a path (./mine.toml, or anything with a / or
+                   ending in .toml). See: dimvexa configs --help
+  --const NAME_OR_VALUE
+                   density for mass <-> volume: the name of a constant of a
+                   density unit (--config water --const water_25C) or your own
+                   number (--const 998.2067kg/m3). The assumption is printed
   --color WHEN     auto, always or never (see: dimvexa --help)
 
 Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
@@ -179,7 +190,8 @@ Options:
   --json           machine-readable output (schema dimvexa.units/4)
   --pretty         --json, indented for reading
   --config NAME_OR_PATH
-                   include the units and names of a config; repeatable
+                   include the units and names of a config; repeatable (a
+                   warning names what a later config replaces)
   --color WHEN     auto, always or never (see: dimvexa --help)
 
 Exit codes: 0 success, 1 unknown unit or group or invalid config, 2 usage error.
@@ -192,9 +204,10 @@ dimvexa configs - list the shipped configs and show what one contains
 Usage:
   dimvexa configs [NAME_OR_PATH] [--json | --pretty]
 
-A config adds names, units and densities to the strict default tables; apply one
-to a conversion with --config. A density (the mass <-> volume constant) comes
-only from a config or your own number; use it with --density.
+A config adds names, units and constants to the strict default tables; apply one
+to a conversion with --config. A density (a constant of a density unit, the
+mass <-> volume number) comes only from a config or your own number; use it
+with --const. See also: dimvexa constants --help.
 
 Examples:
   dimvexa configs
@@ -204,18 +217,52 @@ Examples:
 Forms:
   configs          the configs that ship with dimvexa (us, gb, metric-trade,
                    year-julian, year-civil, water)
-  configs NAME     its names, units, and densities with their conditions and
+  configs NAME     its names, units, and constants with their conditions and
                    sources
   configs PATH     the same for your own file (./mine.toml, or a name with a /
                    or ending in .toml)
 
 Options:
-  --json           machine-readable output (schema dimvexa.configs/1)
+  --json           machine-readable output (schema dimvexa.configs/2)
   --pretty         --json, indented for reading
   --color WHEN     auto, always or never (see: dimvexa --help)
 
 Exit codes: 0 success, 1 invalid config file, 2 usage error (an unknown config
 name is one).
+";
+
+/// `dimvexa constants --help`.
+const HELP_CONSTANTS: &str = "\
+dimvexa constants - list the named constants and show one
+
+Usage:
+  dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json | --pretty]
+
+A constant is an exact value of a unit with its conditions and source; nothing
+is rounded and nothing is applied unless you ask. The built-in ones (pi, h_P,
+e, k_B, N_A) cannot be redefined by a config. A config adds its own with
+[[constant]]; a constant of a density unit is what --const uses for mass <->
+volume.
+
+Examples:
+  dimvexa constants
+  dimvexa constants k_B
+  dimvexa constants --config water --json
+
+Forms:
+  constants        every built-in constant, then those of the --config files
+  constants NAME   one constant, with its note
+
+Options:
+  --config NAME_OR_PATH
+                   also list the constants of this config; repeatable (a
+                   warning names what a later config replaces)
+  --json           machine-readable output (schema dimvexa.constants/1)
+  --pretty         --json, indented for reading
+  --color WHEN     auto, always or never (see: dimvexa --help)
+
+Exit codes: 0 success, 1 invalid config file, 2 usage error (an unknown
+constant name is one).
 ";
 
 /// `dimvexa update --help`.
@@ -298,6 +345,7 @@ fn command_help(topic: &str) -> &'static str {
     match topic {
         "units" => HELP_UNITS,
         "configs" => HELP_CONFIGS,
+        "constants" => HELP_CONSTANTS,
         "update" => HELP_UPDATE,
         _ => HELP_CONVERT,
     }
@@ -635,7 +683,7 @@ fn pretty_json(line: &str) -> String {
 
 /// Parsed command line.
 struct Args {
-    /// The density named or written with `--density`, if any.
+    /// The density named or written with `--const`, if any.
     density: Option<String>,
     value: String,
     from: String,
@@ -662,6 +710,11 @@ enum Parsed {
     },
     /// `dimvexa configs [NAME_OR_PATH]`.
     Configs {
+        target: Option<String>,
+        json: bool,
+    },
+    /// `dimvexa constants [NAME]`.
+    Constants {
         target: Option<String>,
         json: bool,
     },
@@ -693,6 +746,7 @@ fn command_schema(args: &[String]) -> &'static str {
     {
         Some("units") => "units",
         Some("configs") => "configs",
+        Some("constants") => "constants",
         _ => "convert",
     }
 }
@@ -703,7 +757,7 @@ struct ValueOptions {
     density: Option<String>,
 }
 
-/// Splits `--config NAME_OR_PATH` (repeatable) and `--density NAME_OR_VALUE`, also as
+/// Splits `--config NAME_OR_PATH` (repeatable) and `--const NAME_OR_VALUE`, also as
 /// `--opt=value`.
 fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), UsageError> {
     let mut opts = ValueOptions {
@@ -720,19 +774,11 @@ fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), UsageEr
     let mut it = args.iter();
     while let Some(a) = it.next() {
         let (name, inline) = match a.split_once('=') {
-            Some((n @ ("--config" | "--density"), v)) => (n, Some(v.to_string())),
+            Some((n @ ("--config" | "--const"), v)) => (n, Some(v.to_string())),
             _ => (a.as_str(), None),
         };
         match name {
-            "--bridge" => {
-                return Err(UsageError {
-                    message:
-                        "'--bridge' was renamed '--density' (ADR-014): use --density NAME_OR_VALUE"
-                            .to_string(),
-                    ..missing(name)
-                });
-            }
-            "--config" | "--density" => {
+            "--config" | "--const" => {
                 let value = match inline {
                     Some(v) => v,
                     // The next word must be a value, not another option (`--config --json`).
@@ -746,7 +792,7 @@ fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), UsageEr
                     opts.configs.push(value);
                 } else if opts.density.replace(value).is_some() {
                     return Err(UsageError {
-                        message: "'--density' is given twice; give one density".to_string(),
+                        message: "'--const' is given twice; give one density".to_string(),
                         ..missing(name)
                     });
                 }
@@ -762,9 +808,15 @@ fn parse_units(
     rest: &[&str],
     want_groups: bool,
     json: bool,
+    has_const: bool,
     configs: Vec<String>,
     usage: &dyn Fn(String) -> UsageError,
 ) -> Result<(Parsed, Vec<String>), UsageError> {
+    if has_const {
+        return Err(usage(
+            "'--const' selects a density for a conversion; 'units' lists them".to_string(),
+        ));
+    }
     match (rest, want_groups) {
         ([], false) => Ok((
             Parsed::Units {
@@ -797,13 +849,54 @@ fn parse_units(
     }
 }
 
-/// The rest of `dimvexa configs ...` after the command word.
-fn parse_configs(
+/// The rest of `dimvexa constants ...` after the command word.
+fn parse_constants(
     rest: &[&str],
+    misused: bool,
     json: bool,
     configs: Vec<String>,
     usage: &dyn Fn(String) -> UsageError,
 ) -> Result<(Parsed, Vec<String>), UsageError> {
+    if misused {
+        return Err(usage(
+            "'constants' takes only NAME, --config and --json".to_string(),
+        ));
+    }
+    match rest {
+        [] => Ok((Parsed::Constants { target: None, json }, configs)),
+        [one] => Ok((
+            Parsed::Constants {
+                target: Some((*one).to_string()),
+                json,
+            },
+            configs,
+        )),
+        _ => Err(usage(format!(
+            "'constants' takes at most one argument (a constant name such as 'h'), got {}",
+            rest.len()
+        ))),
+    }
+}
+
+/// The rest of `dimvexa configs ...` after the command word.
+fn parse_configs(
+    rest: &[&str],
+    (bad_flag, bad_option): (bool, bool),
+    json: bool,
+    configs: Vec<String>,
+    usage: &dyn Fn(String) -> UsageError,
+) -> Result<(Parsed, Vec<String>), UsageError> {
+    if bad_flag {
+        return Err(usage(
+            "'configs' takes only NAME_OR_PATH and --json".to_string(),
+        ));
+    }
+    if bad_option {
+        return Err(usage(
+            "'configs' shows configs by name or path; it does not take --config or --const"
+                .to_string(),
+        ));
+    }
     match rest {
         [] => Ok((Parsed::Configs { target: None, json }, configs)),
         [one] => Ok((
@@ -821,7 +914,7 @@ fn parse_configs(
 }
 
 /// Checks what the command line says next to `update`: `extra` is a positional argument,
-/// `--exact`, `--json` or `--groups`; `value_options` is `--config` or `--density`. A refusal is
+/// `--exact`, `--json` or `--groups`; `value_options` is `--config` or `--const`. A refusal is
 /// never a `--json` error: the update has no JSON output and no schema.
 fn check_update_args(
     extra: bool,
@@ -838,7 +931,7 @@ fn check_update_args(
         return Err(plain("'update' takes only --check and -y"));
     }
     if value_options {
-        return Err(plain("'update' does not take --config or --density"));
+        return Err(plain("'update' does not take --config or --const"));
     }
     Ok(())
 }
@@ -895,19 +988,22 @@ fn help_topic(positional: &[&str]) -> Result<Option<&'static str>, String> {
         _ => (false, positional),
     };
     if is_help_word && words.len() > 1 {
-        return Err("'help' takes one command: convert, units, configs or update".to_string());
+        return Err(
+            "'help' takes one command: convert, units, configs, constants or update".to_string(),
+        );
     }
     Ok(match words.first().copied() {
         None => None,
         Some("convert") => Some("convert"),
         Some("units") => Some("units"),
         Some("configs") => Some("configs"),
+        Some("constants") => Some("constants"),
         Some("update") => Some("update"),
         // `dimvexa 10 m km --help`: help for the conversion that was being typed.
         Some(_) if !is_help_word => Some("convert"),
         Some(other) => {
             return Err(format!(
-                "no help for '{other}'; commands: convert, units, configs, update"
+                "no help for '{other}'; commands: convert, units, configs, constants, update"
             ));
         }
     })
@@ -967,26 +1063,25 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
         if exact {
             return Err(usage("'units' does not take --exact".to_string()));
         }
-        if opts.density.is_some() {
-            return Err(usage(
-                "'--density' selects a density for a conversion; 'units' lists them".to_string(),
-            ));
-        }
-        return parse_units(rest, want_groups, want_json, configs, &usage);
+        return parse_units(
+            rest,
+            want_groups,
+            want_json,
+            opts.density.is_some(),
+            configs,
+            &usage,
+        );
+    }
+    if let Some((&"constants", rest)) = positional.split_first() {
+        let misused = exact || want_groups || opts.density.is_some();
+        return parse_constants(rest, misused, want_json, configs, &usage);
     }
     if let Some((&"configs", rest)) = positional.split_first() {
-        if exact || want_groups {
-            return Err(usage(
-                "'configs' takes only NAME_OR_PATH and --json".to_string(),
-            ));
-        }
-        if !configs.is_empty() || opts.density.is_some() {
-            return Err(usage(
-                "'configs' shows configs by name or path; it does not take --config or --density"
-                    .to_string(),
-            ));
-        }
-        return parse_configs(rest, want_json, configs, &usage);
+        let misused = (
+            exact || want_groups,
+            !configs.is_empty() || opts.density.is_some(),
+        );
+        return parse_configs(rest, misused, want_json, configs, &usage);
     }
     if want_groups {
         return Err(usage("'--groups' only applies to 'units'".to_string()));
@@ -1047,10 +1142,11 @@ fn f64_text(x: f64) -> String {
     }
 }
 
-/// The JSON schema id of a command: `dimvexa.convert/3`, `dimvexa.units/4`, `dimvexa.configs/1`.
+/// The JSON schema id of a command: `dimvexa.convert/3`, `dimvexa.units/4`, `dimvexa.configs/2`, `dimvexa.constants/1`.
 fn schema_id(command: &str) -> String {
     let version = match command {
-        "configs" => 1,
+        "configs" => 2,
+        "constants" => 1,
         "units" => 4,
         _ => 3,
     };
@@ -1084,13 +1180,8 @@ fn json_error(
 
 /// A registry with the user's configs applied, and which configs those were.
 struct Loaded {
-    reg: Registry,
-    /// The name mappings in effect (empty without a config).
-    mappings: Vec<Mapping>,
-    /// The user units in effect (empty without a config).
-    units: Vec<ConfigUnit>,
-    /// The densities in effect (empty without a config).
-    densities: Vec<Constant>,
+    /// The registry, the names, units and constants in effect (shared with the bindings).
+    lib: dimvexa_config::Loaded,
     /// `(origin, content hash)` of each config, in the order given. The origin is the file
     /// path, or `bundled:NAME` for a config that ships with dimvexa.
     configs: Vec<(String, String)>,
@@ -1131,19 +1222,24 @@ fn read_config(file: &str) -> Result<String, LoadError> {
 /// Reads one `--config` value: a shipped config by name, or a file by path (ADR-014). A bare
 /// word is always a shipped name; a file called `us` is written `./us`.
 fn read_spec(spec: &str) -> Result<Config, LoadError> {
-    if dimvexa_config::is_path(spec) {
+    let config = if dimvexa_config::is_path(spec) {
         let text = read_config(spec)?;
-        return Config::parse(&text, spec).map_err(LoadError::Lib);
-    }
-    dimvexa_config::bundled(spec).map_or_else(
-        || {
-            Err(LoadError::Io(format!(
-                "no config named '{spec}'; shipped configs: {} (a file needs a path, for example ./{spec} or {spec}.toml)",
-                bundled_names()
-            )))
-        },
-        |b| b.config().map_err(LoadError::Lib),
-    )
+        Config::parse(&text, spec).map_err(LoadError::Lib)?
+    } else {
+        dimvexa_config::bundled(spec).map_or_else(
+            || {
+                Err(LoadError::Io(format!(
+                    "no config named '{spec}'; shipped configs: {} (a file needs a path, for example ./{spec} or {spec}.toml)",
+                    bundled_names()
+                )))
+            },
+            |b| b.config().map_err(LoadError::Lib),
+        )?
+    };
+    // A built-in constant cannot be redefined: a user-defined pi would change every angle.
+    let builtin: Vec<&str> = dimvexa::CONSTANTS.iter().map(|c| c.id).collect();
+    dimvexa_config::reject_builtin_constants(&config, &builtin).map_err(LoadError::Lib)?;
+    Ok(config)
 }
 
 fn bundled_names() -> String {
@@ -1155,22 +1251,30 @@ fn bundled_names() -> String {
 }
 
 fn load(config_specs: &[String]) -> Result<Loaded, LoadError> {
-    let mut reg = registry().map_err(LoadError::Lib)?;
+    let reg = registry().map_err(LoadError::Lib)?;
     let (mut parsed, mut configs) = (Vec::new(), Vec::new());
     for spec in config_specs {
         let cfg = read_spec(spec)?;
         configs.push((cfg.origin().to_string(), cfg.hash().to_string()));
         parsed.push(cfg);
     }
-    let applied = dimvexa_config::apply(&mut reg, &parsed).map_err(LoadError::Lib)?;
-    let densities = dimvexa_config::constants(&parsed);
-    Ok(Loaded {
-        reg,
-        mappings: applied.mappings,
-        units: applied.units,
-        densities,
-        configs,
-    })
+    let l = dimvexa_config::load(reg, &parsed, dimvexa::CONSTANTS).map_err(LoadError::Lib)?;
+    Ok(Loaded { lib: l, configs })
+}
+
+/// The JSON array of the warnings (`[]` when there are none), so a script sees what a later
+/// config replaced.
+fn warnings_json(warnings: &[String]) -> String {
+    let items: Vec<String> = warnings.iter().map(|w| json_string(w)).collect();
+    format!("[{}]", items.join(","))
+}
+
+/// Prints one `warning:` line per entry a later config replaced from an earlier one, on stderr
+/// (replacing is allowed, never silent).
+fn print_warnings(loaded: &Loaded, err: &mut dyn Write) {
+    for w in &loaded.lib.warnings {
+        let _ = writeln!(err, "warning: {w}");
+    }
 }
 
 /// Prints a load failure for `schema` and returns the exit code.
@@ -1212,8 +1316,10 @@ fn configs_json(configs: &[(String, String)]) -> String {
 struct Outcome<'a> {
     args: &'a Args,
     configs: &'a [(String, String)],
+    /// What a later config replaced from an earlier one.
+    warnings: &'a [String],
     /// The density the conversion went through, if it needed one.
-    density: Option<&'a Constant>,
+    density: Option<&'a Density>,
     from: UnitExpr,
     to: UnitExpr,
     conv: Conversion,
@@ -1225,9 +1331,9 @@ struct Outcome<'a> {
 fn compute<'a>(
     args: &'a Args,
     loaded: &'a Loaded,
-    density: Option<&'a Constant>,
+    density: Option<&'a Density>,
 ) -> Result<Outcome<'a>, Error> {
-    let reg = &loaded.reg;
+    let reg = &loaded.lib.reg;
     let value: Ratio = args.value.parse()?;
     let from = reg.parse(&args.from)?;
     let to = reg.parse(&args.to)?;
@@ -1243,6 +1349,7 @@ fn compute<'a>(
     Ok(Outcome {
         args,
         configs: &loaded.configs,
+        warnings: &loaded.lib.warnings,
         density: used,
         from,
         to,
@@ -1250,40 +1357,6 @@ fn compute<'a>(
         exact,
         approx,
     })
-}
-
-/// Why `--density` could not be resolved.
-enum DensityError {
-    /// A name that no loaded config defines, or a missing value: a usage problem, with the
-    /// known names.
-    Usage(String, Vec<String>),
-    /// The library refused the caller's own number (not a density, ambiguous unit, overflow).
-    Lib(Error),
-}
-
-/// Resolves `--density`: a number with a unit is the caller's own density, anything else is
-/// the name of a density in a loaded config.
-fn resolve_density(spec: &str, loaded: &Loaded) -> Result<Constant, DensityError> {
-    let starts_like_a_number = spec.starts_with(|c: char| c.is_ascii_digit() || "+-.".contains(c));
-    if starts_like_a_number {
-        return Constant::density_from_text(&loaded.reg, spec).map_err(DensityError::Lib);
-    }
-    let known: Vec<String> = loaded.densities.iter().map(|d| d.name.clone()).collect();
-    loaded
-        .densities
-        .iter()
-        .find(|d| d.name == spec)
-        .cloned()
-        .ok_or_else(|| {
-            let message = if known.is_empty() {
-                format!(
-                    "no density named '{spec}': no loaded config has a [[density]] (try --config water, or write your own: --density 998.2067kg/m3)"
-                )
-            } else {
-                format!("no density named '{spec}'; loaded densities: {}", known.join(", "))
-            };
-            DensityError::Usage(message, known)
-        })
 }
 
 fn render_text(o: &Outcome<'_>, color: bool) -> String {
@@ -1305,13 +1378,13 @@ fn render_text(o: &Outcome<'_>, color: bool) -> String {
 }
 
 /// The JSON object describing a density: everything a reader needs to judge the assumption.
-fn density_json(b: &Constant) -> String {
+fn density_json(b: &Density) -> String {
     format!(
         "{{\"name\":{},\"kind\":{},\"value\":{},\"unit\":{},\"conditions\":{},\"source\":{},\"file\":{},\"line\":{}}}",
         json_string(&b.name),
-        json_string(b.kind.name()),
+        json_string("density"),
         json_string(&b.value.to_fraction_string()),
-        json_string(b.kind.unit()),
+        json_string("kg/m3"),
         json_string(&b.conditions),
         json_string(&b.source),
         json_string(&b.origin),
@@ -1322,7 +1395,7 @@ fn density_json(b: &Constant) -> String {
 /// One line for people: the assumption behind a result that used a density. Text from the config has its
 /// control characters replaced, and a density that is not a short decimal is shown as the
 /// exact fraction, so the note never reads as a different number.
-fn density_note(b: &Constant) -> String {
+fn density_note(b: &Density) -> String {
     let value = match b.value.to_decimal(15) {
         Ok((decimal, true)) => decimal,
         Ok((decimal, false)) => format!("{} (about {decimal})", b.value.to_fraction_string()),
@@ -1342,7 +1415,7 @@ fn density_note(b: &Constant) -> String {
         "note: used density {} ({} {}; {}; source: {}; {})",
         clean(&b.name),
         value,
-        b.kind.unit(),
+        "kg/m3",
         clean(&b.conditions),
         clean(&b.source),
         at
@@ -1390,7 +1463,7 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
 \"output\":{{\"value\":{},\"unit\":{},\"f64\":{},\"truncated\":{}}},\
 \"exact\":{{\"value\":{},\"decimal\":{},\"factor\":{},\"offset\":{}}},\
 \"exactness\":{},\"dimension\":[{}],\"kind\":{},\"quantity_kind\":{},\
-\"packs\":[{}],\"data_version\":{},\"sources\":[{}],\"config\":{},\"density\":{}}}",
+\"packs\":[{}],\"data_version\":{},\"sources\":[{}],\"config\":{},\"density\":{},\"warnings\":{}}}",
         json_string(&schema_id("convert")),
         json_string(&o.args.value),
         json_string(&o.from.to_string()),
@@ -1411,6 +1484,7 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
         sources.join(","),
         configs_json(o.configs),
         o.density.map_or_else(|| "null".to_string(), density_json),
+        warnings_json(o.warnings),
     ))
 }
 
@@ -1525,7 +1599,7 @@ fn units_text(
     units: &[(String, &Unit)],
     ambiguous: &[&dimvexa::AmbiguousDef],
     mappings: &[Mapping],
-    densities: &[Constant],
+    densities: &[Density],
     user: &[ConfigUnit],
 ) -> String {
     let mut s = String::from(
@@ -1595,17 +1669,15 @@ fn units_text(
     }
     if !densities.is_empty() {
         s.push_str(
-            "\n## config densities (constants you supply; use with --density NAME)\n\
+            "\n## config densities (constants of a density unit; use with --const NAME)\n\
 # columns: name, kind, value, unit, conditions, source, file:line\n",
         );
         for b in densities {
             let _ = writeln!(
                 s,
-                "{}\t{}\t{}\t{}\t{}\t{}\t{}:{}",
+                "{}\tdensity\t{}\tkg/m3\t{}\t{}\t{}:{}",
                 cell(&b.name),
-                b.kind.name(),
                 b.value.to_fraction_string(),
-                b.kind.unit(),
                 cell(&b.conditions),
                 cell(&b.source),
                 cell(&b.origin),
@@ -1641,7 +1713,7 @@ fn units_json(
                 json_string(u.prefixes().name()),
                 json_string(u.namespace()),
                 json_string(u.source()),
-                origin_json(user_unit(&loaded.units, u.id())),
+                origin_json(user_unit(&loaded.lib.units, u.id())),
             )
         })
         .collect();
@@ -1661,6 +1733,7 @@ fn units_json(
                 strs(a.planned),
                 json_string(a.note),
                 loaded
+                    .lib
                     .mappings
                     .iter()
                     .find(|m| m.name == a.symbol)
@@ -1681,6 +1754,7 @@ fn units_json(
         .map(|(g, n)| format!("{{\"name\":{},\"units\":{n}}}", json_string(g)))
         .collect();
     let mappings: Vec<String> = loaded
+        .lib
         .mappings
         .iter()
         .map(|m| {
@@ -1698,7 +1772,7 @@ fn units_json(
         |g| json_string(&g.to_ascii_lowercase()),
     );
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"group\":{},\"groups\":[{}],\"units\":[{}],\"ambiguous\":[{}],\"config\":{},\"mappings\":[{}],\"densities\":[{}]}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"group\":{},\"groups\":[{}],\"units\":[{}],\"ambiguous\":[{}],\"config\":{},\"mappings\":[{}],\"densities\":[{}],\"warnings\":{}}}",
         json_string(&schema_id("units")),
         json_string(&dimvexa::data_version()),
         group,
@@ -1708,11 +1782,13 @@ fn units_json(
         configs_json(&loaded.configs),
         mappings.join(","),
         loaded
+            .lib
             .densities
             .iter()
             .map(density_json)
             .collect::<Vec<_>>()
-            .join(",")
+            .join(","),
+        warnings_json(&loaded.lib.warnings),
     )
 }
 
@@ -1888,7 +1964,7 @@ fn detail_text(d: &Detail) -> String {
     s
 }
 
-fn detail_json(d: &Detail) -> String {
+fn detail_json(d: &Detail, warnings: &[String]) -> String {
     let list = |v: &[String]| {
         v.iter()
             .map(|x| json_string(x))
@@ -1898,7 +1974,7 @@ fn detail_json(d: &Detail) -> String {
     let opt = |v: Option<&str>| v.map_or_else(|| "null".to_string(), json_string);
     let dims: Vec<String> = d.dim.exponents().iter().map(ToString::to_string).collect();
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"id\":{},\"symbol\":{},\"name\":{},\"prefix\":{},\"base\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"conditions\":{},\"note\":{},\"origin\":{},\"mapping\":{}}}}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"id\":{},\"symbol\":{},\"name\":{},\"prefix\":{},\"base\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"conditions\":{},\"note\":{},\"origin\":{},\"mapping\":{}}},\"warnings\":{}}}",
         json_string(&schema_id("units")),
         json_string(&dimvexa::data_version()),
         json_string(&d.id),
@@ -1948,6 +2024,7 @@ fn detail_json(d: &Detail) -> String {
                 )
             },
         ),
+        warnings_json(warnings),
     )
 }
 
@@ -1963,6 +2040,7 @@ fn run_units(
         Ok(l) => l,
         Err(e) => return report_load_error(&e, json, "units", out, err),
     };
+    print_warnings(&loaded, err);
     let mut fail = |code: &str, message: &str, suggestions: &[String], status: u8| -> u8 {
         if json {
             let _ = writeln!(
@@ -1975,7 +2053,7 @@ fn run_units(
         }
         status
     };
-    let reg = &loaded.reg;
+    let reg = &loaded.lib.reg;
     let groups = group_counts(reg);
     let (selected, group) = match target {
         UnitsTarget::Groups => {
@@ -1996,10 +2074,10 @@ fn run_units(
             if groups.iter().any(|(g, _)| *g == q_lower) {
                 (Some(q_lower.clone()), Some(q_lower))
             } else {
-                return match unit_detail(reg, &loaded.units, &loaded.mappings, q) {
+                return match unit_detail(reg, &loaded.lib.units, &loaded.lib.mappings, q) {
                     Ok(d) => {
                         let text = if json {
-                            detail_json(&d)
+                            detail_json(&d, &loaded.lib.warnings)
                         } else {
                             detail_text(&d)
                         };
@@ -2047,9 +2125,9 @@ fn run_units(
             units_text(
                 &units,
                 &ambiguous,
-                &loaded.mappings,
-                &loaded.densities,
-                &loaded.units,
+                &loaded.lib.mappings,
+                &loaded.lib.densities,
+                &loaded.lib.units,
             )
         );
     }
@@ -2058,7 +2136,7 @@ fn run_units(
 
 /// The columns of `dimvexa configs`: one row per shipped config.
 fn configs_list_text() -> String {
-    let mut s = String::from("# columns: name, names, units, densities, hash\n");
+    let mut s = String::from("# columns: name, names, units, constants, hash\n");
     for b in dimvexa_config::BUNDLED {
         match b.config() {
             Ok(c) => {
@@ -2086,7 +2164,7 @@ fn configs_list_json() -> String {
         .filter_map(|b| {
             let c = b.config().ok()?;
             Some(format!(
-                "{{\"name\":{},\"hash\":{},\"mappings\":{},\"units\":{},\"densities\":{}}}",
+                "{{\"name\":{},\"hash\":{},\"mappings\":{},\"units\":{},\"constants\":{}}}",
                 json_string(b.name),
                 json_string(c.hash()),
                 c.mappings().len(),
@@ -2102,7 +2180,7 @@ fn configs_list_json() -> String {
     )
 }
 
-/// What one config contains, as text: its names, units and densities with their sources.
+/// What one config contains, as text: its names, units and constants with their sources.
 fn config_detail_text(c: &Config) -> String {
     let mut s = format!("{} (hash {})\n", cell(c.origin()), c.hash());
     if !c.mappings().is_empty() {
@@ -2129,15 +2207,18 @@ fn config_detail_text(c: &Config) -> String {
     }
     if !c.constants().is_empty() {
         s.push_str(
-            "\n## densities (use with --density NAME)\n# columns: name, value, unit, conditions, source\n",
+            "\n## constants (one of a density unit is used with --const NAME)\n\
+# columns: id, name, value, unit, exactness, conditions, source\n",
         );
         for d in c.constants() {
             let _ = writeln!(
                 s,
-                "{}\t{}\t{}\t{}\t{}",
+                "{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                cell(&d.id),
                 cell(&d.name),
-                d.value.to_fraction_string(),
-                d.kind.unit(),
+                d.value_text(),
+                cell(&d.unit),
+                d.exactness.name(),
                 cell(&d.conditions),
                 cell(&d.source)
             );
@@ -2174,16 +2255,116 @@ fn config_detail_json(c: &Config) -> String {
             )
         })
         .collect();
-    let densities: Vec<String> = c.constants().iter().map(density_json).collect();
+    let constants: Vec<String> = c.constants().iter().map(constant_json).collect();
     format!(
-        "{{\"schema\":{},\"ok\":true,\"config\":{{\"name\":{},\"hash\":{},\"mappings\":[{}],\"units\":[{}],\"densities\":[{}]}}}}",
+        "{{\"schema\":{},\"ok\":true,\"config\":{{\"name\":{},\"hash\":{},\"mappings\":[{}],\"units\":[{}],\"constants\":[{}]}}}}",
         json_string(&schema_id("configs")),
         json_string(c.origin()),
         json_string(c.hash()),
         mappings.join(","),
         units.join(","),
-        densities.join(",")
+        constants.join(",")
     )
+}
+
+/// The JSON object of a constant: everything a reader needs to judge the number.
+fn constant_json(c: &Constant) -> String {
+    format!(
+        "{{\"id\":{},\"name\":{},\"value\":{},\"unit\":{},\"exactness\":{},\"codata\":{},\"conditions\":{},\"source\":{},\"note\":{},\"file\":{},\"line\":{}}}",
+        json_string(&c.id),
+        json_string(&c.name),
+        json_string(&c.value.to_fraction_string()),
+        json_string(&c.unit),
+        json_string(c.exactness.name()),
+        json_string(&c.codata),
+        json_string(&c.conditions),
+        json_string(&c.source),
+        json_string(&c.note),
+        json_string(&c.origin),
+        c.line
+    )
+}
+
+/// One tab-separated row of the `constants` listing.
+fn constant_row(c: &Constant) -> String {
+    let at = if c.line == 0 {
+        cell(&c.origin)
+    } else {
+        format!("{}:{}", cell(&c.origin), c.line)
+    };
+    format!(
+        "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+        cell(&c.id),
+        cell(&c.name),
+        c.value_text(),
+        cell(&c.unit),
+        c.exactness.name(),
+        cell(&c.conditions),
+        cell(&c.source),
+        at
+    )
+}
+
+/// Runs `dimvexa constants [NAME]`; returns the exit code.
+fn run_constants(
+    target: Option<&str>,
+    config_files: &[String],
+    json: bool,
+    out: &mut dyn Write,
+    err: &mut dyn Write,
+) -> u8 {
+    let loaded = match load(config_files) {
+        Ok(l) => l,
+        Err(e) => return report_load_error(&e, json, "constants", out, err),
+    };
+    print_warnings(&loaded, err);
+    // The built-in constants first, then the configs' own, in application order.
+    let all = &loaded.lib.constants;
+    let shown: Vec<&Constant> = match target {
+        None => all.iter().collect(),
+        Some(name) => {
+            let found: Vec<&Constant> = all.iter().filter(|c| c.id == name).collect();
+            if found.is_empty() {
+                let known: Vec<String> = all.iter().map(|c| c.id.clone()).collect();
+                let message = format!("no constant named '{name}'; known: {}", known.join(", "));
+                if json {
+                    let _ = writeln!(
+                        out,
+                        "{}",
+                        json_error("constants", "usage", &message, &[], &known)
+                    );
+                } else {
+                    let _ = writeln!(err, "error[usage]: {message}");
+                }
+                return 2;
+            }
+            found
+        }
+    };
+    if json {
+        let items: Vec<String> = shown.iter().map(|c| constant_json(c)).collect();
+        let _ = writeln!(
+            out,
+            "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"constants\":[{}],\"config\":{},\"warnings\":{}}}",
+            json_string(&schema_id("constants")),
+            json_string(&dimvexa::data_version()),
+            items.join(","),
+            configs_json(&loaded.configs),
+            warnings_json(&loaded.lib.warnings),
+        );
+    } else {
+        let _ = writeln!(
+            out,
+            "# columns: id, name, value, unit, exactness, conditions, source, origin"
+        );
+        for c in &shown {
+            let _ = writeln!(out, "{}", constant_row(c));
+            if target.is_some() && !c.note.is_empty() {
+                let _ = writeln!(out, "# {}", cell(&c.note));
+            }
+        }
+    }
+    0
 }
 
 /// Runs `dimvexa configs [NAME_OR_PATH]`; returns the exit code.
@@ -2306,6 +2487,19 @@ fn report_usage_error(u: &UsageError, out: &mut dyn Write, err: &mut dyn Write) 
     2
 }
 
+/// `--version`: the version, the data table version and the project facts.
+fn print_version(out: &mut dyn Write) -> u8 {
+    let _ = writeln!(
+        out,
+        "{} {} (data {})",
+        dimvexa::PROJECT_NAME,
+        env!("CARGO_PKG_VERSION"),
+        dimvexa::data_version()
+    );
+    let _ = write!(out, "{}", about());
+    0
+}
+
 fn run_inner<I>(args: I, out: &mut dyn Write, err: &mut dyn Write, color: Color) -> u8
 where
     I: IntoIterator<Item = String>,
@@ -2323,17 +2517,7 @@ where
                 0
             });
         }
-        Parsed::Version => {
-            let _ = writeln!(
-                out,
-                "{} {} (data {})",
-                dimvexa::PROJECT_NAME,
-                env!("CARGO_PKG_VERSION"),
-                dimvexa::data_version()
-            );
-            let _ = write!(out, "{}", about());
-            return 0;
-        }
+        Parsed::Version => return print_version(out),
         Parsed::Units { target, json } => {
             return paint_with(color.out && !json, TextKind::Listing, out, |o| {
                 run_units(&target, &config_files, json, o, err)
@@ -2344,6 +2528,11 @@ where
                 run_configs(target.as_deref(), json, o, err)
             });
         }
+        Parsed::Constants { target, json } => {
+            return paint_with(color.out && !json, TextKind::Listing, out, |o| {
+                run_constants(target.as_deref(), &config_files, json, o, err)
+            });
+        }
         Parsed::Update { check, yes } => return update::run(check, yes, out, err),
         Parsed::Convert(a) => a,
     };
@@ -2351,21 +2540,29 @@ where
         Ok(l) => l,
         Err(e) => return report_load_error(&e, args.json, "convert", out, err),
     };
+    print_warnings(&loaded, err);
     let density = match &args.density {
         None => None,
-        Some(spec) => match resolve_density(spec, &loaded) {
+        Some(spec) => match loaded.lib.resolve_density(spec) {
             Ok(d) => Some(d),
             Err(e) => {
                 let (code, message, candidates, suggestions, status) = match &e {
-                    DensityError::Usage(m, known) => {
+                    DensityError::Unknown { message: m, known } => {
                         ("usage", m.clone(), Vec::new(), known.clone(), 2)
                     }
                     DensityError::Lib(e) => (
                         e.code(),
-                        format!("--density: {e}"),
+                        format!("--const: {e}"),
                         e.candidates().to_vec(),
                         e.suggestions().to_vec(),
                         1,
+                    ),
+                    _ => (
+                        "usage",
+                        "unusable density".to_string(),
+                        Vec::new(),
+                        Vec::new(),
+                        2,
                     ),
                 };
                 if args.json {
@@ -2443,11 +2640,11 @@ fn fail(args: &Args, e: &Error, out: &mut dyn Write, err: &mut dyn Write) -> u8 
                     );
                 }
             }
-            if Constant::density_needed(*from, *to) && args.density.is_none() {
+            if Density::density_needed(*from, *to) && args.density.is_none() {
                 let _ = writeln!(
                     err,
                     "hint: mass and volume need a density. Pass your own number, for example \
---density 998.2067kg/m3, or a named one: --config water --density water_25C \
+--const 998.2067kg/m3, or a named one: --config water --const water_25C \
 (docs/adr/014-one-config-mechanism.md)"
                 );
             }

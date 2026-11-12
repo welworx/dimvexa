@@ -28,9 +28,41 @@ class Quantity:
     def __mul__(self, other: Quantity) -> Quantity: ...
     def __truediv__(self, other: Quantity) -> Quantity: ...
 
-def convert(value: Any, from_unit: str, to_unit: str, *, exact: bool = False) -> Any: ...
-def conversion(from_unit: str, to_unit: str) -> Conversion: ...
-def quantity(text: str) -> Quantity: ...
-def units() -> list[str]: ...
-def unit_info(symbol: str) -> dict[str, Any] | None: ...
+def convert(
+    value: Any,
+    from_unit: str,
+    to_unit: str,
+    *,
+    exact: bool = False,
+    density: str | None = None,
+    configs: list[str] | None = None,
+    config_texts: list[str] | None = None,
+) -> Any: ...
+def conversion(
+    from_unit: str,
+    to_unit: str,
+    *,
+    density: str | None = None,
+    configs: list[str] | None = None,
+    config_texts: list[str] | None = None,
+) -> Conversion: ...
+def constants(
+    *, configs: list[str] | None = None, config_texts: list[str] | None = None
+) -> list[dict[str, Any]]: ...
+def quantity(
+    text: str,
+    *,
+    density: str | None = None,
+    configs: list[str] | None = None,
+    config_texts: list[str] | None = None,
+) -> Quantity: ...
+def units(
+    *, configs: list[str] | None = None, config_texts: list[str] | None = None
+) -> list[str]: ...
+def unit_info(
+    symbol: str,
+    *,
+    configs: list[str] | None = None,
+    config_texts: list[str] | None = None,
+) -> dict[str, Any] | None: ...
 def data_version() -> str: ...

@@ -4,7 +4,8 @@
 //! Every core error becomes a [`DimvexaError`] carrying the stable `code`, the `suggestions`
 //! and the `candidates`, so Python callers branch on codes, never on message text.
 
-use std::sync::OnceLock;
+use std::io::Read as _;
+use std::sync::{Arc, OnceLock};
 
 use ::dimvexa::{Conversion as CoreConversion, Quantity as CoreQuantity, Registry};
 use numpy::{PyArrayDyn, PyArrayMethods, PyReadonlyArrayDyn, PyUntypedArrayMethods};
@@ -37,6 +38,124 @@ fn registry() -> PyResult<&'static Registry> {
     match REG.get_or_init(::dimvexa::registry) {
         Ok(reg) => Ok(reg),
         Err(e) => Err(to_py(e)),
+    }
+}
+
+/// Reads one config: a shipped name (`"us"`) or a file path (`"./mine.toml"`), as `--config` in
+/// the CLI.
+fn read_config(spec: &str) -> PyResult<dimvexa_config::Config> {
+    let bad = |message: String| {
+        to_py(&::dimvexa::Error::InvalidDefinition {
+            symbol: "config".to_string(),
+            message,
+        })
+    };
+    if dimvexa_config::is_path(spec) {
+        // Like the CLI: a regular file of at most 1 MiB, never a device or a pipe.
+        let fail = |why: String| bad(format!("cannot read config '{spec}': {why}"));
+        let meta = std::fs::metadata(spec).map_err(|e| fail(e.to_string()))?;
+        if !meta.is_file() {
+            return Err(fail("not a regular file".to_string()));
+        }
+        let mut text = String::new();
+        std::fs::File::open(spec)
+            .map_err(|e| fail(e.to_string()))?
+            .take(1 << 20)
+            .read_to_string(&mut text)
+            .map_err(|e| fail(e.to_string()))?;
+        if meta.len() > 1 << 20 {
+            return Err(fail("larger than 1048576 bytes".to_string()));
+        }
+        return dimvexa_config::Config::parse(&text, spec).map_err(|e| to_py(&e));
+    }
+    match dimvexa_config::bundled(spec) {
+        Some(b) => b.config().map_err(|e| to_py(&e)),
+        None => {
+            let known: Vec<&str> = dimvexa_config::BUNDLED.iter().map(|b| b.name).collect();
+            Err(bad(format!(
+                "no config named '{spec}'; shipped configs: {} (a file needs a path, for example ./{spec} or {spec}.toml)",
+                known.join(", ")
+            )))
+        }
+    }
+}
+
+/// The registry with the configs applied (files and shipped names first, then `config_texts`,
+/// later ones win) and the constants in effect, built by `dimvexa-config` like the CLI does.
+fn load(configs: &[String], config_texts: &[String]) -> PyResult<dimvexa_config::Loaded> {
+    let mut parsed = Vec::new();
+    for spec in configs {
+        parsed.push(read_config(spec)?);
+    }
+    for (i, text) in config_texts.iter().enumerate() {
+        let origin = format!("config-text-{}", i.saturating_add(1));
+        parsed.push(dimvexa_config::Config::parse(text, &origin).map_err(|e| to_py(&e))?);
+    }
+    let loaded = dimvexa_config::load(registry()?.clone(), &parsed, ::dimvexa::CONSTANTS)
+        .map_err(|e| to_py(&e))?;
+    // Replacing an entry of an earlier config is allowed, never silent: a Python `UserWarning`.
+    Python::attach(|py| {
+        for w in &loaded.warnings {
+            let message = std::ffi::CString::new(w.replace('\0', " ")).unwrap_or_default();
+            PyErr::warn(
+                py,
+                &py.get_type::<pyo3::exceptions::PyUserWarning>(),
+                &message,
+                1,
+            )?;
+        }
+        PyResult::Ok(())
+    })?;
+    Ok(loaded)
+}
+
+/// The density a `density=` argument names, if one was given (empty text is none).
+fn resolve_density(
+    loaded: &dimvexa_config::Loaded,
+    density: Option<&str>,
+) -> PyResult<Option<dimvexa_config::Density>> {
+    match density {
+        Some(spec) if !spec.trim().is_empty() => {
+            loaded.resolve_density(spec).map(Some).map_err(|e| match e {
+                dimvexa_config::DensityError::Lib(e) => to_py(&e),
+                dimvexa_config::DensityError::Unknown { message, .. } => {
+                    to_py(&::dimvexa::Error::InvalidDefinition {
+                        symbol: "density".to_string(),
+                        message,
+                    })
+                }
+                _ => PyValueError::new_err("unusable density"),
+            })
+        }
+        _ => Ok(None),
+    }
+}
+
+/// The ordinary conversion between two units; if it is refused for lack of a density and one
+/// was given, the conversion through it. A given density is always checked.
+fn conversion_with(
+    from_unit: &str,
+    to_unit: &str,
+    density: Option<&str>,
+    configs: &[String],
+    config_texts: &[String],
+) -> PyResult<CoreConversion> {
+    if density.is_none() && configs.is_empty() && config_texts.is_empty() {
+        return registry()?
+            .conversion(from_unit, to_unit)
+            .map_err(|e| to_py(&e));
+    }
+    let loaded = load(configs, config_texts)?;
+    let resolved = resolve_density(&loaded, density)?;
+    let from = loaded.reg.parse(from_unit).map_err(|e| to_py(&e))?;
+    let to = loaded.reg.parse(to_unit).map_err(|e| to_py(&e))?;
+    match CoreConversion::between(&from, &to) {
+        Ok(conv) => Ok(conv),
+        Err(e @ ::dimvexa::Error::DimensionMismatch { .. }) => match resolved {
+            Some(d) => d.conversion(&from, &to).map_err(|e| to_py(&e)),
+            None => Err(to_py(&e)),
+        },
+        Err(e) => Err(to_py(&e)),
     }
 }
 
@@ -99,6 +218,23 @@ impl Conversion {
 #[pyclass(module = "dimvexa", frozen)]
 struct Quantity {
     inner: CoreQuantity,
+    /// The configs and density it was made with; `None` for the strict default table.
+    ctx: Option<Arc<Context>>,
+}
+
+/// What a quantity needs to be re-expressed: the loaded registry and the density, if given.
+struct Context {
+    loaded: dimvexa_config::Loaded,
+    density: Option<dimvexa_config::Density>,
+}
+
+impl Quantity {
+    fn with(&self, inner: CoreQuantity) -> Self {
+        Self {
+            inner,
+            ctx: self.ctx.clone(),
+        }
+    }
 }
 
 #[pymethods]
@@ -117,13 +253,31 @@ impl Quantity {
     }
 
     /// Re-express in another unit, exactly.
+    ///
+    /// With a density (and only then, and only when the plain conversion is refused for lack of
+    /// one) mass <-> volume goes through it.
     fn to(&self, unit: &str) -> PyResult<Self> {
-        let reg = registry()?;
+        let reg = match &self.ctx {
+            Some(c) => &c.loaded.reg,
+            None => registry()?,
+        };
         let target = reg.parse(unit).map_err(|e| to_py(&e))?;
-        self.inner
-            .to_unit(&target)
-            .map(|inner| Self { inner })
-            .map_err(|e| to_py(&e))
+        match self.inner.to_unit(&target) {
+            Ok(inner) => Ok(self.with(inner)),
+            Err(e @ ::dimvexa::Error::DimensionMismatch { .. }) => {
+                let Some(d) = self.ctx.as_ref().and_then(|c| c.density.as_ref()) else {
+                    return Err(to_py(&e));
+                };
+                let conv = d
+                    .conversion(self.inner.unit(), &target)
+                    .map_err(|e| to_py(&e))?;
+                let value = conv
+                    .apply_exact(self.inner.value())
+                    .map_err(|e| to_py(&e))?;
+                Ok(self.with(CoreQuantity::new(value, target)))
+            }
+            Err(e) => Err(to_py(&e)),
+        }
     }
 
     /// The value rounded once to a float.
@@ -134,14 +288,14 @@ impl Quantity {
     fn __mul__(&self, other: &Self) -> PyResult<Self> {
         self.inner
             .checked_mul(&other.inner)
-            .map(|inner| Self { inner })
+            .map(|inner| self.with(inner))
             .map_err(|e| to_py(&e))
     }
 
     fn __truediv__(&self, other: &Self) -> PyResult<Self> {
         self.inner
             .checked_div(&other.inner)
-            .map(|inner| Self { inner })
+            .map(|inner| self.with(inner))
             .map_err(|e| to_py(&e))
     }
 
@@ -212,53 +366,154 @@ fn apply(
 }
 
 /// Convert a float, a sequence or a NumPy array from one unit to another.
+///
+/// `density` is your own number such as `"998.2067kg/m3"` or the name of a constant of a density
+/// unit; it is used only when the plain conversion needs one (mass <-> volume). `configs` are
+/// shipped config names or file paths and `config_texts` are config files as TOML text; later
+/// ones win. Without them the names stay strict.
 #[pyfunction]
-#[pyo3(signature = (value, from_unit, to_unit, *, exact = false))]
+#[pyo3(signature = (value, from_unit, to_unit, *, exact = false, density = None, configs = None, config_texts = None))]
+#[allow(clippy::too_many_arguments)]
 fn convert(
     py: Python<'_>,
     value: &Bound<'_, PyAny>,
     from_unit: &str,
     to_unit: &str,
     exact: bool,
+    density: Option<&str>,
+    configs: Option<Vec<String>>,
+    config_texts: Option<Vec<String>>,
 ) -> PyResult<Py<PyAny>> {
-    let conv = registry()?
-        .conversion(from_unit, to_unit)
-        .map_err(|e| to_py(&e))?;
+    let conv = conversion_with(
+        from_unit,
+        to_unit,
+        density,
+        &configs.unwrap_or_default(),
+        &config_texts.unwrap_or_default(),
+    )?;
     apply(py, &conv, value, exact)
 }
 
-/// Compose a conversion once for repeated use.
+/// Compose a conversion once for repeated use (options as in `convert`).
 #[pyfunction]
-fn conversion(from_unit: &str, to_unit: &str) -> PyResult<Conversion> {
-    registry()?
-        .conversion(from_unit, to_unit)
-        .map(|inner| Conversion { inner })
-        .map_err(|e| to_py(&e))
+#[pyo3(signature = (from_unit, to_unit, *, density = None, configs = None, config_texts = None))]
+fn conversion(
+    from_unit: &str,
+    to_unit: &str,
+    density: Option<&str>,
+    configs: Option<Vec<String>>,
+    config_texts: Option<Vec<String>>,
+) -> PyResult<Conversion> {
+    conversion_with(
+        from_unit,
+        to_unit,
+        density,
+        &configs.unwrap_or_default(),
+        &config_texts.unwrap_or_default(),
+    )
+    .map(|inner| Conversion { inner })
 }
 
-/// Parse a quantity such as `"20 degC"`.
+/// The named constants in effect (ADR-018): the built-in ones, then those of the configs. Each is
+/// a dict with `id`, `name` (the full name), `value` (exact string), `value_text`, `unit`, `exactness`, `codata`,
+/// `conditions`, `source`, `note`, `file` and `line`.
 #[pyfunction]
-fn quantity(text: &str) -> PyResult<Quantity> {
-    registry()?
-        .quantity(text)
-        .map(|inner| Quantity { inner })
-        .map_err(|e| to_py(&e))
+#[pyo3(signature = (*, configs = None, config_texts = None))]
+fn constants<'py>(
+    py: Python<'py>,
+    configs: Option<Vec<String>>,
+    config_texts: Option<Vec<String>>,
+) -> PyResult<Vec<Bound<'py, PyDict>>> {
+    let loaded = load(
+        &configs.unwrap_or_default(),
+        &config_texts.unwrap_or_default(),
+    )?;
+    let mut out = Vec::new();
+    for c in &loaded.constants {
+        let d = PyDict::new(py);
+        d.set_item("id", &c.id)?;
+        d.set_item("name", &c.name)?;
+        d.set_item("value", c.value.to_fraction_string())?;
+        d.set_item("value_text", c.value_text())?;
+        d.set_item("unit", &c.unit)?;
+        d.set_item("exactness", c.exactness.name())?;
+        d.set_item("codata", &c.codata)?;
+        d.set_item("conditions", &c.conditions)?;
+        d.set_item("source", &c.source)?;
+        d.set_item("note", &c.note)?;
+        d.set_item("file", &c.origin)?;
+        d.set_item("line", c.line)?;
+        out.push(d);
+    }
+    Ok(out)
 }
 
-/// All unit symbols in the table.
+/// Parse a quantity such as `"20 degC"` (options as in `convert`). With `density`, `to()` can
+/// convert mass <-> volume through it; with `configs` the names and units of the configs work.
 #[pyfunction]
-fn units() -> PyResult<Vec<String>> {
-    Ok(registry()?
-        .units()
-        .iter()
-        .map(|u| u.id().to_owned())
-        .collect())
+#[pyo3(signature = (text, *, density = None, configs = None, config_texts = None))]
+fn quantity(
+    text: &str,
+    density: Option<&str>,
+    configs: Option<Vec<String>>,
+    config_texts: Option<Vec<String>>,
+) -> PyResult<Quantity> {
+    let (configs, config_texts) = (
+        configs.unwrap_or_default(),
+        config_texts.unwrap_or_default(),
+    );
+    if density.is_none() && configs.is_empty() && config_texts.is_empty() {
+        return registry()?
+            .quantity(text)
+            .map(|inner| Quantity { inner, ctx: None })
+            .map_err(|e| to_py(&e));
+    }
+    let loaded = load(&configs, &config_texts)?;
+    let density = resolve_density(&loaded, density)?;
+    let inner = loaded.reg.quantity(text).map_err(|e| to_py(&e))?;
+    Ok(Quantity {
+        inner,
+        ctx: Some(Arc::new(Context { loaded, density })),
+    })
 }
 
-/// Details of one unit, or `None` if the symbol is not a table unit.
+/// All unit symbols in the table, and those of the `configs` / `config_texts` if given.
 #[pyfunction]
-fn unit_info<'py>(py: Python<'py>, symbol: &str) -> PyResult<Option<Bound<'py, PyDict>>> {
-    let Some(u) = registry()?.get(symbol) else {
+#[pyo3(signature = (*, configs = None, config_texts = None))]
+fn units(configs: Option<Vec<String>>, config_texts: Option<Vec<String>>) -> PyResult<Vec<String>> {
+    let (configs, config_texts) = (
+        configs.unwrap_or_default(),
+        config_texts.unwrap_or_default(),
+    );
+    let ids = |reg: &Registry| reg.units().iter().map(|u| u.id().to_owned()).collect();
+    if configs.is_empty() && config_texts.is_empty() {
+        return Ok(ids(registry()?));
+    }
+    Ok(ids(&load(&configs, &config_texts)?.reg))
+}
+
+/// Details of one unit (a table unit, or one a config defines, or a name a config maps), or
+/// `None` if the symbol is not a unit. A unit a config defines has `defined_in` (`file:line`).
+#[pyfunction]
+#[pyo3(signature = (symbol, *, configs = None, config_texts = None))]
+fn unit_info<'py>(
+    py: Python<'py>,
+    symbol: &str,
+    configs: Option<Vec<String>>,
+    config_texts: Option<Vec<String>>,
+) -> PyResult<Option<Bound<'py, PyDict>>> {
+    let (configs, config_texts) = (
+        configs.unwrap_or_default(),
+        config_texts.unwrap_or_default(),
+    );
+    let loaded;
+    let (reg, defined) = if configs.is_empty() && config_texts.is_empty() {
+        (registry()?, None)
+    } else {
+        loaded = load(&configs, &config_texts)?;
+        (&loaded.reg, Some(&loaded.units))
+    };
+    let Some(u) = reg.get(symbol) else {
         return Ok(None);
     };
     let d = PyDict::new(py);
@@ -278,6 +533,10 @@ fn unit_info<'py>(py: Python<'py>, symbol: &str) -> PyResult<Option<Bound<'py, P
     // The reference state of a gauge or gas-volume unit (ADR-013), `None` for other units.
     let conditions = Some(u.conditions()).filter(|c| !c.is_empty());
     d.set_item("conditions", conditions)?;
+    let defined_in = defined
+        .and_then(|units| units.iter().find(|c| c.symbol == u.id()))
+        .map(|c| format!("{}:{}", c.origin, c.line));
+    d.set_item("defined_in", defined_in)?;
     Ok(Some(d))
 }
 
@@ -295,6 +554,7 @@ fn _dimvexa(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Quantity>()?;
     m.add_function(wrap_pyfunction!(convert, m)?)?;
     m.add_function(wrap_pyfunction!(conversion, m)?)?;
+    m.add_function(wrap_pyfunction!(constants, m)?)?;
     m.add_function(wrap_pyfunction!(quantity, m)?)?;
     m.add_function(wrap_pyfunction!(units, m)?)?;
     m.add_function(wrap_pyfunction!(unit_info, m)?)?;
