@@ -166,9 +166,10 @@ def test_replacing_an_entry_of_an_earlier_config_warns() -> None:
         dimvexa.constants(configs=["water"], config_texts=[mine])
 
 
-def test_config_files_must_be_regular_files_and_an_empty_density_is_none() -> None:
+def test_config_files_must_be_regular_files_and_an_empty_density_is_none(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    # A directory is not a regular file (on every platform; /dev/zero does not exist on Windows).
     with pytest.raises(dimvexa.DimvexaError, match="not a regular file"):
-        dimvexa.convert(1.0, "m", "m", configs=["/dev/zero"])
+        dimvexa.convert(1.0, "m", "m", configs=[str(tmp_path)])
     assert dimvexa.convert(1.0, "m", "km", density="") == 0.001
 
 
