@@ -8,6 +8,7 @@ to the Rust API. Own workspace, needs network to build, not part of `cargo xtask
 ```console
 cargo install wasm-bindgen-cli --version 0.2.130 --locked   # once; must equal the pin in Cargo.toml
 bindings/wasm/build.sh                                      # writes bindings/wasm/pkg (Node.js target)
+node bindings/wasm/test/wasm.test.js                        # configs, densities, constants, warnings
 ```
 
 ```js
