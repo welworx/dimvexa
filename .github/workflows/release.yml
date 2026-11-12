@@ -201,6 +201,49 @@ jobs:
             dimvexa*.sha256
           if-no-files-found: error
 
+  macos-dmg:
+    name: macOS disk image (universal)
+    needs: [plan, cli-binaries]
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: cli-macos-*
+          path: cli
+          merge-multiple: true
+      - name: Build dimvexa.dmg (arm64 + x86_64 in one binary)
+        shell: bash
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          set -euo pipefail
+          for t in aarch64-apple-darwin x86_64-apple-darwin; do
+            tar -xzf "cli/dimvexa-$VERSION-$t.tar.gz" -C cli
+          done
+          mkdir -p dmg-root
+          lipo -create -output dmg-root/dimvexa \
+            "cli/dimvexa-$VERSION-aarch64-apple-darwin/dimvexa" \
+            "cli/dimvexa-$VERSION-x86_64-apple-darwin/dimvexa"
+          cp "cli/dimvexa-$VERSION-aarch64-apple-darwin/"{LICENSE-MIT,LICENSE-APACHE,README.md} dmg-root/
+          chmod +x dmg-root/dimvexa
+          # Ad-hoc signature: required for arm64 binaries to run. Not notarized (no Apple ID).
+          codesign --force --sign - dmg-root/dimvexa
+          hdiutil create -volname "dimvexa $VERSION" -srcfolder dmg-root -ov -format UDZO dimvexa.dmg
+          shasum -a 256 dimvexa.dmg > dimvexa.dmg.sha256
+      - name: Smoke test
+        run: |
+          hdiutil attach dimvexa.dmg -mountpoint "$RUNNER_TEMP/dmg" -nobrowse -quiet
+          "$RUNNER_TEMP/dmg/dimvexa" --version | grep -F "dimvexa ${{ needs.plan.outputs.version }} "
+          hdiutil detach "$RUNNER_TEMP/dmg" -quiet
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cli-dmg
+          path: |
+            dimvexa.dmg
+            dimvexa.dmg.sha256
+          if-no-files-found: error
+
   sdist:
     name: sdist
     needs: [plan, verify]
@@ -318,7 +361,7 @@ jobs:
 
   publish-crates:
     name: publish to crates.io
-    needs: [plan, wheels, cli-binaries, sdist, npm-package, excel-addin, crates-check]
+    needs: [plan, wheels, cli-binaries, macos-dmg, sdist, npm-package, excel-addin, crates-check]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: release
@@ -402,7 +445,7 @@ jobs:
 
   tag:
     name: tag and GitHub release
-    needs: [plan, cli-binaries, excel-addin, publish-crates, publish-pypi, publish-npm]
+    needs: [plan, cli-binaries, macos-dmg, excel-addin, publish-crates, publish-pypi, publish-npm]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -430,4 +473,4 @@ jobs:
           VERSION: ${{ needs.plan.outputs.version }}
         run: |
           gh release create "v$VERSION" --repo "${{ github.repository }}" --target "${{ github.sha }}" \
-            --title "v$VERSION" --generate-notes cli/*.tar.gz cli/*.zip cli/dimvexa.exe cli/*.sha256 cli/dimvexa.rb excel/*.zip
+            --title "v$VERSION" --generate-notes cli/*.tar.gz cli/*.zip cli/dimvexa.exe cli/dimvexa.dmg cli/*.sha256 cli/dimvexa.rb excel/*.zip

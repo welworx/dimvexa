@@ -12,6 +12,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Added
 
+- Releases attach `dimvexa.dmg` for macOS: a universal (arm64 + x86_64) `dimvexa` binary, ad-hoc signed but not notarized, with a `dimvexa.dmg.sha256`.
 - Colour in help pages and in `units` and `configs` text output (headings bold, command and option names cyan, column headers dim), with the same rules as before (`--color`, `NO_COLOR`, `CLICOLOR_FORCE`, never in JSON). The guide has a Colour section.
 - Per-command help: `dimvexa convert|units|configs|update --help` and `dimvexa help COMMAND` (also `dimvexa 10 m km --help`). `dimvexa help NAME` for an unknown name is a usage error. `AGENTS.md` and the `api-change` skill now require the help to be updated with every CLI change.
 
