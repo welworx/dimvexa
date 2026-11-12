@@ -11,6 +11,8 @@ publishes: merging the release commit to `main` starts `.github/workflows/releas
 waits for the owner's approval of the `release` environment before it publishes to crates.io,
 PyPI and npm (`docs/releasing.md`).
 
+0. The release pull request title must pass the `conventional-title` check: one scope, for
+   example `chore(release)!: 0.7.0` or `feat(config)!: ...` (pattern in `AGENTS.md`, Conventions).
 1. `cargo xtask ci` is green (it includes `msrv`, a check on Rust 1.85) and the pull request's
    check runs are all green (read them with `pull_request_read` `get_check_runs`); on main, the nightly workflow has no open failure issue.
 2. Bump the version in `Cargo.toml` (`[workspace.package]` and the `[workspace.dependencies]`

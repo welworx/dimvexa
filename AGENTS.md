@@ -77,6 +77,13 @@ Read the matching skill in `.claude/skills/<name>/SKILL.md` before the task.
 
 ## Conventions
 
+* The pull request title is checked by `.github/workflows/pr-title.yml` (the `conventional-title`
+  check) and becomes the squash commit. It must match
+  `^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._/-]+\))?!?: [^ ].{0,100}$`:
+  **one** scope only, lower case letters, digits and `. _ / -` (no comma, no space, no
+  upper case: `feat(config)!: ...`, not `feat(data,config,cli)!: ...`), `!` for a breaking
+  change, a subject of at most 101 characters. Check the title against this pattern before you
+  create or rename a pull request, and read the check runs afterwards.
 * Conventional Commits (`feat(core): ...`). Do not add `Signed-off-by` lines for the owner (the
   owner is the sole maintainer and exempt from the DCO check; outside contributors sign off).
   End commits with the attribution lines your environment asks for.
