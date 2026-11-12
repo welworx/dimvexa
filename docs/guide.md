@@ -175,7 +175,7 @@ the close matches or the candidates.
 
 Dimvexa refuses ambiguous names such as `ton` and `mt`, and it never guesses. With no
 `--config` you get strict SI names. `--config` loads a **config**: a small TOML file of names,
-units and densities. One option, two kinds of value (ADR-014,
+units and constants. One option, two kinds of value (ADR-014,
 [`docs/adr/014-one-config-mechanism.md`](adr/014-one-config-mechanism.md)):
 
 - a **name** (`us`, `gb`, `metric-trade`, `year-julian`, `year-civil`, `water`) loads a config
@@ -197,7 +197,7 @@ error[ambiguous_symbol]: 'oz' is ambiguous: use oz_av or oz_troy or fl_oz_us or 
 ```
 
 `dimvexa configs` lists the shipped configs and `dimvexa configs us` shows exactly what one
-contains: the names it maps, the units it defines and every density with its value, conditions
+contains: the names it maps, the units it defines and every constant with its value, conditions
 and source. `oz` stays refused in `us` and `gb` because it means a mass or a volume in both.
 `--config` can be repeated and a later config overrides an earlier one, so
 `--config us --config ./mine.toml` starts from the US names and adds yours.
@@ -239,30 +239,32 @@ ADR-014; what is not supported yet is in
 
 Mass and volume are different quantities, so `convert 1 L kg` is refused. A conversion needs a
 density, and the density depends on the liquid, the temperature and the pressure. Dimvexa never
-looks one up or computes one (ADR-001). You state it with `--density`: either your own number,
+looks one up or computes one (ADR-001). You state it with `--const`: either your own number,
 or a named density from a config, which carries its conditions and source.
 
 ```console
-$ dimvexa convert 1 L kg --density 998.2067kg/m3
+$ dimvexa convert 1 L kg --const 998.2067kg/m3
 0.9982067 kg
-note: used density --density (998.2067 kg/m3; supplied by the caller on the command line; the conditions are not known; source: none: supplied by the caller; --density)
-$ dimvexa convert 1 L kg --config water --density water_25C
+note: used density --const (998.2067 kg/m3; supplied by the caller on the command line; the conditions are not known; source: none: supplied by the caller; --const)
+$ dimvexa convert 1 L kg --config water --const water_25C
 0.99704702 kg
 note: used density water_25C (997.04702 kg/m3; air-free VSMOW water, 25 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309 (recommended density table); value 0.99704702(83) g/mL as quoted in en.wikipedia.org/wiki/Properties_of_water, which agrees with the paper's formula; confirm against Table 1 of the paper; bundled:water:7)
 ```
 
 The `water` config carries two densities of water
 (`water_25C` and `water_max_density`, at 3.983035 degC); `dimvexa configs water` shows them with
-their sources. For another liquid or temperature, write your own `[[density]]` with its
+their sources. For another liquid or temperature, write your own `[[constant]]` with its
 conditions and source:
 
 ```toml
 # examples/configs/water.toml
-[[density]]
+[[constant]]
 name = "water_20C"
 # kg/m3, mass <-> volume
 # 998.2067 kg/m3
 value = "9982067/10000"
+unit = "kg/m3"
+exactness = "measured"
 conditions = "air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa"
 source = "Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1)"
 ```
@@ -270,11 +272,11 @@ source = "Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of th
 ```console
 $ dimvexa convert 1 L kg
 error[dimension_mismatch]: dimension mismatch: [m^3] cannot be converted to [kg]
-hint: mass and volume need a density. Pass your own number, for example --density 998.2067kg/m3, or a named one: --config water --density water_25C (docs/adr/014-one-config-mechanism.md)
-$ dimvexa convert 1 L kg --config examples/configs/water.toml --density water_20C
+hint: mass and volume need a density. Pass your own number, for example --const 998.2067kg/m3, or a named one: --config water --const water_25C (docs/adr/014-one-config-mechanism.md)
+$ dimvexa convert 1 L kg --config examples/configs/water.toml --const water_20C
 0.9982067 kg
 note: used density water_20C (998.2067 kg/m3; air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1); examples/configs/water.toml:9)
-$ dimvexa convert 1 gal_us tonne --config examples/configs/water.toml --density water_20C --exact
+$ dimvexa convert 1 gal_us tonne --config examples/configs/water.toml --const water_20C --exact
 4723279256309691/1250000000000000000 = 0.0037786234050477528 tonne
 note: used density water_20C (998.2067 kg/m3; air-free water of SMOW isotopic composition, 20 degC (ITS-90), 101.325 kPa; source: Tanaka et al., Metrologia 38 (2001) 301-309: the density formula of the paper evaluated at 20 degC (confirm against its Table 1); examples/configs/water.toml:9)
 ```
@@ -282,14 +284,37 @@ note: used density water_20C (998.2067 kg/m3; air-free water of SMOW isotopic co
 What a density does and does not do:
 - It multiplies by the number you wrote and nothing else: no temperature or pressure
   correction, no lookup.
+- It is a `[[constant]]` of a density unit (`kg/m3`, `g/cm3`, ...). A constant of another unit
+  is not a density and `--const` refuses it.
 - It applies only to mass to volume and back (also per time, `kg/h` to `m3/h`), never to a
-  temperature or any other unit, and only when you ask with `--density`. Any unit of mass per
+  temperature or any other unit, and only when you ask with `--const`. Any unit of mass per
   volume works for a number you write yourself (`kg/m3`, `g/cm3`, `lb/ft3`).
 - The assumption travels with the result: the note above on stderr, and in `--json` a `density`
   object (name, value, conditions, source, file and line). The result's `exactness` is
   `measured`, because the density is a stated number and not a definition, and its source is
   added to `sources`.
 - `dimvexa units --config NAME_OR_PATH` lists the densities your configs define.
+
+### Constants: `dimvexa constants`
+
+A **constant** is a named, exact value of a unit with its conditions and its source (ADR-018).
+The built-in ones are the mathematical constant `pi` and the SI defining constants `h`, `e`,
+`k_B` and `N_A`; since 2019 their values are exact by definition:
+
+```console
+$ dimvexa constants k_B
+# columns: name, value, unit, exactness, conditions, source, origin
+k_B	1.380649e-23	J/K	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): k = 1.380 649e-23 J/K	built-in
+# Boltzmann constant
+```
+
+`dimvexa constants` lists them all, and `--config NAME_OR_PATH` adds those of a config. Your own
+config defines one with a `[[constant]]` table (`name`, `value`, `unit`, `exactness`,
+`conditions`, `source`, and for a CODATA value the pinned `codata` edition). The value is exact:
+a decimal, a fraction, or either followed by `10^k` and `pi`. A built-in name cannot be
+redefined: a user-defined `pi` would silently change every angle. A constant is never applied
+silently; today `--const` is the only way to use one, and only a density. Constants inside a
+value (`2 pi rad`) are step 3 of ADR-018 and not yet available (KL-20).
 
 ### Example: a unit of your own
 

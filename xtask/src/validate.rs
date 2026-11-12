@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! Structural validation of `data/units/*.toml` and `data/vectors/*.toml`.
+//! Structural validation of `data/units/*.toml`, `data/constants/*.toml` and `data/vectors/*.toml`.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -27,6 +27,7 @@ pub struct Report {
     units: usize,
     vectors: usize,
     ambiguous: usize,
+    constants: usize,
     chains: usize,
     hash: String,
 }
@@ -34,8 +35,8 @@ pub struct Report {
 impl Report {
     pub fn summary(&self) -> String {
         format!(
-            "validate-data: {} units, {} golden vectors, {} ambiguous symbols, {} derivation checks, table hash {}",
-            self.units, self.vectors, self.ambiguous, self.chains, self.hash
+            "validate-data: {} units, {} constants, {} golden vectors, {} ambiguous symbols, {} derivation checks, table hash {}",
+            self.units, self.constants, self.vectors, self.ambiguous, self.chains, self.hash
         )
     }
 }
@@ -108,6 +109,18 @@ fn data_hash(root: &Path) -> Result<String, String> {
         input.push(0);
         input.extend_from_slice(&std::fs::read(&f).map_err(|e| format!("{}: {e}", f.display()))?);
     }
+    // The constants are part of the table (ADR-018); same bytes as build.rs hashes.
+    for f in toml_files(&root.join("crates/dimvexa-data/data/constants"))? {
+        let name = f
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("?")
+            .to_string();
+        input.extend_from_slice(b"constants/");
+        input.extend_from_slice(name.as_bytes());
+        input.push(0);
+        input.extend_from_slice(&std::fs::read(&f).map_err(|e| format!("{}: {e}", f.display()))?);
+    }
     Ok(format!("fnv1a64:{:016x}", toml_lite::fnv1a64(&input)))
 }
 
@@ -131,7 +144,7 @@ pub fn update_hash(root: &Path) -> Result<String, String> {
     let new_version = version.checked_add(1).ok_or("version overflow")?;
     let body = format!(
         "# SPDX-License-Identifier: MIT OR Apache-2.0\n\
-         # Version and hash of data/units/*.toml. `cargo xtask validate-data` fails if the hash no\n\
+         # Version and hash of data/units/*.toml and data/constants/*.toml. `cargo xtask validate-data` fails if the hash no\n\
          # longer matches the files; `cargo xtask update-data-hash` bumps the version and rewrites it.\n\
          [[data]]\nversion = {new_version}\nhash = \"{hash}\"\n"
     );
@@ -164,6 +177,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
         }
     }
     let mut vector_tables: Vec<(String, Table)> = Vec::new();
+    let mut constant_vector_tables: Vec<(String, Table)> = Vec::new();
     for f in toml_files(&root.join("crates/dimvexa-data/data/vectors"))? {
         let fname = f
             .file_name()
@@ -174,6 +188,8 @@ pub fn run(root: &Path) -> Result<Report, String> {
         for t in toml_lite::parse(&text).map_err(|e| format!("{fname}: {e}"))? {
             if t.name == "vector" {
                 vector_tables.push((fname.clone(), t));
+            } else if t.name == "constant_vector" {
+                constant_vector_tables.push((fname.clone(), t));
             } else {
                 err(format!("{fname}: unknown table [[{}]]", t.name));
             }
@@ -399,6 +415,9 @@ pub fn run(root: &Path) -> Result<Report, String> {
         }
     }
 
+    // ---- constants (ADR-018)
+    let constant_count = check_constants(root, &rows, &constant_vector_tables, &mut errors)?;
+
     // ---- derivation chains
     let chain_count = chains::check(&rows, &mut errors);
 
@@ -425,8 +444,139 @@ pub fn run(root: &Path) -> Result<Report, String> {
         units: rows.len(),
         vectors: vector_tables.len(),
         ambiguous: ambiguous.len(),
+        constants: constant_count,
         chains: chain_count,
         hash,
+    })
+}
+
+/// Checks `data/constants/*.toml`: required fields, an exact value, a measured value naming its
+/// CODATA edition, a defined value with the conditions `none (defined)`, a unit that is in the
+/// table, and one golden vector with its own citation per constant. Returns the constant count.
+fn check_constants(
+    root: &Path,
+    rows: &BTreeMap<String, Row>,
+    vectors: &[(String, Table)],
+    errors: &mut Vec<String>,
+) -> Result<usize, String> {
+    let mut names: BTreeSet<String> = BTreeSet::new();
+    for f in toml_files(&root.join("crates/dimvexa-data/data/constants"))? {
+        let fname = f
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("?")
+            .to_string();
+        let text = std::fs::read_to_string(&f).map_err(|e| format!("{fname}: {e}"))?;
+        for t in toml_lite::parse(&text).map_err(|e| format!("{fname}: {e}"))? {
+            if t.name != "constant" {
+                errors.push(format!("{fname}: unknown table [[{}]]", t.name));
+                continue;
+            }
+            let name = t.str("name").unwrap_or("?").to_string();
+            let at = format!("{fname}:{} constant '{name}'", t.line);
+            if !is_valid_constant_name(&name) {
+                errors.push(format!(
+                    "{at}: the name is not well-formed (a letter, then letters, digits or '_')"
+                ));
+            }
+            if !names.insert(name.clone()) {
+                errors.push(format!("{at}: defined twice"));
+            }
+            for key in ["value", "unit", "exactness", "conditions", "source"] {
+                match t.str(key) {
+                    Ok(v) if !v.trim().is_empty() => {}
+                    _ => errors.push(format!("{at}: missing or empty '{key}'")),
+                }
+            }
+            match t.str("value").map(strict_factor) {
+                Ok(Ok(v)) if v.num() > 0 => {}
+                Ok(Ok(_)) => errors.push(format!("{at}: value must be positive")),
+                Ok(Err(e)) | Err(e) => errors.push(format!("{at}: {e}")),
+            }
+            let codata = t.opt_str("codata").ok().flatten().unwrap_or("");
+            match t.str("exactness") {
+                Ok("defined") => {
+                    if t.str("conditions").ok() != Some("none (defined)") {
+                        errors.push(format!(
+                            "{at}: a defined constant has the conditions 'none (defined)'"
+                        ));
+                    }
+                    if !codata.is_empty() {
+                        errors.push(format!("{at}: a defined constant has no 'codata' edition"));
+                    }
+                }
+                Ok("measured") => {
+                    if codata.trim().is_empty() {
+                        errors.push(format!(
+                            "{at}: a measured constant must pin its 'codata' edition"
+                        ));
+                    }
+                    if t.str("conditions").ok() == Some("none (defined)") {
+                        errors.push(format!("{at}: a measured constant needs real conditions"));
+                    }
+                }
+                Ok(other) => errors.push(format!(
+                    "{at}: exactness '{other}' is not defined or measured"
+                )),
+                Err(_) => {}
+            }
+            if let Ok(unit) = t.str("unit") {
+                if unit != "1" && !unit_expression_is_known(unit, rows) {
+                    errors.push(format!(
+                        "{at}: unit '{unit}' is not built from units of the table"
+                    ));
+                }
+            }
+        }
+    }
+    let mut covered: BTreeSet<String> = BTreeSet::new();
+    for (fname, t) in vectors {
+        let at = format!("{fname}:{} constant_vector", t.line);
+        for key in ["constant", "expect", "source"] {
+            match t.str(key) {
+                Ok(v) if !v.trim().is_empty() => {}
+                _ => errors.push(format!("{at}: missing or empty '{key}'")),
+            }
+        }
+        if let Ok(v) = t.str("expect") {
+            if Ratio::parse_symbolic(v).is_err() {
+                errors.push(format!("{at}: 'expect' = '{v}' is not an exact number"));
+            }
+        }
+        if let Ok(c) = t.str("constant") {
+            if !names.contains(c) {
+                errors.push(format!("{at}: constant '{c}' is not in the table"));
+            } else if !covered.insert(c.to_string()) {
+                errors.push(format!("{at}: constant '{c}' has two vectors"));
+            }
+        }
+    }
+    for n in &names {
+        if !covered.contains(n) {
+            errors.push(format!(
+                "constant '{n}' has no golden vector in data/vectors/"
+            ));
+        }
+    }
+    Ok(names.len())
+}
+
+/// A constant name: ASCII letter first, then letters, digits and `_`.
+fn is_valid_constant_name(name: &str) -> bool {
+    name.starts_with(|c: char| c.is_ascii_alphabetic())
+        && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
+/// Whether every unit symbol in a unit expression such as `J.s`, `J/K` or `1/mol` is in the table
+/// (a prefixed symbol counts when its unprefixed part is).
+fn unit_expression_is_known(expr: &str, rows: &BTreeMap<String, Row>) -> bool {
+    expr.split(|c: char| {
+        matches!(c, '.' | '/' | '*' | '^' | '(' | ')') || c.is_ascii_digit() || c == '-'
+    })
+    .filter(|w| !w.is_empty())
+    .all(|w| {
+        rows.contains_key(w)
+            || (1..w.len()).any(|i| w.is_char_boundary(i) && rows.contains_key(&w[i..]))
     })
 }
 
@@ -546,6 +696,39 @@ mod tests {
             t.replacen("unit = \"torr\"", "unit = \"atm\"", 2)
         });
         assert!(has(&e, "unit 'torr' has no golden vector"), "{e:?}");
+    }
+
+    #[test]
+    fn detects_a_constant_without_a_vector() {
+        let e = errors_after("cvec", "vectors/constants.toml", |t| {
+            t.replacen("constant = \"h\"", "constant = \"pi\"", 1)
+        });
+        assert!(has(&e, "constant 'h' has no golden vector"), "{e:?}");
+        assert!(has(&e, "constant 'pi' has two vectors"), "{e:?}");
+    }
+
+    #[test]
+    fn detects_a_measured_constant_without_a_codata_edition() {
+        let e = errors_after("codata", "constants/si.toml", |t| {
+            t.replacen("exactness = \"defined\"", "exactness = \"measured\"", 1)
+        });
+        assert!(has(&e, "must pin its 'codata' edition"), "{e:?}");
+    }
+
+    #[test]
+    fn detects_a_constant_without_a_source() {
+        let e = errors_after("csrc", "constants/si.toml", |t| {
+            t.replacen("source = \"BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): h", "source = \"\"\nxx = \"", 1)
+        });
+        assert!(has(&e, "missing or empty 'source'"), "{e:?}");
+    }
+
+    #[test]
+    fn detects_a_constant_with_an_unknown_unit() {
+        let e = errors_after("cunit", "constants/si.toml", |t| {
+            t.replacen("unit = \"J/K\"", "unit = \"Zorp/K\"", 1)
+        });
+        assert!(has(&e, "is not built from units of the table"), "{e:?}");
     }
 
     #[test]

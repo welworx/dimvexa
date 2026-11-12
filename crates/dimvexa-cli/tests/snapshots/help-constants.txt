@@ -1,0 +1,29 @@
+dimvexa constants - list the named constants and show one
+
+Usage:
+  dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json | --pretty]
+
+A constant is an exact value of a unit with its conditions and source; nothing
+is rounded and nothing is applied unless you ask. The built-in ones (pi, h, e,
+k_B, N_A) cannot be redefined by a config. A config adds its own with
+[[constant]]; a constant of a density unit is what --const uses for mass <->
+volume.
+
+Examples:
+  dimvexa constants
+  dimvexa constants k_B
+  dimvexa constants --config water --json
+
+Forms:
+  constants        every built-in constant, then those of the --config files
+  constants NAME   one constant, with its note
+
+Options:
+  --config NAME_OR_PATH
+                   also list the constants of this config; repeatable
+  --json           machine-readable output (schema dimvexa.constants/1)
+  --pretty         --json, indented for reading
+  --color WHEN     auto, always or never (see: dimvexa --help)
+
+Exit codes: 0 success, 1 invalid config file, 2 usage error (an unknown
+constant name is one).

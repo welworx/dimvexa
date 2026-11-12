@@ -1,0 +1,6 @@
+# columns: name, value, unit, exactness, conditions, source, origin
+pi	pi	1	defined	none (defined)	ISO 80000-2:2019, mathematical constants (pi, the ratio of the circumference of a circle to its diameter)	built-in
+h	6.62607015e-34	J.s	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): h = 6.626 070 15e-34 J s	built-in
+e	1.602176634e-19	C	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): e = 1.602 176 634e-19 C	built-in
+k_B	1.380649e-23	J/K	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): k = 1.380 649e-23 J/K	built-in
+N_A	6.02214076e23	1/mol	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): N_A = 6.022 140 76e23 1/mol	built-in

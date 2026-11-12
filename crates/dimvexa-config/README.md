@@ -20,9 +20,10 @@ A `[[unit]]` defines your own unit as an exact multiple of an existing one (`bbl
 `gal_us`), with a mandatory source; it can never take an existing name. See
 `examples/configs/oil.toml`.
 
-A `[[density]]` holds a constant you supply for a conversion the core refuses, such as the
-density of water for litres to kilograms; it needs `conditions` and a `source`, and the
-result is marked `measured`. See `examples/configs/water.toml`. `Constant::density_from_text`
+A `[[constant]]` holds a named, exact number you supply, with a `unit`, an `exactness`,
+`conditions` and a `source` (ADR-018). One of a density unit is what a conversion the core
+refuses needs, such as the density of water for litres to kilograms, and the result is marked
+with the constant's exactness. A built-in constant name (`pi`, `h`, ...) cannot be redefined. See `examples/configs/water.toml`. `Density::density_from_text`
 reads a density the caller writes (`998.2067kg/m3`).
 
 Configs also ship inside the crate: `us`, `gb`, `metric-trade`, `year-julian`, `year-civil` and

@@ -7,6 +7,7 @@
     clippy::indexing_slicing,
     clippy::too_many_lines,
     clippy::float_cmp,
+    clippy::arithmetic_side_effects,
     dead_code
 )]
 
@@ -480,4 +481,59 @@ fn time_area_and_superscript_names() {
     }
     // A superscript digit is allowed only on a reference unit: `m³` is not `m^3`.
     assert!(reg.parse("m\u{b3}").is_err());
+}
+
+/// `(mantissa, ten, pi)` with the mantissa an integer without trailing zeros, so two spellings of
+/// one value compare equal even where folding the power of ten would overflow `i128`.
+fn canonical(r: Ratio) -> (i128, i32, i32) {
+    let (mut n, d, mut ten) = (r.num(), r.den(), r.ten_exp());
+    // Scale until the denominator divides: a finite decimal has such a power of ten.
+    let mut k = 0;
+    while n % d != 0 {
+        n = n.checked_mul(10).unwrap();
+        ten -= 1;
+        k += 1;
+        assert!(k < 40, "{r} is not a finite decimal times a power of ten");
+    }
+    n /= d;
+    while n != 0 && n % 10 == 0 {
+        n /= 10;
+        ten += 1;
+    }
+    (n, ten, r.pi_exp())
+}
+
+#[test]
+fn every_constant_has_a_cited_golden_vector_that_reproduces() {
+    let reg = dimvexa_data::registry().unwrap();
+    let vectors: Vec<Table> = load("vectors")
+        .into_iter()
+        .filter(|t| t.name == "constant_vector")
+        .collect();
+    let mut covered = BTreeSet::new();
+    for v in &vectors {
+        let name = v.str("constant").unwrap();
+        assert!(
+            !v.str("source").unwrap().trim().is_empty(),
+            "{name}: empty source"
+        );
+        let c = dimvexa_data::constant(name).unwrap_or_else(|| panic!("{name}: not a constant"));
+        let unit = reg.parse(c.unit).unwrap();
+        let got = c.value().unwrap().checked_mul(unit.factor()).unwrap();
+        let expect = Ratio::parse_symbolic(v.str("expect").unwrap()).unwrap();
+        assert_eq!(
+            canonical(got),
+            canonical(expect),
+            "{name}: got {got}, expected {expect}"
+        );
+        assert!(covered.insert(name.to_string()), "{name}: two vectors");
+    }
+    let all: BTreeSet<String> = dimvexa_data::CONSTANTS
+        .iter()
+        .map(|c| c.name.to_string())
+        .collect();
+    assert_eq!(
+        covered, all,
+        "constants without a vector, or vectors without a constant"
+    );
 }

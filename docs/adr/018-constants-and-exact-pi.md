@@ -4,7 +4,7 @@ Status: Accepted by the owner on 2026-11-11, including the two recommended defau
 
 Supersedes the pi, `eV` and `Da` part of [ADR-010](010-units-that-do-not-fit-i128.md) (its option 2).
 
-Implementation: step 1 (the number type, exact angles, `eV`, `Da`) is released in 0.5.0; the measurements are in [`docs/benchmarks/v0.5.0.md`](../benchmarks/v0.5.0.md). Steps 2 and 3 are not started.
+Implementation: step 1 (the number type, exact angles, `eV`, `Da`) is released in 0.5.0; the measurements are in [`docs/benchmarks/v0.5.0.md`](../benchmarks/v0.5.0.md). Step 2 (the constants table, `--const`, `dimvexa constants`, `dimvexa.configs/2`) is implemented in the release after 0.5.1; step 3 is not started.
 
 ## Context
 

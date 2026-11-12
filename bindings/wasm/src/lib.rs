@@ -14,7 +14,7 @@ use std::rc::Rc;
 use std::sync::OnceLock;
 
 use dimvexa::{Conversion, Error, Registry, UnitExpr};
-use dimvexa_config::Constant;
+use dimvexa_config::Density;
 use js_sys::{Array, Float64Array, Reflect};
 use wasm_bindgen::prelude::*;
 
@@ -50,7 +50,7 @@ fn fail(e: &Error) -> JsValue {
 /// A registry with some shipped configs applied (ADR-014), and the densities they carry.
 struct Loaded {
     reg: Registry,
-    constants: Vec<Constant>,
+    constants: Vec<Density>,
 }
 
 thread_local! {
@@ -104,9 +104,16 @@ fn load_config(spec: &str) -> Result<Rc<Loaded>, JsValue> {
     }
     let mut reg = registry()?.clone();
     dimvexa_config::apply(&mut reg, &configs).map_err(|e| fail(&e))?;
+    // Only the constants of a density unit take part (`--const` in the CLI, ADR-018).
+    let mut densities = Vec::new();
+    for c in dimvexa_config::constants(&configs) {
+        if c.is_density(&reg).map_err(|e| fail(&e))? {
+            densities.push(c.to_density(&reg).map_err(|e| fail(&e))?);
+        }
+    }
     let loaded = Rc::new(Loaded {
         reg,
-        constants: dimvexa_config::constants(&configs),
+        constants: densities,
     });
     LOADED.with(|c| {
         let mut list = c.borrow_mut();
@@ -121,14 +128,14 @@ fn load_config(spec: &str) -> Result<Rc<Loaded>, JsValue> {
 /// Resolves a density argument (ADR-014): text that starts like a number is the caller's own
 /// density (`998.2067kg/m3`); anything else is the name of a density in a loaded config
 /// (`water_25C` needs the config `water`). Nothing is computed or guessed.
-fn resolve_density(loaded: &Loaded, spec: &str) -> Result<Constant, JsValue> {
+fn resolve_density(loaded: &Loaded, spec: &str) -> Result<Density, JsValue> {
     let text = spec.trim();
     let literal = text
         .chars()
         .next()
         .is_some_and(|c| c.is_ascii_digit() || matches!(c, '+' | '-' | '.'));
     if literal {
-        return Constant::density_from_text(&loaded.reg, text).map_err(|e| fail(&e));
+        return Density::density_from_text(&loaded.reg, text).map_err(|e| fail(&e));
     }
     loaded
         .constants

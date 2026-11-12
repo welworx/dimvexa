@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Mathematical constants. A constant is a named, exact, cited value (ADR-018, step 2): `value` is
+# `num/den` in lowest terms, optionally followed by `10^k` and `pi` or `pi^m`; `unit` is a unit
+# expression of the unit table and gives the dimension; `exactness` is `defined` or `measured`.
+# A measured value also names its `codata` edition. A defined value has the conditions
+# `none (defined)`. `pi` cannot be redefined by a config: a user-defined pi would silently change
+# every angle.
+
+[[constant]]
+name = "pi"
+value = "1/1 pi"
+unit = "1"
+exactness = "defined"
+conditions = "none (defined)"
+source = "ISO 80000-2:2019, mathematical constants (pi, the ratio of the circumference of a circle to its diameter)"
+note = "stored symbolically as pi^1, never as a fraction, so deg is exactly pi/180"

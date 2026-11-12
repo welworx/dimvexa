@@ -44,4 +44,6 @@
 )]
 
 pub use dimvexa_core::*;
-pub use dimvexa_data::{AMBIGUOUS, DATA_HASH, DATA_VERSION, PACKS, UNITS, data_version, registry};
+pub use dimvexa_data::{
+    AMBIGUOUS, CONSTANTS, DATA_HASH, DATA_VERSION, PACKS, UNITS, constant, data_version, registry,
+};

@@ -1,4 +1,4 @@
-# columns: name, names, units, densities, hash
+# columns: name, names, units, constants, hash
 us	5	0	0	fnv1a64:<hash>
 gb	5	0	0	fnv1a64:<hash>
 metric-trade	2	0	0	fnv1a64:<hash>

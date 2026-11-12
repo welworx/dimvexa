@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# The defining constants of the SI that are not units themselves (BIPM SI Brochure, 9th ed.,
+# 2019, ch. 2, Table 1). Since 2019 their values are exact by definition, so they are `defined`
+# and need no CODATA edition. Format: see math.toml.
+
+[[constant]]
+name = "h"
+value = "662607015/1 10^-42"
+unit = "J.s"
+exactness = "defined"
+conditions = "none (defined)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): h = 6.626 070 15e-34 J s"
+note = "Planck constant"
+
+[[constant]]
+name = "e"
+value = "1602176634/1 10^-28"
+unit = "C"
+exactness = "defined"
+conditions = "none (defined)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): e = 1.602 176 634e-19 C"
+note = "elementary charge"
+
+[[constant]]
+name = "k_B"
+value = "1380649/1 10^-29"
+unit = "J/K"
+exactness = "defined"
+conditions = "none (defined)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): k = 1.380 649e-23 J/K"
+note = "Boltzmann constant"
+
+[[constant]]
+name = "N_A"
+value = "602214076/1 10^15"
+unit = "1/mol"
+exactness = "defined"
+conditions = "none (defined)"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): N_A = 6.022 140 76e23 1/mol"
+note = "Avogadro constant"

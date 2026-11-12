@@ -4,21 +4,25 @@ Usage:
   dimvexa [convert] VALUE FROM TO [OPTIONS]
   dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
+  dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]
   dimvexa update [--check] [-y]
 
 Converts VALUE from unit FROM to unit TO. Ambiguous input is an error.
-Run 'dimvexa COMMAND --help' (convert, units, configs, update) for details.
+Run 'dimvexa COMMAND --help' (convert, units, configs, constants,
+update) for details.
 
 Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
   dimvexa convert 1 ton kg --config us
-  dimvexa convert 1 L kg --config water --density water_25C
-  dimvexa convert 1 L kg --density 998.2067kg/m3
+  dimvexa convert 1 L kg --config water --const water_25C
+  dimvexa convert 1 L kg --const 998.2067kg/m3
   dimvexa units volume
   dimvexa units psi
   dimvexa configs water
+  dimvexa constants
+  dimvexa constants k_B
 
 Commands:
   convert          convert VALUE from FROM to TO ('convert' may be left out)
@@ -27,8 +31,11 @@ Commands:
   units GROUP      list one group, for example: dimvexa units volume
   units UNIT       show one unit in detail, for example: dimvexa units psi
   configs          list the configs that ship with dimvexa (us, gb, water, ...)
-  configs NAME     show what a config contains: names, units, densities with
+  configs NAME     show what a config contains: names, units, constants with
                    their conditions and sources; a path shows your own file
+  constants        list the constants: name, exact value, unit, conditions and
+                   source (built in, plus those of any --config)
+  constants NAME   show one constant, for example: dimvexa constants h
   update           replace this binary with the latest GitHub release (needs
                    curl and tar; checks the published SHA-256 first; see
                    docs/adr/015-update-command.md)
@@ -41,7 +48,8 @@ Options:
                    or a power of ten when the value has one
                    (1/2 pi = 1.5707963267948966)
   --json           machine-readable output (schemas dimvexa.convert/3,
-                   dimvexa.units/4, dimvexa.configs/1)
+                   dimvexa.units/4, dimvexa.configs/2,
+                   dimvexa.constants/1)
   --pretty         --json, indented for reading (same fields, same order)
   --color WHEN     auto (default: a terminal, unless NO_COLOR is set), always
                    (also CLICOLOR_FORCE=1) or never; JSON is never coloured
@@ -51,10 +59,10 @@ Options:
                    water); a file has a path (./mine.toml, or anything with a /
                    or ending in .toml). Without --config the names stay strict.
                    See docs/adr/014-one-config-mechanism.md
-  --density NAME_OR_VALUE
-                   density for mass <-> volume: a name from a loaded config
-                   (--config water --density water_25C) or your own number
-                   (--density 998.2067kg/m3). The assumption is printed
+  --const NAME_OR_VALUE
+                   density for mass <-> volume: the name of a constant of a
+                   density unit (--config water --const water_25C) or your own
+                   number (--const 998.2067kg/m3). The assumption is printed
   --version        print the version and the data table version
   -h, --help       print this help
 

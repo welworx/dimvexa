@@ -86,9 +86,9 @@ you state:
 ```console
 $ dimvexa convert 1 ton kg --config us
 907.18474 kg
-$ dimvexa convert 1 L kg --density 998.2067kg/m3
+$ dimvexa convert 1 L kg --const 998.2067kg/m3
 0.9982067 kg
-note: used density --density (998.2067 kg/m3; supplied by the caller on the command line; the conditions are not known; source: none: supplied by the caller; --density)
+note: used density --const (998.2067 kg/m3; supplied by the caller on the command line; the conditions are not known; source: none: supplied by the caller; --const)
 ```
 
 The [user guide](docs/guide.md) has the full unit list, configs and densities, units of your
