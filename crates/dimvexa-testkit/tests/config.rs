@@ -127,7 +127,7 @@ fn applying_twice_is_refused_so_overrides_stay_explicit() {
     assert!(err.to_string().contains("already means a unit"), "{err}");
 }
 
-const WATER: &str = "[[constant]]\nname = \"water_20C\"\n\
+const WATER: &str = "[[constant]]\nid = \"water_20C\"\n\
 value = \"9982067/10000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\n\
 source = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
 
@@ -595,21 +595,14 @@ fn only_the_water_config_carries_densities() {
     assert_ne!(water.constants(), []);
     for c in water.constants() {
         assert!(!c.conditions.trim().is_empty() && !c.source.trim().is_empty());
-        assert!(c.conditions.contains("air-free"), "{}", c.name);
+        assert!(c.conditions.contains("air-free"), "{}", c.id);
     }
     for b in dimvexa_config::BUNDLED.iter().filter(|b| b.name != "water") {
         let cfg = b.config().unwrap();
         assert!(cfg.constants().is_empty(), "{} carries a constant", b.name);
     }
     // 25 degC: 997.04702 kg/m3; maximum density: 999.97495 kg/m3
-    let get = |n: &str| {
-        water
-            .constants()
-            .iter()
-            .find(|c| c.name == n)
-            .unwrap()
-            .value
-    };
+    let get = |n: &str| water.constants().iter().find(|c| c.id == n).unwrap().value;
     assert_eq!(get("water_25C"), Ratio::new(99_704_702, 100_000).unwrap());
     assert_eq!(
         get("water_max_density"),
@@ -760,7 +753,7 @@ fn a_constant_is_a_density_only_if_its_unit_is_one() {
 
 #[test]
 fn a_config_cannot_redefine_a_built_in_constant() {
-    let builtin: Vec<&str> = dimvexa_data::CONSTANTS.iter().map(|c| c.name).collect();
+    let builtin: Vec<&str> = dimvexa_data::CONSTANTS.iter().map(|c| c.id).collect();
     assert!(builtin.contains(&"pi") && builtin.contains(&"N_A"));
     for name in &builtin {
         let c = cfg(&WATER.replace("water_20C", name), "mine.toml");
@@ -779,7 +772,7 @@ fn load_builds_the_constants_and_densities_in_one_place() {
     let builtin = dimvexa_data::CONSTANTS;
     let reg = registry().unwrap();
     let loaded = dimvexa_config::load(reg.clone(), &[cfg(WATER, "w.toml")], builtin).unwrap();
-    let names: Vec<&str> = loaded.constants.iter().map(|c| c.name.as_str()).collect();
+    let names: Vec<&str> = loaded.constants.iter().map(|c| c.id.as_str()).collect();
     assert_eq!(names, ["pi", "h_P", "e", "k_B", "N_A", "water_20C"]);
     assert_eq!(loaded.densities.len(), 1);
     // A named density, a literal, and the two refusals.

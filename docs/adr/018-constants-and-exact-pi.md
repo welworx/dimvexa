@@ -34,7 +34,7 @@ Delivered in three steps, each a separate change that can be released and benchm
    DESIGN.md asks), `h` and `e` become representable. KL-19 closes. Breaking: `Ratio` and the
    table format change; handled with the `api-change` skill (new schema versions, CHANGELOG
    `Changed`, snapshots).
-2. **Constants table.** A `[[constant]]` entry has `name`, an exact `value` (a number in the form
+2. **Constants table.** A `[[constant]]` entry has an `id` (what the user writes), a full `name`, an exact `value` (a number in the form
    of step 1), a `unit` (which gives the dimension), `exactness`, `conditions` (`none (defined)`
    for a defined value), `source`, and for a `measured` value the pinned CODATA edition. Built-in
    constants live in `crates/dimvexa-data/data/constants/*.toml` (compiled by `build.rs`, covered

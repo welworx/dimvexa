@@ -35,7 +35,7 @@ mod generated {
 
 pub use generated::{AMBIGUOUS, CONSTANTS, DATA_HASH, DATA_VERSION, PACKS, UNITS};
 
-/// The built-in constant called `name`, if there is one (ADR-018).
+/// The built-in constant with the identifier `id`, if there is one (ADR-018).
 ///
 /// ```
 /// let h = dimvexa_data::constant("h_P").expect("built in");
@@ -43,8 +43,8 @@ pub use generated::{AMBIGUOUS, CONSTANTS, DATA_HASH, DATA_VERSION, PACKS, UNITS}
 /// assert!(dimvexa_data::constant("nope").is_none());
 /// ```
 #[must_use]
-pub fn constant(name: &str) -> Option<&'static ConstantDef> {
-    CONSTANTS.iter().find(|c| c.name == name)
+pub fn constant(id: &str) -> Option<&'static ConstantDef> {
+    CONSTANTS.iter().find(|c| c.id == id)
 }
 
 /// Builds a [`Registry`] from the compiled seed table.
@@ -83,9 +83,10 @@ mod tests {
             let c = constant(name).unwrap_or_else(|| panic!("{name} missing"));
             assert!(!c.source.is_empty() && !c.conditions.is_empty(), "{name}");
             assert!(c.value().is_ok(), "{name}");
+            assert!(!c.name.is_empty(), "{name}: no full name");
             assert!(reg.parse(c.unit).is_ok(), "{name}: unit {}", c.unit);
             // A constant's name is never also a unit's (`h` is the hour).
-            let err = reg.parse(c.name).unwrap_err();
+            let err = reg.parse(c.id).unwrap_err();
             assert_eq!(err.code(), "unknown_unit", "{name} is also a unit");
         }
     }

@@ -158,8 +158,8 @@ fn unit_def(t: &toml_lite::Table) -> Res<String> {
 }
 
 fn constant_def(t: &toml_lite::Table) -> Res<String> {
-    let name = t.str("name")?;
-    let ctx = |e: String| format!("constant '{name}': {e}");
+    let id = t.str("id")?;
+    let ctx = |e: String| format!("constant '{id}': {e}");
     let ((n, d), (ten, pi)) = symbolic(t.str("value").map_err(ctx)?, "value").map_err(ctx)?;
     let exactness = match t.str("exactness").map_err(ctx)? {
         "defined" => "Exactness::Defined",
@@ -167,9 +167,10 @@ fn constant_def(t: &toml_lite::Table) -> Res<String> {
         other => return Err(ctx(format!("unknown exactness '{other}'"))),
     };
     Ok(format!(
-        "    ConstantDef {{ name: {}, value: ({n}_i128, {d}_i128), value_exp: ({ten}_i32, {pi}_i32), unit: {}, \
+        "    ConstantDef {{ id: {}, name: {}, value: ({n}_i128, {d}_i128), value_exp: ({ten}_i32, {pi}_i32), unit: {}, \
          exactness: {exactness}, codata: {}, conditions: {}, source: {}, note: {} }},\n",
-        lit(name),
+        lit(id),
+        lit(t.str("name").map_err(ctx)?),
         lit(t.str("unit").map_err(ctx)?),
         lit(t.opt_str("codata").map_err(ctx)?.unwrap_or("")),
         lit(t.str("conditions").map_err(ctx)?),

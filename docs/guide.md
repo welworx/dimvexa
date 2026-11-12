@@ -262,7 +262,8 @@ conditions and source:
 ```toml
 # examples/configs/water.toml
 [[constant]]
-name = "water_20C"
+id = "water_20C"
+name = "Water density at 20 degC"
 # kg/m3, mass <-> volume
 # 998.2067 kg/m3
 value = "9982067/10000"
@@ -306,14 +307,14 @@ The built-in ones are the mathematical constant `pi` and the SI defining constan
 
 ```console
 $ dimvexa constants k_B
-# columns: name, value, unit, exactness, conditions, source, origin
-k_B	1.380649e-23	J/K	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): k = 1.380 649e-23 J/K	built-in
-# Boltzmann constant
+# columns: id, name, value, unit, exactness, conditions, source, origin
+k_B	Boltzmann constant	1.380649e-23	J/K	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): k = 1.380 649e-23 J/K	built-in
+# exact by the 2019 SI redefinition
 ```
 
 `dimvexa constants` lists them all, and `--config NAME_OR_PATH` adds those of a config. Your own
-config defines one with a `[[constant]]` table (`name`, `value`, `unit`, `exactness`,
-`conditions`, `source`, and for a CODATA value the pinned `codata` edition). The value is exact:
+config defines one with a `[[constant]]` table (`id`, `value`, `unit`, `exactness`,
+`conditions`, `source`, an optional full `name`, and for a CODATA value the pinned `codata` edition). The value is exact:
 a decimal, a fraction, or either followed by `10^k` and `pi`. A built-in name cannot be
 redefined: a user-defined `pi` would silently change every angle. A constant is never applied
 silently; today `--const` is the only way to use one, and only a constant of a density unit (a

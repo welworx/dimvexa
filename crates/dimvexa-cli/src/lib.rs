@@ -1237,7 +1237,7 @@ fn read_spec(spec: &str) -> Result<Config, LoadError> {
         )?
     };
     // A built-in constant cannot be redefined: a user-defined pi would change every angle.
-    let builtin: Vec<&str> = dimvexa::CONSTANTS.iter().map(|c| c.name).collect();
+    let builtin: Vec<&str> = dimvexa::CONSTANTS.iter().map(|c| c.id).collect();
     dimvexa_config::reject_builtin_constants(&config, &builtin).map_err(LoadError::Lib)?;
     Ok(config)
 }
@@ -2208,12 +2208,13 @@ fn config_detail_text(c: &Config) -> String {
     if !c.constants().is_empty() {
         s.push_str(
             "\n## constants (one of a density unit is used with --const NAME)\n\
-# columns: name, value, unit, exactness, conditions, source\n",
+# columns: id, name, value, unit, exactness, conditions, source\n",
         );
         for d in c.constants() {
             let _ = writeln!(
                 s,
-                "{}\t{}\t{}\t{}\t{}\t{}",
+                "{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                cell(&d.id),
                 cell(&d.name),
                 d.value_text(),
                 cell(&d.unit),
@@ -2269,7 +2270,8 @@ fn config_detail_json(c: &Config) -> String {
 /// The JSON object of a constant: everything a reader needs to judge the number.
 fn constant_json(c: &Constant) -> String {
     format!(
-        "{{\"name\":{},\"value\":{},\"unit\":{},\"exactness\":{},\"codata\":{},\"conditions\":{},\"source\":{},\"note\":{},\"file\":{},\"line\":{}}}",
+        "{{\"id\":{},\"name\":{},\"value\":{},\"unit\":{},\"exactness\":{},\"codata\":{},\"conditions\":{},\"source\":{},\"note\":{},\"file\":{},\"line\":{}}}",
+        json_string(&c.id),
         json_string(&c.name),
         json_string(&c.value.to_fraction_string()),
         json_string(&c.unit),
@@ -2291,7 +2293,8 @@ fn constant_row(c: &Constant) -> String {
         format!("{}:{}", cell(&c.origin), c.line)
     };
     format!(
-        "{}\t{}\t{}\t{}\t{}\t{}\t{}",
+        "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+        cell(&c.id),
         cell(&c.name),
         c.value_text(),
         cell(&c.unit),
@@ -2320,9 +2323,9 @@ fn run_constants(
     let shown: Vec<&Constant> = match target {
         None => all.iter().collect(),
         Some(name) => {
-            let found: Vec<&Constant> = all.iter().filter(|c| c.name == name).collect();
+            let found: Vec<&Constant> = all.iter().filter(|c| c.id == name).collect();
             if found.is_empty() {
-                let known: Vec<String> = all.iter().map(|c| c.name.clone()).collect();
+                let known: Vec<String> = all.iter().map(|c| c.id.clone()).collect();
                 let message = format!("no constant named '{name}'; known: {}", known.join(", "));
                 if json {
                     let _ = writeln!(
@@ -2352,7 +2355,7 @@ fn run_constants(
     } else {
         let _ = writeln!(
             out,
-            "# columns: name, value, unit, exactness, conditions, source, origin"
+            "# columns: id, name, value, unit, exactness, conditions, source, origin"
         );
         for c in &shown {
             let _ = writeln!(out, "{}", constant_row(c));

@@ -112,7 +112,7 @@ def test_reference_state_units() -> None:
 
 
 WATER_TEXT = (
-    '[[constant]]\nname = "rho"\nvalue = "0.9982067"\nunit = "g/cm3"\nexactness = "measured"\n'
+    '[[constant]]\nid = "rho"\nvalue = "0.9982067"\nunit = "g/cm3"\nexactness = "measured"\n'
     'conditions = "c"\nsource = "s"\n'
 )
 
@@ -136,12 +136,13 @@ def test_density_and_configs_like_the_cli() -> None:
 
 
 def test_constants_table() -> None:
-    names = [c["name"] for c in dimvexa.constants()]
+    names = [c["id"] for c in dimvexa.constants()]
     assert names == ["pi", "h_P", "e", "k_B", "N_A"]
     h = dimvexa.constants()[1]
+    assert h["name"] == "Planck constant"
     assert (h["value"], h["value_text"], h["unit"]) == ("662607015 10^-42", "6.62607015e-34", "J.s")
     assert h["exactness"] == "defined" and h["file"] == "built-in"
-    both = [c["name"] for c in dimvexa.constants(configs=["water"], config_texts=[WATER_TEXT])]
+    both = [c["id"] for c in dimvexa.constants(configs=["water"], config_texts=[WATER_TEXT])]
     assert both[-3:] == ["water_25C", "water_max_density", "rho"]
 
 

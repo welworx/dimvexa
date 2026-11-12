@@ -7,7 +7,8 @@
 # another temperature or another liquid; dimvexa multiplies by what you write, nothing more.
 
 [[constant]]
-name = "water_20C"
+id = "water_20C"
+name = "Water density at 20 degC"
 # kg/m3, mass <-> volume
 # 998.2067 kg/m3
 value = "9982067/10000"

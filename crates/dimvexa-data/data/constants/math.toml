@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
-# Mathematical constants. A constant is a named, exact, cited value (ADR-018, step 2): `value` is
+# Mathematical constants. A constant is a named, exact, cited value (ADR-018, step 2): `id` is
+# what the user writes (never also a unit's name), `name` the full name, `value` is
 # `num/den` in lowest terms, optionally followed by `10^k` and `pi` or `pi^m`; `unit` is a unit
 # expression of the unit table and gives the dimension; `exactness` is `defined` or `measured`.
 # A measured value also names its `codata` edition. A defined value has the conditions
@@ -7,7 +8,8 @@
 # every angle.
 
 [[constant]]
-name = "pi"
+id = "pi"
+name = "Pi"
 value = "1/1 pi"
 unit = "1"
 exactness = "defined"

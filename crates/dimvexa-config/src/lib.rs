@@ -17,7 +17,7 @@
 //! form.
 //!
 //! A config can also hold **constants** (ADR-018): named, exact, cited numbers the caller
-//! supplies. A constant has a `unit` (which gives its dimension), an `exactness`, mandatory
+//! supplies. A constant has an `id` (what you select), an optional `name`, a `unit` (which gives its dimension), an `exactness`, mandatory
 //! `conditions` and `source`, and, for a CODATA value, the pinned `codata` edition. A constant
 //! of a density unit is what a conversion the core refuses (ADR-001) needs, such as litres to
 //! kilograms; the library multiplies by it and never derives it from temperature or pressure.
@@ -25,7 +25,8 @@
 //!
 //! ```text
 //! [[constant]]
-//! name = "water_20C"
+//! id = "water_20C"
+//! name = "Water at 20 degC"          # optional full name
 //! value = "998.2067"
 //! unit = "kg/m3"
 //! exactness = "measured"
@@ -108,7 +109,10 @@ pub struct ConfigUnit {
 /// travels without the assumption behind it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Constant {
-    /// The name selected with `--const`, for example `water_20C` or `k_B`.
+    /// The identifier selected with `--const`, for example `water_20C` or `k_B`. Never also a
+    /// unit's name.
+    pub id: String,
+    /// The full name, for example `Boltzmann constant` (may be empty for a config constant).
     pub name: String,
     /// The exact value, a number of [`unit`](Self::unit).
     pub value: Ratio,
@@ -311,6 +315,7 @@ impl TableKind {
     const fn keys(self) -> &'static [&'static str] {
         match self {
             Self::Constant => &[
+                "id",
                 "name",
                 "value",
                 "unit",
@@ -419,10 +424,10 @@ fn finish_constant(
     constants: &mut Vec<Constant>,
     origin: &str,
 ) -> core::result::Result<(), String> {
-    let name = p.need("name")?;
-    if !is_constant_name(&name) {
+    let id = p.need("id")?;
+    if !is_constant_name(&id) {
         return Err(format!(
-            "name '{name}' must start with a letter and use only letters, digits and '_' \
+            "id '{id}' must start with a letter and use only letters, digits and '_' \
              (a --const value that starts with a digit is a number)"
         ));
     }
@@ -447,11 +452,12 @@ fn finish_constant(
     }
     let conditions = p.need("conditions")?;
     let source = p.need("source")?;
-    if constants.iter().any(|b| b.name == name) {
-        return Err(format!("'{name}' is defined twice"));
+    if constants.iter().any(|b| b.id == id) {
+        return Err(format!("'{id}' is defined twice"));
     }
     constants.push(Constant {
-        name,
+        id,
+        name: p.get("name").unwrap_or_default().to_string(),
         value,
         unit,
         exactness,
@@ -527,7 +533,7 @@ fn finish_unit(
 ///
 /// ```
 /// use dimvexa_config::{Config, constants};
-/// let entry = |v: &str| format!("[[constant]]\nname = \"w\"\nvalue = \"{v}\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n");
+/// let entry = |v: &str| format!("[[constant]]\nid = \"w\"\nvalue = \"{v}\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n");
 /// let a = Config::parse(&entry("1000"), "a.toml")?;
 /// let b = Config::parse(&entry("998"), "b.toml")?;
 /// let effective = constants(&[a, b]);
@@ -539,7 +545,7 @@ fn finish_unit(
 pub fn constants(configs: &[Config]) -> Vec<Constant> {
     let mut effective: Vec<Constant> = Vec::new();
     for b in configs.iter().flat_map(Config::constants) {
-        upsert(&mut effective, b.clone(), |e| e.name == b.name);
+        upsert(&mut effective, b.clone(), |e| e.id == b.id);
     }
     effective
 }
@@ -555,7 +561,7 @@ impl Constant {
     /// ```
     /// use dimvexa_config::Config;
     /// let cfg = Config::parse(
-    ///     "[[constant]]\nname = \"h\"\nvalue = \"6.62607015 10^-34\"\nunit = \"J.s\"\n\
+    ///     "[[constant]]\nid = \"h\"\nvalue = \"6.62607015 10^-34\"\nunit = \"J.s\"\n\
     ///      exactness = \"defined\"\nconditions = \"none (defined)\"\nsource = \"s\"\n",
     ///     "h.toml",
     /// )?;
@@ -579,16 +585,17 @@ impl Constant {
     /// use dimvexa_config::Constant;
     /// use dimvexa_core::{ConstantDef, Exactness};
     /// let def = ConstantDef {
-    ///     name: "h", value: (662_607_015, 1), value_exp: (-42, 0), unit: "J.s",
+    ///     id: "h_P", name: "Planck constant", value: (662_607_015, 1), value_exp: (-42, 0), unit: "J.s",
     ///     exactness: Exactness::Defined, codata: "", conditions: "none (defined)",
     ///     source: "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1", note: "",
     /// };
     /// let h = Constant::from_def(&def)?;
-    /// assert_eq!((h.name.as_str(), h.unit.as_str(), h.origin.as_str()), ("h", "J.s", "built-in"));
+    /// assert_eq!((h.id.as_str(), h.name.as_str(), h.unit.as_str()), ("h_P", "Planck constant", "J.s"));
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     pub fn from_def(def: &ConstantDef) -> Result<Self> {
         Ok(Self {
+            id: def.id.to_string(),
             name: def.name.to_string(),
             value: def.value()?,
             unit: def.unit.to_string(),
@@ -625,7 +632,7 @@ impl Constant {
                 reason: format!(
                     "constant '{}' is a number of '{}', not a density: --const supplies a \
                      mass <-> volume density such as one in kg/m3",
-                    self.name, self.unit
+                    self.id, self.unit
                 ),
                 suggestions: Vec::new(),
             });
@@ -634,14 +641,14 @@ impl Constant {
             return Err(Error::Refused {
                 reason: format!(
                     "constant '{}': a density is a plain number; write {} as a fraction or decimal, without pi or a power of ten",
-                    self.name, self.value
+                    self.id, self.value
                 ),
                 suggestions: Vec::new(),
             });
         }
         let factor = reg.parse(&self.unit)?.factor();
         Ok(Density {
-            name: self.name.clone(),
+            name: self.id.clone(),
             value: self.value.checked_mul(factor)?,
             // A density is a stated number, never a definition (ADR-001), whatever the
             // constant's own flag says.
@@ -727,7 +734,7 @@ pub const BUILT_IN: &str = "built-in";
 /// ```
 /// use dimvexa_config::{Config, reject_builtin_constants};
 /// let cfg = Config::parse(
-///     "[[constant]]\nname = \"pi\"\nvalue = \"3\"\nunit = \"1\"\nexactness = \"defined\"\n\
+///     "[[constant]]\nid = \"pi\"\nvalue = \"3\"\nunit = \"1\"\nexactness = \"defined\"\n\
 ///      conditions = \"none (defined)\"\nsource = \"s\"\n",
 ///     "mine.toml",
 /// )?;
@@ -737,13 +744,13 @@ pub const BUILT_IN: &str = "built-in";
 /// ```
 pub fn reject_builtin_constants(config: &Config, builtin: &[&str]) -> Result<()> {
     for c in config.constants() {
-        if builtin.contains(&c.name.as_str()) {
+        if builtin.contains(&c.id.as_str()) {
             return Err(Error::InvalidDefinition {
                 symbol: format!("{}:{}", c.origin, c.line),
                 message: format!(
                     "constant: '{}' is a built-in constant and cannot be redefined{}",
-                    c.name,
-                    if c.name == "pi" {
+                    c.id,
+                    if c.id == "pi" {
                         " (a user-defined pi would silently change every angle)"
                     } else {
                         ""
@@ -1355,7 +1362,7 @@ pub enum DensityError {
 /// reg.register(Unit::linear("m", Dim::M, Ratio::ONE)?)?;
 /// reg.register(Unit::linear("g", Dim::KG, Ratio::new(1, 1000)?)?.with_prefixes(PrefixMode::Si))?;
 /// let cfg = Config::parse(
-///     "[[constant]]\nname = \"w\"\nvalue = \"998\"\nunit = \"kg/m3\"\nexactness = \"measured\"\n\
+///     "[[constant]]\nid = \"w\"\nvalue = \"998\"\nunit = \"kg/m3\"\nexactness = \"measured\"\n\
 ///      conditions = \"c\"\nsource = \"s\"\n",
 ///     "w.toml",
 /// )?;
@@ -1365,7 +1372,7 @@ pub enum DensityError {
 /// # Ok::<(), dimvexa_core::Error>(())
 /// ```
 pub fn load(mut reg: Registry, configs: &[Config], builtin: &[ConstantDef]) -> Result<Loaded> {
-    let names: Vec<&str> = builtin.iter().map(|c| c.name).collect();
+    let names: Vec<&str> = builtin.iter().map(|c| c.id).collect();
     for config in configs {
         reject_builtin_constants(config, &names)?;
     }
@@ -1379,7 +1386,7 @@ pub fn load(mut reg: Registry, configs: &[Config], builtin: &[ConstantDef]) -> R
     for c in &constants {
         // A constant's name is never also a unit's (`h` is the hour): it would be ambiguous in a
         // value. An ambiguous bare symbol such as `ton` counts as a unit name too.
-        let is_unit = match reg.parse(&c.name) {
+        let is_unit = match reg.parse(&c.id) {
             Ok(_) => true,
             Err(e) => e.code() == "ambiguous_symbol",
         };
@@ -1388,14 +1395,14 @@ pub fn load(mut reg: Registry, configs: &[Config], builtin: &[ConstantDef]) -> R
                 symbol: format!("{}:{}", c.origin, c.line),
                 message: format!(
                     "constant '{}': the name is also a unit; give the constant another name",
-                    c.name
+                    c.id
                 ),
             });
         }
         // The unit gives the dimension, so an unknown unit is a loud error at load time.
         let wrap = |e: Error| Error::InvalidDefinition {
             symbol: format!("{}:{}", c.origin, c.line),
-            message: format!("constant '{}': unit '{}': {e}", c.name, c.unit),
+            message: format!("constant '{}': unit '{}': {e}", c.id, c.unit),
         };
         if c.is_density(&reg).map_err(wrap)? {
             densities.push(c.to_density(&reg).map_err(wrap)?);
@@ -1441,17 +1448,17 @@ fn replacements(configs: &[Config]) -> Vec<String> {
             note("unit", &u.symbol, &u.origin, u.line);
         }
         for c in config.constants() {
-            note("constant", &c.name, &c.origin, c.line);
+            note("constant", &c.id, &c.origin, c.line);
         }
     }
     warnings
 }
 
 impl Loaded {
-    /// The constant called `name`, if one is in effect.
+    /// The constant with the identifier `id`, if one is in effect.
     #[must_use]
-    pub fn constant(&self, name: &str) -> Option<&Constant> {
-        self.constants.iter().find(|c| c.name == name)
+    pub fn constant(&self, id: &str) -> Option<&Constant> {
+        self.constants.iter().find(|c| c.id == id)
     }
 
     /// Resolves a density argument: text that starts like a number is the caller's own density
@@ -1563,14 +1570,14 @@ mod tests {
         }
     }
 
-    const WATER: &str = "[[constant]]\nname = \"water_20C\"\nvalue = \"9982067/10000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\nsource = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
+    const WATER: &str = "[[constant]]\nid = \"water_20C\"\nvalue = \"9982067/10000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"air-free water, 20 degC, 101.325 kPa\"\nsource = \"Tanaka et al., Metrologia 38 (2001) 301\"\n";
 
     #[test]
     fn parses_a_density_with_its_conditions_and_source() {
         let cfg = Config::parse(&format!("[map]\nmt = \"tonne\"\n\n{WATER}"), "w.toml").unwrap();
         assert_eq!(cfg.mappings().len(), 1);
         let b = &cfg.constants()[0];
-        assert_eq!(b.name, "water_20C");
+        assert_eq!(b.id, "water_20C");
         assert_eq!(
             (b.unit.as_str(), b.exactness),
             ("kg/m3", Exactness::Measured)
@@ -1593,7 +1600,7 @@ mod tests {
                 .collect::<Vec<_>>()
                 .join("\n")
         };
-        for key in ["name", "value", "unit", "exactness", "conditions", "source"] {
+        for key in ["id", "value", "unit", "exactness", "conditions", "source"] {
             let err = Config::parse(&field(key), "w.toml").unwrap_err();
             let msg = err.to_string();
             assert!(
@@ -1643,7 +1650,7 @@ mod tests {
                 WATER.replace("source =", "colour = \"blue\"\nsource ="),
                 "unknown constant key 'colour'",
             ),
-            (format!("{WATER}name = \"x\"\n"), "given twice"),
+            (format!("{WATER}id = \"x\"\n"), "given twice"),
         ] {
             let msg = Config::parse(&text, "w.toml").unwrap_err().to_string();
             assert!(msg.contains(needle), "{needle}: {msg}");

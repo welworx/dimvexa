@@ -541,7 +541,7 @@ fn every_constant_has_a_cited_golden_vector_that_reproduces() {
     }
     let all: BTreeSet<String> = dimvexa_data::CONSTANTS
         .iter()
-        .map(|c| c.name.to_string())
+        .map(|c| c.id.to_string())
         .collect();
     assert_eq!(
         covered, all,

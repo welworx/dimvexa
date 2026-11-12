@@ -415,7 +415,7 @@ fn conversion(
 }
 
 /// The named constants in effect (ADR-018): the built-in ones, then those of the configs. Each is
-/// a dict with `name`, `value` (exact string), `value_text`, `unit`, `exactness`, `codata`,
+/// a dict with `id`, `name` (the full name), `value` (exact string), `value_text`, `unit`, `exactness`, `codata`,
 /// `conditions`, `source`, `note`, `file` and `line`.
 #[pyfunction]
 #[pyo3(signature = (*, configs = None, config_texts = None))]
@@ -431,6 +431,7 @@ fn constants<'py>(
     let mut out = Vec::new();
     for c in &loaded.constants {
         let d = PyDict::new(py);
+        d.set_item("id", &c.id)?;
         d.set_item("name", &c.name)?;
         d.set_item("value", c.value.to_fraction_string())?;
         d.set_item("value_text", c.value_text())?;

@@ -5,37 +5,41 @@
 # (`h` is the hour), so the Planck constant is `h_P`.
 
 [[constant]]
-name = "h_P"
+id = "h_P"
+name = "Planck constant"
 value = "662607015/1 10^-42"
 unit = "J.s"
 exactness = "defined"
 conditions = "none (defined)"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): h = 6.626 070 15e-34 J s"
-note = "Planck constant"
+note = "exact by the 2019 SI redefinition"
 
 [[constant]]
-name = "e"
+id = "e"
+name = "Elementary charge"
 value = "1602176634/1 10^-28"
 unit = "C"
 exactness = "defined"
 conditions = "none (defined)"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): e = 1.602 176 634e-19 C"
-note = "elementary charge"
+note = "exact by the 2019 SI redefinition"
 
 [[constant]]
-name = "k_B"
+id = "k_B"
+name = "Boltzmann constant"
 value = "1380649/1 10^-29"
 unit = "J/K"
 exactness = "defined"
 conditions = "none (defined)"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): k = 1.380 649e-23 J/K"
-note = "Boltzmann constant"
+note = "exact by the 2019 SI redefinition"
 
 [[constant]]
-name = "N_A"
+id = "N_A"
+name = "Avogadro constant"
 value = "602214076/1 10^15"
 unit = "1/mol"
 exactness = "defined"
 conditions = "none (defined)"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): N_A = 6.022 140 76e23 1/mol"
-note = "Avogadro constant"
+note = "exact by the 2019 SI redefinition"

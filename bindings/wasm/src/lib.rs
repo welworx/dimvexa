@@ -301,7 +301,7 @@ pub fn convert_with(
 }
 
 /// The named constants in effect (ADR-018): the built-in ones, then those of the configs, as an
-/// array of objects with `name`, `value` (an exact string such as `"662607015 10^-42"`), `valueText` (the same number for
+/// array of objects with `id`, `name` (the full name), `value` (an exact string such as `"662607015 10^-42"`), `valueText` (the same number for
 /// people, `"6.62607015e-34"`), `unit`,
 /// `exactness`, `codata`, `conditions`, `source`, `note`, `file` and `line`.
 ///
@@ -316,6 +316,7 @@ pub fn constants(config: &str, config_texts: Vec<String>) -> Result<Array, JsVal
     for c in &loaded.constants {
         let obj = js_sys::Object::new();
         let text = |k: &str, v: &str| Reflect::set(&obj, &k.into(), &v.into());
+        let _ = text("id", &c.id);
         let _ = text("name", &c.name);
         let _ = text("value", &c.value.to_fraction_string());
         let _ = text("valueText", &c.value_text());

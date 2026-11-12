@@ -474,11 +474,11 @@ fn check_constants(
                 errors.push(format!("{fname}: unknown table [[{}]]", t.name));
                 continue;
             }
-            let name = t.str("name").unwrap_or("?").to_string();
+            let name = t.str("id").unwrap_or("?").to_string();
             let at = format!("{fname}:{} constant '{name}'", t.line);
             if !is_valid_constant_name(&name) {
                 errors.push(format!(
-                    "{at}: the name is not well-formed (a letter, then letters, digits or '_')"
+                    "{at}: the id is not well-formed (a letter, then letters, digits or '_')"
                 ));
             }
             // A constant's name is never also a unit's (`h` is the hour), with or without an SI
@@ -489,12 +489,12 @@ fn check_constants(
                     .iter()
                     .any(|p| name.strip_prefix(p.symbol).is_some_and(is_unit))
             {
-                errors.push(format!("{at}: the name is also a unit"));
+                errors.push(format!("{at}: the id is also a unit"));
             }
             if !names.insert(name.clone()) {
                 errors.push(format!("{at}: defined twice"));
             }
-            for key in ["value", "unit", "exactness", "conditions", "source"] {
+            for key in ["name", "value", "unit", "exactness", "conditions", "source"] {
                 match t.str(key) {
                     Ok(v) if !v.trim().is_empty() => {}
                     _ => errors.push(format!("{at}: missing or empty '{key}'")),
@@ -736,9 +736,9 @@ mod tests {
     #[test]
     fn detects_a_constant_named_like_a_unit() {
         let e = errors_after("cname", "constants/si.toml", |t| {
-            t.replacen("name = \"h_P\"", "name = \"h\"", 1)
+            t.replacen("id = \"h_P\"", "id = \"h\"", 1)
         });
-        assert!(has(&e, "the name is also a unit"), "{e:?}");
+        assert!(has(&e, "the id is also a unit"), "{e:?}");
     }
 
     #[test]

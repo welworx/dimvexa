@@ -153,6 +153,7 @@
               "items": {
                 "type": "object",
                 "required": [
+                  "id",
                   "name",
                   "value",
                   "unit",
@@ -165,8 +166,13 @@
                   "line"
                 ],
                 "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "The identifier the user selects (never also a unit's name)."
+                  },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The full name, for example `Planck constant`; may be empty for a config constant."
                   },
                   "value": {
                     "type": "string",

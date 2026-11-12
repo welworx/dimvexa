@@ -11,7 +11,7 @@ const realWarn = console.warn;
 console.warn = (m) => warnings.push(String(m));
 
 const constant = (name, value, unit = "kg/m3") =>
-  `[[constant]]\nname = "${name}"\nvalue = "${value}"\nunit = "${unit}"\n` +
+  `[[constant]]\nid = "${name}"\nvalue = "${value}"\nunit = "${unit}"\n` +
   `exactness = "measured"\nconditions = "c"\nsource = "s"\n`;
 const code = (f) => {
   try { f(); } catch (e) { return e.code; }
@@ -29,9 +29,10 @@ assert.strictEqual(code(() => d.convertWith(1, "L", "kg", "", "", [])), "dimensi
 assert.strictEqual(d.convertWith(1, "L", "kg", "rho", "", [constant("rho", "0.9982067", "g/cm3")]), 0.9982067);
 
 // constants: the built-in ones first, then the configs'
-const names = (c, t) => d.constants(c, t).map((x) => x.name);
+const names = (c, t) => d.constants(c, t).map((x) => x.id);
 assert.deepStrictEqual(names("", []), ["pi", "h_P", "e", "k_B", "N_A"]);
 const h = d.constants("", [])[1];
+assert.strictEqual(h.name, "Planck constant");
 assert.deepStrictEqual(
   [h.value, h.valueText, h.unit, h.exactness, h.file, h.line],
   ["662607015 10^-42", "6.62607015e-34", "J.s", "defined", "built-in", 0],
