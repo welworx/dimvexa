@@ -608,11 +608,22 @@ impl Constant {
                 suggestions: Vec::new(),
             });
         }
+        if self.value.has_exponents() {
+            return Err(Error::Refused {
+                reason: format!(
+                    "constant '{}': a density is a plain number; write {} as a fraction or decimal, without pi or a power of ten",
+                    self.name, self.value
+                ),
+                suggestions: Vec::new(),
+            });
+        }
         let factor = reg.parse(&self.unit)?.factor();
         Ok(Density {
             name: self.name.clone(),
             value: self.value.checked_mul(factor)?,
-            exactness: self.exactness,
+            // A density is a stated number, never a definition (ADR-001), whatever the
+            // constant's own flag says.
+            exactness: Exactness::Measured,
             conditions: self.conditions.clone(),
             source: self.source.clone(),
             origin: self.origin.clone(),

@@ -1225,19 +1225,24 @@ fn read_config(file: &str) -> Result<String, LoadError> {
 /// Reads one `--config` value: a shipped config by name, or a file by path (ADR-014). A bare
 /// word is always a shipped name; a file called `us` is written `./us`.
 fn read_spec(spec: &str) -> Result<Config, LoadError> {
-    if dimvexa_config::is_path(spec) {
+    let config = if dimvexa_config::is_path(spec) {
         let text = read_config(spec)?;
-        return Config::parse(&text, spec).map_err(LoadError::Lib);
-    }
-    dimvexa_config::bundled(spec).map_or_else(
-        || {
-            Err(LoadError::Io(format!(
-                "no config named '{spec}'; shipped configs: {} (a file needs a path, for example ./{spec} or {spec}.toml)",
-                bundled_names()
-            )))
-        },
-        |b| b.config().map_err(LoadError::Lib),
-    )
+        Config::parse(&text, spec).map_err(LoadError::Lib)?
+    } else {
+        dimvexa_config::bundled(spec).map_or_else(
+            || {
+                Err(LoadError::Io(format!(
+                    "no config named '{spec}'; shipped configs: {} (a file needs a path, for example ./{spec} or {spec}.toml)",
+                    bundled_names()
+                )))
+            },
+            |b| b.config().map_err(LoadError::Lib),
+        )?
+    };
+    // A built-in constant cannot be redefined: a user-defined pi would change every angle.
+    let builtin: Vec<&str> = dimvexa::CONSTANTS.iter().map(|c| c.name).collect();
+    dimvexa_config::reject_builtin_constants(&config, &builtin).map_err(LoadError::Lib)?;
+    Ok(config)
 }
 
 fn bundled_names() -> String {
@@ -1255,11 +1260,6 @@ fn load(config_specs: &[String]) -> Result<Loaded, LoadError> {
         let cfg = read_spec(spec)?;
         configs.push((cfg.origin().to_string(), cfg.hash().to_string()));
         parsed.push(cfg);
-    }
-    // A built-in constant cannot be redefined: a user-defined pi would change every angle.
-    let builtin_names: Vec<&str> = dimvexa::CONSTANTS.iter().map(|c| c.name).collect();
-    for cfg in &parsed {
-        dimvexa_config::reject_builtin_constants(cfg, &builtin_names).map_err(LoadError::Lib)?;
     }
     let applied = dimvexa_config::apply(&mut reg, &parsed).map_err(LoadError::Lib)?;
     let constants = dimvexa_config::constants(&parsed);
@@ -2258,7 +2258,7 @@ fn config_detail_text(c: &Config) -> String {
     }
     if !c.constants().is_empty() {
         s.push_str(
-            "\n## constants (a density unit: use with --const NAME)\n\
+            "\n## constants (one of a density unit is used with --const NAME)\n\
 # columns: name, value, unit, exactness, conditions, source\n",
         );
         for d in c.constants() {

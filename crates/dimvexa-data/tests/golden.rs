@@ -519,6 +519,17 @@ fn every_constant_has_a_cited_golden_vector_that_reproduces() {
         );
         let c = dimvexa_data::constant(name).unwrap_or_else(|| panic!("{name}: not a constant"));
         let unit = reg.parse(c.unit).unwrap();
+        let want_dim: Vec<i8> = v
+            .ints("dim")
+            .unwrap()
+            .iter()
+            .map(|d| i8::try_from(*d).unwrap())
+            .collect();
+        assert_eq!(
+            unit.dim().exponents().to_vec(),
+            want_dim,
+            "{name}: dimension"
+        );
         let got = c.value().unwrap().checked_mul(unit.factor()).unwrap();
         let expect = Ratio::parse_symbolic(v.str("expect").unwrap()).unwrap();
         assert_eq!(

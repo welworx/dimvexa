@@ -309,7 +309,7 @@ dimvexa search bar                     # find units by name/alias
 dimvexa packs                          # packs compiled in, versions, data hash
 ```
 
-Global options: `--packs process,common`, `--config us` (a shipped config by name, or your own file by path; ADR-014), `--density NAME_OR_VALUE`, `--json`, `--exact`, `--no-color`, `--quiet`. Refused conversions (for example `L` to `kg`) print the reason and how to pass an explicit number (`--density 998.2067kg/m3`), and exit non-zero.
+Global options: `--packs process,common`, `--config us` (a shipped config by name, or your own file by path; ADR-014), `--const NAME_OR_VALUE`, `--json`, `--exact`, `--no-color`, `--quiet`. Refused conversions (for example `L` to `kg`) print the reason and how to pass an explicit number (`--const 998.2067kg/m3`), and exit non-zero.
 
 ### `--json` output
 

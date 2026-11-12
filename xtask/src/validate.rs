@@ -532,6 +532,9 @@ fn check_constants(
     let mut covered: BTreeSet<String> = BTreeSet::new();
     for (fname, t) in vectors {
         let at = format!("{fname}:{} constant_vector", t.line);
+        if t.ints("dim").map_or(true, |d| d.len() != 7) {
+            errors.push(format!("{at}: 'dim' needs 7 exponents"));
+        }
         for key in ["constant", "expect", "source"] {
             match t.str(key) {
                 Ok(v) if !v.trim().is_empty() => {}
@@ -568,7 +571,7 @@ fn is_valid_constant_name(name: &str) -> bool {
 }
 
 /// Whether every unit symbol in a unit expression such as `J.s`, `J/K` or `1/mol` is in the table
-/// (a prefixed symbol counts when its unprefixed part is).
+/// (a symbol with an SI prefix counts when its unprefixed part is).
 fn unit_expression_is_known(expr: &str, rows: &BTreeMap<String, Row>) -> bool {
     expr.split(|c: char| {
         matches!(c, '.' | '/' | '*' | '^' | '(' | ')') || c.is_ascii_digit() || c == '-'
@@ -576,7 +579,10 @@ fn unit_expression_is_known(expr: &str, rows: &BTreeMap<String, Row>) -> bool {
     .filter(|w| !w.is_empty())
     .all(|w| {
         rows.contains_key(w)
-            || (1..w.len()).any(|i| w.is_char_boundary(i) && rows.contains_key(&w[i..]))
+            || dimvexa_core::SI_PREFIXES.iter().any(|p| {
+                w.strip_prefix(p.symbol)
+                    .is_some_and(|rest| rows.contains_key(rest))
+            })
     })
 }
 

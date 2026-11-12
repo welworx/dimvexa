@@ -2726,3 +2726,48 @@ fn a_density_constant_in_g_per_cm3_gives_the_same_result_as_kg_per_m3() {
     assert_eq!(ra.code, 0, "{}", ra.stderr);
     assert_eq!(ra.stdout, rb.stdout);
 }
+
+/// `configs PATH` applies the same checks as loading the config for a conversion.
+#[test]
+fn configs_path_refuses_a_redefined_built_in_constant() {
+    let cfg = config_file(
+        "configs_redefine_pi.toml",
+        "[[constant]]\nname = \"pi\"\nvalue = \"3\"\nunit = \"1\"\nexactness = \"defined\"\nconditions = \"c\"\nsource = \"s\"\n",
+    );
+    let r = dimvexa(&["configs", &cfg]);
+    assert_eq!(r.code, 1, "{}", r.stdout);
+    assert!(r.stderr.contains("cannot be redefined"), "{}", r.stderr);
+}
+
+/// A density is a stated plain number: never `defined`, never with pi or a power of ten.
+#[test]
+fn a_config_density_is_measured_and_a_plain_number() {
+    let mk = |name: &str, value: &str, exactness: &str| {
+        config_file(
+            name,
+            &format!(
+                "[[constant]]\nname = \"rho\"\nvalue = \"{value}\"\nunit = \"kg/m3\"\nexactness = \"{exactness}\"\nconditions = \"c\"\nsource = \"s\"\n"
+            ),
+        )
+    };
+    let a = mk("rho_defined.toml", "1000", "defined");
+    let r = dimvexa(&[
+        "convert", "1", "L", "kg", "--config", &a, "--const", "rho", "--json",
+    ]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(
+        r.stdout.contains("\"exactness\":\"measured\""),
+        "{}",
+        r.stdout
+    );
+    for value in ["1/1 pi", "1 10^40"] {
+        let b = mk("rho_symbolic.toml", value, "measured");
+        let r = dimvexa(&["convert", "1", "L", "kg", "--config", &b, "--const", "rho"]);
+        assert_eq!(r.code, 1, "{value}: {}", r.stdout);
+        assert!(
+            r.stderr.contains("a density is a plain number"),
+            "{}",
+            r.stderr
+        );
+    }
+}
