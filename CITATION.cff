@@ -20,6 +20,6 @@ keywords:
   - unit conversion
   - dimensional analysis
   - rust
-version: "0.6.0"
+version: "0.7.0"
 date-released: "2026-11-12"
 # Keep version and date-released in step with each release (the `release` skill). No DOI is invented.
