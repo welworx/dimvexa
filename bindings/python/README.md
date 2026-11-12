@@ -18,6 +18,15 @@ except dimvexa.DimvexaError as e:
     e.code, e.candidates  # 'ambiguous_symbol', ['gal_us', 'gal_imp']
 ```
 
+Configs, densities and constants work as in the CLI (`dimvexa-config` does the loading):
+
+```python
+dimvexa.convert(1.0, "ton", "kg", configs=["us"])  # 907.18474; a name or a file path
+dimvexa.convert(1.0, "L", "kg", density="998.2067kg/m3")  # never assumed, only when asked
+dimvexa.convert(1.0, "L", "kg", configs=["water"], density="water_25C")
+dimvexa.constants(config_texts=[toml_text])  # pi, h, e, k_B, N_A, then your own
+```
+
 Every refusal is a `DimvexaError` (a `ValueError`) with a stable `code`, `suggestions` and
 `candidates`. `exact=True` routes through the exact rational path, rounded once.
 

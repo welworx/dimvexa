@@ -773,3 +773,41 @@ fn a_config_cannot_redefine_a_built_in_constant() {
     let ok = cfg(WATER, "mine.toml");
     assert!(dimvexa_config::reject_builtin_constants(&ok, &builtin).is_ok());
 }
+
+#[test]
+fn load_builds_the_constants_and_densities_in_one_place() {
+    let builtin = dimvexa_data::CONSTANTS;
+    let reg = registry().unwrap();
+    let loaded = dimvexa_config::load(reg.clone(), &[cfg(WATER, "w.toml")], builtin).unwrap();
+    let names: Vec<&str> = loaded.constants.iter().map(|c| c.name.as_str()).collect();
+    assert_eq!(names, ["pi", "h", "e", "k_B", "N_A", "water_20C"]);
+    assert_eq!(loaded.densities.len(), 1);
+    // A named density, a literal, and the two refusals.
+    assert_eq!(
+        loaded.resolve_density("water_20C").unwrap().value,
+        Ratio::new(9_982_067, 10_000).unwrap()
+    );
+    assert_eq!(
+        loaded.resolve_density("0.7 g/cm3").unwrap().value,
+        Ratio::from_int(700)
+    );
+    for bad in ["h", "nope"] {
+        assert!(
+            matches!(
+                loaded.resolve_density(bad),
+                Err(dimvexa_config::DensityError::Unknown { .. })
+            ),
+            "{bad}"
+        );
+    }
+    // A built-in name and an unknown unit are refused at load; a unit from a later config works.
+    let pi = cfg(&WATER.replace("water_20C", "pi"), "pi.toml");
+    assert!(dimvexa_config::load(reg.clone(), &[pi], builtin).is_err());
+    let unit = cfg(
+        "[[unit]]\nsymbol = \"blob\"\nbase = \"g\"\nfactor = \"7\"\nexactness = \"defined\"\nsource = \"s\"\n",
+        "u.toml",
+    );
+    let c = cfg(&WATER.replace("kg/m3", "blob/m3"), "c.toml");
+    assert!(dimvexa_config::load(reg.clone(), std::slice::from_ref(&c), builtin).is_err());
+    assert!(dimvexa_config::load(reg, &[unit, c], builtin).is_ok());
+}

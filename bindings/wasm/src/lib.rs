@@ -14,7 +14,7 @@ use std::rc::Rc;
 use std::sync::OnceLock;
 
 use dimvexa::{Conversion, Error, Registry, UnitExpr};
-use dimvexa_config::Density;
+use dimvexa_config::{Density, DensityError};
 use js_sys::{Array, Float64Array, Reflect};
 use wasm_bindgen::prelude::*;
 
@@ -47,12 +47,6 @@ fn fail(e: &Error) -> JsValue {
     js_error(e)
 }
 
-/// A registry with some shipped configs applied (ADR-014), and the densities they carry.
-struct Loaded {
-    reg: Registry,
-    constants: Vec<Density>,
-}
-
 thread_local! {
     /// The last few config combinations, so a worksheet that calls the same one thousands of
     /// times builds its registry once. Oldest entry is dropped first.
@@ -61,6 +55,10 @@ thread_local! {
 
 const LOADED_CAP: usize = 8;
 
+/// The registry with the configs applied and the constants in effect, built by
+/// `dimvexa-config` so the binding cannot differ from the CLI (ADR-018).
+type Loaded = dimvexa_config::Loaded;
+
 fn invalid(symbol: &str, message: String) -> JsValue {
     fail(&Error::InvalidDefinition {
         symbol: symbol.to_string(),
@@ -68,17 +66,18 @@ fn invalid(symbol: &str, message: String) -> JsValue {
     })
 }
 
-/// Applies the named shipped configs (`"us"`, `"us,water"`; commas or spaces) to a copy of the
-/// registry. Only shipped names: a file path cannot be read from a worksheet. An empty spec is
-/// the plain strict table.
-fn load_config(spec: &str) -> Result<Rc<Loaded>, JsValue> {
+/// Applies shipped configs by name (`"us"`, `"us,water"`; commas or spaces) and then your own
+/// config files given as TOML text, to a copy of the registry. A file path cannot be read from a
+/// worksheet or a browser, so the caller reads the file and passes its text. Later configs win
+/// (ADR-009). No config is the plain strict table.
+fn load_config(spec: &str, texts: &[String]) -> Result<Rc<Loaded>, JsValue> {
     let mut names: Vec<&str> = Vec::new();
     for name in spec.split([',', ' ', ';']).filter(|n| !n.is_empty()) {
         // Later entries win (ADR-009), so keep the last occurrence of a repeated name.
         names.retain(|n| *n != name);
         names.push(name);
     }
-    let key = names.join(",");
+    let key = format!("{}\u{0}{}", names.join(","), texts.join("\u{0}"));
     let cached = LOADED.with(|c| {
         c.borrow()
             .iter()
@@ -95,30 +94,21 @@ fn load_config(spec: &str) -> Result<Rc<Loaded>, JsValue> {
             invalid(
                 "config",
                 format!(
-                    "no shipped config named '{name}' (a file path cannot be used in Excel); shipped configs: {}",
+                    "no shipped config named '{name}' (a file path cannot be used here: pass your own file as TOML text); shipped configs: {}",
                     known.join(", ")
                 ),
             )
         })?;
-        let config = bundled.config().map_err(|e| fail(&e))?;
-        // Same rule as the CLI: a config cannot redefine a built-in constant (ADR-018).
-        let builtin: Vec<&str> = dimvexa::CONSTANTS.iter().map(|c| c.name).collect();
-        dimvexa_config::reject_builtin_constants(&config, &builtin).map_err(|e| fail(&e))?;
-        configs.push(config);
+        configs.push(bundled.config().map_err(|e| fail(&e))?);
     }
-    let mut reg = registry()?.clone();
-    dimvexa_config::apply(&mut reg, &configs).map_err(|e| fail(&e))?;
-    // Only the constants of a density unit take part (`--const` in the CLI, ADR-018).
-    let mut densities = Vec::new();
-    for c in dimvexa_config::constants(&configs) {
-        if c.is_density(&reg).map_err(|e| fail(&e))? {
-            densities.push(c.to_density(&reg).map_err(|e| fail(&e))?);
-        }
+    for (i, text) in texts.iter().enumerate() {
+        let origin = format!("config-text-{}", i.saturating_add(1));
+        configs.push(dimvexa_config::Config::parse(text, &origin).map_err(|e| fail(&e))?);
     }
-    let loaded = Rc::new(Loaded {
-        reg,
-        constants: densities,
-    });
+    let loaded = Rc::new(
+        dimvexa_config::load(registry()?.clone(), &configs, dimvexa::CONSTANTS)
+            .map_err(|e| fail(&e))?,
+    );
     LOADED.with(|c| {
         let mut list = c.borrow_mut();
         if list.len() >= LOADED_CAP {
@@ -129,44 +119,27 @@ fn load_config(spec: &str) -> Result<Rc<Loaded>, JsValue> {
     Ok(loaded)
 }
 
-/// Resolves a density argument (ADR-014): text that starts like a number is the caller's own
-/// density (`998.2067kg/m3`); anything else is the name of a density in a loaded config
-/// (`water_25C` needs the config `water`). Nothing is computed or guessed.
+/// Resolves a density argument through `dimvexa-config` (a number with a unit, or the name of a
+/// constant of a density unit). Nothing is computed or guessed.
 fn resolve_density(loaded: &Loaded, spec: &str) -> Result<Density, JsValue> {
-    let text = spec.trim();
-    let literal = text
-        .chars()
-        .next()
-        .is_some_and(|c| c.is_ascii_digit() || matches!(c, '+' | '-' | '.'));
-    if literal {
-        return Density::density_from_text(&loaded.reg, text).map_err(|e| fail(&e));
-    }
-    loaded
-        .constants
-        .iter()
-        .find(|c| c.name == text)
-        .cloned()
-        .ok_or_else(|| {
-            let names: Vec<&str> = loaded.constants.iter().map(|c| c.name.as_str()).collect();
-            let hint = if names.is_empty() {
-                "no density is loaded: add the config 'water' for water_25C, or write your own, for example 998.2067kg/m3".to_string()
-            } else {
-                format!("loaded densities: {}", names.join(", "))
-            };
-            invalid("density", format!("no density named '{text}'; {hint}"))
-        })
+    loaded.resolve_density(spec).map_err(|e| match e {
+        DensityError::Lib(e) => fail(&e),
+        DensityError::Unknown { message, .. } => invalid("density", message),
+        _ => invalid("density", "unusable density".to_string()),
+    })
 }
 
 /// The ordinary conversion if one exists. A density that was given is always checked; it is used
-/// only when the plain conversion is refused for lack of one (mass to volume or back). `config` and
-/// `density` are empty for "none".
+/// only when the plain conversion is refused for lack of one (mass to volume or back). `config`,
+/// `config_texts` and `density` are empty for "none".
 fn conversion_with_options(
     from: &str,
     to: &str,
     density: &str,
     config: &str,
+    config_texts: &[String],
 ) -> Result<Conversion, JsValue> {
-    let loaded = load_config(config)?;
+    let loaded = load_config(config, config_texts)?;
     let reg = &loaded.reg;
     // A density that was given must be a valid one even when this conversion does not need it,
     // as in the CLI: a typo in a density cell must not stay invisible until a row needs it.
@@ -209,9 +182,10 @@ impl DimvexaConversion {
     }
 
     /// Like the constructor, with the options of a worksheet: `density` is your own number such
-    /// as `"998.2067kg/m3"` or the name of a density in a loaded config (empty for none), and
+    /// as `"998.2067kg/m3"` or the name of a constant of a density unit (empty for none),
     /// `config` is a shipped config name or a list such as `"us"` or `"us,water"` (empty for
-    /// none). The density is used only when the plain conversion needs one.
+    /// none), and `configTexts` are your own config files as TOML text, applied after the
+    /// shipped ones. The density is used only when the plain conversion needs one.
     ///
     /// # Errors
     ///
@@ -222,8 +196,9 @@ impl DimvexaConversion {
         to: &str,
         density: &str,
         config: &str,
+        config_texts: Vec<String>,
     ) -> Result<DimvexaConversion, JsValue> {
-        let inner = conversion_with_options(from, to, density, config)?;
+        let inner = conversion_with_options(from, to, density, config, &config_texts)?;
         Ok(Self { inner })
     }
 
@@ -285,8 +260,9 @@ pub fn convert(value: f64, from: &str, to: &str) -> Result<f64, JsValue> {
 }
 
 /// One-shot fast-path conversion with the options of a worksheet: `convertWith(1, "L", "kg",
-/// "998.2067kg/m3", "")`, `convertWith(1, "ton", "kg", "", "us")` or `convertWith(1, "L", "kg",
-/// "water_25C", "water")`. See `DimvexaConversion.withOptions`.
+/// "998.2067kg/m3", "", [])`, `convertWith(1, "ton", "kg", "", "us", [])` or `convertWith(1, "L",
+/// "kg", "water_25C", "water", [])`. The last argument is your own config files as TOML text.
+/// See `DimvexaConversion.withOptions`.
 ///
 /// # Errors
 ///
@@ -298,8 +274,45 @@ pub fn convert_with(
     to: &str,
     density: &str,
     config: &str,
+    config_texts: Vec<String>,
 ) -> Result<f64, JsValue> {
-    Ok(conversion_with_options(from, to, density, config)?.apply(value))
+    Ok(conversion_with_options(from, to, density, config, &config_texts)?.apply(value))
+}
+
+/// The named constants in effect (ADR-018): the built-in ones, then those of the configs, as an
+/// array of objects with `name`, `value` (an exact string such as `"662607015 10^-42"`), `valueText` (the same number for
+/// people, `"6.62607015e-34"`), `unit`,
+/// `exactness`, `codata`, `conditions`, `source`, `note`, `file` and `line`.
+///
+/// # Errors
+///
+/// Throws a `DimvexaError` (unknown config, a config that redefines a built-in constant, an
+/// unknown unit, ...).
+#[wasm_bindgen]
+pub fn constants(config: &str, config_texts: Vec<String>) -> Result<Array, JsValue> {
+    let loaded = load_config(config, &config_texts)?;
+    let list = Array::new();
+    for c in &loaded.constants {
+        let obj = js_sys::Object::new();
+        let text = |k: &str, v: &str| Reflect::set(&obj, &k.into(), &v.into());
+        let _ = text("name", &c.name);
+        let _ = text("value", &c.value.to_fraction_string());
+        let _ = text("valueText", &c.value_text());
+        let _ = text("unit", &c.unit);
+        let _ = text("exactness", c.exactness.name());
+        let _ = text("codata", &c.codata);
+        let _ = text("conditions", &c.conditions);
+        let _ = text("source", &c.source);
+        let _ = text("note", &c.note);
+        let _ = text("file", &c.origin);
+        let _ = Reflect::set(
+            &obj,
+            &"line".into(),
+            &JsValue::from_f64(f64::from(u32::try_from(c.line).unwrap_or(u32::MAX))),
+        );
+        list.push(&obj);
+    }
+    Ok(list)
 }
 
 /// One-shot exact-path conversion of a decimal string, e.g. `convertExact("98.6", "degF", "degC")`.

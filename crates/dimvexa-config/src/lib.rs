@@ -545,6 +545,28 @@ pub fn constants(configs: &[Config]) -> Vec<Constant> {
 }
 
 impl Constant {
+    /// The value for people: a plain decimal for a moderate magnitude (`998.2067`), scientific
+    /// notation for a very large or small one (`6.62607015e-34`), the exact symbolic form when
+    /// the value has no finite decimal (`1/3`) or carries pi (`pi`). Same number as
+    /// [`value`](Self::value).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dimvexa_config::Config;
+    /// let cfg = Config::parse(
+    ///     "[[constant]]\nname = \"h\"\nvalue = \"6.62607015 10^-34\"\nunit = \"J.s\"\n\
+    ///      exactness = \"defined\"\nconditions = \"none (defined)\"\nsource = \"s\"\n",
+    ///     "h.toml",
+    /// )?;
+    /// assert_eq!(cfg.constants()[0].value_text(), "6.62607015e-34");
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    #[must_use]
+    pub fn value_text(&self) -> String {
+        value_text_of(self.value)
+    }
+
     /// The built-in constant `def` as a [`Constant`] (origin `built-in`, line 0).
     ///
     /// # Errors
@@ -630,6 +652,57 @@ impl Constant {
             line: self.line,
         })
     }
+}
+
+/// A value for people: a plain decimal for a moderate magnitude (`998.2067`), scientific
+/// notation for a very large or small one (`6.62607015e-34`), the exact symbolic form when the
+/// value has no finite decimal (`1/3`) or carries pi (`1/2 pi`). The text is the same number.
+fn value_text_of(v: Ratio) -> String {
+    if v.pi_exp() == 0 {
+        if let Some((mantissa, ten)) = decimal_parts(v) {
+            let digits = mantissa.to_string();
+            let len = i32::try_from(digits.len()).unwrap_or(i32::MAX);
+            let exp10 = ten.saturating_add(len).saturating_sub(1);
+            if (-4..=15).contains(&exp10) {
+                if let Ok((plain, true)) = Ratio::new(mantissa, 1)
+                    .and_then(|m| m.checked_mul(Ratio::from_int(1).with_exponents(ten, 0)))
+                    .and_then(|r| r.to_decimal(40))
+                {
+                    return plain;
+                }
+            }
+            let (head, tail) = digits.split_at(1.min(digits.len()));
+            let frac = if tail.is_empty() {
+                String::new()
+            } else {
+                format!(".{tail}")
+            };
+            return format!("{head}{frac}e{exp10}");
+        }
+    }
+    v.to_fraction_string()
+}
+
+/// `(mantissa, ten)` with `v = mantissa * 10^ten`, the mantissa an integer without trailing
+/// zeros, when `v` is a finite decimal; `None` otherwise.
+fn decimal_parts(v: Ratio) -> Option<(i128, i32)> {
+    let (mut n, d, mut ten) = (v.num(), v.den(), v.ten_exp());
+    for _ in 0..=40 {
+        if n.checked_rem(d)? == 0 {
+            break;
+        }
+        n = n.checked_mul(10)?;
+        ten = ten.checked_sub(1)?;
+    }
+    if n.checked_rem(d)? != 0 {
+        return None;
+    }
+    n = n.checked_div(d)?;
+    while n != 0 && n.checked_rem(10)? == 0 {
+        n = n.checked_div(10)?;
+        ten = ten.checked_add(1)?;
+    }
+    Some((n, ten))
 }
 
 /// The dimension of a density, kg/m^3.
@@ -1220,6 +1293,143 @@ fn fnv1a64(bytes: &[u8]) -> u64 {
     bytes.iter().fold(0xcbf2_9ce4_8422_2325, |h, b| {
         (h ^ u64::from(*b)).wrapping_mul(0x0100_0000_01b3)
     })
+}
+
+/// A registry with configs applied, and the constants in effect (ADR-018): everything the CLI
+/// and the language bindings need to convert and to list, built in one place so they cannot
+/// differ.
+#[derive(Debug, Clone)]
+pub struct Loaded {
+    /// The registry with the configs' units and names applied.
+    pub reg: Registry,
+    /// The `[map]` entries in effect, in application order.
+    pub mappings: Vec<Mapping>,
+    /// The `[[unit]]` definitions in effect, in application order.
+    pub units: Vec<ConfigUnit>,
+    /// The constants in effect: the built-in ones first, then those of the configs (a later
+    /// config overriding an earlier one).
+    pub constants: Vec<Constant>,
+    /// The constants of a density unit among them, in kg/m^3: what a density argument can name.
+    pub densities: Vec<Density>,
+}
+
+/// Why a density argument could not be resolved.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum DensityError {
+    /// No constant of that name is a density: a usage problem, with the density names known.
+    Unknown {
+        /// What was wrong, in one sentence.
+        message: String,
+        /// The names of the densities loaded.
+        known: Vec<String>,
+    },
+    /// The library refused the caller's own number (not a density, ambiguous unit, overflow).
+    Lib(Error),
+}
+
+/// Applies `configs` to `reg` and collects the constants in effect.
+///
+/// A config cannot redefine a name of `builtin` (a user-defined `pi` would silently change every
+/// angle). The unit of every constant is resolved against the registry **after** all configs
+/// are applied, so a constant may use a unit another loaded config defines; an unknown unit is
+/// an `invalid_definition` at the constant's `file:line`. A constant of a density unit is also
+/// available as a [`Density`] in kg/m^3.
+///
+/// # Errors
+///
+/// [`Error::InvalidDefinition`] for a built-in name, an unknown unit or any error of [`apply`];
+/// [`Error::Refused`] and [`Error::Overflow`] from [`Constant::to_density`].
+///
+/// # Examples
+///
+/// ```
+/// use dimvexa_config::{Config, load};
+/// use dimvexa_core::{Dim, Exactness, Ratio, Registry, Unit, PrefixMode};
+///
+/// let mut reg = Registry::new();
+/// reg.register(Unit::linear("m", Dim::M, Ratio::ONE)?)?;
+/// reg.register(Unit::linear("g", Dim::KG, Ratio::new(1, 1000)?)?.with_prefixes(PrefixMode::Si))?;
+/// let cfg = Config::parse(
+///     "[[constant]]\nname = \"w\"\nvalue = \"998\"\nunit = \"kg/m3\"\nexactness = \"measured\"\n\
+///      conditions = \"c\"\nsource = \"s\"\n",
+///     "w.toml",
+/// )?;
+/// let loaded = load(reg, &[cfg], &[])?;
+/// assert_eq!(loaded.densities[0].value, Ratio::from_int(998));
+/// assert_eq!(loaded.densities[0].exactness, Exactness::Measured);
+/// # Ok::<(), dimvexa_core::Error>(())
+/// ```
+pub fn load(mut reg: Registry, configs: &[Config], builtin: &[ConstantDef]) -> Result<Loaded> {
+    let names: Vec<&str> = builtin.iter().map(|c| c.name).collect();
+    for config in configs {
+        reject_builtin_constants(config, &names)?;
+    }
+    let applied = apply(&mut reg, configs)?;
+    let mut constants = Vec::new();
+    for def in builtin {
+        constants.push(Constant::from_def(def)?);
+    }
+    constants.extend(self::constants(configs));
+    let mut densities = Vec::new();
+    for c in &constants {
+        // The unit gives the dimension, so an unknown unit is a loud error at load time.
+        let wrap = |e: Error| Error::InvalidDefinition {
+            symbol: format!("{}:{}", c.origin, c.line),
+            message: format!("constant '{}': unit '{}': {e}", c.name, c.unit),
+        };
+        if c.is_density(&reg).map_err(wrap)? {
+            densities.push(c.to_density(&reg).map_err(wrap)?);
+        }
+    }
+    Ok(Loaded {
+        reg,
+        mappings: applied.mappings,
+        units: applied.units,
+        constants,
+        densities,
+    })
+}
+
+impl Loaded {
+    /// The constant called `name`, if one is in effect.
+    #[must_use]
+    pub fn constant(&self, name: &str) -> Option<&Constant> {
+        self.constants.iter().find(|c| c.name == name)
+    }
+
+    /// Resolves a density argument: text that starts like a number is the caller's own density
+    /// (`998.2067kg/m3`, see [`Density::density_from_text`]); anything else is the name of a
+    /// constant of a density unit. A constant of another dimension is refused, never guessed.
+    ///
+    /// # Errors
+    ///
+    /// [`DensityError::Unknown`] for a name that is no density, [`DensityError::Lib`] for the
+    /// caller's own number.
+    pub fn resolve_density(&self, spec: &str) -> core::result::Result<Density, DensityError> {
+        let spec = spec.trim();
+        if spec.starts_with(|c: char| c.is_ascii_digit() || "+-.".contains(c)) {
+            return Density::density_from_text(&self.reg, spec).map_err(DensityError::Lib);
+        }
+        let known: Vec<String> = self.densities.iter().map(|d| d.name.clone()).collect();
+        if let Some(d) = self.densities.iter().find(|d| d.name == spec) {
+            return Ok(d.clone());
+        }
+        let message = match self.constant(spec) {
+            Some(c) => format!(
+                "constant '{spec}' is a number of '{}', not a density: a density is a mass <-> volume constant such as one in kg/m3",
+                c.unit
+            ),
+            None if known.is_empty() => format!(
+                "no density named '{spec}': no loaded config has a [[constant]] of a density unit (add the config 'water' for water_25C, or write your own number, for example 998.2067kg/m3)"
+            ),
+            None => format!(
+                "no density named '{spec}'; loaded densities: {}",
+                known.join(", ")
+            ),
+        };
+        Err(DensityError::Unknown { message, known })
+    }
 }
 
 #[cfg(test)]

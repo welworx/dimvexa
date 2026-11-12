@@ -40,6 +40,86 @@ fn registry() -> PyResult<&'static Registry> {
     }
 }
 
+/// Reads one config: a shipped name (`"us"`) or a file path (`"./mine.toml"`), as `--config` in
+/// the CLI.
+fn read_config(spec: &str) -> PyResult<dimvexa_config::Config> {
+    let bad = |message: String| {
+        to_py(&::dimvexa::Error::InvalidDefinition {
+            symbol: "config".to_string(),
+            message,
+        })
+    };
+    if dimvexa_config::is_path(spec) {
+        let text = std::fs::read_to_string(spec)
+            .map_err(|e| bad(format!("cannot read config '{spec}': {e}")))?;
+        return dimvexa_config::Config::parse(&text, spec).map_err(|e| to_py(&e));
+    }
+    match dimvexa_config::bundled(spec) {
+        Some(b) => b.config().map_err(|e| to_py(&e)),
+        None => {
+            let known: Vec<&str> = dimvexa_config::BUNDLED.iter().map(|b| b.name).collect();
+            Err(bad(format!(
+                "no config named '{spec}'; shipped configs: {} (a file needs a path, for example ./{spec} or {spec}.toml)",
+                known.join(", ")
+            )))
+        }
+    }
+}
+
+/// The registry with the configs applied (files and shipped names first, then `config_texts`,
+/// later ones win) and the constants in effect, built by `dimvexa-config` like the CLI does.
+fn load(configs: &[String], config_texts: &[String]) -> PyResult<dimvexa_config::Loaded> {
+    let mut parsed = Vec::new();
+    for spec in configs {
+        parsed.push(read_config(spec)?);
+    }
+    for (i, text) in config_texts.iter().enumerate() {
+        let origin = format!("config-text-{}", i.saturating_add(1));
+        parsed.push(dimvexa_config::Config::parse(text, &origin).map_err(|e| to_py(&e))?);
+    }
+    dimvexa_config::load(registry()?.clone(), &parsed, ::dimvexa::CONSTANTS).map_err(|e| to_py(&e))
+}
+
+/// The ordinary conversion between two units; if it is refused for lack of a density and one
+/// was given, the conversion through it. A given density is always checked.
+fn conversion_with(
+    from_unit: &str,
+    to_unit: &str,
+    density: Option<&str>,
+    configs: &[String],
+    config_texts: &[String],
+) -> PyResult<CoreConversion> {
+    if density.is_none() && configs.is_empty() && config_texts.is_empty() {
+        return registry()?
+            .conversion(from_unit, to_unit)
+            .map_err(|e| to_py(&e));
+    }
+    let loaded = load(configs, config_texts)?;
+    let resolved = match density {
+        Some(spec) => Some(loaded.resolve_density(spec).map_err(|e| match e {
+            dimvexa_config::DensityError::Lib(e) => to_py(&e),
+            dimvexa_config::DensityError::Unknown { message, .. } => {
+                to_py(&::dimvexa::Error::InvalidDefinition {
+                    symbol: "density".to_string(),
+                    message,
+                })
+            }
+            _ => PyValueError::new_err("unusable density"),
+        })?),
+        None => None,
+    };
+    let from = loaded.reg.parse(from_unit).map_err(|e| to_py(&e))?;
+    let to = loaded.reg.parse(to_unit).map_err(|e| to_py(&e))?;
+    match CoreConversion::between(&from, &to) {
+        Ok(conv) => Ok(conv),
+        Err(e @ ::dimvexa::Error::DimensionMismatch { .. }) => match resolved {
+            Some(d) => d.conversion(&from, &to).map_err(|e| to_py(&e)),
+            None => Err(to_py(&e)),
+        },
+        Err(e) => Err(to_py(&e)),
+    }
+}
+
 /// A pre-composed conversion between two units (parse once, apply many times).
 #[pyclass(module = "dimvexa", frozen)]
 struct Conversion {
@@ -212,28 +292,85 @@ fn apply(
 }
 
 /// Convert a float, a sequence or a NumPy array from one unit to another.
+///
+/// `density` is your own number such as `"998.2067kg/m3"` or the name of a constant of a density
+/// unit; it is used only when the plain conversion needs one (mass <-> volume). `configs` are
+/// shipped config names or file paths and `config_texts` are config files as TOML text; later
+/// ones win. Without them the names stay strict.
 #[pyfunction]
-#[pyo3(signature = (value, from_unit, to_unit, *, exact = false))]
+#[pyo3(signature = (value, from_unit, to_unit, *, exact = false, density = None, configs = None, config_texts = None))]
+#[allow(clippy::too_many_arguments)]
 fn convert(
     py: Python<'_>,
     value: &Bound<'_, PyAny>,
     from_unit: &str,
     to_unit: &str,
     exact: bool,
+    density: Option<&str>,
+    configs: Option<Vec<String>>,
+    config_texts: Option<Vec<String>>,
 ) -> PyResult<Py<PyAny>> {
-    let conv = registry()?
-        .conversion(from_unit, to_unit)
-        .map_err(|e| to_py(&e))?;
+    let conv = conversion_with(
+        from_unit,
+        to_unit,
+        density,
+        &configs.unwrap_or_default(),
+        &config_texts.unwrap_or_default(),
+    )?;
     apply(py, &conv, value, exact)
 }
 
-/// Compose a conversion once for repeated use.
+/// Compose a conversion once for repeated use (options as in `convert`).
 #[pyfunction]
-fn conversion(from_unit: &str, to_unit: &str) -> PyResult<Conversion> {
-    registry()?
-        .conversion(from_unit, to_unit)
-        .map(|inner| Conversion { inner })
-        .map_err(|e| to_py(&e))
+#[pyo3(signature = (from_unit, to_unit, *, density = None, configs = None, config_texts = None))]
+fn conversion(
+    from_unit: &str,
+    to_unit: &str,
+    density: Option<&str>,
+    configs: Option<Vec<String>>,
+    config_texts: Option<Vec<String>>,
+) -> PyResult<Conversion> {
+    conversion_with(
+        from_unit,
+        to_unit,
+        density,
+        &configs.unwrap_or_default(),
+        &config_texts.unwrap_or_default(),
+    )
+    .map(|inner| Conversion { inner })
+}
+
+/// The named constants in effect (ADR-018): the built-in ones, then those of the configs. Each is
+/// a dict with `name`, `value` (exact string), `value_text`, `unit`, `exactness`, `codata`,
+/// `conditions`, `source`, `note`, `file` and `line`.
+#[pyfunction]
+#[pyo3(signature = (*, configs = None, config_texts = None))]
+fn constants<'py>(
+    py: Python<'py>,
+    configs: Option<Vec<String>>,
+    config_texts: Option<Vec<String>>,
+) -> PyResult<Vec<Bound<'py, PyDict>>> {
+    let loaded = load(
+        &configs.unwrap_or_default(),
+        &config_texts.unwrap_or_default(),
+    )?;
+    let mut out = Vec::new();
+    for c in &loaded.constants {
+        let d = PyDict::new(py);
+        d.set_item("name", &c.name)?;
+        d.set_item("value", c.value.to_fraction_string())?;
+        d.set_item("value_text", c.value_text())?;
+        d.set_item("unit", &c.unit)?;
+        d.set_item("exactness", c.exactness.name())?;
+        d.set_item("codata", &c.codata)?;
+        d.set_item("conditions", &c.conditions)?;
+        d.set_item("source", &c.source)?;
+        d.set_item("note", &c.note)?;
+        d.set_item("file", &c.origin)?;
+        d.set_item("line", c.line)?;
+        out.push(d);
+    }
+    Ok(out)
 }
 
 /// Parse a quantity such as `"20 degC"`.
@@ -295,6 +432,7 @@ fn _dimvexa(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Quantity>()?;
     m.add_function(wrap_pyfunction!(convert, m)?)?;
     m.add_function(wrap_pyfunction!(conversion, m)?)?;
+    m.add_function(wrap_pyfunction!(constants, m)?)?;
     m.add_function(wrap_pyfunction!(quantity, m)?)?;
     m.add_function(wrap_pyfunction!(units, m)?)?;
     m.add_function(wrap_pyfunction!(unit_info, m)?)?;

@@ -28,7 +28,7 @@ use std::fmt::Write as _;
 use std::io::Write;
 
 use dimvexa::{Conversion, Dim, Error, Ratio, Registry, Unit, UnitExpr, registry};
-use dimvexa_config::{Config, ConfigUnit, Constant, Density, Mapping};
+use dimvexa_config::{Config, ConfigUnit, Constant, Density, DensityError, Mapping};
 
 mod update;
 
@@ -1176,15 +1176,8 @@ fn json_error(
 
 /// A registry with the user's configs applied, and which configs those were.
 struct Loaded {
-    reg: Registry,
-    /// The name mappings in effect (empty without a config).
-    mappings: Vec<Mapping>,
-    /// The user units in effect (empty without a config).
-    units: Vec<ConfigUnit>,
-    /// The constants the configs define, in effect (empty without a config).
-    constants: Vec<Constant>,
-    /// The constants of a density unit among them, in kg/m3 (what `--const` can use).
-    densities: Vec<Density>,
+    /// The registry, the names, units and constants in effect (shared with the bindings).
+    lib: dimvexa_config::Loaded,
     /// `(origin, content hash)` of each config, in the order given. The origin is the file
     /// path, or `bundled:NAME` for a config that ships with dimvexa.
     configs: Vec<(String, String)>,
@@ -1254,36 +1247,15 @@ fn bundled_names() -> String {
 }
 
 fn load(config_specs: &[String]) -> Result<Loaded, LoadError> {
-    let mut reg = registry().map_err(LoadError::Lib)?;
+    let reg = registry().map_err(LoadError::Lib)?;
     let (mut parsed, mut configs) = (Vec::new(), Vec::new());
     for spec in config_specs {
         let cfg = read_spec(spec)?;
         configs.push((cfg.origin().to_string(), cfg.hash().to_string()));
         parsed.push(cfg);
     }
-    let applied = dimvexa_config::apply(&mut reg, &parsed).map_err(LoadError::Lib)?;
-    let constants = dimvexa_config::constants(&parsed);
-    let mut densities = Vec::new();
-    for c in &constants {
-        // The unit gives the dimension, so an unknown unit is a loud error at load time.
-        let wrap = |e: Error| {
-            LoadError::Lib(Error::InvalidDefinition {
-                symbol: format!("{}:{}", c.origin, c.line),
-                message: format!("constant '{}': unit '{}': {e}", c.name, c.unit),
-            })
-        };
-        if c.is_density(&reg).map_err(wrap)? {
-            densities.push(c.to_density(&reg).map_err(wrap)?);
-        }
-    }
-    Ok(Loaded {
-        reg,
-        mappings: applied.mappings,
-        units: applied.units,
-        constants,
-        densities,
-        configs,
-    })
+    let l = dimvexa_config::load(reg, &parsed, dimvexa::CONSTANTS).map_err(LoadError::Lib)?;
+    Ok(Loaded { lib: l, configs })
 }
 
 /// Prints a load failure for `schema` and returns the exit code.
@@ -1340,7 +1312,7 @@ fn compute<'a>(
     loaded: &'a Loaded,
     density: Option<&'a Density>,
 ) -> Result<Outcome<'a>, Error> {
-    let reg = &loaded.reg;
+    let reg = &loaded.lib.reg;
     let value: Ratio = args.value.parse()?;
     let from = reg.parse(&args.from)?;
     let to = reg.parse(&args.to)?;
@@ -1363,58 +1335,6 @@ fn compute<'a>(
         exact,
         approx,
     })
-}
-
-/// Why `--const` could not be resolved.
-enum DensityError {
-    /// A name that no loaded config defines, or a missing value: a usage problem, with the
-    /// known names.
-    Usage(String, Vec<String>),
-    /// The library refused the caller's own number (not a density, ambiguous unit, overflow).
-    Lib(Error),
-}
-
-/// Resolves `--const`: a number with a unit is the caller's own density, anything else is
-/// the name of a constant, built in or from a loaded config, that is a density.
-fn resolve_density(spec: &str, loaded: &Loaded) -> Result<Density, DensityError> {
-    let starts_like_a_number = spec.starts_with(|c: char| c.is_ascii_digit() || "+-.".contains(c));
-    if starts_like_a_number {
-        return Density::density_from_text(&loaded.reg, spec).map_err(DensityError::Lib);
-    }
-    let known: Vec<String> = loaded.densities.iter().map(|d| d.name.clone()).collect();
-    if let Some(d) = loaded.densities.iter().find(|d| d.name == spec) {
-        return Ok(d.clone());
-    }
-    // A built-in constant is a name too, but none of them is a density: say so.
-    if let Some(def) = dimvexa::constant(spec) {
-        return Err(DensityError::Usage(
-            format!(
-                "constant '{spec}' is a number of '{}', not a density: --const supplies a mass <-> volume density (see 'dimvexa constants')",
-                def.unit
-            ),
-            known,
-        ));
-    }
-    if let Some(c) = loaded.constants.iter().find(|c| c.name == spec) {
-        return Err(DensityError::Usage(
-            format!(
-                "constant '{spec}' is a number of '{}', not a density: --const supplies a mass <-> volume density",
-                c.unit
-            ),
-            known,
-        ));
-    }
-    let message = if known.is_empty() {
-        format!(
-            "no density named '{spec}': no loaded config has a [[constant]] of a density unit (try --config water, or write your own: --const 998.2067kg/m3)"
-        )
-    } else {
-        format!(
-            "no density named '{spec}'; loaded densities: {}",
-            known.join(", ")
-        )
-    };
-    Err(DensityError::Usage(message, known))
 }
 
 fn render_text(o: &Outcome<'_>, color: bool) -> String {
@@ -1770,7 +1690,7 @@ fn units_json(
                 json_string(u.prefixes().name()),
                 json_string(u.namespace()),
                 json_string(u.source()),
-                origin_json(user_unit(&loaded.units, u.id())),
+                origin_json(user_unit(&loaded.lib.units, u.id())),
             )
         })
         .collect();
@@ -1790,6 +1710,7 @@ fn units_json(
                 strs(a.planned),
                 json_string(a.note),
                 loaded
+                    .lib
                     .mappings
                     .iter()
                     .find(|m| m.name == a.symbol)
@@ -1810,6 +1731,7 @@ fn units_json(
         .map(|(g, n)| format!("{{\"name\":{},\"units\":{n}}}", json_string(g)))
         .collect();
     let mappings: Vec<String> = loaded
+        .lib
         .mappings
         .iter()
         .map(|m| {
@@ -1837,6 +1759,7 @@ fn units_json(
         configs_json(&loaded.configs),
         mappings.join(","),
         loaded
+            .lib
             .densities
             .iter()
             .map(density_json)
@@ -2104,7 +2027,7 @@ fn run_units(
         }
         status
     };
-    let reg = &loaded.reg;
+    let reg = &loaded.lib.reg;
     let groups = group_counts(reg);
     let (selected, group) = match target {
         UnitsTarget::Groups => {
@@ -2125,7 +2048,7 @@ fn run_units(
             if groups.iter().any(|(g, _)| *g == q_lower) {
                 (Some(q_lower.clone()), Some(q_lower))
             } else {
-                return match unit_detail(reg, &loaded.units, &loaded.mappings, q) {
+                return match unit_detail(reg, &loaded.lib.units, &loaded.lib.mappings, q) {
                     Ok(d) => {
                         let text = if json {
                             detail_json(&d)
@@ -2176,9 +2099,9 @@ fn run_units(
             units_text(
                 &units,
                 &ambiguous,
-                &loaded.mappings,
-                &loaded.densities,
-                &loaded.units,
+                &loaded.lib.mappings,
+                &loaded.lib.densities,
+                &loaded.lib.units,
             )
         );
     }
@@ -2266,7 +2189,7 @@ fn config_detail_text(c: &Config) -> String {
                 s,
                 "{}\t{}\t{}\t{}\t{}\t{}",
                 cell(&d.name),
-                value_text(d.value),
+                d.value_text(),
                 cell(&d.unit),
                 d.exactness.name(),
                 cell(&d.conditions),
@@ -2317,57 +2240,6 @@ fn config_detail_json(c: &Config) -> String {
     )
 }
 
-/// A value for people: a plain decimal for a moderate magnitude (`998.2067`), scientific
-/// notation for a very large or small one (`6.62607015e-34`), the exact symbolic form when the
-/// value has no finite decimal (`1/3`) or carries pi (`1/2 pi`). The text is the same number.
-fn value_text(v: Ratio) -> String {
-    if v.pi_exp() == 0 {
-        if let Some((mantissa, ten)) = decimal_parts(v) {
-            let digits = mantissa.to_string();
-            let len = i32::try_from(digits.len()).unwrap_or(i32::MAX);
-            let exp10 = ten.saturating_add(len).saturating_sub(1);
-            if (-4..=15).contains(&exp10) {
-                if let Ok((plain, true)) = Ratio::new(mantissa, 1)
-                    .and_then(|m| m.checked_mul(Ratio::from_int(1).with_exponents(ten, 0)))
-                    .and_then(|r| r.to_decimal(40))
-                {
-                    return plain;
-                }
-            }
-            let (head, tail) = digits.split_at(1.min(digits.len()));
-            let frac = if tail.is_empty() {
-                String::new()
-            } else {
-                format!(".{tail}")
-            };
-            return format!("{head}{frac}e{exp10}");
-        }
-    }
-    v.to_fraction_string()
-}
-
-/// `(mantissa, ten)` with `v = mantissa * 10^ten`, the mantissa an integer without trailing
-/// zeros, when `v` is a finite decimal; `None` otherwise.
-fn decimal_parts(v: Ratio) -> Option<(i128, i32)> {
-    let (mut n, d, mut ten) = (v.num(), v.den(), v.ten_exp());
-    for _ in 0..=40 {
-        if n.checked_rem(d)? == 0 {
-            break;
-        }
-        n = n.checked_mul(10)?;
-        ten = ten.checked_sub(1)?;
-    }
-    if n.checked_rem(d)? != 0 {
-        return None;
-    }
-    n = n.checked_div(d)?;
-    while n != 0 && n.checked_rem(10)? == 0 {
-        n = n.checked_div(10)?;
-        ten = ten.checked_add(1)?;
-    }
-    Some((n, ten))
-}
-
 /// The JSON object of a constant: everything a reader needs to judge the number.
 fn constant_json(c: &Constant) -> String {
     format!(
@@ -2395,7 +2267,7 @@ fn constant_row(c: &Constant) -> String {
     format!(
         "{}\t{}\t{}\t{}\t{}\t{}\t{}",
         cell(&c.name),
-        value_text(c.value),
+        c.value_text(),
         cell(&c.unit),
         c.exactness.name(),
         cell(&c.conditions),
@@ -2417,14 +2289,7 @@ fn run_constants(
         Err(e) => return report_load_error(&e, json, "constants", out, err),
     };
     // The built-in constants first, then the configs' own, in application order.
-    let mut all: Vec<Constant> = Vec::new();
-    for def in dimvexa::CONSTANTS {
-        match Constant::from_def(def) {
-            Ok(c) => all.push(c),
-            Err(e) => return report_load_error(&LoadError::Lib(e), json, "constants", out, err),
-        }
-    }
-    all.extend(loaded.constants.iter().cloned());
+    let all = &loaded.lib.constants;
     let shown: Vec<&Constant> = match target {
         None => all.iter().collect(),
         Some(name) => {
@@ -2646,11 +2511,11 @@ where
     };
     let density = match &args.density {
         None => None,
-        Some(spec) => match resolve_density(spec, &loaded) {
+        Some(spec) => match loaded.lib.resolve_density(spec) {
             Ok(d) => Some(d),
             Err(e) => {
                 let (code, message, candidates, suggestions, status) = match &e {
-                    DensityError::Usage(m, known) => {
+                    DensityError::Unknown { message: m, known } => {
                         ("usage", m.clone(), Vec::new(), known.clone(), 2)
                     }
                     DensityError::Lib(e) => (
@@ -2659,6 +2524,13 @@ where
                         e.candidates().to_vec(),
                         e.suggestions().to_vec(),
                         1,
+                    ),
+                    _ => (
+                        "usage",
+                        "unusable density".to_string(),
+                        Vec::new(),
+                        Vec::new(),
+                        2,
                     ),
                 };
                 if args.json {

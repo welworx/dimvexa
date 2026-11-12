@@ -75,7 +75,7 @@ function convert(value, from, to, density, config) {
   return whenReady(() => {
     try {
       const result = given(density) || given(config)
-        ? wasm_bindgen.convertWith(value, unit(from), unit(to), text(density), text(config))
+        ? wasm_bindgen.convertWith(value, unit(from), unit(to), text(density), text(config), [])
         : wasm_bindgen.convert(value, unit(from), unit(to));
       if (!Number.isFinite(result)) throw overflowError();
       return result;
@@ -117,7 +117,7 @@ function convertRangeNow(values, from, to, density, config) {
   try {
     // One composed conversion and one WASM call for the whole range.
     conversion = given(density) || given(config)
-      ? wasm_bindgen.DimvexaConversion.withOptions(unit(from), unit(to), text(density), text(config))
+      ? wasm_bindgen.DimvexaConversion.withOptions(unit(from), unit(to), text(density), text(config), [])
       : new wasm_bindgen.DimvexaConversion(unit(from), unit(to));
     const rows = values.length;
     const cols = rows > 0 ? values[0].length : 0;

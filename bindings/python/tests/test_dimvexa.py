@@ -109,3 +109,51 @@ def test_reference_state_units() -> None:
             dimvexa.convert(1.0, a, b)
         assert err.value.code == "refused"
     assert dimvexa.data_version().startswith("v")
+
+
+WATER_TEXT = (
+    '[[constant]]\nname = "rho"\nvalue = "0.9982067"\nunit = "g/cm3"\nexactness = "measured"\n'
+    'conditions = "c"\nsource = "s"\n'
+)
+
+
+def test_density_and_configs_like_the_cli() -> None:
+    # A shipped config resolves an ambiguous name; a density is used only when it is needed.
+    assert dimvexa.convert(1.0, "ton", "kg", configs=["us"]) == 907.18474
+    assert dimvexa.convert(1.0, "L", "kg", density="998.2067kg/m3") == 0.9982067
+    assert dimvexa.convert(1.0, "L", "kg", density="water_25C", configs=["water"]) == 0.99704702
+    assert dimvexa.convert(1.0, "L", "kg", config_texts=[WATER_TEXT], density="rho") == 0.9982067
+    assert dimvexa.convert(1.0, "L", "mL", density="998kg/m3") == 1000.0
+    assert dimvexa.conversion("L", "kg", density="998.2067kg/m3")(1.0) == 0.9982067
+    with pytest.raises(dimvexa.DimvexaError) as err:
+        dimvexa.convert(1.0, "L", "kg")
+    assert err.value.code == "dimension_mismatch"
+    for bad in ("nope", "h"):  # unknown, and a constant that is not a density
+        with pytest.raises(dimvexa.DimvexaError):
+            dimvexa.convert(1.0, "L", "kg", density=bad)
+    with pytest.raises(dimvexa.DimvexaError):
+        dimvexa.convert(1.0, "m", "m", configs=["nope"])
+
+
+def test_constants_table() -> None:
+    names = [c["name"] for c in dimvexa.constants()]
+    assert names == ["pi", "h", "e", "k_B", "N_A"]
+    h = dimvexa.constants()[1]
+    assert (h["value"], h["value_text"], h["unit"]) == ("662607015 10^-42", "6.62607015e-34", "J.s")
+    assert h["exactness"] == "defined" and h["file"] == "built-in"
+    both = [c["name"] for c in dimvexa.constants(configs=["water"], config_texts=[WATER_TEXT])]
+    assert both[-3:] == ["water_25C", "water_max_density", "rho"]
+
+
+def test_a_config_cannot_redefine_a_builtin_constant() -> None:
+    pi = WATER_TEXT.replace("rho", "pi")
+    with pytest.raises(dimvexa.DimvexaError) as err:
+        dimvexa.constants(config_texts=[pi])
+    assert err.value.code == "invalid_definition"
+    assert "cannot be redefined" in str(err.value)
+    # A unit defined by another loaded config is fine; an unknown unit is a loud error.
+    unit = '[[unit]]\nsymbol = "blob"\nbase = "g"\nfactor = "7"\nexactness = "defined"\nsource = "s"\n'
+    const = WATER_TEXT.replace("g/cm3", "blob/m3")
+    assert dimvexa.constants(config_texts=[unit, const])[-1]["unit"] == "blob/m3"
+    with pytest.raises(dimvexa.DimvexaError):
+        dimvexa.constants(config_texts=[const])

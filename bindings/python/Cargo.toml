@@ -17,7 +17,8 @@ name = "_dimvexa"
 crate-type = ["cdylib"]
 
 [dependencies]
-dimvexa = "0.5.1"
+dimvexa = { path = "../../crates/dimvexa" }
+dimvexa-config = { path = "../../crates/dimvexa-config" }
 pyo3 = { version = "0.30", features = ["abi3-py39", "extension-module"] }
 numpy = "0.30"
 
