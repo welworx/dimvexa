@@ -369,6 +369,72 @@ fn per_command_help() {
     );
 }
 
+fn strip_ansi(s: &str) -> String {
+    let mut out = String::new();
+    let mut chars = s.chars();
+    while let Some(c) = chars.next() {
+        if c == '\x1b' {
+            for d in chars.by_ref() {
+                if d == 'm' {
+                    break;
+                }
+            }
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
+/// Colour only wraps text: help pages and listings painted with `--color always` read back as
+/// the plain text once the escapes are removed, headings and names are actually painted, and
+/// `--color never`, JSON and a pipe carry no escape.
+#[test]
+fn help_and_listings_are_coloured_without_changing_the_text() {
+    let pages: &[&[&str]] = &[
+        &["--help"],
+        &["convert", "--help"],
+        &["units", "--help"],
+        &["configs", "--help"],
+        &["update", "--help"],
+        &["units"],
+        &["units", "--groups"],
+        &["units", "psi"],
+        &["configs"],
+        &["configs", "water"],
+    ];
+    for page in pages {
+        let plain = dimvexa(page);
+        assert!(
+            !plain.stdout.contains('\x1b'),
+            "{page:?}: piped output has colour"
+        );
+        let mut with: Vec<&str> = page.to_vec();
+        with.extend(["--color", "always"]);
+        let coloured = dimvexa(&with);
+        assert_eq!(coloured.code, plain.code, "{page:?}");
+        assert!(
+            coloured.stdout.contains("\x1b["),
+            "{page:?}: nothing painted"
+        );
+        assert_eq!(strip_ansi(&coloured.stdout), plain.stdout, "{page:?}");
+        with.truncate(page.len());
+        with.extend(["--color", "never"]);
+        assert!(!dimvexa(&with).stdout.contains('\x1b'), "{page:?}");
+    }
+    let help = dimvexa(&["--help", "--color", "always"]).stdout;
+    for painted in [
+        "\x1b[1mUsage:\x1b[0m",
+        "\x1b[1mExamples:\x1b[0m",
+        "\x1b[36munits\x1b[0m",
+        "\x1b[36m--exact\x1b[0m",
+    ] {
+        assert!(help.contains(painted), "missing {painted:?}");
+    }
+    let json = dimvexa(&["units", "--json", "--color", "always"]).stdout;
+    assert!(!json.contains('\x1b'));
+}
+
 /// `--help` stays readable in a default 80-column terminal: no line wraps.
 #[test]
 fn help_lines_fit_80_columns() {

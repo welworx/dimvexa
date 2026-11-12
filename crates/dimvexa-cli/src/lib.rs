@@ -317,7 +317,130 @@ const BOLD_GREEN: &str = "\x1b[1;32m";
 const CYAN: &str = "\x1b[36m";
 const BOLD_RED: &str = "\x1b[1;31m";
 const YELLOW: &str = "\x1b[33m";
+const BOLD: &str = "\x1b[1m";
+const DIM: &str = "\x1b[2m";
 const RESET: &str = "\x1b[0m";
+
+/// Which text `colorize_text` is painting.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum TextKind {
+    /// A help page: headings, command and option names.
+    Help,
+    /// `units` and `configs` output: section and column headers, first columns, labels.
+    Listing,
+}
+
+/// Paints the plain text of a help page or a listing. Colour only wraps text, so removing the
+/// escape sequences gives back the plain text exactly (a test checks that).
+fn colorize_text(text: &str, kind: TextKind) -> String {
+    let mut out = String::with_capacity(text.len().saturating_mul(2));
+    for (n, line) in text.split_inclusive('\n').enumerate() {
+        let body = line.trim_end_matches('\n');
+        let nl = &line[body.len()..];
+        let _ = match () {
+            () if kind == TextKind::Help && n == 0 => write!(out, "{BOLD}{body}{RESET}{nl}"),
+            () if body.starts_with("## ") => write!(out, "{BOLD}{body}{RESET}{nl}"),
+            () if body.starts_with("# ") => write!(out, "{DIM}{body}{RESET}{nl}"),
+            () if kind == TextKind::Listing && !body.starts_with(' ') && body.contains('\t') => {
+                let (first, rest) = body.split_once('\t').unwrap_or((body, ""));
+                write!(out, "{CYAN}{first}{RESET}\t{rest}{nl}")
+            }
+            () if kind == TextKind::Listing && n == 0 && !body.is_empty() => {
+                write!(out, "{BOLD}{body}{RESET}{nl}")
+            }
+            () if kind == TextKind::Listing => write!(out, "{}{nl}", paint_label(body)),
+            () => write!(out, "{}{nl}", paint_help_line(body)),
+        };
+    }
+    out
+}
+
+/// `  label   value` (an indented label, two or more spaces, then the value): the label in cyan.
+fn paint_label(body: &str) -> String {
+    let trimmed = body.trim_start_matches(' ');
+    let indent = body.len().saturating_sub(trimmed.len());
+    match trimmed.find("  ") {
+        Some(end) if indent > 0 && end > 0 => format!(
+            "{}{CYAN}{}{RESET}{}",
+            &body[..indent],
+            &trimmed[..end],
+            &trimmed[end..]
+        ),
+        _ => body.to_string(),
+    }
+}
+
+/// One line of a help page: a `Heading:` in bold, command and option names in cyan.
+fn paint_help_line(body: &str) -> String {
+    let heading = body
+        .find(':')
+        .filter(|&i| {
+            i > 0
+                && body[..i]
+                    .chars()
+                    .all(|c| c.is_ascii_alphabetic() || c == ' ')
+        })
+        .filter(|_| body.starts_with(|c: char| c.is_ascii_uppercase()));
+    if let Some(i) = heading {
+        let end = i.saturating_add(1);
+        return format!("{BOLD}{}{RESET}{}", &body[..end], &body[end..]);
+    }
+    // Two-column entries (`  units    list ...`): the left column is the name.
+    let two_columns = body.starts_with("  ")
+        && !body.starts_with("  dimvexa ")
+        && body.trim_start().contains("  ");
+    let painted = if two_columns {
+        paint_label(body)
+    } else {
+        body.to_string()
+    };
+    paint_options(&painted)
+}
+
+/// Every word that starts with `--` (not already painted) in cyan.
+fn paint_options(line: &str) -> String {
+    if line.contains('\x1b') {
+        return line.to_string();
+    }
+    let mut out = String::with_capacity(line.len());
+    let mut rest = line;
+    while let Some(i) = rest.find("--") {
+        let at_word_start = rest[..i]
+            .chars()
+            .next_back()
+            .is_none_or(|c| !c.is_alphanumeric() && c != '-');
+        let tail = &rest[i..];
+        let len = tail
+            .find(|c: char| !(c.is_ascii_alphanumeric() || c == '-' || c == '_'))
+            .unwrap_or(tail.len());
+        out.push_str(&rest[..i]);
+        if at_word_start && len > 2 {
+            let _ = write!(out, "{CYAN}{}{RESET}", &tail[..len]);
+        } else {
+            out.push_str(&tail[..len]);
+        }
+        rest = &tail[len..];
+    }
+    out.push_str(rest);
+    out
+}
+
+/// Writes what `f` prints to `out`, painted as `kind` when `color` is on and the output is text.
+fn paint_with(
+    color: bool,
+    kind: TextKind,
+    out: &mut dyn Write,
+    f: impl FnOnce(&mut dyn Write) -> u8,
+) -> u8 {
+    if !color {
+        return f(out);
+    }
+    let mut buffered = Vec::new();
+    let code = f(&mut buffered);
+    let text = String::from_utf8_lossy(&buffered);
+    let _ = write!(out, "{}", colorize_text(&text, kind));
+    code
+}
 
 /// Colours the leading label of `error[..]:`, `hint:` and `note:` lines.
 fn colorize_diagnostics(text: &str) -> String {
@@ -2145,11 +2268,11 @@ where
     };
     let args = match parsed {
         Parsed::Help(topic) => {
-            let _ = match topic {
-                None => write!(out, "{}", help_text()),
-                Some(t) => write!(out, "{}", command_help(t)),
-            };
-            return 0;
+            let text = topic.map_or_else(help_text, |t| command_help(t).to_string());
+            return paint_with(color.out, TextKind::Help, out, |o| {
+                let _ = write!(o, "{text}");
+                0
+            });
         }
         Parsed::Version => {
             let _ = writeln!(
@@ -2163,10 +2286,14 @@ where
             return 0;
         }
         Parsed::Units { target, json } => {
-            return run_units(&target, &config_files, json, out, err);
+            return paint_with(color.out && !json, TextKind::Listing, out, |o| {
+                run_units(&target, &config_files, json, o, err)
+            });
         }
         Parsed::Configs { target, json } => {
-            return run_configs(target.as_deref(), json, out, err);
+            return paint_with(color.out && !json, TextKind::Listing, out, |o| {
+                run_configs(target.as_deref(), json, o, err)
+            });
         }
         Parsed::Update { check, yes } => return update::run(check, yes, out, err),
         Parsed::Convert(a) => a,

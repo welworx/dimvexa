@@ -17,6 +17,17 @@ self-update. Every command and output shown here is checked by the test suite
 `dimvexa convert --help`, `dimvexa units --help`, `dimvexa configs --help` and
 `dimvexa update --help` (also `dimvexa help units`).
 
+## Colour
+
+On a terminal the output is coloured: the result number in bold green and its unit in cyan;
+`error[...]` in bold red, `hint:` in cyan and `note:` in yellow; in help pages and listings
+the headings in bold, command and option names in cyan, column headers dim. Colour only
+wraps text and never carries meaning alone: removing it gives the same words. JSON is never
+coloured.
+
+* `NO_COLOR` (any value) turns it off; `CLICOLOR_FORCE=1` turns it on for a pipe.
+* `--color auto|always|never` decides for one run and wins over both variables.
+
 ## Supported units
 
 The table below lists every unit id (what you type) by quantity group (the SI units also accept the SI

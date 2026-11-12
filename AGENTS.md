@@ -98,7 +98,8 @@ Read the matching skill in `.claude/skills/<name>/SKILL.md` before the task.
   `crates/dimvexa-cli/src/lib.rs`, its `Examples:` and `docs/guide.md`. A new command also needs a
   page, an entry in `HELP_PAGES` in `crates/dimvexa-cli/tests/cli.rs` and a line in the overview.
   Help lines stay within 80 columns and every example must run as typed from an empty
-  directory (tests enforce both); regenerate the `help*.txt` snapshots and read the diff.
+  directory (tests enforce both); colour wraps text only (`colorize_text`) and a test checks that
+  stripping it gives the plain text; regenerate the `help*.txt` snapshots and read the diff.
 * Update `CHANGELOG.md` for user-visible changes and the relevant ADR or doc for a decision.
 * A breaking change (a renamed JSON field, a changed public item) is allowed while the crate is
   0.x, but it needs the `api-change` skill: new schema version and file, CHANGELOG `Changed`,
