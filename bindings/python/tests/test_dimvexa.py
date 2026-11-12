@@ -163,3 +163,9 @@ def test_replacing_an_entry_of_an_earlier_config_warns() -> None:
     mine = WATER_TEXT.replace("rho", "water_25C")
     with pytest.warns(UserWarning, match="constant 'water_25C'.*replaces the one from bundled:water"):
         dimvexa.constants(configs=["water"], config_texts=[mine])
+
+
+def test_config_files_must_be_regular_files_and_an_empty_density_is_none() -> None:
+    with pytest.raises(dimvexa.DimvexaError, match="not a regular file"):
+        dimvexa.convert(1.0, "m", "m", configs=["/dev/zero"])
+    assert dimvexa.convert(1.0, "m", "km", density="") == 0.001

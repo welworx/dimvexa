@@ -1396,7 +1396,7 @@ pub fn load(mut reg: Registry, configs: &[Config], builtin: &[ConstantDef]) -> R
 }
 
 /// A warning for each entry of a later config that replaces an entry of an earlier one with the
-/// same name: "constant 'w' (b.toml:3) replaces the one from a.toml:7". The same file given twice
+/// same name: "constant 'w' (b.toml:3) replaces the one from a.toml:7". The same path given twice
 /// replaces itself silently.
 fn replacements(configs: &[Config]) -> Vec<String> {
     let mut seen: Vec<(&'static str, String, String, usize)> = Vec::new();

@@ -190,7 +190,8 @@ Options:
   --json           machine-readable output (schema dimvexa.units/4)
   --pretty         --json, indented for reading
   --config NAME_OR_PATH
-                   include the units and names of a config; repeatable
+                   include the units and names of a config; repeatable (a
+                   warning names what a later config replaces)
   --color WHEN     auto, always or never (see: dimvexa --help)
 
 Exit codes: 0 success, 1 unknown unit or group or invalid config, 2 usage error.
@@ -254,7 +255,8 @@ Forms:
 
 Options:
   --config NAME_OR_PATH
-                   also list the constants of this config; repeatable
+                   also list the constants of this config; repeatable (a
+                   warning names what a later config replaces)
   --json           machine-readable output (schema dimvexa.constants/1)
   --pretty         --json, indented for reading
   --color WHEN     auto, always or never (see: dimvexa --help)

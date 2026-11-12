@@ -4,6 +4,7 @@
 //! Every core error becomes a [`DimvexaError`] carrying the stable `code`, the `suggestions`
 //! and the `candidates`, so Python callers branch on codes, never on message text.
 
+use std::io::Read as _;
 use std::sync::OnceLock;
 
 use ::dimvexa::{Conversion as CoreConversion, Quantity as CoreQuantity, Registry};
@@ -50,8 +51,21 @@ fn read_config(spec: &str) -> PyResult<dimvexa_config::Config> {
         })
     };
     if dimvexa_config::is_path(spec) {
-        let text = std::fs::read_to_string(spec)
-            .map_err(|e| bad(format!("cannot read config '{spec}': {e}")))?;
+        // Like the CLI: a regular file of at most 1 MiB, never a device or a pipe.
+        let fail = |why: String| bad(format!("cannot read config '{spec}': {why}"));
+        let meta = std::fs::metadata(spec).map_err(|e| fail(e.to_string()))?;
+        if !meta.is_file() {
+            return Err(fail("not a regular file".to_string()));
+        }
+        let mut text = String::new();
+        std::fs::File::open(spec)
+            .map_err(|e| fail(e.to_string()))?
+            .take(1 << 20)
+            .read_to_string(&mut text)
+            .map_err(|e| fail(e.to_string()))?;
+        if meta.len() > 1 << 20 {
+            return Err(fail("larger than 1048576 bytes".to_string()));
+        }
         return dimvexa_config::Config::parse(&text, spec).map_err(|e| to_py(&e));
     }
     match dimvexa_config::bundled(spec) {
@@ -111,17 +125,19 @@ fn conversion_with(
     }
     let loaded = load(configs, config_texts)?;
     let resolved = match density {
-        Some(spec) => Some(loaded.resolve_density(spec).map_err(|e| match e {
-            dimvexa_config::DensityError::Lib(e) => to_py(&e),
-            dimvexa_config::DensityError::Unknown { message, .. } => {
-                to_py(&::dimvexa::Error::InvalidDefinition {
-                    symbol: "density".to_string(),
-                    message,
-                })
-            }
-            _ => PyValueError::new_err("unusable density"),
-        })?),
-        None => None,
+        Some(spec) if !spec.trim().is_empty() => {
+            Some(loaded.resolve_density(spec).map_err(|e| match e {
+                dimvexa_config::DensityError::Lib(e) => to_py(&e),
+                dimvexa_config::DensityError::Unknown { message, .. } => {
+                    to_py(&::dimvexa::Error::InvalidDefinition {
+                        symbol: "density".to_string(),
+                        message,
+                    })
+                }
+                _ => PyValueError::new_err("unusable density"),
+            })?)
+        }
+        _ => None,
     };
     let from = loaded.reg.parse(from_unit).map_err(|e| to_py(&e))?;
     let to = loaded.reg.parse(to_unit).map_err(|e| to_py(&e))?;

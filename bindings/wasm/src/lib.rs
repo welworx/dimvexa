@@ -69,7 +69,8 @@ fn invalid(symbol: &str, message: String) -> JsValue {
 /// Applies shipped configs by name (`"us"`, `"us,water"`; commas or spaces) and then your own
 /// config files given as TOML text, to a copy of the registry. A file path cannot be read from a
 /// worksheet or a browser, so the caller reads the file and passes its text. Later configs win
-/// (ADR-009). No config is the plain strict table.
+/// (ADR-009). No config is the plain strict table. The result is cached, so a replacement
+/// warning (`console.warn`) is printed once per distinct combination, not once per call.
 fn load_config(spec: &str, texts: &[String]) -> Result<Rc<Loaded>, JsValue> {
     let mut names: Vec<&str> = Vec::new();
     for name in spec.split([',', ' ', ';']).filter(|n| !n.is_empty()) {
@@ -77,7 +78,13 @@ fn load_config(spec: &str, texts: &[String]) -> Result<Rc<Loaded>, JsValue> {
         names.retain(|n| *n != name);
         names.push(name);
     }
-    let key = format!("{}\u{0}{}", names.join(","), texts.join("\u{0}"));
+    // Length-prefixed parts, so no two different inputs can share a key (a NUL may appear in text).
+    let key: String = names
+        .iter()
+        .map(|n| ("n", *n))
+        .chain(texts.iter().map(|t| ("t", t.as_str())))
+        .map(|(kind, s)| format!("{kind}{}:{s}", s.len()))
+        .collect();
     let cached = LOADED.with(|c| {
         c.borrow()
             .iter()
