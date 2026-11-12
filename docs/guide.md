@@ -11,6 +11,12 @@ self-update. Every command and output shown here is checked by the test suite
 - [Angles and pi](#angles-and-pi)
 - [Updating](#updating)
 
+## Getting help
+
+`dimvexa --help` gives the overview with examples. Each command has its own page:
+`dimvexa convert --help`, `dimvexa units --help`, `dimvexa configs --help` and
+`dimvexa update --help` (also `dimvexa help units`).
+
 ## Supported units
 
 The table below lists every unit id (what you type) by quantity group (the SI units also accept the SI

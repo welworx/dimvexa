@@ -14,6 +14,9 @@ description: Use when changing a public item, an error code, the CLI output or t
   `cargo xtask ci docs doctest`.
 * The CLI holds no conversion logic: it calls the library (`crates/dimvexa-cli/src/lib.rs`).
   Update the snapshots deliberately (see the `tests` skill).
+* Update the CLI help in the same change: the overview and the page of the command concerned
+  (`HELP`, `HELP_CONVERT`, `HELP_UNITS`, `HELP_CONFIGS`, `HELP_UPDATE`), with working examples, in
+  at most 80 columns. A new command gets its own page and an entry in `HELP_PAGES` in `cli.rs`.
 * Update `CHANGELOG.md` (Added, Changed, Fixed) and the docs that mention the item.
 * Once a release exists, run `cargo semver-checks` against it; before that, review the diff of
   the public items by hand.

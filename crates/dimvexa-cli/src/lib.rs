@@ -53,6 +53,7 @@ Usage:
   dimvexa update [--check] [-y]
 
 Converts VALUE from unit FROM to unit TO. Ambiguous input is an error.
+Run 'dimvexa COMMAND --help' (convert, units, configs, update) for details.
 
 Examples:
   dimvexa convert 10 m/s km/h
@@ -112,6 +113,123 @@ Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error;
 `update --check` also exits 3 when a newer release exists.
 ";
 
+/// `dimvexa convert --help`. Examples are run by a test, like those of `HELP`.
+const HELP_CONVERT: &str = "\
+dimvexa convert - convert a value from one unit to another
+
+Usage:
+  dimvexa [convert] VALUE FROM TO [--exact] [--json | --pretty]
+      [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
+
+VALUE is a number; FROM and TO are units or unit expressions (m/s, kW.h, psi).
+Units of different quantities, or an ambiguous symbol, are an error.
+
+Examples:
+  dimvexa convert 10 m/s km/h
+  dimvexa convert 1 psi Pa --exact
+  dimvexa convert 100 degC degF --json
+  dimvexa convert 1 ton kg --config us
+  dimvexa convert 1 L kg --config water --density water_25C
+  dimvexa convert 1 L kg --density 998.2067kg/m3
+
+Options:
+  --exact          print the exact result and its decimal: a fraction, with pi
+                   or a power of ten when the value has one
+                   (1/2 pi = 1.5707963267948966)
+  --json           machine-readable output (schema dimvexa.convert/3)
+  --pretty         --json, indented for reading
+  --config NAME_OR_PATH
+                   (beta) apply a config; repeatable, later ones win. A shipped
+                   one is named (us, gb, metric-trade, year-julian, year-civil,
+                   water); a file has a path (./mine.toml, or anything with a /
+                   or ending in .toml). See: dimvexa configs --help
+  --density NAME_OR_VALUE
+                   density for mass <-> volume: a name from a loaded config
+                   (--config water --density water_25C) or your own number
+                   (--density 998.2067kg/m3). The assumption is printed
+  --color WHEN     auto, always or never (see: dimvexa --help)
+
+Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
+";
+
+/// `dimvexa units --help`.
+const HELP_UNITS: &str = "\
+dimvexa units - list the supported units and show one in detail
+
+Usage:
+  dimvexa units [--groups | GROUP | UNIT] [--json | --pretty]
+      [--config NAME_OR_PATH]...
+
+Examples:
+  dimvexa units
+  dimvexa units --groups
+  dimvexa units volume
+  dimvexa units psi
+  dimvexa units km --json
+
+Forms:
+  units            every unit by quantity, then the ambiguous symbols that are
+                   refused
+  units --groups   only the groups (length, mass, volume, ...) with their sizes
+  units GROUP      one group
+  units UNIT       one unit: id, symbol, name, factor, exactness, sources; a
+                   prefixed unit (km) is named from its parts
+
+Options:
+  --json           machine-readable output (schema dimvexa.units/4)
+  --config NAME_OR_PATH
+                   include the units and names of a config; repeatable
+";
+
+/// `dimvexa configs --help`.
+const HELP_CONFIGS: &str = "\
+dimvexa configs - list the shipped configs and show what one contains
+
+Usage:
+  dimvexa configs [NAME_OR_PATH] [--json | --pretty]
+
+A config adds names, units and densities to the strict default tables; apply one
+to a conversion with --config. A density (the mass <-> volume constant) comes
+only from a config or your own number; use it with --density.
+
+Examples:
+  dimvexa configs
+  dimvexa configs water
+  dimvexa configs us --json
+
+Forms:
+  configs          the configs that ship with dimvexa (us, gb, metric-trade,
+                   year-julian, year-civil, water)
+  configs NAME     its names, units, and densities with their conditions and
+                   sources
+  configs PATH     the same for your own file (./mine.toml, or a name with a /
+                   or ending in .toml)
+
+Options:
+  --json           machine-readable output (schema dimvexa.configs/1)
+";
+
+/// `dimvexa update --help`.
+const HELP_UPDATE: &str = "\
+dimvexa update - replace this binary with the latest GitHub release
+
+Usage:
+  dimvexa update [--check] [-y]
+
+Needs curl and tar. Checks the published SHA-256 of the download before it
+replaces anything (see docs/adr/015-update-command.md).
+
+Examples:
+  dimvexa update --check
+
+Options:
+  --check          only report whether a newer release exists
+  -y, --yes        do not ask \"Update to vX.Y.Z? [y/N]\" first
+
+Exit codes: 0 up to date (or updated), 1 error, 2 usage error; --check exits 3
+when a newer release exists.
+";
+
 /// Shown after the project facts; the long form is `docs/licensing.md`.
 const DISCLAIMER: &str = "\
 Provided as is, without warranty. Unit factors and sources can contain errors:
@@ -164,6 +282,16 @@ fn about() -> String {
         env!("CARGO_PKG_AUTHORS"),
         env!("CARGO_PKG_HOMEPAGE")
     )
+}
+
+/// The text of `dimvexa COMMAND --help`.
+fn command_help(topic: &str) -> &'static str {
+    match topic {
+        "units" => HELP_UNITS,
+        "configs" => HELP_CONFIGS,
+        "update" => HELP_UPDATE,
+        _ => HELP_CONVERT,
+    }
 }
 
 /// The text of `--help`: a title line, the usage, and the project facts.
@@ -393,7 +521,8 @@ enum Parsed {
         check: bool,
         yes: bool,
     },
-    Help,
+    /// `--help`, or `help COMMAND`, or `COMMAND --help`; `None` is the overview.
+    Help(Option<&'static str>),
     Version,
 }
 
@@ -589,6 +718,28 @@ fn normalize_convert(words: &[&str]) -> Vec<String> {
     out
 }
 
+/// Which help page `--help` or `help COMMAND` asks for: `None` is the overview.
+fn help_topic(positional: &[&str]) -> Result<Option<&'static str>, String> {
+    let (is_help_word, words) = match positional.split_first() {
+        Some((&"help", rest)) => (true, rest),
+        _ => (false, positional),
+    };
+    Ok(match words.first().copied() {
+        None => None,
+        Some("convert") => Some("convert"),
+        Some("units") => Some("units"),
+        Some("configs") => Some("configs"),
+        Some("update") => Some("update"),
+        // `dimvexa 10 m km --help`: help for the conversion that was being typed.
+        Some(_) if !is_help_word => Some("convert"),
+        Some(other) => {
+            return Err(format!(
+                "no help for '{other}'; commands: convert, units, configs, update"
+            ));
+        }
+    })
+}
+
 fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     let (opts, args) = split_options(all)?;
     let configs = opts.configs;
@@ -603,7 +754,7 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     };
     let mut positional: Vec<&str> = Vec::new();
     let (mut exact, mut want_json, mut want_groups) = (false, false, false);
-    let (mut want_check, mut want_yes) = (false, false);
+    let (mut want_check, mut want_yes, mut want_help) = (false, false, false);
     for a in args {
         match a.as_str() {
             "--check" => want_check = true,
@@ -611,11 +762,15 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
             "--exact" => exact = true,
             "--json" => want_json = true,
             "--groups" => want_groups = true,
-            "-h" | "--help" => return Ok((Parsed::Help, configs)),
+            "-h" | "--help" => want_help = true,
             "-V" | "--version" => return Ok((Parsed::Version, configs)),
             s if s.starts_with("--") => return Err(usage(format!("unknown option '{s}'"))),
             s => positional.push(s),
         }
+    }
+    if want_help || positional.first() == Some(&"help") {
+        let topic = help_topic(&positional).map_err(usage)?;
+        return Ok((Parsed::Help(topic), configs));
     }
     if let Some((&"update", rest)) = positional.split_first() {
         check_update_args(
@@ -1989,8 +2144,11 @@ where
         Err(u) => return report_usage_error(&u, out, err),
     };
     let args = match parsed {
-        Parsed::Help => {
-            let _ = write!(out, "{}", help_text());
+        Parsed::Help(topic) => {
+            let _ = match topic {
+                None => write!(out, "{}", help_text()),
+                Some(t) => write!(out, "{}", command_help(t)),
+            };
             return 0;
         }
         Parsed::Version => {

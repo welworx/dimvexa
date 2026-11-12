@@ -10,6 +10,10 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 - `dimvexa --help` is reorganised to fit 80 columns: usage, one-line description, examples, commands, options, then precision and exit codes. A usage error now prints only the short usage and a pointer to `--help` instead of the whole help. `--help` and `--version` show the website (https://dimvexa.com, the package `homepage`) instead of the repository.
 
+### Added
+
+- Per-command help: `dimvexa convert|units|configs|update --help` and `dimvexa help COMMAND` (also `dimvexa 10 m km --help`). `dimvexa help NAME` for an unknown name is a usage error. `AGENTS.md` and the `api-change` skill now require the help to be updated with every CLI change.
+
 ### Fixed
 
 - The `--help` example `convert 1 bbl_oil L --config oil.toml` failed in any directory but the repository's. Every example in `--help` now works as typed from an empty directory, and a test (`help_examples_run_from_an_empty_directory`) runs each one.

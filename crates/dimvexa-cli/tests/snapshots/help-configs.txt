@@ -1,0 +1,24 @@
+dimvexa configs - list the shipped configs and show what one contains
+
+Usage:
+  dimvexa configs [NAME_OR_PATH] [--json | --pretty]
+
+A config adds names, units and densities to the strict default tables; apply one
+to a conversion with --config. A density (the mass <-> volume constant) comes
+only from a config or your own number; use it with --density.
+
+Examples:
+  dimvexa configs
+  dimvexa configs water
+  dimvexa configs us --json
+
+Forms:
+  configs          the configs that ship with dimvexa (us, gb, metric-trade,
+                   year-julian, year-civil, water)
+  configs NAME     its names, units, and densities with their conditions and
+                   sources
+  configs PATH     the same for your own file (./mine.toml, or a name with a /
+                   or ending in .toml)
+
+Options:
+  --json           machine-readable output (schema dimvexa.configs/1)

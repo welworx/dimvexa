@@ -1,0 +1,25 @@
+dimvexa units - list the supported units and show one in detail
+
+Usage:
+  dimvexa units [--groups | GROUP | UNIT] [--json | --pretty]
+      [--config NAME_OR_PATH]...
+
+Examples:
+  dimvexa units
+  dimvexa units --groups
+  dimvexa units volume
+  dimvexa units psi
+  dimvexa units km --json
+
+Forms:
+  units            every unit by quantity, then the ambiguous symbols that are
+                   refused
+  units --groups   only the groups (length, mass, volume, ...) with their sizes
+  units GROUP      one group
+  units UNIT       one unit: id, symbol, name, factor, exactness, sources; a
+                   prefixed unit (km) is named from its parts
+
+Options:
+  --json           machine-readable output (schema dimvexa.units/4)
+  --config NAME_OR_PATH
+                   include the units and names of a config; repeatable
