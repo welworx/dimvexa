@@ -14,6 +14,7 @@ update) for details.
 Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
+  dimvexa convert 4pi rad deg
   dimvexa convert 100 degC degF --json
   dimvexa convert 1 ton kg --config us
   dimvexa convert 1 L kg --config water --const water_25C

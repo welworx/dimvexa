@@ -5,6 +5,12 @@ All notable changes are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Release notes are generated from Conventional
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
+## [Unreleased]
+### Added
+
+- **Constants in a value (ADR-018, step 3, closes KL-20).** `dimvexa convert 4pi rad deg` (also `4π`, `4 pi`, `pi/2`, `1/2 pi`, `2*pi^2`, `1/(2*pi)`, and with spaces `4 pi rad deg`): a value may use `pi`, `*`, `/`, an integer power `^`, a sign and parentheses. Pi stays symbolic, so `4 pi rad` to `deg` is exactly 720. Plain numbers read as before. No addition; a constant that has a unit (`2*h_P`) is `refused`; an unknown name is `invalid_number`.
+- Library: `Ratio::parse_expression`, `Ratio::parse_expression_prefix` and `Registry::quantity_with(input, constants)`. `Registry::quantity` is unchanged.
+
 ## [0.6.0] - 2026-11-12
 ### Added
 

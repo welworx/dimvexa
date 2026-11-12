@@ -4,7 +4,7 @@ Status: Accepted by the owner on 2026-11-11, including the two recommended defau
 
 Supersedes the pi, `eV` and `Da` part of [ADR-010](010-units-that-do-not-fit-i128.md) (its option 2).
 
-Implementation: step 1 (the number type, exact angles, `eV`, `Da`) is released in 0.5.0; the measurements are in [`docs/benchmarks/v0.5.0.md`](../benchmarks/v0.5.0.md). Step 2 (the constants table, `--const`, `dimvexa constants`, `dimvexa.configs/2`) is released in 0.6.0; step 3 is not started.
+Implementation: step 1 (the number type, exact angles, `eV`, `Da`) is released in 0.5.0; the measurements are in [`docs/benchmarks/v0.5.0.md`](../benchmarks/v0.5.0.md). Step 2 (the constants table, `--const`, `dimvexa constants`, `dimvexa.configs/2`) is released in 0.6.0; step 3 (constants in a value: `Ratio::parse_expression`, `Registry::quantity_with`, the CLI value) is implemented for the dimensionless constants (`pi`); a constant that has a unit in a value is refused (`refused`), see KL-20.
 
 ## Context
 
