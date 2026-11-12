@@ -1291,17 +1291,17 @@ fn density_misuse_is_loud() {
     for (name, text, needle) in [
         (
             "nocond.toml",
-            "[[constant]]\nname = \"w\"\nvalue = \"1000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nsource = \"s\"\n",
+            "[[constant]]\nname = \"dens\"\nvalue = \"1000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nsource = \"s\"\n",
             "'conditions'",
         ),
         (
             "nosrc.toml",
-            "[[constant]]\nname = \"w\"\nvalue = \"1000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\n",
+            "[[constant]]\nname = \"dens\"\nvalue = \"1000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\n",
             "'source'",
         ),
         (
             "zero.toml",
-            "[[constant]]\nname = \"w\"\nvalue = \"0\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n",
+            "[[constant]]\nname = \"dens\"\nvalue = \"0\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n",
             "must be positive",
         ),
     ] {
@@ -1874,7 +1874,7 @@ fn outputs_validate_against_the_schema_files() {
         (&configs, vec!["configs", "nope", "--json"]),
         (&configs, vec!["configs", "a", "b", "--json"]),
         (&constants, vec!["constants", "--json"]),
-        (&constants, vec!["constants", "h", "--json"]),
+        (&constants, vec!["constants", "h_P", "--json"]),
         (&constants, vec!["constants", "--json", "--config", "water"]),
         (&constants, vec!["constants", "nope", "--json"]),
         (&constants, vec!["constants", "a", "b", "--json"]),
@@ -1981,10 +1981,10 @@ fn a_density_note_never_misstates_the_density() {
     );
     let third = config_file(
         "third.toml",
-        "[[constant]]\nname = \"t\"\nvalue = \"1000/3\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n",
+        "[[constant]]\nname = \"third\"\nvalue = \"1000/3\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n",
     );
     let r = dimvexa(&[
-        "convert", "3", "L", "kg", "--config", &third, "--const", "t", "--exact",
+        "convert", "3", "L", "kg", "--config", &third, "--const", "third", "--exact",
     ]);
     assert!(
         r.stderr.contains("1000/3 (about 333.333333333333333)"),
@@ -1994,9 +1994,11 @@ fn a_density_note_never_misstates_the_density() {
     // A short exact decimal is shown plainly, and control characters in the config text are cleaned.
     let cfg = config_file(
         "ctl.toml",
-        "[[constant]]\nname = \"w\"\nvalue = \"998.2067\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"a\tb\"\nsource = \"s\"\n",
+        "[[constant]]\nname = \"dens\"\nvalue = \"998.2067\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"a\tb\"\nsource = \"s\"\n",
     );
-    let r = dimvexa(&["convert", "1", "L", "kg", "--config", &cfg, "--const", "w"]);
+    let r = dimvexa(&[
+        "convert", "1", "L", "kg", "--config", &cfg, "--const", "dens",
+    ]);
     assert!(r.stderr.contains("(998.2067 kg/m3; a b;"), "{}", r.stderr);
 }
 
@@ -2071,14 +2073,14 @@ fn angle_units_are_exact_with_pi_kept_symbolic() {
     assert!(out.get("truncated").unwrap().as_bool());
 }
 
-/// The guide's angle examples (`2 pi`, `turn`) run against the shipped example config.
+/// The guide's angle examples (`2 pirad`, `turn`) run against the shipped example config.
 #[test]
 fn guide_angle_examples_are_real() {
     const CFG: &str = "examples/configs/angle.toml";
     let section = readme_section(&guide(), "## Angles and pi");
     for (args, out) in [
         (
-            &["convert", "2", "pi", "deg", "--config", CFG][..],
+            &["convert", "2", "pirad", "deg", "--config", CFG][..],
             "360 deg",
         ),
         (
@@ -2090,7 +2092,7 @@ fn guide_angle_examples_are_real() {
         assert_eq!((r.code, r.stdout.trim_end()), (0, out), "{}", r.stderr);
         assert!(section.contains(&format!("$ dimvexa {}\n   {out}", args.join(" "))));
     }
-    let r = dimvexa_at_root(&["convert", "2", "pi", "deg", "--config", CFG, "--exact"]);
+    let r = dimvexa_at_root(&["convert", "2", "pirad", "deg", "--config", CFG, "--exact"]);
     assert_eq!(r.stdout.trim_end(), "360 deg");
     // `turn` is exactly 2 pi rad (the config defines it as 360 deg).
     let r = dimvexa_at_root(&["convert", "1", "turn", "rad", "--config", CFG, "--exact"]);
@@ -2560,13 +2562,13 @@ fn constants_lists_the_built_in_table_with_exact_values_units_and_sources() {
         .map(|l| l.split('\t').collect())
         .collect();
     let names: Vec<&str> = rows.iter().map(|c| c[0]).collect();
-    assert_eq!(names, ["pi", "h", "e", "k_B", "N_A"]);
+    assert_eq!(names, ["pi", "h_P", "e", "k_B", "N_A"]);
     snapshot("constants.txt", &r.stdout);
     snapshot("constants.json", &dimvexa(&["constants", "--json"]).stdout);
     let get = |n: &str| rows.iter().find(|c| c[0] == n).unwrap().clone();
     // name, value, unit, exactness, conditions, source, origin
     assert_eq!(get("pi")[1..4], ["pi", "1", "defined"]);
-    assert_eq!(get("h")[1..4], ["6.62607015e-34", "J.s", "defined"]);
+    assert_eq!(get("h_P")[1..4], ["6.62607015e-34", "J.s", "defined"]);
     assert_eq!(get("e")[1..3], ["1.602176634e-19", "C"]);
     assert_eq!(get("k_B")[1..3], ["1.380649e-23", "J/K"]);
     assert_eq!(get("N_A")[1..3], ["6.02214076e23", "1/mol"]);
@@ -2585,16 +2587,20 @@ fn constants_lists_the_built_in_table_with_exact_values_units_and_sources() {
 
 #[test]
 fn constants_shows_one_constant_with_its_note_and_refuses_an_unknown_name() {
-    let r = dimvexa(&["constants", "h"]);
+    let r = dimvexa(&["constants", "h_P"]);
     assert_eq!(r.code, 0);
-    assert!(r.stdout.contains("h\t6.62607015e-34\tJ.s"), "{}", r.stdout);
+    assert!(
+        r.stdout.contains("h_P\t6.62607015e-34\tJ.s"),
+        "{}",
+        r.stdout
+    );
     assert!(r.stdout.contains("# Planck constant"), "{}", r.stdout);
     assert!(!r.stdout.contains("k_B"), "{}", r.stdout);
     let r = dimvexa(&["constants", "nope"]);
     assert_eq!(r.code, 2);
     assert!(
         r.stderr
-            .contains("no constant named 'nope'; known: pi, h, e, k_B, N_A"),
+            .contains("no constant named 'nope'; known: pi, h_P, e, k_B, N_A"),
         "{}",
         r.stderr
     );
@@ -2605,7 +2611,7 @@ fn constants_shows_one_constant_with_its_note_and_refuses_an_unknown_name() {
 
 #[test]
 fn constants_json_carries_the_exact_value_as_a_string() {
-    let r = dimvexa(&["constants", "h", "--json"]);
+    let r = dimvexa(&["constants", "h_P", "--json"]);
     let v = json::parse(&r.stdout).unwrap();
     assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.constants/1");
     let c = &v.get("constants").unwrap().as_array()[0];
@@ -2629,7 +2635,7 @@ fn constants_lists_those_of_a_config_after_the_built_in_ones() {
         names,
         [
             "pi",
-            "h",
+            "h_P",
             "e",
             "k_B",
             "N_A",
@@ -2647,7 +2653,7 @@ fn constants_lists_those_of_a_config_after_the_built_in_ones() {
 /// `pi` cannot be redefined by a config: a user-defined pi would silently change every angle.
 #[test]
 fn a_config_cannot_redefine_a_built_in_constant() {
-    for name in ["pi", "h", "e", "k_B", "N_A"] {
+    for name in ["pi", "h_P", "e", "k_B", "N_A"] {
         let cfg = config_file(
             &format!("redefine_{name}.toml"),
             &format!(
@@ -2699,7 +2705,7 @@ fn a_config_constant_of_any_unit_is_listed_but_only_a_density_feeds_const() {
         r.stdout
     );
     // --const supplies a density; a constant of another dimension is refused, not guessed.
-    for name in ["gas_R", "h"] {
+    for name in ["gas_R", "h_P"] {
         let r = dimvexa(&["convert", "1", "L", "kg", "--config", &cfg, "--const", name]);
         assert_eq!(r.code, 2, "{name}");
         assert!(r.stderr.contains("not a density"), "{name}: {}", r.stderr);
@@ -2721,7 +2727,7 @@ fn a_density_constant_in_g_per_cm3_gives_the_same_result_as_kg_per_m3() {
         config_file(
             name,
             &format!(
-                "[[constant]]\nname = \"w\"\nvalue = \"{value}\"\nunit = \"{unit}\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n"
+                "[[constant]]\nname = \"dens\"\nvalue = \"{value}\"\nunit = \"{unit}\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n"
             ),
         )
     };
@@ -2730,10 +2736,10 @@ fn a_density_constant_in_g_per_cm3_gives_the_same_result_as_kg_per_m3() {
         mk("w_gcm3.toml", "0.9982067", "g/cm3"),
     );
     let ra = dimvexa(&[
-        "convert", "1", "L", "kg", "--exact", "--config", &a, "--const", "w",
+        "convert", "1", "L", "kg", "--exact", "--config", &a, "--const", "dens",
     ]);
     let rb = dimvexa(&[
-        "convert", "1", "L", "kg", "--exact", "--config", &b, "--const", "w",
+        "convert", "1", "L", "kg", "--exact", "--config", &b, "--const", "dens",
     ]);
     assert_eq!(ra.code, 0, "{}", ra.stderr);
     assert_eq!(ra.stdout, rb.stdout);

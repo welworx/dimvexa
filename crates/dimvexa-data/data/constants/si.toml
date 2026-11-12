@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # The defining constants of the SI that are not units themselves (BIPM SI Brochure, 9th ed.,
 # 2019, ch. 2, Table 1). Since 2019 their values are exact by definition, so they are `defined`
-# and need no CODATA edition. Format: see math.toml.
+# and need no CODATA edition. Format: see math.toml. A constant's name is never also a unit's
+# (`h` is the hour), so the Planck constant is `h_P`.
 
 [[constant]]
-name = "h"
+name = "h_P"
 value = "662607015/1 10^-42"
 unit = "J.s"
 exactness = "defined"

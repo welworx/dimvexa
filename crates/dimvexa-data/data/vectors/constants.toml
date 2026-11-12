@@ -12,7 +12,7 @@ expect = "pi"
 source = "ISO 80000-2:2019, mathematical constants (pi; kept symbolic, not a decimal)"
 
 [[constant_vector]]
-constant = "h"
+constant = "h_P"
 dim = [1, 2, -1, 0, 0, 0, 0]
 expect = "6.62607015 10^-34"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: h = 6.626 070 15 x 10^-34 J s"

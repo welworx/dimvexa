@@ -21,7 +21,7 @@
 //! `conditions` and `source`, and, for a CODATA value, the pinned `codata` edition. A constant
 //! of a density unit is what a conversion the core refuses (ADR-001) needs, such as litres to
 //! kilograms; the library multiplies by it and never derives it from temperature or pressure.
-//! The names of the built-in constants (`pi`, `h`, ...) cannot be redefined.
+//! The names of the built-in constants (`pi`, `h_P`, ...) cannot be redefined.
 //!
 //! ```text
 //! [[constant]]
@@ -716,7 +716,7 @@ pub const BUILT_IN: &str = "built-in";
 /// Refuses a config that defines a constant with the name of a built-in one.
 ///
 /// A built-in constant cannot be redefined by a config: a user-defined `pi` would silently
-/// change the meaning of every angle (ADR-018), and the same holds for `h` or `N_A`.
+/// change the meaning of every angle (ADR-018), and the same holds for `h_P` or `N_A`.
 ///
 /// # Errors
 ///
@@ -731,7 +731,7 @@ pub const BUILT_IN: &str = "built-in";
 ///      conditions = \"none (defined)\"\nsource = \"s\"\n",
 ///     "mine.toml",
 /// )?;
-/// let err = reject_builtin_constants(&cfg, &["pi", "h"]).unwrap_err();
+/// let err = reject_builtin_constants(&cfg, &["pi", "h_P"]).unwrap_err();
 /// assert!(err.to_string().contains("cannot be redefined"));
 /// # Ok::<(), dimvexa_core::Error>(())
 /// ```
@@ -1334,14 +1334,15 @@ pub enum DensityError {
 /// Applies `configs` to `reg` and collects the constants in effect.
 ///
 /// A config cannot redefine a name of `builtin` (a user-defined `pi` would silently change every
-/// angle). The unit of every constant is resolved against the registry **after** all configs
+/// angle). A constant's name must not also be a unit's (`h` is the hour). The unit of every constant is resolved against the registry **after** all configs
 /// are applied, so a constant may use a unit another loaded config defines; an unknown unit is
 /// an `invalid_definition` at the constant's `file:line`. A constant of a density unit is also
 /// available as a [`Density`] in kg/m^3.
 ///
 /// # Errors
 ///
-/// [`Error::InvalidDefinition`] for a built-in name, an unknown unit or any error of [`apply`];
+/// [`Error::InvalidDefinition`] for a built-in name, a name that is also a unit, an unknown unit
+/// or any error of [`apply`];
 /// [`Error::Refused`] and [`Error::Overflow`] from [`Constant::to_density`].
 ///
 /// # Examples
@@ -1376,6 +1377,21 @@ pub fn load(mut reg: Registry, configs: &[Config], builtin: &[ConstantDef]) -> R
     constants.extend(self::constants(configs));
     let mut densities = Vec::new();
     for c in &constants {
+        // A constant's name is never also a unit's (`h` is the hour): it would be ambiguous in a
+        // value. An ambiguous bare symbol such as `ton` counts as a unit name too.
+        let is_unit = match reg.parse(&c.name) {
+            Ok(_) => true,
+            Err(e) => e.code() == "ambiguous_symbol",
+        };
+        if is_unit {
+            return Err(Error::InvalidDefinition {
+                symbol: format!("{}:{}", c.origin, c.line),
+                message: format!(
+                    "constant '{}': the name is also a unit; give the constant another name",
+                    c.name
+                ),
+            });
+        }
         // The unit gives the dimension, so an unknown unit is a loud error at load time.
         let wrap = |e: Error| Error::InvalidDefinition {
             symbol: format!("{}:{}", c.origin, c.line),

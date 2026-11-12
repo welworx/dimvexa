@@ -24,7 +24,9 @@ Configs, densities and constants work as in the CLI (`dimvexa-config` does the l
 dimvexa.convert(1.0, "ton", "kg", configs=["us"])  # 907.18474; a name or a file path
 dimvexa.convert(1.0, "L", "kg", density="998.2067kg/m3")  # never assumed, only when asked
 dimvexa.convert(1.0, "L", "kg", configs=["water"], density="water_25C")
-dimvexa.constants(config_texts=[toml_text])  # pi, h, e, k_B, N_A, then your own
+dimvexa.constants(config_texts=[toml_text])  # pi, h_P, e, k_B, N_A, then your own
+dimvexa.quantity("1 L", density="998.2067kg/m3").to("kg")  # exact; quantity() takes the same options
+dimvexa.units(configs=["us"]), dimvexa.unit_info("bbl_oil", config_texts=[toml_text])  # config units too
 ```
 
 Every refusal is a `DimvexaError` (a `ValueError`) with a stable `code`, `suggestions` and

@@ -30,7 +30,7 @@ assert.strictEqual(d.convertWith(1, "L", "kg", "rho", "", [constant("rho", "0.99
 
 // constants: the built-in ones first, then the configs'
 const names = (c, t) => d.constants(c, t).map((x) => x.name);
-assert.deepStrictEqual(names("", []), ["pi", "h", "e", "k_B", "N_A"]);
+assert.deepStrictEqual(names("", []), ["pi", "h_P", "e", "k_B", "N_A"]);
 const h = d.constants("", [])[1];
 assert.deepStrictEqual(
   [h.value, h.valueText, h.unit, h.exactness, h.file, h.line],
@@ -40,7 +40,7 @@ assert.deepStrictEqual(names("water", [constant("rho", "1")]).slice(-3), ["water
 
 // refusals: a built-in name, a constant that is not a density, an unknown unit or name
 assert.strictEqual(code(() => d.constants("", [constant("pi", "3", "1")])), "invalid_definition");
-assert.strictEqual(code(() => d.convertWith(1, "L", "kg", "h", "", [])), "invalid_definition");
+assert.strictEqual(code(() => d.convertWith(1, "L", "kg", "h_P", "", [])), "invalid_definition");
 assert.strictEqual(code(() => d.constants("", [constant("x", "1", "Zorp")])), "invalid_definition");
 assert.strictEqual(code(() => d.constants("nope", [])), "invalid_definition");
 

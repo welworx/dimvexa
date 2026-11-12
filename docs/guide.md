@@ -203,7 +203,7 @@ and source. `oz` stays refused in `us` and `gb` because it means a mass or a vol
 `--config us --config ./mine.toml` starts from the US names and adds yours. Replacing is allowed
 but never silent: every name, unit or constant that replaces one of an earlier config prints
 `warning: constant 'water_25C' (./mine.toml:3) replaces the one from bundled:water:7` on stderr, and in `--json` output as a `warnings` array (empty when nothing was replaced).
-The built-in constants (`pi`, `h`, ...) and the units of the table cannot be replaced.
+The built-in constants (`pi`, `h_P`, ...) and the units of the table cannot be replaced.
 
 Your own file is the same format:
 
@@ -301,7 +301,7 @@ What a density does and does not do:
 ### Constants: `dimvexa constants`
 
 A **constant** is a named, exact value of a unit with its conditions and its source (ADR-018).
-The built-in ones are the mathematical constant `pi` and the SI defining constants `h`, `e`,
+The built-in ones are the mathematical constant `pi` and the SI defining constants `h_P`, `e`,
 `k_B` and `N_A`; since 2019 their values are exact by definition:
 
 ```console
@@ -400,11 +400,11 @@ What to know:
    multiplies, so this shows up only through the library (`Ratio::checked_add`).
 3. **You cannot type `2*pi` or `2pi` as a value.** A value is a plain number (`6.283185307179586`)
    or a fraction (`1/3`); the decimal is not exactly 2 pi, so `--exact` shows a tiny difference
-   (about 1.8e-14 deg). Use degrees (`360 deg`), or define `pi` and `turn` with the shipped
+   (about 1.8e-14 deg). Use degrees (`360 deg`), or define `pirad` and `turn` with the shipped
    example config, which defines them on `deg` and so keeps them exact:
 
    ```console
-   $ dimvexa convert 2 pi deg --config examples/configs/angle.toml
+   $ dimvexa convert 2 pirad deg --config examples/configs/angle.toml
    360 deg
    $ dimvexa convert 1 turn rad --config examples/configs/angle.toml
    6.283185307179586 rad

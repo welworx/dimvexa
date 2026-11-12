@@ -416,7 +416,8 @@ pub fn run(root: &Path) -> Result<Report, String> {
     }
 
     // ---- constants (ADR-018)
-    let constant_count = check_constants(root, &rows, &constant_vector_tables, &mut errors)?;
+    let constant_count =
+        check_constants(root, &rows, &names, &constant_vector_tables, &mut errors)?;
 
     // ---- derivation chains
     let chain_count = chains::check(&rows, &mut errors);
@@ -456,6 +457,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
 fn check_constants(
     root: &Path,
     rows: &BTreeMap<String, Row>,
+    unit_names: &BTreeMap<String, String>,
     vectors: &[(String, Table)],
     errors: &mut Vec<String>,
 ) -> Result<usize, String> {
@@ -478,6 +480,16 @@ fn check_constants(
                 errors.push(format!(
                     "{at}: the name is not well-formed (a letter, then letters, digits or '_')"
                 ));
+            }
+            // A constant's name is never also a unit's (`h` is the hour), with or without an SI
+            // prefix, so a name in a value is never ambiguous.
+            let is_unit = |n: &str| unit_names.contains_key(n);
+            if is_unit(&name)
+                || dimvexa_core::SI_PREFIXES
+                    .iter()
+                    .any(|p| name.strip_prefix(p.symbol).is_some_and(is_unit))
+            {
+                errors.push(format!("{at}: the name is also a unit"));
             }
             if !names.insert(name.clone()) {
                 errors.push(format!("{at}: defined twice"));
@@ -707,9 +719,9 @@ mod tests {
     #[test]
     fn detects_a_constant_without_a_vector() {
         let e = errors_after("cvec", "vectors/constants.toml", |t| {
-            t.replacen("constant = \"h\"", "constant = \"pi\"", 1)
+            t.replacen("constant = \"h_P\"", "constant = \"pi\"", 1)
         });
-        assert!(has(&e, "constant 'h' has no golden vector"), "{e:?}");
+        assert!(has(&e, "constant 'h_P' has no golden vector"), "{e:?}");
         assert!(has(&e, "constant 'pi' has two vectors"), "{e:?}");
     }
 
@@ -719,6 +731,14 @@ mod tests {
             t.replacen("exactness = \"defined\"", "exactness = \"measured\"", 1)
         });
         assert!(has(&e, "must pin its 'codata' edition"), "{e:?}");
+    }
+
+    #[test]
+    fn detects_a_constant_named_like_a_unit() {
+        let e = errors_after("cname", "constants/si.toml", |t| {
+            t.replacen("name = \"h_P\"", "name = \"h\"", 1)
+        });
+        assert!(has(&e, "the name is also a unit"), "{e:?}");
     }
 
     #[test]

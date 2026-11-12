@@ -50,6 +50,10 @@ Delivered in three steps, each a separate change that can be released and benchm
 Output (confirmed): `--exact` prints both the symbolic fraction (`1/2 pi`) and
 the correctly rounded decimal; `--json` carries both (`exact` and `decimal`).
 
+A constant's name is never also a unit's, so a name in a value (step 3) is unambiguous: the Planck
+constant is `h_P` because `h` is the hour, `load` refuses a constant named like a unit, and
+`validate-data` checks the built-in table.
+
 Confirmed: pi is a built-in constant `pi` in step 2 and is not redefinable by a config
 (a user pi would silently change the meaning of every angle).
 

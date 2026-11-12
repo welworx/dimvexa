@@ -20,7 +20,7 @@ d.convertWith(1, 'ton', 'kg', '', 'us', []);   // 907.18474 (a shipped config re
 d.convertWith(1, 'L', 'kg', '998.2067kg/m3', '', []);  // 0.9982067 (your own density; never assumed)
 d.convertWith(1, 'L', 'kg', 'water_25C', 'water', []); // a density from a loaded config
 d.convertWith(1, 'L', 'kg', 'rho', '', [tomlText]);   // your own config file, passed as TOML text
-d.constants('water', [tomlText]);  // built-in constants (pi, h, e, k_B, N_A), then the configs'
+d.constants('water', [tomlText]);  // built-in constants (pi, h_P, e, k_B, N_A), then the configs'
 
 const c = new d.DimvexaConversion('m/s', 'km/h');   // parse and compose once
 c.apply(10);                               // 36

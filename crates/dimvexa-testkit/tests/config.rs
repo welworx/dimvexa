@@ -780,7 +780,7 @@ fn load_builds_the_constants_and_densities_in_one_place() {
     let reg = registry().unwrap();
     let loaded = dimvexa_config::load(reg.clone(), &[cfg(WATER, "w.toml")], builtin).unwrap();
     let names: Vec<&str> = loaded.constants.iter().map(|c| c.name.as_str()).collect();
-    assert_eq!(names, ["pi", "h", "e", "k_B", "N_A", "water_20C"]);
+    assert_eq!(names, ["pi", "h_P", "e", "k_B", "N_A", "water_20C"]);
     assert_eq!(loaded.densities.len(), 1);
     // A named density, a literal, and the two refusals.
     assert_eq!(

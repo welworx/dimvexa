@@ -82,7 +82,7 @@ Commands:
                    their conditions and sources; a path shows your own file
   constants        list the constants: name, exact value, unit, conditions and
                    source (built in, plus those of any --config)
-  constants NAME   show one constant, for example: dimvexa constants h
+  constants NAME   show one constant, for example: dimvexa constants h_P
   update           replace this binary with the latest GitHub release (needs
                    curl and tar; checks the published SHA-256 first; see
                    docs/adr/015-update-command.md)
@@ -239,8 +239,8 @@ Usage:
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json | --pretty]
 
 A constant is an exact value of a unit with its conditions and source; nothing
-is rounded and nothing is applied unless you ask. The built-in ones (pi, h, e,
-k_B, N_A) cannot be redefined by a config. A config adds its own with
+is rounded and nothing is applied unless you ask. The built-in ones (pi, h_P,
+e, k_B, N_A) cannot be redefined by a config. A config adds its own with
 [[constant]]; a constant of a density unit is what --const uses for mass <->
 volume.
 

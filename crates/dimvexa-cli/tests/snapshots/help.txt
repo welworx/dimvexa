@@ -35,7 +35,7 @@ Commands:
                    their conditions and sources; a path shows your own file
   constants        list the constants: name, exact value, unit, conditions and
                    source (built in, plus those of any --config)
-  constants NAME   show one constant, for example: dimvexa constants h
+  constants NAME   show one constant, for example: dimvexa constants h_P
   update           replace this binary with the latest GitHub release (needs
                    curl and tar; checks the published SHA-256 first; see
                    docs/adr/015-update-command.md)

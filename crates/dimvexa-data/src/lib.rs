@@ -38,7 +38,7 @@ pub use generated::{AMBIGUOUS, CONSTANTS, DATA_HASH, DATA_VERSION, PACKS, UNITS}
 /// The built-in constant called `name`, if there is one (ADR-018).
 ///
 /// ```
-/// let h = dimvexa_data::constant("h").expect("built in");
+/// let h = dimvexa_data::constant("h_P").expect("built in");
 /// assert_eq!(h.unit, "J.s");
 /// assert!(dimvexa_data::constant("nope").is_none());
 /// ```
@@ -79,11 +79,14 @@ mod tests {
     #[test]
     fn constants_load_with_a_source_and_a_unit_that_parses() {
         let reg = registry().unwrap();
-        for name in ["pi", "h", "e", "k_B", "N_A"] {
+        for name in ["pi", "h_P", "e", "k_B", "N_A"] {
             let c = constant(name).unwrap_or_else(|| panic!("{name} missing"));
             assert!(!c.source.is_empty() && !c.conditions.is_empty(), "{name}");
             assert!(c.value().is_ok(), "{name}");
             assert!(reg.parse(c.unit).is_ok(), "{name}: unit {}", c.unit);
+            // A constant's name is never also a unit's (`h` is the hour).
+            let err = reg.parse(c.name).unwrap_err();
+            assert_eq!(err.code(), "unknown_unit", "{name} is also a unit");
         }
     }
 
