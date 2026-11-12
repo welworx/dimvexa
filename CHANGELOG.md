@@ -15,8 +15,8 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Changed
 
-- **Breaking:** `[[density]]` is now a `[[constant]]` of a density unit (`unit = "kg/m3"`, `exactness = "measured"`); `[[density]]` and `[[bridge]]` are refused with a message that says how to write the new entry. Config constants are checked when the config is loaded: an unknown unit is an `invalid_definition` with file and line.
-- **Breaking:** `--const NAME_OR_VALUE` replaces `--density` (and the earlier `--bridge`); both old names are usage errors that point to `--const`. It takes the name of a constant of a density unit or your own number (`998.2067kg/m3`); a constant of another dimension (`h`, `k_B`) is refused, and a constant is never applied silently. The convert JSON (`dimvexa.convert/3`) is unchanged except that the `file` of a number written on the command line is `--const`.
+- **Breaking:** `[[density]]` is now a `[[constant]]` of a density unit (`unit = "kg/m3"`, `exactness = "measured"`); `[[density]]` is no longer a table. Config constants are checked when the config is loaded: an unknown unit is an `invalid_definition` with file and line.
+- **Breaking:** `--const NAME_OR_VALUE` replaces `--density`, which is gone. It takes the name of a constant of a density unit or your own number (`998.2067kg/m3`); a constant of another dimension (`h`, `k_B`) is refused, and a constant is never applied silently. The convert JSON (`dimvexa.convert/3`) is unchanged except that the `file` of a number written on the command line is `--const`.
 - **Breaking:** `dimvexa.configs/2` (new schema file; `/1` stays): the `densities` entries and count are now `constants`, each with `unit`, `exactness`, `codata`, `note`, `file` and `line`. `dimvexa.units/4` is unchanged: its `densities` still lists the constants of a density unit.
 - **Breaking (library):** `dimvexa_config::Constant` is now the general constant and `ConstantKind` is gone; the old density-only type is `Density` (`density_needed`, `conversion`, `density_from_text`).
 

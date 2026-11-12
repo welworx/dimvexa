@@ -208,14 +208,6 @@ impl Config {
                         seen_map = true;
                         section = Section::Map;
                     }
-                    Header::Double("bridge" | "density") => {
-                        return Err(bad(
-                            "the [[bridge]] and [[density]] tables are now [[constant]] (ADR-018, \
-                             dimvexa.configs/2): add unit = \"kg/m3\" (or another density unit) and \
-                             exactness = \"measured\""
-                                .to_string(),
-                        ));
-                    }
                     Header::Double("constant") => {
                         section = Section::Table;
                         pending = Some(Pending::new(TableKind::Constant, line));
@@ -603,8 +595,7 @@ impl Constant {
     ///
     /// # Errors
     ///
-    /// [`Error::Refused`] if the unit is not a density (the constant is then not a bridge
-    /// between mass and volume), the registry's error for an unknown unit, and
+    /// [`Error::Refused`] if the unit is not a density (the constant is then no density), the registry's error for an unknown unit, and
     /// [`Error::Overflow`] if the exact value does not fit.
     pub fn to_density(&self, reg: &Registry) -> Result<Density> {
         if !self.is_density(reg)? {
@@ -1343,12 +1334,8 @@ mod tests {
                 "must start with a letter",
             ),
             (
-                WATER.replace("[[constant]]", "[[bridge]]"),
-                "now [[constant]]",
-            ),
-            (
                 WATER.replace("[[constant]]", "[[density]]"),
-                "now [[constant]]",
+                "unknown section",
             ),
             (
                 WATER.replace("measured", "approximate"),

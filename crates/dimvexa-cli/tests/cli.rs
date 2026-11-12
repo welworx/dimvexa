@@ -2290,35 +2290,16 @@ fn a_density_is_a_name_or_the_callers_own_number() {
 }
 
 #[test]
-fn the_old_bridge_and_profile_options_are_refused_with_the_new_name() {
-    let r = dimvexa(&["convert", "1", "L", "kg", "--bridge", "x"]);
-    assert_eq!(r.code, 2);
-    assert!(r.stderr.contains("replaced by '--const'"), "{}", r.stderr);
-    let r = dimvexa(&["convert", "1", "L", "kg", "--density", "x"]);
-    assert_eq!(r.code, 2);
-    assert!(r.stderr.contains("replaced by '--const'"), "{}", r.stderr);
-    let r = dimvexa(&["convert", "1", "ton", "kg", "--profile", "us"]);
-    assert_eq!(r.code, 2);
-    assert!(
-        r.stderr.contains("unknown option '--profile'"),
-        "{}",
-        r.stderr
-    );
-    // The old table name is refused when the file is loaded.
-    let cfg = config_file(
-        "old_bridge.toml",
-        "[[bridge]]\nname = \"w\"\nkind = \"density\"\nvalue = \"1000\"\nconditions = \"c\"\nsource = \"s\"\n",
-    );
-    let r = dimvexa(&["convert", "1", "L", "kg", "--config", &cfg]);
-    assert_eq!(r.code, 1);
-    // So is [[density]] (ADR-018, dimvexa.configs/2).
-    let cfg = config_file(
-        "old_density.toml",
-        "[[density]]\nname = \"w\"\nvalue = \"1000\"\nconditions = \"c\"\nsource = \"s\"\n",
-    );
-    let r = dimvexa(&["convert", "1", "L", "kg", "--config", &cfg]);
-    assert_eq!(r.code, 1);
-    assert!(r.stderr.contains("now [[constant]]"), "{}", r.stderr);
+fn a_removed_option_is_an_unknown_option() {
+    for old in ["--profile", "--bridge", "--density"] {
+        let r = dimvexa(&["convert", "1", "ton", "kg", old, "us"]);
+        assert_eq!(r.code, 2, "{old}");
+        assert!(
+            r.stderr.contains(&format!("unknown option '{old}'")),
+            "{}",
+            r.stderr
+        );
+    }
 }
 
 #[test]

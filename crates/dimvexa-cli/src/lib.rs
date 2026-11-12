@@ -770,20 +770,10 @@ fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), UsageEr
     let mut it = args.iter();
     while let Some(a) = it.next() {
         let (name, inline) = match a.split_once('=') {
-            Some((n @ ("--config" | "--const" | "--bridge" | "--density"), v)) => {
-                (n, Some(v.to_string()))
-            }
+            Some((n @ ("--config" | "--const"), v)) => (n, Some(v.to_string())),
             _ => (a.as_str(), None),
         };
         match name {
-            "--bridge" | "--density" => {
-                return Err(UsageError {
-                    message: format!(
-                        "'{name}' was replaced by '--const' (ADR-018): use --const NAME_OR_VALUE"
-                    ),
-                    ..missing(name)
-                });
-            }
             "--config" | "--const" => {
                 let value = match inline {
                     Some(v) => v,
