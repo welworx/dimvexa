@@ -126,10 +126,11 @@ on a networked machine.
 
 ## Status of the runners
 
-Latest full run: 2026-11-10, see [`benchmarks/comparison/comparison-run-3.md`](benchmarks/comparison/comparison-run-3.md) (earlier: [run 2](benchmarks/comparison/comparison-run-2.md), [run 1](benchmarks/comparison/comparison-run-1.md)) for
+Latest full run: 2026-11-12, for release 0.5.0, see [`benchmarks/comparison/v0.5.0.md`](benchmarks/comparison/v0.5.0.md) (earlier dated runs:
+[`benchmarks/comparison/history/`](benchmarks/comparison/history/)) for
 the summary, the caveats and the cases where Dimvexa is slower, and
 [`benchmarks/comparison/comparison.md`](benchmarks/comparison/comparison.md) for every table. One run on one shared VM:
-indicative, not a basis for a "fastest" claim.
+indicative; the 0.5.0 run does not support a "fastest" claim (it lists the rows Dimvexa does not win).
 
 | Runner | Run on a networked machine |
 |---|---|

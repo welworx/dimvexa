@@ -2,13 +2,13 @@
 <rect width="900" height="426" fill="#ffffff"/>
 <text x="12" y="24" font-family="sans-serif" font-size="16" font-weight="bold" fill="#1a1a1a">Ambiguous names accepted with a default (lower is safer; a default is a policy choice)</text>
 <text x="12" y="44" font-family="sans-serif" font-size="12" fill="#444444">lower is better</text>
-<text x="322" y="74" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.5.0+9783042-dirty / exact_f64</text>
+<text x="322" y="74" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.5.0+772e31c / exact_f64</text>
 <rect x="330" y="60" width="2.0" height="20" fill="#e8590c"/>
 <text x="338.0" y="74" font-family="sans-serif" font-size="12" fill="#1a1a1a">0 </text>
-<text x="322" y="102" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.5.0+9783042-dirty / fast_f64</text>
+<text x="322" y="102" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.5.0+772e31c / fast_f64</text>
 <rect x="330" y="88" width="2.0" height="20" fill="#e8590c"/>
 <text x="338.0" y="102" font-family="sans-serif" font-size="12" fill="#1a1a1a">0 </text>
-<text x="322" y="130" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.5.0+9783042-dirty / text</text>
+<text x="322" y="130" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa 0.5.0+772e31c / text</text>
 <rect x="330" y="116" width="2.0" height="20" fill="#e8590c"/>
 <text x="338.0" y="130" font-family="sans-serif" font-size="12" fill="#1a1a1a">0 </text>
 <text x="322" y="158" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">dimvexa-py 0.5.0+v19+fnv1a64:4650355d84607807 / plain</text>
