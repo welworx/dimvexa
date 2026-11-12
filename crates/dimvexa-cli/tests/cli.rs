@@ -312,7 +312,15 @@ fn help_examples_run_from_an_empty_directory() {
             .take_while(|l| l.starts_with("  dimvexa "))
             .collect();
         assert!(!section.is_empty(), "no examples in `{page:?}`");
+        assert!(
+            page != ["update", "--help"] || section.len() == 1,
+            "the update page's examples are not run (network): keep it to one"
+        );
         for line in section {
+            // `update` talks to GitHub: the tests build and run offline.
+            if line.starts_with("  dimvexa update") {
+                continue;
+            }
             let args: Vec<&str> = line.split_whitespace().skip(1).collect();
             let out = Command::new(env!("CARGO_BIN_EXE_dimvexa"))
                 .args(&args)
@@ -433,6 +441,63 @@ fn help_and_listings_are_coloured_without_changing_the_text() {
     }
     let json = dimvexa(&["units", "--json", "--color", "always"]).stdout;
     assert!(!json.contains('\x1b'));
+}
+
+/// `--help` beats a mistyped option, the first of `--help` and `--version` wins, and `help`
+/// takes exactly one command.
+#[test]
+fn help_precedence_and_arity() {
+    let overview = dimvexa(&["--help"]).stdout;
+    let r = dimvexa(&["--help", "--bogus"]);
+    assert_eq!((r.code, r.stdout.as_str()), (0, overview.as_str()));
+    assert_eq!(dimvexa(&["--bogus", "--help"]).stdout, overview);
+    assert_eq!(dimvexa(&["--help", "--version"]).stdout, overview);
+    assert!(
+        dimvexa(&["--version", "--help"])
+            .stdout
+            .starts_with("dimvexa 0.")
+    );
+    assert_eq!(dimvexa(&["--bogus"]).code, 2);
+    let r = dimvexa(&["help", "units", "extra"]);
+    assert_eq!(r.code, 2, "{}", r.stdout);
+    assert!(
+        r.stderr.contains("'help' takes one command"),
+        "{}",
+        r.stderr
+    );
+}
+
+/// The labels of a unit's detail view are all painted, including `quantity kind`.
+#[test]
+fn detail_labels_are_all_painted() {
+    let plain = dimvexa(&["units", "psi"]).stdout;
+    let coloured = dimvexa(&["units", "psi", "--color", "always"]).stdout;
+    for line in plain.lines().filter(|l| l.starts_with("  ")) {
+        let label = line[2..16].trim();
+        assert!(
+            coloured.contains(&format!("\x1b[36m{label}\x1b[0m")),
+            "label {label:?} is not painted"
+        );
+    }
+}
+
+/// Text from a user's config that is not ASCII is painted without a panic or a change.
+#[test]
+fn colour_handles_non_ascii_config_text() {
+    let dir = std::env::temp_dir().join(format!("dimvexa-colour-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("ü.toml");
+    std::fs::write(
+        &file,
+        "[[unit]]\nsymbol = \"wä\"\nbase = \"m\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"Quelle — 25 °C --é --«x»\"\n",
+    )
+    .unwrap();
+    let path = file.to_str().unwrap();
+    let plain = dimvexa(&["configs", path]);
+    let coloured = dimvexa(&["configs", path, "--color", "always"]);
+    assert_eq!(plain.code, 0, "{}", plain.stderr);
+    assert_eq!(strip_ansi(&coloured.stdout), plain.stdout);
+    std::fs::remove_dir_all(&dir).unwrap();
 }
 
 /// `--help` stays readable in a default 80-column terminal: no line wraps.

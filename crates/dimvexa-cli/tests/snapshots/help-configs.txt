@@ -22,3 +22,8 @@ Forms:
 
 Options:
   --json           machine-readable output (schema dimvexa.configs/1)
+  --pretty         --json, indented for reading
+  --color WHEN     auto, always or never (see: dimvexa --help)
+
+Exit codes: 0 success, 1 invalid config file, 2 usage error (an unknown config
+name is one).

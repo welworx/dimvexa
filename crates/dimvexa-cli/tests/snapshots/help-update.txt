@@ -13,5 +13,5 @@ Options:
   --check          only report whether a newer release exists
   -y, --yes        do not ask "Update to vX.Y.Z? [y/N]" first
 
-Exit codes: 0 up to date (or updated), 1 error, 2 usage error; --check exits 3
-when a newer release exists.
+Exit codes: 0 up to date, updated, or declined at the prompt; 1 error; 2 usage
+error; --check exits 3 when a newer release exists.

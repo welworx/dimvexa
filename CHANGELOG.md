@@ -17,6 +17,8 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Fixed
 
+- `--help` wins over a mistyped option again (the first of `--help` and `--version` wins), and `help COMMAND` with extra words is a usage error.
+- The `units` and `configs` help pages list `--pretty`, `--color` and the exit codes; the `update` page says a declined update exits 0.
 - The `--help` example `convert 1 bbl_oil L --config oil.toml` failed in any directory but the repository's. Every example in `--help` now works as typed from an empty directory, and a test (`help_examples_run_from_an_empty_directory`) runs each one.
 
 ## [0.5.0] - 2026-11-11

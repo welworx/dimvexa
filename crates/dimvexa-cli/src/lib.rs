@@ -177,8 +177,12 @@ Forms:
 
 Options:
   --json           machine-readable output (schema dimvexa.units/4)
+  --pretty         --json, indented for reading
   --config NAME_OR_PATH
                    include the units and names of a config; repeatable
+  --color WHEN     auto, always or never (see: dimvexa --help)
+
+Exit codes: 0 success, 1 unknown unit or group or invalid config, 2 usage error.
 ";
 
 /// `dimvexa configs --help`.
@@ -207,6 +211,11 @@ Forms:
 
 Options:
   --json           machine-readable output (schema dimvexa.configs/1)
+  --pretty         --json, indented for reading
+  --color WHEN     auto, always or never (see: dimvexa --help)
+
+Exit codes: 0 success, 1 invalid config file, 2 usage error (an unknown config
+name is one).
 ";
 
 /// `dimvexa update --help`.
@@ -226,8 +235,8 @@ Options:
   --check          only report whether a newer release exists
   -y, --yes        do not ask \"Update to vX.Y.Z? [y/N]\" first
 
-Exit codes: 0 up to date (or updated), 1 error, 2 usage error; --check exits 3
-when a newer release exists.
+Exit codes: 0 up to date, updated, or declined at the prompt; 1 error; 2 usage
+error; --check exits 3 when a newer release exists.
 ";
 
 /// Shown after the project facts; the long form is `docs/licensing.md`.
@@ -335,66 +344,80 @@ enum TextKind {
 fn colorize_text(text: &str, kind: TextKind) -> String {
     let mut out = String::with_capacity(text.len().saturating_mul(2));
     for (n, line) in text.split_inclusive('\n').enumerate() {
-        let body = line.trim_end_matches('\n');
-        let nl = &line[body.len()..];
-        let _ = match () {
-            () if kind == TextKind::Help && n == 0 => write!(out, "{BOLD}{body}{RESET}{nl}"),
-            () if body.starts_with("## ") => write!(out, "{BOLD}{body}{RESET}{nl}"),
-            () if body.starts_with("# ") => write!(out, "{DIM}{body}{RESET}{nl}"),
-            () if kind == TextKind::Listing && !body.starts_with(' ') && body.contains('\t') => {
-                let (first, rest) = body.split_once('\t').unwrap_or((body, ""));
-                write!(out, "{CYAN}{first}{RESET}\t{rest}{nl}")
-            }
-            () if kind == TextKind::Listing && n == 0 && !body.is_empty() => {
-                write!(out, "{BOLD}{body}{RESET}{nl}")
-            }
-            () if kind == TextKind::Listing => write!(out, "{}{nl}", paint_label(body)),
-            () => write!(out, "{}{nl}", paint_help_line(body)),
+        let (body, nl) = line.strip_suffix('\n').map_or((line, ""), |b| (b, "\n"));
+        let painted = if kind == TextKind::Help && n == 0 || body.starts_with("## ") {
+            format!("{BOLD}{body}{RESET}")
+        } else if body.starts_with("# ") {
+            format!("{DIM}{body}{RESET}")
+        } else if kind == TextKind::Listing && !body.starts_with(' ') && body.contains('\t') {
+            let (first, rest) = body.split_once('\t').unwrap_or((body, ""));
+            format!("{CYAN}{first}{RESET}\t{rest}")
+        } else if kind == TextKind::Listing && n == 0 && !body.is_empty() {
+            format!("{BOLD}{body}{RESET}")
+        } else if kind == TextKind::Listing {
+            paint_field(body)
+        } else {
+            paint_help_line(body)
         };
+        out.push_str(&painted);
+        out.push_str(nl);
     }
     out
 }
 
-/// `  label   value` (an indented label, two or more spaces, then the value): the label in cyan.
+/// `  label   value` (an indented label, a gap of two or more spaces, then the value): the
+/// label in cyan. A label may hold single spaces (`quantity kind`).
 fn paint_label(body: &str) -> String {
     let trimmed = body.trim_start_matches(' ');
-    let indent = body.len().saturating_sub(trimmed.len());
-    match trimmed.find("  ") {
-        Some(end) if indent > 0 && end > 0 => format!(
-            "{}{CYAN}{}{RESET}{}",
-            &body[..indent],
-            &trimmed[..end],
-            &trimmed[end..]
-        ),
+    let Some((indent, _)) = body.split_at_checked(body.len().saturating_sub(trimmed.len())) else {
+        return body.to_string();
+    };
+    match trimmed
+        .find("  ")
+        .and_then(|end| trimmed.split_at_checked(end))
+    {
+        Some((label, rest)) if !indent.is_empty() && !label.is_empty() => {
+            format!("{indent}{CYAN}{label}{RESET}{rest}")
+        }
         _ => body.to_string(),
+    }
+}
+
+/// `  label         value` of a detail view: the label is the 14-column field after the indent
+/// (`quantity kind` has single spaces inside), painted when it is not blank.
+fn paint_field(body: &str) -> String {
+    let field = body
+        .strip_prefix("  ")
+        .and_then(|rest| rest.split_at_checked(14))
+        .filter(|(label, _)| label.ends_with(' ') && !label.trim().is_empty());
+    match field {
+        Some((label, rest)) => {
+            let name = label.trim_end_matches(' ');
+            let pad = label.get(name.len()..).unwrap_or("");
+            format!("  {CYAN}{name}{RESET}{pad}{rest}")
+        }
+        None => body.to_string(),
     }
 }
 
 /// One line of a help page: a `Heading:` in bold, command and option names in cyan.
 fn paint_help_line(body: &str) -> String {
-    let heading = body
-        .find(':')
-        .filter(|&i| {
-            i > 0
-                && body[..i]
-                    .chars()
-                    .all(|c| c.is_ascii_alphabetic() || c == ' ')
-        })
-        .filter(|_| body.starts_with(|c: char| c.is_ascii_uppercase()));
-    if let Some(i) = heading {
-        let end = i.saturating_add(1);
-        return format!("{BOLD}{}{RESET}{}", &body[..end], &body[end..]);
+    if body.starts_with(|c: char| c.is_ascii_uppercase()) {
+        if let Some((head, rest)) = body.split_once(':') {
+            if head.chars().all(|c| c.is_ascii_alphabetic() || c == ' ') {
+                return format!("{BOLD}{head}:{RESET}{}", paint_options(rest));
+            }
+        }
     }
     // Two-column entries (`  units    list ...`): the left column is the name.
     let two_columns = body.starts_with("  ")
         && !body.starts_with("  dimvexa ")
         && body.trim_start().contains("  ");
-    let painted = if two_columns {
-        paint_label(body)
+    if two_columns {
+        paint_options(&paint_label(body))
     } else {
-        body.to_string()
-    };
-    paint_options(&painted)
+        paint_options(body)
+    }
 }
 
 /// Every word that starts with `--` (not already painted) in cyan.
@@ -404,22 +427,25 @@ fn paint_options(line: &str) -> String {
     }
     let mut out = String::with_capacity(line.len());
     let mut rest = line;
-    while let Some(i) = rest.find("--") {
-        let at_word_start = rest[..i]
+    let mut prev_word_char = false;
+    while let Some((head, tail)) = rest.split_once("--") {
+        out.push_str(head);
+        prev_word_char = head
             .chars()
             .next_back()
-            .is_none_or(|c| !c.is_alphanumeric() && c != '-');
-        let tail = &rest[i..];
+            .map_or(prev_word_char, |c| c.is_alphanumeric() || c == '-');
         let len = tail
             .find(|c: char| !(c.is_ascii_alphanumeric() || c == '-' || c == '_'))
             .unwrap_or(tail.len());
-        out.push_str(&rest[..i]);
-        if at_word_start && len > 2 {
-            let _ = write!(out, "{CYAN}{}{RESET}", &tail[..len]);
+        let (name, after) = tail.split_at_checked(len).unwrap_or((tail, ""));
+        if !prev_word_char && !name.is_empty() {
+            let _ = write!(out, "{CYAN}--{name}{RESET}");
         } else {
-            out.push_str(&tail[..len]);
+            out.push_str("--");
+            out.push_str(name);
         }
-        rest = &tail[len..];
+        prev_word_char = false;
+        rest = after;
     }
     out.push_str(rest);
     out
@@ -841,12 +867,36 @@ fn normalize_convert(words: &[&str]) -> Vec<String> {
     out
 }
 
+/// What `--help`, `--version`, `help COMMAND` or a mistyped option ask for: `Some` when the
+/// command line is answered by a help page or the version, `None` to go on parsing.
+fn info_request(
+    flag: Option<bool>,
+    unknown: Option<String>,
+    positional: &[&str],
+) -> Result<Option<Parsed>, String> {
+    if flag == Some(false) {
+        return Ok(Some(Parsed::Version));
+    }
+    if flag.is_none() {
+        if let Some(message) = unknown {
+            return Err(message);
+        }
+    }
+    if flag == Some(true) || positional.first() == Some(&"help") {
+        return Ok(Some(Parsed::Help(help_topic(positional)?)));
+    }
+    Ok(None)
+}
+
 /// Which help page `--help` or `help COMMAND` asks for: `None` is the overview.
 fn help_topic(positional: &[&str]) -> Result<Option<&'static str>, String> {
     let (is_help_word, words) = match positional.split_first() {
         Some((&"help", rest)) => (true, rest),
         _ => (false, positional),
     };
+    if is_help_word && words.len() > 1 {
+        return Err("'help' takes one command: convert, units, configs or update".to_string());
+    }
     Ok(match words.first().copied() {
         None => None,
         Some("convert") => Some("convert"),
@@ -877,7 +927,8 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     };
     let mut positional: Vec<&str> = Vec::new();
     let (mut exact, mut want_json, mut want_groups) = (false, false, false);
-    let (mut want_check, mut want_yes, mut want_help) = (false, false, false);
+    let (mut want_check, mut want_yes) = (false, false);
+    let (mut want_help, mut unknown) = (None, None::<String>);
     for a in args {
         match a.as_str() {
             "--check" => want_check = true,
@@ -885,15 +936,17 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
             "--exact" => exact = true,
             "--json" => want_json = true,
             "--groups" => want_groups = true,
-            "-h" | "--help" => want_help = true,
-            "-V" | "--version" => return Ok((Parsed::Version, configs)),
-            s if s.starts_with("--") => return Err(usage(format!("unknown option '{s}'"))),
+            "-h" | "--help" => want_help = want_help.or(Some(true)),
+            "-V" | "--version" => want_help = want_help.or(Some(false)),
+            s if s.starts_with("--") => {
+                unknown.get_or_insert_with(|| format!("unknown option '{s}'"));
+            }
             s => positional.push(s),
         }
     }
-    if want_help || positional.first() == Some(&"help") {
-        let topic = help_topic(&positional).map_err(usage)?;
-        return Ok((Parsed::Help(topic), configs));
+    // `--help` or `--version` wins over a mistyped option; the first of the two wins.
+    if let Some(parsed) = info_request(want_help, unknown, &positional).map_err(usage)? {
+        return Ok((parsed, configs));
     }
     if let Some((&"update", rest)) = positional.split_first() {
         check_update_args(
@@ -901,18 +954,14 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
             !configs.is_empty() || opts.density.is_some(),
             schema,
         )?;
-        return Ok((
-            Parsed::Update {
-                check: want_check,
-                yes: want_yes,
-            },
-            configs,
-        ));
+        let update = Parsed::Update {
+            check: want_check,
+            yes: want_yes,
+        };
+        return Ok((update, configs));
     }
     if want_check || want_yes {
-        return Err(usage(
-            "'--check' and '-y' only apply to 'update'".to_string(),
-        ));
+        return Err(usage("'--check' and '-y' only apply to 'update'".into()));
     }
     if let Some((&"units", rest)) = positional.split_first() {
         if exact {
