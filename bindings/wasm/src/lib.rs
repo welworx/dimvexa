@@ -100,7 +100,11 @@ fn load_config(spec: &str) -> Result<Rc<Loaded>, JsValue> {
                 ),
             )
         })?;
-        configs.push(bundled.config().map_err(|e| fail(&e))?);
+        let config = bundled.config().map_err(|e| fail(&e))?;
+        // Same rule as the CLI: a config cannot redefine a built-in constant (ADR-018).
+        let builtin: Vec<&str> = dimvexa::CONSTANTS.iter().map(|c| c.name).collect();
+        dimvexa_config::reject_builtin_constants(&config, &builtin).map_err(|e| fail(&e))?;
+        configs.push(config);
     }
     let mut reg = registry()?.clone();
     dimvexa_config::apply(&mut reg, &configs).map_err(|e| fail(&e))?;
