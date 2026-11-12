@@ -5,6 +5,7 @@
 //! maximum nanoseconds per operation over repeated samples. Nothing here is cached by the
 //! library (plan section 6.2); "prepared" means the caller keeps the `Conversion` handle.
 #![allow(
+    unexpected_cfgs,
     clippy::suboptimal_flops,
     clippy::items_after_statements,
     clippy::unwrap_used,
@@ -29,6 +30,10 @@ use std::io::Write as _;
 use std::time::{Duration, Instant};
 
 use dimvexa::{Conversion, Dim, Quantity, Ratio, Registry, Unit, registry};
+// Values with constants (0.7.0): compiled out, with `--cfg dimvexa_no_value_expr`, for a release
+// that has no `Ratio::parse_expression`; `cargo xtask bench-matrix` sets it (bench_check.rs).
+#[cfg(not(dimvexa_no_value_expr))]
+use dimvexa::CONSTANTS;
 
 struct Row {
     name: String,
@@ -435,6 +440,73 @@ fn main() {
         "prepare + exact apply",
         || black_box(&prod).to_unit(black_box(&kwh)).unwrap(),
     );
+
+    // ---- 5b. reading a value (ADR-018 step 3). The first two rows exist in every release: they
+    // are the old path (`Registry::quantity` reads a plain number), so they show whether it moved.
+    b.run(
+        "Registry::quantity(`1.1`) (plain number, no unit)",
+        1,
+        "the number reader alone",
+        || reg.quantity(black_box("1.1")).unwrap(),
+    );
+    b.run(
+        "Registry::quantity(`1.1 kW`) (number + unit)",
+        1,
+        "number, then a cold unit parse",
+        || reg.quantity(black_box("1.1 kW")).unwrap(),
+    );
+    #[cfg(not(dimvexa_no_value_expr))]
+    {
+        b.run(
+            "Ratio::parse_expression(`1.1`) (plain number)",
+            1,
+            "the same value as the first row, through the expression grammar",
+            || Ratio::parse_expression(black_box("1.1"), CONSTANTS).unwrap(),
+        );
+        for (text, note) in [
+            ("4 pi", "a constant by juxtaposition"),
+            ("pi/2", "a quotient"),
+            ("1/(2*pi)", "parentheses, a quotient and a product"),
+            ("2*pi^2", "an integer power"),
+        ] {
+            b.run(
+                &format!("Ratio::parse_expression(`{text}`)"),
+                1,
+                note,
+                || Ratio::parse_expression(black_box(text), CONSTANTS).unwrap(),
+            );
+        }
+        b.run(
+            "Registry::quantity_with(`1.1 kW`)",
+            1,
+            "as Registry::quantity, through the expression grammar",
+            || reg.quantity_with(black_box("1.1 kW"), CONSTANTS).unwrap(),
+        );
+        b.run(
+            "Registry::quantity_with(`2 pi rad`)",
+            1,
+            "a value with pi, then a unit",
+            || reg.quantity_with(black_box("2 pi rad"), CONSTANTS).unwrap(),
+        );
+        let rad_deg = reg.conversion("rad", "deg").unwrap();
+        let four_pi = Ratio::parse_expression("4 pi", CONSTANTS).unwrap();
+        b.run(
+            "apply_exact (Ratio, 4 pi rad -> deg)",
+            1,
+            "pi cancels: exactly 720",
+            || rad_deg.apply_exact(black_box(four_pi)).unwrap(),
+        );
+        b.run(
+            "one-shot `4 pi` rad -> deg (parse value, prepare, exact, f64)",
+            1,
+            "what `dimvexa convert 4pi rad deg` does",
+            || {
+                let v = Ratio::parse_expression(black_box("4 pi"), CONSTANTS).unwrap();
+                let c = reg.conversion(black_box("rad"), black_box("deg")).unwrap();
+                c.apply_exact(v).unwrap().to_f64().unwrap()
+            },
+        );
+    }
 
     // ---- 6. registry lookup with 10 and 10,000 units
     for &n in &[10_usize, 10_000] {
