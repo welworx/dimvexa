@@ -5,6 +5,22 @@ All notable changes are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Release notes are generated from Conventional
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
+## [0.5.1] - 2026-11-12
+### Changed
+
+- `dimvexa --help` is reorganised to fit 80 columns: usage, one-line description, examples, commands, options, then precision and exit codes. A usage error now prints only the short usage and a pointer to `--help` instead of the whole help. `--help` and `--version` show the website (https://dimvexa.com, the package `homepage`) instead of the repository.
+
+### Added
+
+- Colour in help pages and in `units` and `configs` text output (headings bold, command and option names cyan, column headers dim), with the same rules as before (`--color`, `NO_COLOR`, `CLICOLOR_FORCE`, never in JSON). The guide has a Colour section.
+- Per-command help: `dimvexa convert|units|configs|update --help` and `dimvexa help COMMAND` (also `dimvexa 10 m km --help`). `dimvexa help NAME` for an unknown name is a usage error. `AGENTS.md` and the `api-change` skill now require the help to be updated with every CLI change.
+
+### Fixed
+
+- `--help` wins over a mistyped option again (the first of `--help` and `--version` wins), and `help COMMAND` with extra words is a usage error.
+- The `units` and `configs` help pages list `--pretty`, `--color` and the exit codes; the `update` page says a declined update exits 0.
+- The `--help` example `convert 1 bbl_oil L --config oil.toml` failed in any directory but the repository's. Every example in `--help` now works as typed from an empty directory, and a test (`help_examples_run_from_an_empty_directory`) runs each one.
+
 ## [0.5.0] - 2026-11-11
 ### Added
 

@@ -32,74 +32,220 @@ use dimvexa_config::{Config, ConfigUnit, Constant, Mapping};
 
 mod update;
 
+/// The usage lines: what a usage error shows, and the top of `--help`.
 const USAGE: &str = "\
 Usage:
-  dimvexa convert VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
-  dimvexa VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
-  dimvexa units [--groups | GROUP | UNIT] [--json] [--config NAME_OR_PATH]...
+  dimvexa [convert] VALUE FROM TO [OPTIONS]
+  dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa update [--check] [-y]
 
-Converts VALUE from unit FROM to unit TO.
+Run 'dimvexa --help' for commands, options and examples.
+";
 
-Commands:
-  units            list the supported units grouped by quantity, and the ambiguous symbols
-                   that are refused
-  units --groups   list only the groups (length, mass, volume, ...) with their sizes
-  units GROUP      list one group, for example: dimvexa units volume
-  units UNIT       show the details of one unit, for example: dimvexa units psi
-  configs          list the configs that ship with dimvexa (us, gb, ...)
-  configs NAME     show what one config contains: names, units and densities with their
-                   conditions and sources; a path shows your own file
-  update           replace this binary with the latest GitHub release (needs curl and tar;
-                   checks the published SHA-256 first; see docs/adr/015-update-command.md)
-  update --check   only report whether a newer release exists; exit 0 up to date, 3 newer
-                   release available, 1 error
-  update -y        do not ask \"Update to vX.Y.Z? [y/N]\" first (also --yes)
+/// The body of `--help`, after the usage lines. Every line is at most 80 columns, and every
+/// command under `Examples:` is run by a test in an empty directory, so it must work as typed.
+const HELP: &str = "\
+Usage:
+  dimvexa [convert] VALUE FROM TO [OPTIONS]
+  dimvexa units [--groups | GROUP | UNIT] [--json]
+  dimvexa configs [NAME_OR_PATH] [--json]
+  dimvexa update [--check] [-y]
 
-Options:
-  --exact      print the exact result and its decimal: a fraction, with pi or a power of ten when
-               the value has one (`1/2 pi = 1.5707963267948966`); a whole number is printed once
-  --json       machine-readable output (schema dimvexa.convert/3; dimvexa.units/4 for units,
-               dimvexa.configs/1 for configs)
-  --color WHEN auto (default: a terminal, unless NO_COLOR is set), always (also
-               CLICOLOR_FORCE=1) or never; JSON is never coloured
-  --pretty     --json, indented for reading (same fields, same order)
-  --config NAME_OR_PATH  (beta) apply a config (repeatable, later ones win; see
-               docs/adr/014-one-config-mechanism.md). A shipped one is named (us, gb,
-               metric-trade, year-julian, year-civil, water); a file has a path (./mine.toml,
-               or anything with a / or ending in .toml). Without --config the names stay strict
-  --density NAME_OR_VALUE  use a density for mass <-> volume: a name from a loaded config, for
-               example --config water --density water_25C, or your own number, for example
-               --density 998.2067kg/m3. The assumption is printed with the result
-  --version    print version and data table version
-  -h, --help   print this help
+Converts VALUE from unit FROM to unit TO. Ambiguous input is an error.
+Run 'dimvexa COMMAND --help' (convert, units, configs, update) for details.
 
 Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
-  dimvexa convert 100 degC degF --pretty
   dimvexa convert 1 ton kg --config us
-  dimvexa convert 1 mt kg --config metric-trade
   dimvexa convert 1 L kg --config water --density water_25C
   dimvexa convert 1 L kg --density 998.2067kg/m3
-  dimvexa convert 1 bbl_oil L --config oil.toml
+  dimvexa units volume
+  dimvexa units psi
+  dimvexa configs water
 
-Precision: the CLI always uses the exact path, so the number printed is the exact result
-rounded once to the nearest f64 (0 ulp). The library's fast f64 path is within 1 ulp (linear
-units) or 2 ulp (temperature scales such as degC and degF) of it; see docs/precision.md.
+Commands:
+  convert          convert VALUE from FROM to TO ('convert' may be left out)
+  units            list the units by quantity, and the ambiguous symbols refused
+  units --groups   list only the groups (length, mass, volume, ...) and sizes
+  units GROUP      list one group, for example: dimvexa units volume
+  units UNIT       show one unit in detail, for example: dimvexa units psi
+  configs          list the configs that ship with dimvexa (us, gb, water, ...)
+  configs NAME     show what a config contains: names, units, densities with
+                   their conditions and sources; a path shows your own file
+  update           replace this binary with the latest GitHub release (needs
+                   curl and tar; checks the published SHA-256 first; see
+                   docs/adr/015-update-command.md)
+  update --check   only report whether a newer release exists; exit 0 up to
+                   date, 3 newer release available, 1 error
+  update -y        do not ask \"Update to vX.Y.Z? [y/N]\" first (also --yes)
 
-Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error; `update --check`
-also exits 3 when a newer release exists.
+Options:
+  --exact          print the exact result and its decimal: a fraction, with pi
+                   or a power of ten when the value has one
+                   (1/2 pi = 1.5707963267948966)
+  --json           machine-readable output (schemas dimvexa.convert/3,
+                   dimvexa.units/4, dimvexa.configs/1)
+  --pretty         --json, indented for reading (same fields, same order)
+  --color WHEN     auto (default: a terminal, unless NO_COLOR is set), always
+                   (also CLICOLOR_FORCE=1) or never; JSON is never coloured
+  --config NAME_OR_PATH
+                   (beta) apply a config; repeatable, later ones win. A shipped
+                   one is named (us, gb, metric-trade, year-julian, year-civil,
+                   water); a file has a path (./mine.toml, or anything with a /
+                   or ending in .toml). Without --config the names stay strict.
+                   See docs/adr/014-one-config-mechanism.md
+  --density NAME_OR_VALUE
+                   density for mass <-> volume: a name from a loaded config
+                   (--config water --density water_25C) or your own number
+                   (--density 998.2067kg/m3). The assumption is printed
+  --version        print the version and the data table version
+  -h, --help       print this help
+
+Precision: the CLI always uses the exact path, so the printed number is the
+exact result rounded once to the nearest f64 (0 ulp). The library's fast f64
+path is within 1 ulp (linear units) or 2 ulp (temperature scales such as degC
+and degF) of it; see docs/precision.md.
+
+Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error;
+`update --check` also exits 3 when a newer release exists.
+";
+
+/// `dimvexa convert --help`. Examples are run by a test, like those of `HELP`.
+const HELP_CONVERT: &str = "\
+dimvexa convert - convert a value from one unit to another
+
+Usage:
+  dimvexa [convert] VALUE FROM TO [--exact] [--json | --pretty]
+      [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
+
+VALUE is a number; FROM and TO are units or unit expressions (m/s, kW.h, psi).
+Units of different quantities, or an ambiguous symbol, are an error.
+
+Examples:
+  dimvexa convert 10 m/s km/h
+  dimvexa convert 1 psi Pa --exact
+  dimvexa convert 100 degC degF --json
+  dimvexa convert 1 ton kg --config us
+  dimvexa convert 1 L kg --config water --density water_25C
+  dimvexa convert 1 L kg --density 998.2067kg/m3
+
+Options:
+  --exact          print the exact result and its decimal: a fraction, with pi
+                   or a power of ten when the value has one
+                   (1/2 pi = 1.5707963267948966)
+  --json           machine-readable output (schema dimvexa.convert/3)
+  --pretty         --json, indented for reading
+  --config NAME_OR_PATH
+                   (beta) apply a config; repeatable, later ones win. A shipped
+                   one is named (us, gb, metric-trade, year-julian, year-civil,
+                   water); a file has a path (./mine.toml, or anything with a /
+                   or ending in .toml). See: dimvexa configs --help
+  --density NAME_OR_VALUE
+                   density for mass <-> volume: a name from a loaded config
+                   (--config water --density water_25C) or your own number
+                   (--density 998.2067kg/m3). The assumption is printed
+  --color WHEN     auto, always or never (see: dimvexa --help)
+
+Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
+";
+
+/// `dimvexa units --help`.
+const HELP_UNITS: &str = "\
+dimvexa units - list the supported units and show one in detail
+
+Usage:
+  dimvexa units [--groups | GROUP | UNIT] [--json | --pretty]
+      [--config NAME_OR_PATH]...
+
+Examples:
+  dimvexa units
+  dimvexa units --groups
+  dimvexa units volume
+  dimvexa units psi
+  dimvexa units km --json
+
+Forms:
+  units            every unit by quantity, then the ambiguous symbols that are
+                   refused
+  units --groups   only the groups (length, mass, volume, ...) with their sizes
+  units GROUP      one group
+  units UNIT       one unit: id, symbol, name, factor, exactness, sources; a
+                   prefixed unit (km) is named from its parts
+
+Options:
+  --json           machine-readable output (schema dimvexa.units/4)
+  --pretty         --json, indented for reading
+  --config NAME_OR_PATH
+                   include the units and names of a config; repeatable
+  --color WHEN     auto, always or never (see: dimvexa --help)
+
+Exit codes: 0 success, 1 unknown unit or group or invalid config, 2 usage error.
+";
+
+/// `dimvexa configs --help`.
+const HELP_CONFIGS: &str = "\
+dimvexa configs - list the shipped configs and show what one contains
+
+Usage:
+  dimvexa configs [NAME_OR_PATH] [--json | --pretty]
+
+A config adds names, units and densities to the strict default tables; apply one
+to a conversion with --config. A density (the mass <-> volume constant) comes
+only from a config or your own number; use it with --density.
+
+Examples:
+  dimvexa configs
+  dimvexa configs water
+  dimvexa configs us --json
+
+Forms:
+  configs          the configs that ship with dimvexa (us, gb, metric-trade,
+                   year-julian, year-civil, water)
+  configs NAME     its names, units, and densities with their conditions and
+                   sources
+  configs PATH     the same for your own file (./mine.toml, or a name with a /
+                   or ending in .toml)
+
+Options:
+  --json           machine-readable output (schema dimvexa.configs/1)
+  --pretty         --json, indented for reading
+  --color WHEN     auto, always or never (see: dimvexa --help)
+
+Exit codes: 0 success, 1 invalid config file, 2 usage error (an unknown config
+name is one).
+";
+
+/// `dimvexa update --help`.
+const HELP_UPDATE: &str = "\
+dimvexa update - replace this binary with the latest GitHub release
+
+Usage:
+  dimvexa update [--check] [-y]
+
+Needs curl and tar. Checks the published SHA-256 of the download before it
+replaces anything (see docs/adr/015-update-command.md).
+
+Examples:
+  dimvexa update --check
+
+Options:
+  --check          only report whether a newer release exists
+  -y, --yes        do not ask \"Update to vX.Y.Z? [y/N]\" first
+
+Exit codes: 0 up to date, updated, or declined at the prompt; 1 error; 2 usage
+error; --check exits 3 when a newer release exists.
 ";
 
 /// Shown after the project facts; the long form is `docs/licensing.md`.
 const DISCLAIMER: &str = "\
-Provided as is, without warranty. Unit factors and sources can contain errors: verify any
-result you depend on against the primary source, and do not use it as the only safeguard in
-safety-critical, medical, legal, financial or custody-transfer settings. Independent project,
-not affiliated with other unit libraries. Terms: LICENSE-MIT and LICENSE-APACHE.";
+Provided as is, without warranty. Unit factors and sources can contain errors:
+verify any result you depend on against the primary source, and do not use it as
+the only safeguard in safety-critical, medical, legal, financial or
+custody-transfer settings. Independent project, not affiliated with other unit
+libraries. Terms: LICENSE-MIT and LICENSE-APACHE.";
 
 /// The value of `--color`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -140,17 +286,27 @@ fn take_color_option(args: &mut Vec<String>) -> Result<Option<ColorWhen>, String
 /// Name, version, tagline and where the project lives, from the package metadata.
 fn about() -> String {
     format!(
-        "License:    {}\nAuthors:    {}\nRepository: {}\n\n{DISCLAIMER}\n",
+        "License:    {}\nAuthors:    {}\nWebsite:    {}\n\n{DISCLAIMER}\n",
         env!("CARGO_PKG_LICENSE"),
         env!("CARGO_PKG_AUTHORS"),
-        env!("CARGO_PKG_REPOSITORY")
+        env!("CARGO_PKG_HOMEPAGE")
     )
+}
+
+/// The text of `dimvexa COMMAND --help`.
+fn command_help(topic: &str) -> &'static str {
+    match topic {
+        "units" => HELP_UNITS,
+        "configs" => HELP_CONFIGS,
+        "update" => HELP_UPDATE,
+        _ => HELP_CONVERT,
+    }
 }
 
 /// The text of `--help`: a title line, the usage, and the project facts.
 fn help_text() -> String {
     format!(
-        "dimvexa {} - Exact factors. Loud failures. Zero guessing.\n\n{USAGE}\n{}",
+        "dimvexa {} - Exact factors. Loud failures. Zero guessing.\n\n{HELP}\n{}",
         env!("CARGO_PKG_VERSION"),
         about()
     )
@@ -170,7 +326,147 @@ const BOLD_GREEN: &str = "\x1b[1;32m";
 const CYAN: &str = "\x1b[36m";
 const BOLD_RED: &str = "\x1b[1;31m";
 const YELLOW: &str = "\x1b[33m";
+const BOLD: &str = "\x1b[1m";
+const DIM: &str = "\x1b[2m";
 const RESET: &str = "\x1b[0m";
+
+/// Which text `colorize_text` is painting.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum TextKind {
+    /// A help page: headings, command and option names.
+    Help,
+    /// `units` and `configs` output: section and column headers, first columns, labels.
+    Listing,
+}
+
+/// Paints the plain text of a help page or a listing. Colour only wraps text, so removing the
+/// escape sequences gives back the plain text exactly (a test checks that).
+fn colorize_text(text: &str, kind: TextKind) -> String {
+    let mut out = String::with_capacity(text.len().saturating_mul(2));
+    for (n, line) in text.split_inclusive('\n').enumerate() {
+        let (body, nl) = line.strip_suffix('\n').map_or((line, ""), |b| (b, "\n"));
+        let painted = if kind == TextKind::Help && n == 0 || body.starts_with("## ") {
+            format!("{BOLD}{body}{RESET}")
+        } else if body.starts_with("# ") {
+            format!("{DIM}{body}{RESET}")
+        } else if kind == TextKind::Listing && !body.starts_with(' ') && body.contains('\t') {
+            let (first, rest) = body.split_once('\t').unwrap_or((body, ""));
+            format!("{CYAN}{first}{RESET}\t{rest}")
+        } else if kind == TextKind::Listing && n == 0 && !body.is_empty() {
+            format!("{BOLD}{body}{RESET}")
+        } else if kind == TextKind::Listing {
+            paint_field(body)
+        } else {
+            paint_help_line(body)
+        };
+        out.push_str(&painted);
+        out.push_str(nl);
+    }
+    out
+}
+
+/// `  label   value` (an indented label, a gap of two or more spaces, then the value): the
+/// label in cyan. A label may hold single spaces (`quantity kind`).
+fn paint_label(body: &str) -> String {
+    let trimmed = body.trim_start_matches(' ');
+    let Some((indent, _)) = body.split_at_checked(body.len().saturating_sub(trimmed.len())) else {
+        return body.to_string();
+    };
+    match trimmed
+        .find("  ")
+        .and_then(|end| trimmed.split_at_checked(end))
+    {
+        Some((label, rest)) if !indent.is_empty() && !label.is_empty() => {
+            format!("{indent}{CYAN}{label}{RESET}{rest}")
+        }
+        _ => body.to_string(),
+    }
+}
+
+/// `  label         value` of a detail view: the label is the 14-column field after the indent
+/// (`quantity kind` has single spaces inside), painted when it is not blank.
+fn paint_field(body: &str) -> String {
+    let field = body
+        .strip_prefix("  ")
+        .and_then(|rest| rest.split_at_checked(14))
+        .filter(|(label, _)| label.ends_with(' ') && !label.trim().is_empty());
+    match field {
+        Some((label, rest)) => {
+            let name = label.trim_end_matches(' ');
+            let pad = label.get(name.len()..).unwrap_or("");
+            format!("  {CYAN}{name}{RESET}{pad}{rest}")
+        }
+        None => body.to_string(),
+    }
+}
+
+/// One line of a help page: a `Heading:` in bold, command and option names in cyan.
+fn paint_help_line(body: &str) -> String {
+    if body.starts_with(|c: char| c.is_ascii_uppercase()) {
+        if let Some((head, rest)) = body.split_once(':') {
+            if head.chars().all(|c| c.is_ascii_alphabetic() || c == ' ') {
+                return format!("{BOLD}{head}:{RESET}{}", paint_options(rest));
+            }
+        }
+    }
+    // Two-column entries (`  units    list ...`): the left column is the name.
+    let two_columns = body.starts_with("  ")
+        && !body.starts_with("  dimvexa ")
+        && body.trim_start().contains("  ");
+    if two_columns {
+        paint_options(&paint_label(body))
+    } else {
+        paint_options(body)
+    }
+}
+
+/// Every word that starts with `--` (not already painted) in cyan.
+fn paint_options(line: &str) -> String {
+    if line.contains('\x1b') {
+        return line.to_string();
+    }
+    let mut out = String::with_capacity(line.len());
+    let mut rest = line;
+    let mut prev_word_char = false;
+    while let Some((head, tail)) = rest.split_once("--") {
+        out.push_str(head);
+        prev_word_char = head
+            .chars()
+            .next_back()
+            .map_or(prev_word_char, |c| c.is_alphanumeric() || c == '-');
+        let len = tail
+            .find(|c: char| !(c.is_ascii_alphanumeric() || c == '-' || c == '_'))
+            .unwrap_or(tail.len());
+        let (name, after) = tail.split_at_checked(len).unwrap_or((tail, ""));
+        if !prev_word_char && !name.is_empty() {
+            let _ = write!(out, "{CYAN}--{name}{RESET}");
+        } else {
+            out.push_str("--");
+            out.push_str(name);
+        }
+        prev_word_char = false;
+        rest = after;
+    }
+    out.push_str(rest);
+    out
+}
+
+/// Writes what `f` prints to `out`, painted as `kind` when `color` is on and the output is text.
+fn paint_with(
+    color: bool,
+    kind: TextKind,
+    out: &mut dyn Write,
+    f: impl FnOnce(&mut dyn Write) -> u8,
+) -> u8 {
+    if !color {
+        return f(out);
+    }
+    let mut buffered = Vec::new();
+    let code = f(&mut buffered);
+    let text = String::from_utf8_lossy(&buffered);
+    let _ = write!(out, "{}", colorize_text(&text, kind));
+    code
+}
 
 /// Colours the leading label of `error[..]:`, `hint:` and `note:` lines.
 fn colorize_diagnostics(text: &str) -> String {
@@ -374,7 +670,8 @@ enum Parsed {
         check: bool,
         yes: bool,
     },
-    Help,
+    /// `--help`, or `help COMMAND`, or `COMMAND --help`; `None` is the overview.
+    Help(Option<&'static str>),
     Version,
 }
 
@@ -570,6 +867,52 @@ fn normalize_convert(words: &[&str]) -> Vec<String> {
     out
 }
 
+/// What `--help`, `--version`, `help COMMAND` or a mistyped option ask for: `Some` when the
+/// command line is answered by a help page or the version, `None` to go on parsing.
+fn info_request(
+    flag: Option<bool>,
+    unknown: Option<String>,
+    positional: &[&str],
+) -> Result<Option<Parsed>, String> {
+    if flag == Some(false) {
+        return Ok(Some(Parsed::Version));
+    }
+    if flag.is_none() {
+        if let Some(message) = unknown {
+            return Err(message);
+        }
+    }
+    if flag == Some(true) || positional.first() == Some(&"help") {
+        return Ok(Some(Parsed::Help(help_topic(positional)?)));
+    }
+    Ok(None)
+}
+
+/// Which help page `--help` or `help COMMAND` asks for: `None` is the overview.
+fn help_topic(positional: &[&str]) -> Result<Option<&'static str>, String> {
+    let (is_help_word, words) = match positional.split_first() {
+        Some((&"help", rest)) => (true, rest),
+        _ => (false, positional),
+    };
+    if is_help_word && words.len() > 1 {
+        return Err("'help' takes one command: convert, units, configs or update".to_string());
+    }
+    Ok(match words.first().copied() {
+        None => None,
+        Some("convert") => Some("convert"),
+        Some("units") => Some("units"),
+        Some("configs") => Some("configs"),
+        Some("update") => Some("update"),
+        // `dimvexa 10 m km --help`: help for the conversion that was being typed.
+        Some(_) if !is_help_word => Some("convert"),
+        Some(other) => {
+            return Err(format!(
+                "no help for '{other}'; commands: convert, units, configs, update"
+            ));
+        }
+    })
+}
+
 fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     let (opts, args) = split_options(all)?;
     let configs = opts.configs;
@@ -585,6 +928,7 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     let mut positional: Vec<&str> = Vec::new();
     let (mut exact, mut want_json, mut want_groups) = (false, false, false);
     let (mut want_check, mut want_yes) = (false, false);
+    let (mut want_help, mut unknown) = (None, None::<String>);
     for a in args {
         match a.as_str() {
             "--check" => want_check = true,
@@ -592,11 +936,17 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
             "--exact" => exact = true,
             "--json" => want_json = true,
             "--groups" => want_groups = true,
-            "-h" | "--help" => return Ok((Parsed::Help, configs)),
-            "-V" | "--version" => return Ok((Parsed::Version, configs)),
-            s if s.starts_with("--") => return Err(usage(format!("unknown option '{s}'"))),
+            "-h" | "--help" => want_help = want_help.or(Some(true)),
+            "-V" | "--version" => want_help = want_help.or(Some(false)),
+            s if s.starts_with("--") => {
+                unknown.get_or_insert_with(|| format!("unknown option '{s}'"));
+            }
             s => positional.push(s),
         }
+    }
+    // `--help` or `--version` wins over a mistyped option; the first of the two wins.
+    if let Some(parsed) = info_request(want_help, unknown, &positional).map_err(usage)? {
+        return Ok((parsed, configs));
     }
     if let Some((&"update", rest)) = positional.split_first() {
         check_update_args(
@@ -604,18 +954,14 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
             !configs.is_empty() || opts.density.is_some(),
             schema,
         )?;
-        return Ok((
-            Parsed::Update {
-                check: want_check,
-                yes: want_yes,
-            },
-            configs,
-        ));
+        let update = Parsed::Update {
+            check: want_check,
+            yes: want_yes,
+        };
+        return Ok((update, configs));
     }
     if want_check || want_yes {
-        return Err(usage(
-            "'--check' and '-y' only apply to 'update'".to_string(),
-        ));
+        return Err(usage("'--check' and '-y' only apply to 'update'".into()));
     }
     if let Some((&"units", rest)) = positional.split_first() {
         if exact {
@@ -1970,9 +2316,12 @@ where
         Err(u) => return report_usage_error(&u, out, err),
     };
     let args = match parsed {
-        Parsed::Help => {
-            let _ = write!(out, "{}", help_text());
-            return 0;
+        Parsed::Help(topic) => {
+            let text = topic.map_or_else(help_text, |t| command_help(t).to_string());
+            return paint_with(color.out, TextKind::Help, out, |o| {
+                let _ = write!(o, "{text}");
+                0
+            });
         }
         Parsed::Version => {
             let _ = writeln!(
@@ -1986,10 +2335,14 @@ where
             return 0;
         }
         Parsed::Units { target, json } => {
-            return run_units(&target, &config_files, json, out, err);
+            return paint_with(color.out && !json, TextKind::Listing, out, |o| {
+                run_units(&target, &config_files, json, o, err)
+            });
         }
         Parsed::Configs { target, json } => {
-            return run_configs(target.as_deref(), json, out, err);
+            return paint_with(color.out && !json, TextKind::Listing, out, |o| {
+                run_configs(target.as_deref(), json, o, err)
+            });
         }
         Parsed::Update { check, yes } => return update::run(check, yes, out, err),
         Parsed::Convert(a) => a,

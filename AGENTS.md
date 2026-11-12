@@ -92,6 +92,14 @@ Read the matching skill in `.claude/skills/<name>/SKILL.md` before the task.
 * Keep error codes stable (`Error::ALL_CODES`); adding a field to the JSON schema is allowed
   within the current schema version (`dimvexa.convert/3`, `dimvexa.units/4`, `dimvexa.configs/1`);
   removing or renaming one needs a new version (ADR-014 did that for `/2`).
+* The CLI help is part of the interface. A new or changed command, option, config, JSON schema,
+  exit code or error behaviour updates, in the same change: the overview (`HELP`) and the page
+  of that command (`HELP_CONVERT`, `HELP_UNITS`, `HELP_CONFIGS`, `HELP_UPDATE`) in
+  `crates/dimvexa-cli/src/lib.rs`, its `Examples:` and `docs/guide.md`. A new command also needs a
+  page, an entry in `HELP_PAGES` in `crates/dimvexa-cli/tests/cli.rs` and a line in the overview.
+  Help lines stay within 80 columns and every example must run as typed from an empty
+  directory (tests enforce both); colour wraps text only (`colorize_text`) and a test checks that
+  stripping it gives the plain text; regenerate the `help*.txt` snapshots and read the diff.
 * Update `CHANGELOG.md` for user-visible changes and the relevant ADR or doc for a decision.
 * A breaking change (a renamed JSON field, a changed public item) is allowed while the crate is
   0.x, but it needs the `api-change` skill: new schema version and file, CHANGELOG `Changed`,

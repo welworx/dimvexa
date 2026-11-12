@@ -287,6 +287,240 @@ fn error_snapshots() {
     snapshot("errors.txt", &text);
 }
 
+/// The help pages: the overview and one per command, by every spelling that reaches them.
+const HELP_PAGES: [&[&str]; 5] = [
+    &["--help"],
+    &["convert", "--help"],
+    &["units", "--help"],
+    &["configs", "--help"],
+    &["update", "--help"],
+];
+
+/// Every command in the `Examples:` section of every help page works as typed, from any
+/// directory: a reader copies it into a terminal in whatever folder they are in. It must exit
+/// 0 and print something, so an example that needs a file of the repository cannot slip in.
+#[test]
+fn help_examples_run_from_an_empty_directory() {
+    let dir = std::env::temp_dir().join(format!("dimvexa-help-examples-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    for page in HELP_PAGES {
+        let help = dimvexa(page).stdout;
+        let section: Vec<&str> = help
+            .lines()
+            .skip_while(|l| *l != "Examples:")
+            .skip(1)
+            .take_while(|l| l.starts_with("  dimvexa "))
+            .collect();
+        assert!(!section.is_empty(), "no examples in `{page:?}`");
+        assert!(
+            page != ["update", "--help"] || section.len() == 1,
+            "the update page's examples are not run (network): keep it to one"
+        );
+        for line in section {
+            // `update` talks to GitHub: the tests build and run offline.
+            if line.starts_with("  dimvexa update") {
+                continue;
+            }
+            let args: Vec<&str> = line.split_whitespace().skip(1).collect();
+            let out = Command::new(env!("CARGO_BIN_EXE_dimvexa"))
+                .args(&args)
+                .current_dir(&dir)
+                .output()
+                .unwrap();
+            assert_eq!(
+                out.status.code(),
+                Some(0),
+                "help example `{line}` failed: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
+            assert!(
+                !out.stdout.is_empty(),
+                "help example `{line}` printed nothing"
+            );
+        }
+    }
+    std::fs::remove_dir_all(&dir).unwrap();
+}
+
+/// `dimvexa help COMMAND`, `COMMAND --help` and `--help COMMAND` show the same page, which is
+/// not the overview; an unknown topic is a usage error.
+#[test]
+fn per_command_help() {
+    let overview = dimvexa(&["--help"]).stdout;
+    for cmd in ["convert", "units", "configs", "update"] {
+        let page = dimvexa(&[cmd, "--help"]);
+        assert_eq!(page.code, 0, "{cmd}");
+        assert!(
+            page.stdout.starts_with(&format!("dimvexa {cmd} - ")),
+            "{cmd}"
+        );
+        assert_ne!(page.stdout, overview, "{cmd}");
+        assert_eq!(dimvexa(&["help", cmd]).stdout, page.stdout, "{cmd}");
+        assert_eq!(dimvexa(&["--help", cmd]).stdout, page.stdout, "{cmd}");
+        assert!(
+            overview.contains(&format!("  {cmd} ")),
+            "overview lacks {cmd}"
+        );
+        snapshot(&format!("help-{cmd}.txt"), &page.stdout);
+    }
+    assert_eq!(
+        dimvexa(&["10", "m", "km", "--help"]).stdout,
+        dimvexa(&["convert", "--help"]).stdout
+    );
+    assert_eq!(dimvexa(&["help"]).stdout, overview);
+    let r = dimvexa(&["help", "frobnicate"]);
+    assert_eq!(r.code, 2, "{}", r.stderr);
+    assert!(
+        r.stderr.contains("no help for 'frobnicate'"),
+        "{}",
+        r.stderr
+    );
+}
+
+fn strip_ansi(s: &str) -> String {
+    let mut out = String::new();
+    let mut chars = s.chars();
+    while let Some(c) = chars.next() {
+        if c == '\x1b' {
+            for d in chars.by_ref() {
+                if d == 'm' {
+                    break;
+                }
+            }
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
+/// Colour only wraps text: help pages and listings painted with `--color always` read back as
+/// the plain text once the escapes are removed, headings and names are actually painted, and
+/// `--color never`, JSON and a pipe carry no escape.
+#[test]
+fn help_and_listings_are_coloured_without_changing_the_text() {
+    let pages: &[&[&str]] = &[
+        &["--help"],
+        &["convert", "--help"],
+        &["units", "--help"],
+        &["configs", "--help"],
+        &["update", "--help"],
+        &["units"],
+        &["units", "--groups"],
+        &["units", "psi"],
+        &["configs"],
+        &["configs", "water"],
+    ];
+    for page in pages {
+        let plain = dimvexa(page);
+        assert!(
+            !plain.stdout.contains('\x1b'),
+            "{page:?}: piped output has colour"
+        );
+        let mut with: Vec<&str> = page.to_vec();
+        with.extend(["--color", "always"]);
+        let coloured = dimvexa(&with);
+        assert_eq!(coloured.code, plain.code, "{page:?}");
+        assert!(
+            coloured.stdout.contains("\x1b["),
+            "{page:?}: nothing painted"
+        );
+        assert_eq!(strip_ansi(&coloured.stdout), plain.stdout, "{page:?}");
+        with.truncate(page.len());
+        with.extend(["--color", "never"]);
+        assert!(!dimvexa(&with).stdout.contains('\x1b'), "{page:?}");
+    }
+    let help = dimvexa(&["--help", "--color", "always"]).stdout;
+    for painted in [
+        "\x1b[1mUsage:\x1b[0m",
+        "\x1b[1mExamples:\x1b[0m",
+        "\x1b[36munits\x1b[0m",
+        "\x1b[36m--exact\x1b[0m",
+    ] {
+        assert!(help.contains(painted), "missing {painted:?}");
+    }
+    let json = dimvexa(&["units", "--json", "--color", "always"]).stdout;
+    assert!(!json.contains('\x1b'));
+}
+
+/// `--help` beats a mistyped option, the first of `--help` and `--version` wins, and `help`
+/// takes exactly one command.
+#[test]
+fn help_precedence_and_arity() {
+    let overview = dimvexa(&["--help"]).stdout;
+    let r = dimvexa(&["--help", "--bogus"]);
+    assert_eq!((r.code, r.stdout.as_str()), (0, overview.as_str()));
+    assert_eq!(dimvexa(&["--bogus", "--help"]).stdout, overview);
+    assert_eq!(dimvexa(&["--help", "--version"]).stdout, overview);
+    assert!(
+        dimvexa(&["--version", "--help"])
+            .stdout
+            .starts_with("dimvexa 0.")
+    );
+    assert_eq!(dimvexa(&["--bogus"]).code, 2);
+    let r = dimvexa(&["help", "units", "extra"]);
+    assert_eq!(r.code, 2, "{}", r.stdout);
+    assert!(
+        r.stderr.contains("'help' takes one command"),
+        "{}",
+        r.stderr
+    );
+}
+
+/// The labels of a unit's detail view are all painted, including `quantity kind`.
+#[test]
+fn detail_labels_are_all_painted() {
+    let plain = dimvexa(&["units", "psi"]).stdout;
+    let coloured = dimvexa(&["units", "psi", "--color", "always"]).stdout;
+    for line in plain.lines().filter(|l| l.starts_with("  ")) {
+        let label = line[2..16].trim();
+        assert!(
+            coloured.contains(&format!("\x1b[36m{label}\x1b[0m")),
+            "label {label:?} is not painted"
+        );
+    }
+}
+
+/// Text from a user's config that is not ASCII is painted without a panic or a change.
+#[test]
+fn colour_handles_non_ascii_config_text() {
+    let dir = std::env::temp_dir().join(format!("dimvexa-colour-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("ü.toml");
+    std::fs::write(
+        &file,
+        "[[unit]]\nsymbol = \"wä\"\nbase = \"m\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"Quelle — 25 °C --é --«x»\"\n",
+    )
+    .unwrap();
+    let path = file.to_str().unwrap();
+    let plain = dimvexa(&["configs", path]);
+    let coloured = dimvexa(&["configs", path, "--color", "always"]);
+    assert_eq!(plain.code, 0, "{}", plain.stderr);
+    assert_eq!(strip_ansi(&coloured.stdout), plain.stdout);
+    std::fs::remove_dir_all(&dir).unwrap();
+}
+
+/// `--help` stays readable in a default 80-column terminal: no line wraps.
+#[test]
+fn help_lines_fit_80_columns() {
+    for page in HELP_PAGES {
+        let help = dimvexa(page).stdout;
+        for line in help.lines() {
+            assert!(
+                line.chars().count() <= 80,
+                "too wide ({}): {line}",
+                line.chars().count()
+            );
+        }
+    }
+    let usage_error = dimvexa(&["convert", "1", "m", "--bogus"]);
+    assert!(
+        usage_error.stderr.lines().count() < 20,
+        "{}",
+        usage_error.stderr
+    );
+}
+
 #[test]
 fn help_and_version() {
     let r = dimvexa(&["--help"]);
@@ -305,10 +539,7 @@ fn help_and_version() {
         "{}",
         r.stdout
     );
-    assert!(
-        r.stdout
-            .contains("Repository: https://github.com/welworx/dimvexa")
-    );
+    assert!(r.stdout.contains("Website:    https://dimvexa.com"));
     assert_eq!(r.code, 0);
     assert!(
         r.stdout

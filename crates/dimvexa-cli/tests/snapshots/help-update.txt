@@ -1,0 +1,17 @@
+dimvexa update - replace this binary with the latest GitHub release
+
+Usage:
+  dimvexa update [--check] [-y]
+
+Needs curl and tar. Checks the published SHA-256 of the download before it
+replaces anything (see docs/adr/015-update-command.md).
+
+Examples:
+  dimvexa update --check
+
+Options:
+  --check          only report whether a newer release exists
+  -y, --yes        do not ask "Update to vX.Y.Z? [y/N]" first
+
+Exit codes: 0 up to date, updated, or declined at the prompt; 1 error; 2 usage
+error; --check exits 3 when a newer release exists.
