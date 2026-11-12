@@ -2783,3 +2783,48 @@ fn a_config_density_is_measured_and_a_plain_number() {
         );
     }
 }
+
+/// Replacing an entry of an earlier config is reported in the JSON too, so a script sees it.
+#[test]
+fn json_output_lists_what_a_later_config_replaced() {
+    let cfg = config_file(
+        "json_override_water.toml",
+        "[[constant]]\nname = \"water_25C\"\nvalue = \"1000\"\nunit = \"kg/m3\"\nexactness = \"measured\"\nconditions = \"mine\"\nsource = \"mine\"\n",
+    );
+    let twice = ["--config", "water", "--config", &cfg];
+    for args in [
+        [
+            &["convert", "1", "L", "kg", "--json", "--const", "water_25C"][..],
+            &twice,
+        ]
+        .concat(),
+        [&["units", "--json"][..], &twice].concat(),
+        [&["units", "m", "--json"][..], &twice].concat(),
+        [&["constants", "--json"][..], &twice].concat(),
+    ] {
+        let r = dimvexa(&args);
+        assert_eq!(r.code, 0, "{args:?}: {}", r.stderr);
+        let v = json::parse(&r.stdout).unwrap();
+        let w = v.get("warnings").unwrap().as_array();
+        assert_eq!(w.len(), 1, "{args:?}: {}", r.stdout);
+        assert!(
+            w[0].as_str().contains("constant 'water_25C'")
+                && w[0]
+                    .as_str()
+                    .contains("replaces the one from bundled:water:7"),
+            "{}",
+            w[0].as_str()
+        );
+    }
+    // Nothing replaced: an empty array, never absent.
+    let r = dimvexa(&["constants", "--json"]);
+    assert_eq!(
+        json::parse(&r.stdout)
+            .unwrap()
+            .get("warnings")
+            .unwrap()
+            .as_array()
+            .len(),
+        0
+    );
+}

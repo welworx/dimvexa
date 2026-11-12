@@ -1260,6 +1260,13 @@ fn load(config_specs: &[String]) -> Result<Loaded, LoadError> {
     Ok(Loaded { lib: l, configs })
 }
 
+/// The JSON array of the warnings (`[]` when there are none), so a script sees what a later
+/// config replaced.
+fn warnings_json(warnings: &[String]) -> String {
+    let items: Vec<String> = warnings.iter().map(|w| json_string(w)).collect();
+    format!("[{}]", items.join(","))
+}
+
 /// Prints one `warning:` line per entry a later config replaced from an earlier one, on stderr
 /// (replacing is allowed, never silent).
 fn print_warnings(loaded: &Loaded, err: &mut dyn Write) {
@@ -1307,6 +1314,8 @@ fn configs_json(configs: &[(String, String)]) -> String {
 struct Outcome<'a> {
     args: &'a Args,
     configs: &'a [(String, String)],
+    /// What a later config replaced from an earlier one.
+    warnings: &'a [String],
     /// The density the conversion went through, if it needed one.
     density: Option<&'a Density>,
     from: UnitExpr,
@@ -1338,6 +1347,7 @@ fn compute<'a>(
     Ok(Outcome {
         args,
         configs: &loaded.configs,
+        warnings: &loaded.lib.warnings,
         density: used,
         from,
         to,
@@ -1451,7 +1461,7 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
 \"output\":{{\"value\":{},\"unit\":{},\"f64\":{},\"truncated\":{}}},\
 \"exact\":{{\"value\":{},\"decimal\":{},\"factor\":{},\"offset\":{}}},\
 \"exactness\":{},\"dimension\":[{}],\"kind\":{},\"quantity_kind\":{},\
-\"packs\":[{}],\"data_version\":{},\"sources\":[{}],\"config\":{},\"density\":{}}}",
+\"packs\":[{}],\"data_version\":{},\"sources\":[{}],\"config\":{},\"density\":{},\"warnings\":{}}}",
         json_string(&schema_id("convert")),
         json_string(&o.args.value),
         json_string(&o.from.to_string()),
@@ -1472,6 +1482,7 @@ fn render_json(o: &Outcome<'_>) -> Result<String, Error> {
         sources.join(","),
         configs_json(o.configs),
         o.density.map_or_else(|| "null".to_string(), density_json),
+        warnings_json(o.warnings),
     ))
 }
 
@@ -1759,7 +1770,7 @@ fn units_json(
         |g| json_string(&g.to_ascii_lowercase()),
     );
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"group\":{},\"groups\":[{}],\"units\":[{}],\"ambiguous\":[{}],\"config\":{},\"mappings\":[{}],\"densities\":[{}]}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"group\":{},\"groups\":[{}],\"units\":[{}],\"ambiguous\":[{}],\"config\":{},\"mappings\":[{}],\"densities\":[{}],\"warnings\":{}}}",
         json_string(&schema_id("units")),
         json_string(&dimvexa::data_version()),
         group,
@@ -1774,7 +1785,8 @@ fn units_json(
             .iter()
             .map(density_json)
             .collect::<Vec<_>>()
-            .join(",")
+            .join(","),
+        warnings_json(&loaded.lib.warnings),
     )
 }
 
@@ -1950,7 +1962,7 @@ fn detail_text(d: &Detail) -> String {
     s
 }
 
-fn detail_json(d: &Detail) -> String {
+fn detail_json(d: &Detail, warnings: &[String]) -> String {
     let list = |v: &[String]| {
         v.iter()
             .map(|x| json_string(x))
@@ -1960,7 +1972,7 @@ fn detail_json(d: &Detail) -> String {
     let opt = |v: Option<&str>| v.map_or_else(|| "null".to_string(), json_string);
     let dims: Vec<String> = d.dim.exponents().iter().map(ToString::to_string).collect();
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"id\":{},\"symbol\":{},\"name\":{},\"prefix\":{},\"base\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"conditions\":{},\"note\":{},\"origin\":{},\"mapping\":{}}}}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"id\":{},\"symbol\":{},\"name\":{},\"prefix\":{},\"base\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"conditions\":{},\"note\":{},\"origin\":{},\"mapping\":{}}},\"warnings\":{}}}",
         json_string(&schema_id("units")),
         json_string(&dimvexa::data_version()),
         json_string(&d.id),
@@ -2010,6 +2022,7 @@ fn detail_json(d: &Detail) -> String {
                 )
             },
         ),
+        warnings_json(warnings),
     )
 }
 
@@ -2062,7 +2075,7 @@ fn run_units(
                 return match unit_detail(reg, &loaded.lib.units, &loaded.lib.mappings, q) {
                     Ok(d) => {
                         let text = if json {
-                            detail_json(&d)
+                            detail_json(&d, &loaded.lib.warnings)
                         } else {
                             detail_text(&d)
                         };
@@ -2327,11 +2340,12 @@ fn run_constants(
         let items: Vec<String> = shown.iter().map(|c| constant_json(c)).collect();
         let _ = writeln!(
             out,
-            "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"constants\":[{}],\"config\":{}}}",
+            "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"constants\":[{}],\"config\":{},\"warnings\":{}}}",
             json_string(&schema_id("constants")),
             json_string(&dimvexa::data_version()),
             items.join(","),
-            configs_json(&loaded.configs)
+            configs_json(&loaded.configs),
+            warnings_json(&loaded.lib.warnings),
         );
     } else {
         let _ = writeln!(

@@ -202,7 +202,7 @@ and source. `oz` stays refused in `us` and `gb` because it means a mass or a vol
 `--config` can be repeated and a later config overrides an earlier one, so
 `--config us --config ./mine.toml` starts from the US names and adds yours. Replacing is allowed
 but never silent: every name, unit or constant that replaces one of an earlier config prints
-`warning: constant 'water_25C' (./mine.toml:3) replaces the one from bundled:water:7` on stderr.
+`warning: constant 'water_25C' (./mine.toml:3) replaces the one from bundled:water:7` on stderr, and in `--json` output as a `warnings` array (empty when nothing was replaced).
 The built-in constants (`pi`, `h`, ...) and the units of the table cannot be replaced.
 
 Your own file is the same format:
