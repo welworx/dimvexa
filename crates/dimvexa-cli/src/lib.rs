@@ -32,74 +32,93 @@ use dimvexa_config::{Config, ConfigUnit, Constant, Mapping};
 
 mod update;
 
+/// The usage lines: what a usage error shows, and the top of `--help`.
 const USAGE: &str = "\
 Usage:
-  dimvexa convert VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
-  dimvexa VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--density NAME_OR_VALUE]
-  dimvexa units [--groups | GROUP | UNIT] [--json] [--config NAME_OR_PATH]...
+  dimvexa [convert] VALUE FROM TO [OPTIONS]
+  dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa update [--check] [-y]
 
-Converts VALUE from unit FROM to unit TO.
+Run 'dimvexa --help' for commands, options and examples.
+";
 
-Commands:
-  units            list the supported units grouped by quantity, and the ambiguous symbols
-                   that are refused
-  units --groups   list only the groups (length, mass, volume, ...) with their sizes
-  units GROUP      list one group, for example: dimvexa units volume
-  units UNIT       show the details of one unit, for example: dimvexa units psi
-  configs          list the configs that ship with dimvexa (us, gb, ...)
-  configs NAME     show what one config contains: names, units and densities with their
-                   conditions and sources; a path shows your own file
-  update           replace this binary with the latest GitHub release (needs curl and tar;
-                   checks the published SHA-256 first; see docs/adr/015-update-command.md)
-  update --check   only report whether a newer release exists; exit 0 up to date, 3 newer
-                   release available, 1 error
-  update -y        do not ask \"Update to vX.Y.Z? [y/N]\" first (also --yes)
+/// The body of `--help`, after the usage lines. Every line is at most 80 columns, and every
+/// command under `Examples:` is run by a test in an empty directory, so it must work as typed.
+const HELP: &str = "\
+Usage:
+  dimvexa [convert] VALUE FROM TO [OPTIONS]
+  dimvexa units [--groups | GROUP | UNIT] [--json]
+  dimvexa configs [NAME_OR_PATH] [--json]
+  dimvexa update [--check] [-y]
 
-Options:
-  --exact      print the exact result and its decimal: a fraction, with pi or a power of ten when
-               the value has one (`1/2 pi = 1.5707963267948966`); a whole number is printed once
-  --json       machine-readable output (schema dimvexa.convert/3; dimvexa.units/4 for units,
-               dimvexa.configs/1 for configs)
-  --color WHEN auto (default: a terminal, unless NO_COLOR is set), always (also
-               CLICOLOR_FORCE=1) or never; JSON is never coloured
-  --pretty     --json, indented for reading (same fields, same order)
-  --config NAME_OR_PATH  (beta) apply a config (repeatable, later ones win; see
-               docs/adr/014-one-config-mechanism.md). A shipped one is named (us, gb,
-               metric-trade, year-julian, year-civil, water); a file has a path (./mine.toml,
-               or anything with a / or ending in .toml). Without --config the names stay strict
-  --density NAME_OR_VALUE  use a density for mass <-> volume: a name from a loaded config, for
-               example --config water --density water_25C, or your own number, for example
-               --density 998.2067kg/m3. The assumption is printed with the result
-  --version    print version and data table version
-  -h, --help   print this help
+Converts VALUE from unit FROM to unit TO. Ambiguous input is an error.
 
 Examples:
   dimvexa convert 10 m/s km/h
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 100 degC degF --json
-  dimvexa convert 100 degC degF --pretty
   dimvexa convert 1 ton kg --config us
-  dimvexa convert 1 mt kg --config metric-trade
   dimvexa convert 1 L kg --config water --density water_25C
   dimvexa convert 1 L kg --density 998.2067kg/m3
-  dimvexa convert 1 bbl_oil L --config oil.toml
+  dimvexa units volume
+  dimvexa units psi
+  dimvexa configs water
 
-Precision: the CLI always uses the exact path, so the number printed is the exact result
-rounded once to the nearest f64 (0 ulp). The library's fast f64 path is within 1 ulp (linear
-units) or 2 ulp (temperature scales such as degC and degF) of it; see docs/precision.md.
+Commands:
+  convert          convert VALUE from FROM to TO ('convert' may be left out)
+  units            list the units by quantity, and the ambiguous symbols refused
+  units --groups   list only the groups (length, mass, volume, ...) and sizes
+  units GROUP      list one group, for example: dimvexa units volume
+  units UNIT       show one unit in detail, for example: dimvexa units psi
+  configs          list the configs that ship with dimvexa (us, gb, water, ...)
+  configs NAME     show what a config contains: names, units, densities with
+                   their conditions and sources; a path shows your own file
+  update           replace this binary with the latest GitHub release (needs
+                   curl and tar; checks the published SHA-256 first; see
+                   docs/adr/015-update-command.md)
+  update --check   only report whether a newer release exists; exit 0 up to
+                   date, 3 newer release available, 1 error
+  update -y        do not ask \"Update to vX.Y.Z? [y/N]\" first (also --yes)
 
-Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error; `update --check`
-also exits 3 when a newer release exists.
+Options:
+  --exact          print the exact result and its decimal: a fraction, with pi
+                   or a power of ten when the value has one
+                   (1/2 pi = 1.5707963267948966)
+  --json           machine-readable output (schemas dimvexa.convert/3,
+                   dimvexa.units/4, dimvexa.configs/1)
+  --pretty         --json, indented for reading (same fields, same order)
+  --color WHEN     auto (default: a terminal, unless NO_COLOR is set), always
+                   (also CLICOLOR_FORCE=1) or never; JSON is never coloured
+  --config NAME_OR_PATH
+                   (beta) apply a config; repeatable, later ones win. A shipped
+                   one is named (us, gb, metric-trade, year-julian, year-civil,
+                   water); a file has a path (./mine.toml, or anything with a /
+                   or ending in .toml). Without --config the names stay strict.
+                   See docs/adr/014-one-config-mechanism.md
+  --density NAME_OR_VALUE
+                   density for mass <-> volume: a name from a loaded config
+                   (--config water --density water_25C) or your own number
+                   (--density 998.2067kg/m3). The assumption is printed
+  --version        print the version and the data table version
+  -h, --help       print this help
+
+Precision: the CLI always uses the exact path, so the printed number is the
+exact result rounded once to the nearest f64 (0 ulp). The library's fast f64
+path is within 1 ulp (linear units) or 2 ulp (temperature scales such as degC
+and degF) of it; see docs/precision.md.
+
+Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error;
+`update --check` also exits 3 when a newer release exists.
 ";
 
 /// Shown after the project facts; the long form is `docs/licensing.md`.
 const DISCLAIMER: &str = "\
-Provided as is, without warranty. Unit factors and sources can contain errors: verify any
-result you depend on against the primary source, and do not use it as the only safeguard in
-safety-critical, medical, legal, financial or custody-transfer settings. Independent project,
-not affiliated with other unit libraries. Terms: LICENSE-MIT and LICENSE-APACHE.";
+Provided as is, without warranty. Unit factors and sources can contain errors:
+verify any result you depend on against the primary source, and do not use it as
+the only safeguard in safety-critical, medical, legal, financial or
+custody-transfer settings. Independent project, not affiliated with other unit
+libraries. Terms: LICENSE-MIT and LICENSE-APACHE.";
 
 /// The value of `--color`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -140,17 +159,17 @@ fn take_color_option(args: &mut Vec<String>) -> Result<Option<ColorWhen>, String
 /// Name, version, tagline and where the project lives, from the package metadata.
 fn about() -> String {
     format!(
-        "License:    {}\nAuthors:    {}\nRepository: {}\n\n{DISCLAIMER}\n",
+        "License:    {}\nAuthors:    {}\nWebsite:    {}\n\n{DISCLAIMER}\n",
         env!("CARGO_PKG_LICENSE"),
         env!("CARGO_PKG_AUTHORS"),
-        env!("CARGO_PKG_REPOSITORY")
+        env!("CARGO_PKG_HOMEPAGE")
     )
 }
 
 /// The text of `--help`: a title line, the usage, and the project facts.
 fn help_text() -> String {
     format!(
-        "dimvexa {} - Exact factors. Loud failures. Zero guessing.\n\n{USAGE}\n{}",
+        "dimvexa {} - Exact factors. Loud failures. Zero guessing.\n\n{HELP}\n{}",
         env!("CARGO_PKG_VERSION"),
         about()
     )

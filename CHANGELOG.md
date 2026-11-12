@@ -5,6 +5,15 @@ All notable changes are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Release notes are generated from Conventional
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
+## [Unreleased]
+### Changed
+
+- `dimvexa --help` is reorganised to fit 80 columns: usage, one-line description, examples, commands, options, then precision and exit codes. A usage error now prints only the short usage and a pointer to `--help` instead of the whole help. `--help` and `--version` show the website (https://dimvexa.com, the package `homepage`) instead of the repository.
+
+### Fixed
+
+- The `--help` example `convert 1 bbl_oil L --config oil.toml` failed in any directory but the repository's. Every example in `--help` now works as typed from an empty directory, and a test (`help_examples_run_from_an_empty_directory`) runs each one.
+
 ## [0.5.0] - 2026-11-11
 ### Added
 

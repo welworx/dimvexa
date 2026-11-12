@@ -287,6 +287,61 @@ fn error_snapshots() {
     snapshot("errors.txt", &text);
 }
 
+/// Every command in the `Examples:` section of `--help` works as typed, from any directory:
+/// a reader copies it into a terminal in whatever folder they are in. It must exit 0 and
+/// print something, so an example that needs a file of the repository cannot slip in.
+#[test]
+fn help_examples_run_from_an_empty_directory() {
+    let help = dimvexa(&["--help"]).stdout;
+    let section: Vec<&str> = help
+        .lines()
+        .skip_while(|l| *l != "Examples:")
+        .skip(1)
+        .take_while(|l| l.starts_with("  dimvexa "))
+        .collect();
+    assert!(section.len() >= 5, "no examples found in --help");
+    let dir = std::env::temp_dir().join(format!("dimvexa-help-examples-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    for line in section {
+        let args: Vec<&str> = line.split_whitespace().skip(1).collect();
+        let out = Command::new(env!("CARGO_BIN_EXE_dimvexa"))
+            .args(&args)
+            .current_dir(&dir)
+            .output()
+            .unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(0),
+            "help example `{line}` failed: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        assert!(
+            !out.stdout.is_empty(),
+            "help example `{line}` printed nothing"
+        );
+    }
+    std::fs::remove_dir_all(&dir).unwrap();
+}
+
+/// `--help` stays readable in a default 80-column terminal: no line wraps.
+#[test]
+fn help_lines_fit_80_columns() {
+    let help = dimvexa(&["--help"]).stdout;
+    for line in help.lines() {
+        assert!(
+            line.chars().count() <= 80,
+            "too wide ({}): {line}",
+            line.chars().count()
+        );
+    }
+    let usage_error = dimvexa(&["convert", "1", "m", "--bogus"]);
+    assert!(
+        usage_error.stderr.lines().count() < 20,
+        "{}",
+        usage_error.stderr
+    );
+}
+
 #[test]
 fn help_and_version() {
     let r = dimvexa(&["--help"]);
@@ -305,10 +360,7 @@ fn help_and_version() {
         "{}",
         r.stdout
     );
-    assert!(
-        r.stdout
-            .contains("Repository: https://github.com/welworx/dimvexa")
-    );
+    assert!(r.stdout.contains("Website:    https://dimvexa.com"));
     assert_eq!(r.code, 0);
     assert!(
         r.stdout
