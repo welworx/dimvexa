@@ -214,7 +214,7 @@ def dimvexa_symbols():
         if p.name == "ambiguous.toml":
             continue
         for u in load_toml(p).get("unit", []):
-            syms.append(u["symbol"])
+            syms.append(u["id"])
     return syms
 
 
@@ -224,11 +224,18 @@ def build():
 
     # 1. Dimvexa golden vectors (origin "dimvexa-vector").
     n_checked = 0
+    n_irrational = 0
     for p in sorted((DATA / "vectors").glob("*.toml")):
         for i, v in enumerate(load_toml(p).get("vector", []), 1):
             cid = f"dv-{p.stem}-{i:03d}"
-            value = Fraction(v["value"])
-            expect = Fraction(v["expect"])
+            try:
+                value = Fraction(v["value"])
+                expect = Fraction(v["expect"])
+            except ValueError:
+                # Since 0.5.0 a vector may expect an irrational number ("pi", "180 pi^-1"). The corpus
+                # holds exact rationals only, so these are not cases; they are counted in the manifest.
+                n_irrational += 1
+                continue
             tol = Fraction(v["rel_tol"]) if "rel_tol" in v else None
             try:
                 truth = oracle.convert(value, v["from"], v["to"])
@@ -328,7 +335,8 @@ def build():
         "counts": {"must_convert": len(cases), "must_convert_independent": n_independent, "must_convert_approximate": len(approx),
                    "must_refuse": len(refuse), "coverage_lists": len(lists),
                    "coverage_units": sum(len(l["units"]) for l in lists),
-                   "dimvexa_vectors_cross_checked_by_oracle": n_checked},
+                   "dimvexa_vectors_cross_checked_by_oracle": n_checked,
+                   "dimvexa_vectors_skipped_irrational": n_irrational},
         "files": {k: hashlib.sha256(b.encode()).hexdigest() for k, b in sorted(blobs.items())},
     }
     # corpus_id: hash over all file hashes, quoted in every result file.

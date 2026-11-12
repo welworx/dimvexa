@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""Runner for unyt. Run in the first comparison (docs/benchmarks/comparison/comparison-run-1.md).
+"""Runner for unyt. Run in the first comparison (docs/benchmarks/comparison/history/comparison-run-1.md).
 
 Modes: "plain" is `unyt_quantity(x, from).to(to).value` (array: `unyt_array`); "to_value" uses
 `.to_value(unit)`; "factor" uses `Unit.get_conversion_factor` (linear conversions only: unyt

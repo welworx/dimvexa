@@ -16,7 +16,13 @@ Own-performance numbers: one report per released version in [`docs/benchmarks/`]
    loops and NumPy/`memcpy` are shown as ceilings, never as competitors.
 4. **No cherry-picking.** Every corpus case, every conversion and every batch size is reported,
    including those where Dimvexa loses or fails.
-5. **Maintainers may review their runner.** Open a *Benchmark runner review* issue; corrections
+5. **One comparison per release.** Every release has its own hand-written comparison,
+   `docs/benchmarks/comparison/vX.Y.Z.md`, written from one full `benchmarks/run_all.sh` run made on a
+   clean checkout of that release's commit. `run_all.sh` refuses a full run unless every competitor
+   version equals its lockfile (`benchmarks/tools/check_versions.py`, run again on the results before
+   they are published). A release-time claim about another library links to that file. The files in
+   `comparison/history/` are earlier dated runs, kept as records; they are not updated.
+6. **Maintainers may review their runner.** Open a *Benchmark runner review* issue; corrections
    are applied before publication. Draft requests for each runner:
    [`benchmarks/comparison/runner-review-requests.md`](benchmarks/comparison/runner-review-requests.md) (not yet posted).
 
@@ -120,10 +126,11 @@ on a networked machine.
 
 ## Status of the runners
 
-Latest full run: 2026-11-10, see [`benchmarks/comparison/comparison-run-3.md`](benchmarks/comparison/comparison-run-3.md) (earlier: [run 2](benchmarks/comparison/comparison-run-2.md), [run 1](benchmarks/comparison/comparison-run-1.md)) for
+Latest full run: 2026-11-12, for release 0.5.0, see [`benchmarks/comparison/v0.5.0.md`](benchmarks/comparison/v0.5.0.md) (earlier dated runs:
+[`benchmarks/comparison/history/`](benchmarks/comparison/history/)) for
 the summary, the caveats and the cases where Dimvexa is slower, and
 [`benchmarks/comparison/comparison.md`](benchmarks/comparison/comparison.md) for every table. One run on one shared VM:
-indicative, not a basis for a "fastest" claim.
+indicative; the 0.5.0 run does not support a "fastest" claim (it lists the rows Dimvexa does not win).
 
 | Runner | Run on a networked machine |
 |---|---|

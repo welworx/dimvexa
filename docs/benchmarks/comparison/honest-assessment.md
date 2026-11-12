@@ -21,7 +21,7 @@ benchmark publication: it does not replace `comparison.md` and does not license 
 > `Nm3` and `scf`. The statements below that these units are missing, that 9 hand-written cases
 > are unsupported, that "24 of 30" refusals carry the intended reason, and the coverage gaps for
 > `psig`, `barg`, `Nm3`, `scf` and `bbl` are **superseded**: see
-> [`comparison-run-3.md`](comparison-run-3.md) (242 of 242 must-convert cases correct, 0 wrong,
+> [`history/comparison-run-3.md`](history/comparison-run-3.md) (242 of 242 must-convert cases correct, 0 wrong,
 > 25 of 27 refusals with the intended code). Still true: `inHg`, `mH2O` and `wt%` are not
 > supported (the lists below that also name `kgf/cm2`, `cP` and `cSt` as unsupported predate
 > later unit additions: those three convert today), the stated limits of the machine, and every competitor number that was not
@@ -176,7 +176,7 @@ Reading it honestly:
   dominates. These are real but mostly say "native library versus Python library".
 * **Where it is not faster:** large batches. The fast path equals a plain multiply loop and
   NumPy-backed libraries reach the same memory-bound rate (0.57 versus 0.59 to 0.9 ns/value). There
-  is no batch differentiator and the repo's own `comparison-run-1.md` says so.
+  is no batch differentiator and the repo's own `history/comparison-run-1.md` says so.
 * **Where it is much slower:** the exact path, 90 to 500 ns per scalar and about 550 ns per batch
   value, 600 to 900 times slower than NumPy-backed batch conversion and 190 to 1,200 times slower
   than its own fast path. The only way to use the "exact" selling point at volume is slow. About

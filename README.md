@@ -97,6 +97,11 @@ READMEs in [`bindings/`](bindings); an Excel add-in is an early spike ([docs](do
 
 ## Benchmarked against
 
+**The aim is to be the most accurate and the fastest unit-conversion library.** That is the goal
+every release is measured against, not a claim: what Dimvexa does and does not achieve is stated
+only by the dated comparison of each release (see [`docs/benchmarking.md`](docs/benchmarking.md)),
+including the rows where another library wins.
+
 [uom](https://github.com/iliekturtles/uom) (Rust), [Pint](https://github.com/hgrecco/pint),
 [Astropy](https://github.com/astropy/astropy) and [unyt](https://github.com/yt-project/unyt)
 (Python), [math.js](https://github.com/josdejong/mathjs),

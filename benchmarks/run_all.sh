@@ -28,13 +28,11 @@ venv=benchmarks/python/.venv
 
 python3 -I benchmarks/tools/gen_corpus.py --check
 
-# The result files record which lockfiles were used; they say "unknown" when one is missing.
-lock="unknown"
-if [ -f benchmarks/python/requirements.lock.txt ] && [ -f benchmarks/node/package-lock.json ] \
-   && [ -f benchmarks/runners/rust-uom/Cargo.lock ] && [ -f benchmarks/runners/dimvexa-rs/Cargo.lock ]; then
-  lock="requirements.lock.txt+package-lock.json+Cargo.lock"
-fi
-export DIMVEXA_BENCH_LOCK="$lock"
+# Library versions: the label "pinned" in the result files is only ever set after
+# benchmarks/tools/check_versions.py has compared what is installed with the lockfiles (it is run
+# again on the result files at the end). A missing lockfile or a mismatch stops a full run; a
+# --quick run goes on and is labelled "unlocked".
+export DIMVEXA_BENCH_LOCK="unlocked"
 
 if [ "$install" = yes ]; then
   [ -d "$venv" ] || python3 -m venv "$venv"
@@ -50,6 +48,15 @@ if [ "$install" = yes ]; then
     echo "warning: no package-lock.json, Node versions are unlocked" >&2
     (cd benchmarks/node && npm install --ignore-scripts --no-audit --no-fund)
   fi
+fi
+
+if python3 -I benchmarks/tools/check_versions.py env; then
+  export DIMVEXA_BENCH_LOCK="pinned"
+elif [ -n "$quick" ]; then
+  echo "warning: library versions do not match the lockfiles; this quick run is labelled unlocked" >&2
+else
+  echo "error: library versions do not match the lockfiles (see above); a full run needs them pinned" >&2
+  exit 1
 fi
 
 { lscpu; echo; cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo "governor: unknown"; } > "$out/machine.txt" || true
@@ -73,9 +80,12 @@ if [ -n "$quick" ]; then
   python3 -I benchmarks/tools/report.py --results "$out" --out "$out/comparison.md" >/dev/null && echo "smoke report: $out/comparison.md"
 else
   # Every runner succeeded: replace the old result files in one step, then build the report.
+  # What was measured must be what the lockfiles pin, whatever the environment looked like before.
+  python3 -I benchmarks/tools/check_versions.py results "$out" || { echo "error: results not published (kept in $out)" >&2; exit 1; }
   mkdir -p benchmarks/results
   rm -f benchmarks/results/*.json benchmarks/results/machine.txt
   cp "$out"/*.json "$out/machine.txt" benchmarks/results/
   python3 -I benchmarks/tools/report.py
-  echo "done. Review docs/benchmarks/comparison/comparison.md, then update docs/benchmarks/comparison/comparison-run-N.md by hand."
+  echo "done. Review docs/benchmarks/comparison/comparison.md, then write or update the hand-written"
+  echo "comparison for the release this run belongs to: docs/benchmarks/comparison/vX.Y.Z.md."
 fi
