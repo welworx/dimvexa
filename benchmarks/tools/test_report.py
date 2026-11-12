@@ -15,6 +15,7 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parent
 BENCH = TOOLS.parent
 sys.path.insert(0, str(TOOLS))
+import check_versions  # noqa: E402
 import report  # noqa: E402
 
 
@@ -111,6 +112,33 @@ class Corpus(unittest.TestCase):
         self.assertEqual(g["ambiguous_name"]["silently_accepted"], 1)
         self.assertEqual(g["other"]["silently_accepted"], 1)
         self.assertEqual(g["other"]["refused"], 1)
+
+
+class CheckVersions(unittest.TestCase):
+    def write_result(self, d, name, version, language):
+        (Path(d) / f"{name}-{version}.json").write_text(json.dumps({
+            "kind": "library", "library": {"name": name, "version": version}, "runtime": {"language": language}}))
+
+    def test_committed_results_match_the_lockfiles(self):
+        self.assertEqual(check_versions.check_results(BENCH / "results"), [])
+
+    def test_a_result_with_another_version_than_the_lockfile_is_reported(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.write_result(d, "pint", "0.1", "python")
+            self.write_result(d, "mathjs", "13.2.0", "javascript")
+            problems = check_versions.check_results(d)
+            self.assertEqual(len(problems), 1)
+            self.assertIn("pint", problems[0])
+
+    def test_pin_parsing_ignores_hashes_and_normalises_names(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "lock.txt"
+            f.write_text("# c\nTyping_Extensions==4.16.0 \\\n    --hash=sha256:ab\npint==0.26.2 ; python_version>'3'\n")
+            self.assertEqual(check_versions.python_pins(f), {"typing-extensions": "4.16.0", "pint": "0.26.2"})
+
+    def test_empty_results_directory_is_a_problem(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertTrue(check_versions.check_results(d))
 
 
 if __name__ == "__main__":

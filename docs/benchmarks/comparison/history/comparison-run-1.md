@@ -1,7 +1,7 @@
 # Comparison run 1 (2026-11-07): what it shows and what it does not
 
-Raw data: [`benchmarks/results/`](../../../benchmarks/results/). Full tables and charts:
-[`comparison.md`](comparison.md) (generated). Method: [`../benchmarking.md`](../../benchmarking.md).
+Raw data: [`benchmarks/results/`](../../../../benchmarks/results/). Full tables and charts:
+[`comparison.md`](../comparison.md) (generated). Method: [`../benchmarking.md`](../../../benchmarking.md).
 Rerun everything with `benchmarks/run_all.sh`.
 
 This is the first run that included competitor libraries: **one run on one shared cloud VM**

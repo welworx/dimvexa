@@ -5,7 +5,7 @@ Ready-to-post text for the *Benchmark runner review* issue form
 here has been posted, and nobody has been contacted. The owner decides whether, where and when to
 post each one. Each block fills the three fields of the form: *Library and version*, *What is
 unfair, wrong or missing?* and *Suggested change*. Numbers are from the first run
-(2026-11-07, [`comparison-run-1.md`](comparison-run-1.md)); they will change after the next run
+(2026-11-07, [`history/comparison-run-1.md`](history/comparison-run-1.md)); they will change after the next run
 because the corpus now includes independent cases and the refusal results are split into
 "ambiguous name" and "other" (see [`../benchmarking.md`](../../benchmarking.md)).
 
@@ -153,7 +153,7 @@ Runner: `benchmarks/runners/rust-uom`; results: `benchmarks/results/uom-0.36.0.j
    marked not applicable. This is a design difference, not a failure, and the report says so. Is
    the typed-pair selection representative, and are the features enabled in the runner's `Cargo.toml` the ones you
    would choose?
-2. Only some pairs compiled against 0.36.0 (see the uom row in `comparison-run-1.md`). Please
+2. Only some pairs compiled against 0.36.0 (see the uom row in `history/comparison-run-1.md`). Please
    tell us whether the missing ones are unsupported by uom or a mistake in the runner.
 
 **Suggested change:** (yours)

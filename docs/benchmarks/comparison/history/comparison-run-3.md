@@ -1,7 +1,7 @@
 # Comparison run 3 (2026-11-10): adds bbl, psig, barg, Nm3 and scf
 
-Raw data: [`benchmarks/results/`](../../../benchmarks/results/). Full tables and charts:
-[`comparison.md`](comparison.md) (generated). Method: [`../benchmarking.md`](../../benchmarking.md).
+Raw data: [`benchmarks/results/`](../../../../benchmarks/results/). Full tables and charts:
+[`comparison.md`](../comparison.md) (generated). Method: [`../benchmarking.md`](../../../benchmarking.md).
 Runs [1](comparison-run-1.md) and [2](comparison-run-2.md) keep their caveats; this run supersedes
 them for the data.
 

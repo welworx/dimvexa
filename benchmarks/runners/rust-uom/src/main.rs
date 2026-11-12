@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! Benchmark runner for `uom` (compile-time dimensional analysis). Run in the first comparison (docs/benchmarks/comparison/comparison-run-1.md).
+//! Benchmark runner for `uom` (compile-time dimensional analysis). Run in the first comparison (docs/benchmarks/comparison/history/comparison-run-1.md).
 //!
 //! uom resolves units at compile time and has no string interface, so:
 //! * speed rows measure `Quantity::new::<from>(x).get::<to>()`, the idiomatic typed conversion

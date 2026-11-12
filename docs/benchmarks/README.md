@@ -24,4 +24,4 @@ Layout of this folder:
 | `vX.Y.Z.md` (for example `v0.5.0.md`), `matrix.md`, `matrix-raw.tsv`, `releases.tsv` | the report of one released version; the generated matrix of all versions, its raw runs and the list of released commits |
 | `baseline-m0.tsv` | the stored baseline of one machine for `cargo xtask bench-check` (re-recorded with `--update`) |
 | `history/` | the M0 spike (`M0.md`) and the layout experiment of 2026-11-10; kept as records, not updated |
-| `comparison/` | the cross-library comparison: generated `comparison.md` and charts (`img/`), the dated runs `comparison-run-*.md`, `honest-assessment.md`, `runner-review-requests.md`; method in [`../benchmarking.md`](../benchmarking.md) |
+| `comparison/` | the cross-library comparison: generated `comparison.md` and charts (`img/`), one hand-written comparison per release (`comparison/vX.Y.Z.md`), earlier dated runs (`comparison/history/`), `honest-assessment.md`, `runner-review-requests.md`; method in [`../benchmarking.md`](../benchmarking.md) |
