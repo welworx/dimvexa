@@ -387,9 +387,21 @@ impl Conversion {
     /// # Errors
     ///
     /// [`Error::Overflow`] if the result does not fit in `i128` fractions, or if `a * x` and
-    /// `b` have different exponents and cannot be added exactly.
+    /// `b` have different powers of ten that cannot be added exactly. [`Error::Refused`] if
+    /// `x` carries pi and the conversion has an offset (`pi` in `degC` to `degF`): a multiple
+    /// of pi plus a rational is not a number of the form rational times a power of pi.
     pub fn apply_exact(&self, x: Ratio) -> Result<Ratio> {
-        self.factor.checked_mul(x)?.checked_add(self.offset)
+        let scaled = self.factor.checked_mul(x)?;
+        if !self.offset.is_zero() && !scaled.is_zero() && scaled.pi_exp() != self.offset.pi_exp() {
+            return Err(Error::Refused {
+                reason: "a value with pi cannot be converted exactly with an offset (a \
+                         temperature scale): pi times a factor plus an offset is not exact; \
+                         use a decimal"
+                    .to_string(),
+                suggestions: Vec::new(),
+            });
+        }
+        scaled.checked_add(self.offset)
     }
 
     /// Converts one `f64` on the exact path and rounds once: the result is the `f64` nearest
@@ -579,6 +591,19 @@ mod tests {
 
     fn r(n: i128, d: i128) -> Ratio {
         Ratio::new(n, d).unwrap()
+    }
+
+    #[test]
+    fn pi_with_an_offset_is_refused_not_an_overflow() {
+        let degc_to_degf = Conversion::affine(r(9, 5), r(32, 1)).unwrap();
+        let e = degc_to_degf.apply_exact(Ratio::PI).unwrap_err();
+        assert_eq!(e.code(), "refused");
+        // zero carries no pi, and an ordinary value is unchanged
+        assert_eq!(degc_to_degf.apply_exact(Ratio::ZERO).unwrap(), r(32, 1));
+        assert_eq!(degc_to_degf.apply_exact(r(100, 1)).unwrap(), r(212, 1));
+        // a linear conversion keeps pi
+        let lin = Conversion::linear(r(3, 1)).unwrap();
+        assert_eq!(lin.apply_exact(Ratio::PI).unwrap().pi_exp(), 1);
     }
 
     /// The reduced path as it was before `exact_f64_unreduced`: the reference for it.

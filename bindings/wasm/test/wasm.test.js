@@ -74,5 +74,10 @@ assert.strictEqual(code(() => d.convertExact("1/2pi", "rad", "deg")), "ambiguous
 assert.strictEqual(code(() => d.convertExact("2*h_P", "rad", "deg")), "refused");
 assert.strictEqual(code(() => d.convertExact("tau", "rad", "deg")), "invalid_number");
 
+assert.strictEqual(d.convertExactWith("4pi", "rad", "deg", "", "", []), 720);
+assert.strictEqual(d.convertExactWith("1", "ton", "kg", "", "us", []), 907.18474);
+assert.strictEqual(code(() => d.convertExactWith("pi", "degC", "degF", "", "", [])), "refused");
+assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", [])), "ambiguous_expression");
+
 console.warn = realWarn;
 console.log("wasm: ok");

@@ -7,7 +7,9 @@
 use std::io::Read as _;
 use std::sync::{Arc, OnceLock};
 
-use ::dimvexa::{Conversion as CoreConversion, Quantity as CoreQuantity, Registry};
+use ::dimvexa::{
+    CONSTANTS, Conversion as CoreConversion, Quantity as CoreQuantity, Ratio, Registry,
+};
 use numpy::{PyArrayDyn, PyArrayMethods, PyReadonlyArrayDyn, PyUntypedArrayMethods};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -318,6 +320,16 @@ fn apply(
     x: &Bound<'_, PyAny>,
     exact: bool,
 ) -> PyResult<Py<PyAny>> {
+    // A string is an exact value, a number or an expression with pi ("4pi", "pi/2", "0.1"):
+    // parsed exactly and rounded once, so it always takes the exact path.
+    if let Ok(text) = x.extract::<String>() {
+        let value = Ratio::parse_expression(text.trim(), CONSTANTS).map_err(|e| to_py(&e))?;
+        let out = conv
+            .apply_exact(value)
+            .and_then(|r| r.to_f64())
+            .map_err(|e| to_py(&e))?;
+        return Ok(out.into_pyobject(py)?.into_any().unbind());
+    }
     if let Ok(v) = x.extract::<f64>() {
         let out = if exact {
             conv.apply_exact_f64(v).map_err(|e| to_py(&e))?
@@ -365,7 +377,9 @@ fn apply(
     Ok(out.into_pyobject(py)?.into_any().unbind())
 }
 
-/// Convert a float, a sequence or a NumPy array from one unit to another.
+/// Convert a float, a sequence or a NumPy array from one unit to another. A string is an exact
+/// value, a number or an expression with pi (`"4pi"`, `"pi/2"`, `"2*pi^2"`, `"0.1"`): it is
+/// parsed exactly and rounded once, as `exact=True` does for a float.
 ///
 /// `density` is your own number such as `"998.2067kg/m3"` or the name of a constant of a density
 /// unit; it is used only when the plain conversion needs one (mass <-> volume). `configs` are
@@ -448,7 +462,7 @@ fn constants<'py>(
     Ok(out)
 }
 
-/// Parse a quantity such as `"20 degC"` (options as in `convert`). With `density`, `to()` can
+/// Parse a quantity such as `"20 degC"` or `"pi/2 rad"` (options as in `convert`). With `density`, `to()` can
 /// convert mass <-> volume through it; with `configs` the names and units of the configs work.
 #[pyfunction]
 #[pyo3(signature = (text, *, density = None, configs = None, config_texts = None))]
@@ -464,13 +478,16 @@ fn quantity(
     );
     if density.is_none() && configs.is_empty() && config_texts.is_empty() {
         return registry()?
-            .quantity(text)
+            .quantity_with(text, CONSTANTS)
             .map(|inner| Quantity { inner, ctx: None })
             .map_err(|e| to_py(&e));
     }
     let loaded = load(&configs, &config_texts)?;
     let density = resolve_density(&loaded, density)?;
-    let inner = loaded.reg.quantity(text).map_err(|e| to_py(&e))?;
+    let inner = loaded
+        .reg
+        .quantity_with(text, CONSTANTS)
+        .map_err(|e| to_py(&e))?;
     Ok(Quantity {
         inner,
         ctx: Some(Arc::new(Context { loaded, density })),

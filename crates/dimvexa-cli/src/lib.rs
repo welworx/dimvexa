@@ -1406,17 +1406,6 @@ fn compute<'a>(
         (Err(Error::DimensionMismatch { .. }), Some(d)) => (d.conversion(&from, &to)?, Some(d)),
         (Err(e), _) => return Err(e),
     };
-    // pi times a factor plus an offset is not a number of the form rational * pi^m, so the
-    // exact path would stop with a misleading `overflow`: say what is wrong instead
-    if value.pi_exp() != 0 && !conv.offset().is_zero() {
-        return Err(Error::Refused {
-            reason: format!(
-                "a value with pi cannot be converted exactly between {from} and {to}: the offset \
-                 of a temperature scale cannot be added to a multiple of pi; use a decimal"
-            ),
-            suggestions: Vec::new(),
-        });
-    }
     let exact = conv.apply_exact(value)?;
     let approx = exact.to_f64()?;
     Ok(Outcome {

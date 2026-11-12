@@ -85,6 +85,26 @@ function convert(value, from, to, density, config) {
   });
 }
 
+/** @customfunction CONVERTEXACT */
+function convertExact(value, from, to, density, config) {
+  return whenReady(() => {
+    try {
+      // The value is read as text, so "4pi", "pi/2" or "0.1" is exact on the way in. A number
+      // cell is turned into its shortest decimal text (0.1 is "0.1"), which Excel shows too.
+      if (!given(value) || (typeof value === "string" && value.trim() === "")) {
+        throw rangeError("the value is empty");
+      }
+      if (typeof value === "number" && !Number.isFinite(value)) throw overflowError();
+      const result = wasm_bindgen.convertExactWith(
+        String(value), unit(from), unit(to), text(density), text(config), []);
+      if (!Number.isFinite(result)) throw overflowError();
+      return result;
+    } catch (e) {
+      throw toExcelError(e);
+    }
+  });
+}
+
 // The range is declared `any` so a blank cell can be told from a 0 (a `number` range makes Excel
 // pass blanks as 0 and refuse text itself). A cell of only spaces counts as blank.
 function isBlank(v) {
@@ -168,5 +188,6 @@ function version() {
 }
 
 CustomFunctions.associate("CONVERT", convert);
+CustomFunctions.associate("CONVERTEXACT", convertExact);
 CustomFunctions.associate("CONVERTRANGE", convertRange);
 CustomFunctions.associate("VERSION", version);

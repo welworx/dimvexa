@@ -212,3 +212,37 @@ def test_a_constant_cannot_be_named_like_a_unit() -> None:
     for bad in ("h", "ton"):  # the hour, and an ambiguous bare symbol
         with pytest.raises(dimvexa.DimvexaError, match="also a unit"):
             dimvexa.constants(config_texts=[WATER_TEXT.replace("rho", bad)])
+
+
+def test_a_string_value_may_contain_pi_and_stays_exact() -> None:
+    assert dimvexa.convert("4pi", "rad", "deg") == 720.0
+    assert dimvexa.convert("pi/2", "rad", "deg") == 90.0
+    assert dimvexa.convert(" 2*pi^1 ", "rad", "deg") == 360.0
+    assert dimvexa.convert("98.6", "degF", "degC") == 37.0
+    assert dimvexa.conversion("rad", "deg")("4pi") == 720.0
+    q = dimvexa.quantity("pi/2 rad")
+    assert q.value == "1/2 pi"
+    assert q.to("deg").to_float() == 90.0
+    assert dimvexa.quantity("4 pi rad", configs=["us"]).to("deg").to_float() == 720.0
+    assert dimvexa.quantity("2.5 km").to("m").to_float() == 2500.0
+
+
+@pytest.mark.parametrize(
+    ("value", "code"),
+    [
+        ("1/2pi", "ambiguous_expression"),
+        ("2*h_P", "refused"),
+        ("tau", "invalid_number"),
+        ("1/0", "division_by_zero"),
+    ],
+)
+def test_a_bad_string_value_is_a_loud_error(value: str, code: str) -> None:
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.convert(value, "rad", "deg")
+    assert e.value.code == code
+
+
+def test_pi_into_an_offset_unit_is_refused() -> None:
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.convert("pi", "degC", "degF")
+    assert e.value.code == "refused"

@@ -357,6 +357,31 @@ pub fn convert_exact(value: &str, from: &str, to: &str) -> Result<f64, JsValue> 
         .map_err(|e| fail(&e))
 }
 
+/// Exact-path conversion of a value written as text, with the options of a worksheet. The
+/// value is a number or an expression with `pi` (`"4pi"`, `"pi/2"`, `"98.6"`), parsed exactly;
+/// the result is rounded once to `f64`. `density`, `config` and `config_texts` are as in
+/// `convertWith`, and empty for "none".
+///
+/// # Errors
+///
+/// Throws a `DimvexaError` with a stable `code`.
+#[wasm_bindgen(js_name = convertExactWith)]
+pub fn convert_exact_with(
+    value: &str,
+    from: &str,
+    to: &str,
+    density: &str,
+    config: &str,
+    config_texts: Vec<String>,
+) -> Result<f64, JsValue> {
+    let conv = conversion_with_options(from, to, density, config, &config_texts)?;
+    let x =
+        dimvexa::Ratio::parse_expression(value.trim(), dimvexa::CONSTANTS).map_err(|e| fail(&e))?;
+    conv.apply_exact(x)
+        .and_then(|r| r.to_f64())
+        .map_err(|e| fail(&e))
+}
+
 /// Converts a quantity text such as `"5 ft"` or `"pi/2 rad"` to `to`, returning the exact
 /// quantity as text.
 ///

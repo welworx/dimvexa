@@ -2,7 +2,7 @@
 
 User guide, how to add it to Excel and hosting plan: [`docs/excel.md`](../../docs/excel.md).
 
-Custom functions `DIMVEXA.CONVERT(value, from, to, [density], [config])`, `DIMVEXA.CONVERTRANGE` and `DIMVEXA.VERSION()` over the WASM build
+Custom functions `DIMVEXA.CONVERT(value, from, to, [density], [config])`, `DIMVEXA.CONVERTEXACT` (the value as text, with pi), `DIMVEXA.CONVERTRANGE` and `DIMVEXA.VERSION()` over the WASM build
 in `../wasm`. A refusal (unknown or ambiguous unit, dimension mismatch, overflow) is an Excel
 error whose message starts with `dimvexa <code>:`; nothing is guessed.
 
@@ -48,4 +48,10 @@ The npm tools are development aids only; nothing here is a dependency of the lib
     loaded config, `=DIMVEXA.CONVERT(1,"L","kg","water_25C","water")`. A name without its
     config is an error with a hint; a density is never assumed. The result is `measured`, but a
     cell has no place to say so: the number is only as good as the density you gave.
-* Not built yet: exact decimal input.
+* `DIMVEXA.CONVERTEXACT(value, from, to, [density], [config])` takes the value as text and keeps it
+  exact: `=DIMVEXA.CONVERTEXACT("4pi","rad","deg")` is 720, `"pi/2"` is 90. The value may use `pi`
+  (also `π`), `* / ^` and parentheses; there is no addition. `1/2pi` is refused as ambiguous
+  (`pi/2` or `1/(2*pi)`): write one of those. A decimal text (`"0.1"`) is exact on the way in,
+  and a number cell is read as its shortest decimal text. The result is rounded once, to a
+  number. `pi` into a temperature scale with an offset is refused. `CONVERT` and `CONVERTRANGE`
+  still take numbers.
