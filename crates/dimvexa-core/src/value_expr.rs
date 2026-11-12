@@ -9,8 +9,10 @@
 //! atom   = number | constant | "(" value ")"
 //! ```
 //!
-//! `*`, `/` and the juxtaposition of a constant (`4 pi`, `4pi`) have the same precedence and
-//! group to the left, so `1/2 pi` is `pi/2`, the notation of the unit tables. There is no
+//! `*`, `/` and the juxtaposition of a dimensionless constant (`4 pi`, `4pi`) have the same
+//! precedence and group to the left. A constant written right after a quotient (`1/2 pi`,
+//! `1/2pi`) is refused as an ambiguous expression: it could mean `pi/2` or `1/(2 pi)`, and the two
+//! differ by a factor of pi squared. Write `pi/2`, `1/2*pi` or `1/(2*pi)`. There is no
 //! addition: dimvexa converts, it does not calculate (ADR-014).
 
 use crate::constant::ConstantDef;
@@ -161,6 +163,7 @@ impl Parser<'_, '_> {
         }
         self.skip_space();
         let mut acc = self.factor(depth)?.ok_or_else(|| invalid(self.src))?;
+        let mut after_quotient = false;
         loop {
             self.skip_space();
             let before = self.pos;
@@ -177,11 +180,21 @@ impl Parser<'_, '_> {
                     } else {
                         acc.checked_div(rhs)?
                     };
+                    after_quotient = op == '/';
                 }
                 Some(c) if c.is_alphabetic() || c == '_' => {
-                    // juxtaposition is only for a constant: `4 pi`, never `4 m`
-                    if self.constant(self.word()).is_none() {
+                    // juxtaposition is only for a dimensionless constant: `4 pi`, never `4 m`
+                    // or `2 e` (a typo for `2e3` must not name the elementary charge)
+                    if self.constant(self.word()).is_none_or(|c| c.unit != "1") {
                         return Ok(acc);
+                    }
+                    if after_quotient {
+                        return Err(Error::AmbiguousExpression {
+                            input: self.src.to_string(),
+                            message: "a constant after a quotient could be read as pi/2 or as \
+                                      1/(2 pi); write pi/2, 1/2*pi or 1/(2*pi)"
+                                .to_string(),
+                        });
                     }
                     let Some(rhs) = self.factor(depth)? else {
                         return Ok(acc);
@@ -206,8 +219,10 @@ impl Parser<'_, '_> {
             self.pos = start;
             return Ok(None);
         };
+        self.skip_space();
         if self.peek() == Some('^') {
             self.bump('^');
+            self.skip_space();
             let exp = self.exponent()?;
             atom = atom.checked_pow(exp)?;
         }
@@ -264,6 +279,7 @@ impl Parser<'_, '_> {
         if let Some(sign @ ('+' | '-')) = self.peek() {
             negative = sign == '-';
             self.bump(sign);
+            self.skip_space();
         }
         let rest = self.rest();
         let end = rest
@@ -323,7 +339,9 @@ mod tests {
             ("4*pi", "4 pi"),
             ("-4 pi", "-4 pi"),
             ("pi/2", "1/2 pi"),
-            ("1/2 pi", "1/2 pi"),
+            ("pi ^ 2", "pi^2"),
+            ("2 * pi ^ -1", "2 pi^-1"),
+            ("(1/2) pi", "1/2 pi"),
             ("1/2*pi", "1/2 pi"),
             ("1/(2 pi)", "1/2 pi^-1"),
             ("2*pi^2", "2 pi^2"),
@@ -380,7 +398,23 @@ mod tests {
         }
         assert_eq!(val("1/0"), Err(Error::DivisionByZero));
         assert_eq!(val("pi/0"), Err(Error::DivisionByZero));
-        assert!(matches!(val("2 h_P"), Err(Error::Refused { .. })));
+        assert!(matches!(val("2*h_P"), Err(Error::Refused { .. })));
+        // a constant with a unit never continues a value by juxtaposition: `2e` is a typo
+        for text in ["2 h_P", "2e", "2 e"] {
+            assert!(
+                matches!(val(text), Err(Error::InvalidNumber { .. })),
+                "{text:?}"
+            );
+        }
+        // a constant right after a quotient is ambiguous: pi/2 or 1/(2 pi)
+        for text in ["1/2 pi", "1/2pi", "1/2π", "4 pi / 2 pi", "1/2^2 pi"] {
+            assert!(
+                matches!(val(text), Err(Error::AmbiguousExpression { .. })),
+                "{text:?}: {:?}",
+                val(text)
+            );
+        }
+        assert_eq!(val("1/2*pi").unwrap(), sym("1/2 pi"));
         assert!(matches!(val("2^200"), Err(Error::Overflow { .. })));
         let deep = format!("{}1{}", "(".repeat(100), ")".repeat(100));
         assert!(matches!(val(&deep), Err(Error::InvalidNumber { .. })));

@@ -967,10 +967,12 @@ fn normalize_convert(words: &[&str]) -> Vec<String> {
     out
 }
 
-/// Joins the words of a value written with spaces, `4 pi rad deg` or `1 / 2 pi rad deg`, into
-/// the one value argument `4 pi`, `1 / 2 pi`. Only a dimensionless constant (`pi`, `π`) or an
-/// operator (`*`, `/`, `^`) and its operand are joined; a unit is never mistaken for them
-/// because a constant's name is never also a unit's. The words from and to stay.
+/// Joins the words of a value written with spaces, `4 pi rad deg` or `2 * pi rad deg`, into
+/// the one value argument `4 pi`, `2 * pi`. A word is joined when it is made only of a
+/// dimensionless constant (`pi`, `π`), operators (`* / ^`), parentheses, digits and signs and
+/// has a constant or an operator in it (`pi`, `pi/2`, `*`, `^2`), or when it is the operand
+/// after a word that ends in an operator. A unit is never mistaken for them: a constant's name
+/// is never also a unit's. The words from and to stay.
 fn fold_value_words(out: &mut Vec<String>) {
     let is_constant = |w: &str| {
         w == "π"
@@ -978,15 +980,41 @@ fn fold_value_words(out: &mut Vec<String>) {
                 .iter()
                 .any(|c| c.id == w && c.unit == "1")
     };
+    let is_operator = |c: char| matches!(c, '*' | '/' | '^');
+    // `Some(true)` if the word is a value continuation that has a constant or an operator
+    let continues = |w: &str| {
+        let mut rest = w;
+        let mut marked = false;
+        while let Some(c) = rest.chars().next() {
+            if c.is_alphabetic() || c == '_' || c == 'π' {
+                let end = rest
+                    .find(|d: char| !(d.is_alphanumeric() || d == '_'))
+                    .unwrap_or(rest.len());
+                let (ident, tail) = rest.split_at(end);
+                if !is_constant(ident) {
+                    return false;
+                }
+                marked = true;
+                rest = tail;
+            } else if is_operator(c) {
+                marked = true;
+                rest = rest.get(c.len_utf8()..).unwrap_or("");
+            } else if c.is_ascii_digit() || matches!(c, '(' | ')' | '.' | '+' | '-') {
+                rest = rest.get(c.len_utf8()..).unwrap_or("");
+            } else {
+                return false;
+            }
+        }
+        marked
+    };
     let mut operand_due = false;
     while out.len() > 3 {
         let Some(word) = out.get(1) else { break };
-        let operator = matches!(word.as_str(), "*" | "/" | "^");
-        if !(operand_due || operator || is_constant(word)) {
+        if !(operand_due || continues(word)) {
             break;
         }
+        operand_due = word.ends_with(is_operator);
         let word = out.remove(1);
-        operand_due = operator;
         if let Some(first) = out.first_mut() {
             first.push(' ');
             first.push_str(&word);
@@ -1378,6 +1406,17 @@ fn compute<'a>(
         (Err(Error::DimensionMismatch { .. }), Some(d)) => (d.conversion(&from, &to)?, Some(d)),
         (Err(e), _) => return Err(e),
     };
+    // pi times a factor plus an offset is not a number of the form rational * pi^m, so the
+    // exact path would stop with a misleading `overflow`: say what is wrong instead
+    if value.pi_exp() != 0 && !conv.offset().is_zero() {
+        return Err(Error::Refused {
+            reason: format!(
+                "a value with pi cannot be converted exactly between {from} and {to}: the offset \
+                 of a temperature scale cannot be added to a multiple of pi; use a decimal"
+            ),
+            suggestions: Vec::new(),
+        });
+    }
     let exact = conv.apply_exact(value)?;
     let approx = exact.to_f64()?;
     Ok(Outcome {

@@ -399,13 +399,14 @@ What to know:
    once, at the end, to the nearest `f64`. These units are `defined` in `dimvexa units deg`.
 2. **Addition is not defined for values with different exponents.** Combining `pi` with a plain
    number in a sum (`1 + pi`) is refused with `overflow`, never approximated. A conversion only
-   multiplies, so this shows up only through the library (`Ratio::checked_add`).
-3. **A value may contain `pi`** (ADR-018, step 3). `4pi`, `4π`, `4 pi`, `pi/2`, `1/2 pi`,
-   `2*pi^2` and `1/(2*pi)` are all values; so are `4 pi rad deg` and `1 / 2 pi rad deg` written
+   multiplies, so this shows up only through the library (`Ratio::checked_add`). The one conversion that adds is a temperature scale with an offset, so `dimvexa convert pi degC degF` is refused (`refused`): use a decimal.
+3. **A value may contain `pi`** (ADR-018, step 3). `4pi`, `4π`, `4 pi`, `pi/2`, `1/2*pi`,
+   `2*pi^2` and `1/(2*pi)` are all values; so are `4 pi rad deg` and `2 * pi rad deg` written
    with spaces. A value may use `*`, `/`, an integer power `^`, a leading sign and parentheses.
    There is no addition and no other function, and only a constant without a unit (`pi`) can be
    written in a value: `2*h_P` is refused (`refused`), an unknown name such as `tau` is
-   `invalid_number`. Pi stays symbolic, so nothing is rounded on the way in:
+   `invalid_number`. A constant right after a quotient (`1/2 pi`, `1/2pi`) is
+   `ambiguous_expression`: it could be `pi/2` or `1/(2 pi)`, so write `pi/2` or `1/(2*pi)`. Pi stays symbolic, so nothing is rounded on the way in:
 
    ```console
    $ dimvexa convert 4pi rad deg

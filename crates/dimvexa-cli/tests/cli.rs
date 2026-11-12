@@ -2134,7 +2134,8 @@ fn a_value_may_contain_pi_and_operators() {
         ("4 pi", "720 deg"),
         ("4*pi", "720 deg"),
         ("pi/2", "90 deg"),
-        ("1/2 pi", "90 deg"),
+        ("1/2*pi", "90 deg"),
+        ("pi ^ 2 / pi", "180 deg"),
         ("1/(2*pi)", "9.118906527810399 deg"),
         ("-pi", "-180 deg"),
         ("(pi)^2/pi", "180 deg"),
@@ -2148,7 +2149,11 @@ fn a_value_may_contain_pi_and_operators() {
         &["4", "pi", "rad", "deg"][..],
         &["4", "pi", "rad", "to", "deg"],
         &["4", "*", "pi", "rad", "deg"],
-        &["1", "/", "2", "pi", "rad", "deg"][..],
+        &["2", "*", "pi", "rad", "deg"][..],
+        &["pi", "^", "2", "/", "pi", "rad", "deg"],
+        &["4", "pi/2", "rad", "deg"],
+        &["4", "*pi", "rad", "deg"],
+        &["pi", "^2", "rad", "deg"],
     ] {
         let mut args = vec!["convert"];
         args.extend_from_slice(words);
@@ -2157,6 +2162,14 @@ fn a_value_may_contain_pi_and_operators() {
         assert!(r.stdout.ends_with(" deg\n"), "{words:?}");
     }
     assert_eq!(dimvexa(&["4", "pi", "rad", "deg"]).stdout, "720 deg\n");
+    // a unit written with an operator is not folded into the value
+    assert_eq!(
+        dimvexa(&["convert", "5", "1/s", "to", "Hz"]).stdout,
+        "5 Hz\n"
+    );
+    // pi into a temperature scale with an offset is refused with its own message
+    let r = dimvexa(&["convert", "pi", "degC", "degF"]);
+    assert!(r.stderr.starts_with("error[refused]"), "{}", r.stderr);
     // pi is not rounded in the input: 2 pi rad is exactly a turn
     let r = dimvexa_at_root(&[
         "convert",
@@ -2184,6 +2197,9 @@ fn a_value_with_a_bad_constant_or_operator_is_loud() {
         ("(pi", "invalid_number"),
         ("pi/0", "division_by_zero"),
         ("2*h_P", "refused"),
+        ("1/2pi", "ambiguous_expression"),
+        ("1/2 pi", "ambiguous_expression"),
+        ("2e", "invalid_number"),
         ("2*k_B", "refused"),
     ] {
         let r = dimvexa(&["convert", value, "rad", "deg"]);

@@ -530,20 +530,23 @@ impl Registry {
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     pub fn quantity(&self, input: &str) -> Result<Quantity> {
-        self.quantity_with(input, &[])
+        let (value, rest) = Ratio::parse_prefix(input.trim())?;
+        self.finish_quantity(value, rest)
     }
 
     /// Parses a quantity whose value may contain constants and operators, such as `2 pi rad`
     /// or `pi/2 rad` (ADR-018, step 3).
     ///
     /// `constants` is the table the value may name, for example `dimvexa::CONSTANTS`; the value
-    /// ends at the first word that is not one of its constants. See
-    /// [`Ratio::parse_expression`] for the grammar. With an empty table this is
-    /// [`quantity`](Self::quantity).
+    /// ends at the first word that is not one of its dimensionless constants, which is where
+    /// the unit starts. See [`Ratio::parse_expression`] for the grammar. Unlike
+    /// [`quantity`](Self::quantity), which reads a plain number, the operators are read as part
+    /// of the value: `10 / 2 s` is the value 5 and the unit `s`.
     ///
     /// # Errors
     ///
-    /// [`Error::InvalidNumber`], [`Error::Refused`] for a constant that has a unit, the
+    /// [`Error::InvalidNumber`], [`Error::AmbiguousExpression`] for a constant after a
+    /// quotient, [`Error::Refused`] for a constant that has a unit after an operator, the
     /// arithmetic errors of the value, and any error of [`parse`](Self::parse).
     ///
     /// # Examples
@@ -563,6 +566,10 @@ impl Registry {
     /// ```
     pub fn quantity_with(&self, input: &str, constants: &[ConstantDef]) -> Result<Quantity> {
         let (value, rest) = Ratio::parse_expression_prefix(input.trim(), constants)?;
+        self.finish_quantity(value, rest)
+    }
+
+    fn finish_quantity(&self, value: Ratio, rest: &str) -> Result<Quantity> {
         let rest = rest.trim();
         let unit = if rest.is_empty() {
             UnitExpr::unity()

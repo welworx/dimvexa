@@ -339,7 +339,8 @@ pub fn constants(config: &str, config_texts: Vec<String>) -> Result<Array, JsVal
 
 /// One-shot exact-path conversion of a decimal string, e.g. `convertExact("98.6", "degF", "degC")`.
 /// The string is parsed as an exact rational, so no input rounding happens; the result is
-/// rounded once to `f64`.
+/// rounded once to `f64`. The value may contain `pi` and operators, kept exact:
+/// `convertExact("4pi", "rad", "deg")` is exactly 720.
 ///
 /// # Errors
 ///
@@ -348,7 +349,7 @@ pub fn constants(config: &str, config_texts: Vec<String>) -> Result<Array, JsVal
 pub fn convert_exact(value: &str, from: &str, to: &str) -> Result<f64, JsValue> {
     let reg = registry()?;
     let q = reg
-        .quantity(&format!("{} {}", value.trim(), from))
+        .quantity_with(&format!("{} {}", value.trim(), from), dimvexa::CONSTANTS)
         .map_err(|e| fail(&e))?;
     let target = reg.parse(to).map_err(|e| fail(&e))?;
     q.to_unit(&target)
@@ -356,7 +357,8 @@ pub fn convert_exact(value: &str, from: &str, to: &str) -> Result<f64, JsValue> 
         .map_err(|e| fail(&e))
 }
 
-/// Converts a quantity text such as `"5 ft"` to `to`, returning the exact quantity as text.
+/// Converts a quantity text such as `"5 ft"` or `"pi/2 rad"` to `to`, returning the exact
+/// quantity as text.
 ///
 /// # Errors
 ///
@@ -364,7 +366,9 @@ pub fn convert_exact(value: &str, from: &str, to: &str) -> Result<f64, JsValue> 
 #[wasm_bindgen(js_name = convertQuantity)]
 pub fn convert_quantity(quantity: &str, to: &str) -> Result<String, JsValue> {
     let reg = registry()?;
-    let q = reg.quantity(quantity).map_err(|e| fail(&e))?;
+    let q = reg
+        .quantity_with(quantity, dimvexa::CONSTANTS)
+        .map_err(|e| fail(&e))?;
     let target = reg.parse(to).map_err(|e| fail(&e))?;
     Ok(q.to_unit(&target).map_err(|e| fail(&e))?.to_string())
 }
