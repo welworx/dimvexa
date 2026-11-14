@@ -21,9 +21,9 @@ fuzz_target!(|data: (i128, i128, i128, i128, i16, i16)| {
         assert!(eq);
     }
     if ta == tb {
-        let ab = a.checked_cmp(b).expect("same exponents always compare");
-        let ba = b.checked_cmp(a).expect("same exponents always compare");
-        assert_eq!(ab, ba.reverse());
-        assert_eq!(eq, ab == Ordering::Equal);
+        let a_b = a.checked_cmp(b).expect("same exponents always compare");
+        let b_a = b.checked_cmp(a).expect("same exponents always compare");
+        assert_eq!(a_b, b_a.reverse());
+        assert_eq!(eq, a_b == Ordering::Equal);
     }
 });
