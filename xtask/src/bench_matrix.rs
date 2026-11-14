@@ -434,7 +434,9 @@ fn write_outputs(
     if reports {
         for (i, v) in versions.iter().enumerate() {
             let path = dir.join(format!("v{v}.md"));
-            let hand_written = std::fs::read_to_string(&path).is_ok_and(|t| !t.starts_with(MARKER));
+            let hand_written = std::fs::read_to_string(&path).is_ok_and(|t| {
+                !t.starts_with(MARKER) && !t.starts_with(crate::bench_release::MARKER)
+            });
             if hand_written {
                 println!("bench-matrix: kept the hand-written v{v}.md");
                 continue;

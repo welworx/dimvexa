@@ -18,11 +18,16 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
 | A claim against another library | `benchmarks/run_all.sh` (see `docs/benchmarking.md`) | `docs/benchmarks/comparison/` |
 
 `bench-impact` lists the files changed since the merge base with `origin/main` (committed, staged,
-unstaged, new). A file counts as hot path if it is under `crates/dimvexa-core/src/` or
-`crates/dimvexa/benches/`, or is `Cargo.toml`, `Cargo.lock` or `rust-toolchain.toml`
-(`HOT_PATHS` in `xtask/src/bench_impact.rs`; a test checks that every entry exists). If the diff
+unstaged, new). A file counts as hot path if it is under `crates/dimvexa-core/src/`,
+`crates/dimvexa-data/` (`data/units/`, `data/constants/`, `src/`, `build.rs`: the guarded exact rows
+convert `deg -> rad` and `eV -> J` from the compiled table; golden vectors are not hot), `crates/dimvexa/src/`, `crates/dimvexa/benches/` or
+`.cargo/`, or is `Cargo.toml`, `Cargo.lock` or `rust-toolchain.toml` (`HOT_PATHS` in
+`xtask/src/bench_impact.rs`; a test checks that every entry exists). A unit-table change therefore
+runs the benchmark too: a missed regression is silent, a needless run is only a few minutes. If the diff
 touches one, it runs the A/B guard below against the merge base; there is no baseline to keep and
-no old release is run. Never run the matrix for an ordinary change.
+no old release is run. Never run the matrix for an ordinary change. Nothing enforces that
+`bench-impact` was run: no CI stage and no `check-docs` check does. The PR template asks for its
+output and the `review` skill treats a missing output on a hot-path diff as a blocking finding.
 
 * Run: `cargo bench -p dimvexa --bench m0` (std-only harness in `crates/dimvexa/benches/m0.rs`,
   15 samples per row, median reported). Vectorisation check:
@@ -47,8 +52,8 @@ no old release is run. Never run the matrix for an ordinary change.
 * **Read numbers with the spread.** A change is "faster" or "slower" only if it is larger than the
   spread of both sides; the matrix marks the others `(noise)`. Do not write a performance claim for
   a `(noise)` row, and say what is inside the noise instead. A hand-written narrative for a version
-  (what changed, why a row moved, what was not run, as in `v0.5.0.md`) has no generated marker and
-  is never overwritten by the tool.
+  (what changed, why a row moved, what was not run) goes in `v<version>-notes.md`; a file without a
+  generated marker, such as the old `v0.5.0.md`, is never overwritten by the tools.
 * Everything in a report is copied from a real run, with the machine, compiler, profile, bench
   file revision and the number of runs. **Only claim numbers you measured**; say what was not run.
 * Regression guard: `cargo xtask bench-check` compares a fresh `m0` run with

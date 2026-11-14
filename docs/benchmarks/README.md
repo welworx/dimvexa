@@ -1,8 +1,9 @@
 # Benchmarks
 
 **One report per released version, named after it (`v0.5.0.md`)**, written when the version is prepared (the `release`
-skill checks it). Each report states the machine, compiler, profile and method, the before and after
-numbers copied from real runs, and what was not run. Only measured numbers are quoted; there is no
+skill checks it). Each report states the machine, compiler, profile and method, the numbers copied from
+real runs (the older hand-written ones also the before and after), and what was not run. A narrative for a
+version is `vX.Y.Z-notes.md`. Only measured numbers are quoted; there is no
 claim against another library without a link to a dated run (`docs/benchmarking.md`).
 
 | Version | Report |

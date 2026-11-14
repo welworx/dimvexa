@@ -29,17 +29,18 @@ ran, nothing else (rule 6). Commands to start: `git diff --stat BASE...`, `cargo
    fields added only inside the current schema version, or a new version, schema file, ADR and
    snapshots together; CLI help (`HELP*`), `docs/guide.md` and `CHANGELOG.md` updated in the same
    change; snapshot diffs were read, not just regenerated.
-7. **Speed impact (`benchmarks` skill).** Decide from the diff whether it touches a hot path
-   (scalar apply, `apply_slice`, `apply_in_place`, the registry lookup, `m0.rs`).
-   * Hot path touched: the pull request must show the output of `cargo xtask bench-impact`
-     (a benchmark of the change against its merge base, with the machine). No output is a
-     blocking finding.
+7. **Speed impact (`benchmarks` skill).** Every pull request shows the output of `cargo xtask
+   bench-impact`; the tool, not you, decides from the diff whether a hot path is touched (the
+   list is `HOT_PATHS` in `xtask/src/bench_impact.rs`: the conversion core, the compiled unit
+   table, the facade, `m0.rs` and the build settings).
+   * Hot path touched: the output is a benchmark of the change against its merge base, with the
+     machine. No output is a blocking finding. Nothing in CI enforces it, so you are the check.
    * Read the table, not the verdict. A slowdown above about 10% outside the spread needs an
      explanation or a faster alternative; a row marked `(noise)` supports no claim in either
      direction; a "faster" claim must also stay bit-identical or inside the ulp bound
      (`differential.rs`).
-   * No hot path touched: say so in the review ("no hot path in the diff, no benchmark needed").
-     A skipped benchmark is fine only for that reason.
+   * The output says `skipped: no hot-path file changed`: accept it, after a glance at the diff
+     for a file the list could have missed (then add it to `HOT_PATHS`). Say so in the review.
    * Re-run it yourself only when the evidence is missing, its base is not the merge base, or the
      numbers contradict the diff; a re-run on a shared machine mostly measures noise.
    * Claims against other libraries ("fastest", "most accurate") need a link to a dated run

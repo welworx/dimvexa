@@ -33,7 +33,16 @@ use crate::bench_check;
 /// entry exists, so a rename cannot silently turn the guard off.
 pub const HOT_PATHS: &[&str] = &[
     "crates/dimvexa-core/src/",
+    // The guarded exact rows convert `deg -> rad` and `eV -> J` from the compiled unit table; the
+    // stored ratio decides which branch of `apply_exact_f64` runs. A missed regression is silent,
+    // a needless run is not, so the table and what compiles it count.
+    "crates/dimvexa-data/data/units/",
+    "crates/dimvexa-data/data/constants/",
+    "crates/dimvexa-data/build.rs",
+    "crates/dimvexa-data/src/",
+    "crates/dimvexa/src/",
     "crates/dimvexa/benches/",
+    ".cargo/",
     "Cargo.toml",
     "Cargo.lock",
     "rust-toolchain.toml",
@@ -101,14 +110,37 @@ fn merge_base(root: &Path) -> Result<(String, &'static str), String> {
 
 /// Files changed since `base`: committed, staged and unstaged changes, and new untracked files.
 fn changed_files(root: &Path, base: &str) -> Result<Vec<String>, String> {
-    let mut files: Vec<String> = bench_check::git(root, &["diff", "--name-only", base])?
-        .lines()
-        .map(str::to_string)
-        .collect();
+    // `-z` and `core.quotePath=false` keep non-ASCII names intact; `--no-renames` lists both the
+    // old and the new path, so a file moved out of a hot path still counts.
+    let mut files: Vec<String> = bench_check::git(
+        root,
+        &[
+            "-c",
+            "core.quotePath=false",
+            "diff",
+            "--name-only",
+            "--no-renames",
+            "-z",
+            base,
+        ],
+    )?
+    .split('\0')
+    .map(str::to_string)
+    .collect();
     files.extend(
-        bench_check::git(root, &["ls-files", "--others", "--exclude-standard"])?
-            .lines()
-            .map(str::to_string),
+        bench_check::git(
+            root,
+            &[
+                "-c",
+                "core.quotePath=false",
+                "ls-files",
+                "--others",
+                "--exclude-standard",
+                "-z",
+            ],
+        )?
+        .split('\0')
+        .map(str::to_string),
     );
     files.retain(|f| !f.is_empty());
     files.sort();
@@ -199,7 +231,8 @@ mod tests {
         let changed = v(&[
             "crates/dimvexa-core/src/conversion.rs",
             "crates/dimvexa-core/tests/x.rs",
-            "crates/dimvexa-data/data/units/common.toml",
+            "crates/dimvexa-data/data/vectors/common.toml",
+            "crates/dimvexa-config/src/lib.rs",
             "crates/dimvexa-cli/src/lib.rs",
             "docs/guide.md",
             "Cargo.toml",
@@ -209,6 +242,16 @@ mod tests {
         assert_eq!(
             hot_files(&changed),
             vec!["crates/dimvexa-core/src/conversion.rs", "Cargo.toml"]
+        );
+        assert_eq!(
+            hot_files(&v(&[
+                "crates/dimvexa-data/data/units/common.toml",
+                "crates/dimvexa-data/build.rs"
+            ])),
+            vec![
+                "crates/dimvexa-data/data/units/common.toml",
+                "crates/dimvexa-data/build.rs"
+            ]
         );
         assert_eq!(
             hot_files(&v(&["docs/guide.md", "crates/dimvexa-core/README.md"])),

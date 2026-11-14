@@ -20,8 +20,8 @@ cargo xtask ci
 
 ## Speed
 
-Paste the output of `cargo xtask bench-impact`. If it says "skipped: no hot-path file changed",
-write "no hot path touched". A guarded row more than 10 percent slower outside the noise needs an
+Paste the output of `cargo xtask bench-impact` (every pull request; a skip line is fine). It
+decides from the diff whether a hot path is touched. A guarded row more than 10 percent slower outside the noise needs an
 explanation here, or a faster implementation.
 
 ```

@@ -39,8 +39,10 @@ PyPI and npm (`docs/releasing.md`).
    `cargo xtask bench-release` has been run on the release commit (every row of `m0.rs`, 6 runs,
    this version only; no older release is measured and `matrix.md` is not touched), the generated
    `docs/benchmarks/v<version>.md` is committed and listed in `docs/benchmarks/README.md`, and a
-   hand-written narrative exists for this version if the `bench-impact` outputs of its changes
-   showed a row beyond the noise. The cross-library comparison of this version exists too:
+   hand-written narrative exists in `docs/benchmarks/v<version>-notes.md` if the `bench-impact`
+   outputs of its changes showed a row beyond the noise (the generated report is never hand-edited
+   and a hand-written file of that name is never replaced). The released versions up to 0.7.0
+   keep their earlier reports. The cross-library comparison of this version exists too:
    a full `benchmarks/run_all.sh` on a clean checkout of the release commit (it refuses unpinned
    competitor versions), the regenerated `docs/benchmarks/comparison/comparison.md`, `img/` and
    `benchmarks/results/` committed, and the hand-written `vX.Y.Z.md` in the `docs/benchmarks/comparison` folder from them
