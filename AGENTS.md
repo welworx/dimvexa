@@ -78,7 +78,12 @@ when the command cannot run here, and then the report names the command and the 
    (and in the PR). It decides by itself whether a hot path is touched; you do not decide by
    the size of the diff. In a clone where it cannot find a merge base ("shallow clone?"), pass it
    explicitly: `cargo xtask bench-impact --base $(git rev-parse HEAD~N)` or the commit the
-   branch started from. "I did not run it" is a finding, never a footnote.
+   branch started from. "I did not run it" is a finding, never a footnote. The pre-commit hook
+   enforces it: it stays out of the way for commits that touch no hot-path file (docs, skills,
+   workflows, other crates) and blocks a commit that stages one until `bench-impact` has run for
+   the current hot-path files (`cargo xtask bench-impact --guard` is that check; it never runs the
+   benchmark). It checks that the run happened, not its numbers.
+   `DIMVEXA_SKIP_BENCH_GUARD=1` skips it once and is for a human to decide, never for an agent.
 3. The `review` skill (`skills/review/SKILL.md`) has been read and applied to **your own** diff:
    go through its checklist top to bottom and put the result (findings, or "no findings" and what
    you ran) in the report. Scratch or probe files are deleted, an untracked file is either

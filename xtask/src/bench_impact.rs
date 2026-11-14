@@ -6,6 +6,7 @@
 //! cargo xtask bench-impact --base REV      compare with REV instead of the merge base
 //! cargo xtask bench-impact --force         benchmark even if no hot-path file changed
 //! cargo xtask bench-impact --dry-run       only print the decision
+//! cargo xtask bench-impact --guard         pre-commit check: was it run for the staged hot paths?
 //! cargo xtask bench-impact --threshold 15 --runs 5 --layouts 5   passed on to bench-check
 //! ```
 //!
@@ -18,12 +19,20 @@
 //! base outside the noise. The `benchmarks` skill says what to do then: explain it, or have a
 //! fresh Opus subagent look for a faster implementation. Paste the output into the pull request.
 //!
+//! A run that finishes records, in the git directory, a fingerprint of the hot-path files it
+//! measured. `--guard` (called by `.githooks/pre-commit`) is cheap: it passes at once when no
+//! staged file is a hot-path file (docs, skills, tests outside the core, workflows), and
+//! otherwise passes only if the evidence matches the current hot-path files. It checks that the
+//! benchmark was run, not how the numbers came out: a slowdown is for a human to explain. It is
+//! never a second benchmark run. `DIMVEXA_SKIP_BENCH_GUARD=1` skips it once, loudly.
+//!
 //! It never runs the release matrix or the cross-library comparison; those stay manual
 //! (`bench-release` runs once per release, `bench-matrix` and `benchmarks/run_all.sh` are manual).
 #![allow(clippy::arithmetic_side_effects)]
 
-use std::path::Path;
-use std::process::ExitCode;
+use std::io::Write;
+use std::path::{Path, PathBuf};
+use std::process::{Command, ExitCode, Stdio};
 
 use crate::bench_check;
 
@@ -70,6 +79,7 @@ struct Opts {
     base: Option<String>,
     force: bool,
     dry_run: bool,
+    guard: bool,
     /// Options passed on to `bench-check` unchanged.
     pass: Vec<String>,
 }
@@ -82,6 +92,7 @@ fn parse_opts(args: &[String]) -> Result<Opts, String> {
             "--base" => o.base = Some(it.next().ok_or("--base needs a git revision")?.clone()),
             "--force" => o.force = true,
             "--dry-run" => o.dry_run = true,
+            "--guard" => o.guard = true,
             "--threshold" | "--runs" | "--layouts" => {
                 let v = it.next().ok_or_else(|| format!("{a} needs a value"))?;
                 o.pass.push(a.clone());
@@ -148,8 +159,136 @@ fn changed_files(root: &Path, base: &str) -> Result<Vec<String>, String> {
     Ok(files)
 }
 
+/// Runs git with `input` on its standard input and returns its trimmed output.
+fn git_stdin(root: &Path, args: &[&str], input: &str) -> Result<String, String> {
+    let mut child = Command::new("git")
+        .args(args)
+        .current_dir(root)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("cannot run git: {e}"))?;
+    if let Some(mut stdin) = child.stdin.take() {
+        stdin
+            .write_all(input.as_bytes())
+            .map_err(|e| format!("cannot write to git: {e}"))?;
+    }
+    let out = child
+        .wait_with_output()
+        .map_err(|e| format!("cannot run git: {e}"))?;
+    if out.status.success() {
+        Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+    } else {
+        Err(format!(
+            "git {} failed: {}",
+            args.join(" "),
+            String::from_utf8_lossy(&out.stderr).trim()
+        ))
+    }
+}
+
+/// A fingerprint of the hot-path files as they are in the working tree (tracked and new files,
+/// not ignored ones): what a benchmark run measures. Equal fingerprints mean equal hot code.
+fn fingerprint(root: &Path) -> Result<String, String> {
+    let mut args = vec![
+        "ls-files",
+        "-z",
+        "--cached",
+        "--others",
+        "--exclude-standard",
+        "--",
+    ];
+    args.extend(HOT_PATHS.iter().copied());
+    let listed = bench_check::git(root, &args)?;
+    let mut paths: Vec<&str> = listed
+        .split('\0')
+        .filter(|f| !f.is_empty() && root.join(f).is_file())
+        .collect();
+    paths.sort_unstable();
+    paths.dedup();
+    if paths.is_empty() {
+        return Ok("empty".to_string());
+    }
+    let hashes = git_stdin(root, &["hash-object", "--stdin-paths"], &paths.join("\n"))?;
+    let mut manifest = String::new();
+    for (p, h) in paths.iter().zip(hashes.lines()) {
+        manifest.push_str(&[p, " ", h, "\n"].concat());
+    }
+    git_stdin(root, &["hash-object", "--stdin"], &manifest)
+}
+
+fn evidence_path(root: &Path) -> Result<PathBuf, String> {
+    let rel = bench_check::git(root, &["rev-parse", "--git-path", "dimvexa-bench-impact"])?;
+    Ok(root.join(rel))
+}
+
+/// Remembers that the benchmark was run for the hot-path files as they are now.
+fn record_evidence(root: &Path, verdict: &str) -> Result<(), String> {
+    let line = format!("{} {verdict}\n", fingerprint(root)?);
+    std::fs::write(evidence_path(root)?, line).map_err(|e| format!("cannot record the run: {e}"))
+}
+
+/// The pre-commit check: cheap, and silent unless it blocks.
+fn guard(root: &Path) -> Result<bool, String> {
+    if std::env::var_os("DIMVEXA_SKIP_BENCH_GUARD").is_some() {
+        eprintln!(
+            "bench-guard: DIMVEXA_SKIP_BENCH_GUARD is set, so the benchmark requirement is \
+             skipped. Say so in the pull request."
+        );
+        return Ok(true);
+    }
+    let staged: Vec<String> = bench_check::git(
+        root,
+        &[
+            "-c",
+            "core.quotePath=false",
+            "diff",
+            "--cached",
+            "--name-only",
+            "--no-renames",
+            "-z",
+        ],
+    )?
+    .split('\0')
+    .filter(|f| !f.is_empty())
+    .map(str::to_string)
+    .collect();
+    let hot = hot_files(&staged);
+    if hot.is_empty() {
+        return Ok(true);
+    }
+    let now = fingerprint(root)?;
+    let recorded = std::fs::read_to_string(evidence_path(root)?).unwrap_or_default();
+    let mut parts = recorded.split_whitespace();
+    if parts.next() == Some(now.as_str()) {
+        if parts.next() == Some("slower") {
+            eprintln!(
+                "bench-guard: the recorded run found a guarded row slower than the threshold; \
+                 the pull request must explain it."
+            );
+        }
+        return Ok(true);
+    }
+    eprintln!("bench-guard: this commit changes a hot-path file and `cargo xtask bench-impact`");
+    eprintln!("bench-guard: has not been run for it (or the code changed since the last run):");
+    for f in &hot {
+        eprintln!("bench-guard:   {f}");
+    }
+    eprintln!("bench-guard: run `cargo xtask bench-impact` (about 3 minutes), then commit again.");
+    eprintln!("bench-guard: docs, skills, workflows and tests outside the core never need it.");
+    eprintln!(
+        "bench-guard: no baseline in this clone? add `--base REV`. Only a human decides to skip \
+         with DIMVEXA_SKIP_BENCH_GUARD=1."
+    );
+    Ok(false)
+}
+
 fn execute(args: &[String], root: &Path) -> Result<bool, String> {
     let o = parse_opts(args)?;
+    if o.guard {
+        return guard(root);
+    }
     let (base, label) = match &o.base {
         Some(rev) => (rev.clone(), "--base"),
         None => merge_base(root)?,
@@ -171,6 +310,7 @@ fn execute(args: &[String], root: &Path) -> Result<bool, String> {
              say so in the pull request.",
             HOT_PATHS.join(", ")
         );
+        record_evidence(root, "skipped")?;
         return Ok(true);
     }
     if hot.is_empty() {
@@ -188,6 +328,7 @@ fn execute(args: &[String], root: &Path) -> Result<bool, String> {
     let mut check: Vec<String> = vec!["--against".to_string(), base];
     check.extend(o.pass);
     let ok = bench_check::execute(&check, root)?;
+    record_evidence(root, if ok { "ok" } else { "slower" })?;
     println!(
         "bench-impact: machine {} {}; paste this output into the pull request",
         std::env::consts::OS,
@@ -207,7 +348,9 @@ fn execute(args: &[String], root: &Path) -> Result<bool, String> {
 pub fn run(args: &[String], root: &Path) -> ExitCode {
     match execute(args, root) {
         Ok(true) => {
-            println!("bench-impact: ok");
+            if !args.iter().any(|a| a == "--guard") {
+                println!("bench-impact: ok");
+            }
             ExitCode::SUCCESS
         }
         Ok(false) => ExitCode::FAILURE,
@@ -275,6 +418,26 @@ mod tests {
         }
     }
 
+    /// The hook only asks `xtask` when a coarse path filter matches, so the filter must cover
+    /// every hot path, or the guard would silently stop guarding.
+    #[test]
+    fn the_hook_prefilter_covers_every_hot_path() {
+        let root = crate::repo_root();
+        let hook = std::fs::read_to_string(root.join(".githooks/pre-commit")).unwrap();
+        let line = hook
+            .lines()
+            .find_map(|l| l.strip_prefix("HOT_PREFILTER=\""))
+            .and_then(|l| l.strip_suffix('"'))
+            .expect("the hook defines HOT_PREFILTER=\"...\"");
+        let prefixes: Vec<&str> = line.split_whitespace().collect();
+        for h in HOT_PATHS {
+            assert!(
+                prefixes.iter().any(|p| h.starts_with(p)),
+                "HOT_PATHS entry {h} is not covered by HOT_PREFILTER in .githooks/pre-commit"
+            );
+        }
+    }
+
     #[test]
     fn parses_options() {
         let a = |x: &[&str]| parse_opts(&v(x));
@@ -294,6 +457,7 @@ mod tests {
         assert_eq!(o.pass, v(&["--runs", "5", "--threshold", "15"]));
         assert!(a(&["--base"]).is_err());
         assert!(a(&["--runs"]).is_err());
+        assert!(a(&["--guard"]).unwrap().guard);
         assert!(a(&["--update"]).is_err());
     }
 }

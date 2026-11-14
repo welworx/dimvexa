@@ -14,6 +14,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Added
 
+- `cargo xtask bench-impact --guard` and a pre-commit step: a commit that stages a hot-path file is blocked until `bench-impact` has run for the current hot-path files; commits that touch only docs, skills, workflows or other crates are not affected.
 - Tests: `ratio_model` (equality, order and integrality against an independent `i128` model) and `roundtrip` (A to B to A is the identity in exact arithmetic and stays within 3 ulp, linear, or 8 ulp of the larger operand, affine, on the fast path).
 
 ## [0.7.0] - 2026-11-12
