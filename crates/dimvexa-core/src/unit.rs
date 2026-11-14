@@ -367,7 +367,7 @@ impl Unit {
         &self.note
     }
 
-    /// The reference state the unit is defined at (`273.15 K, 101 325 Pa` for `Nm3`), or an
+    /// The reference state the unit is defined at (`gauge: measured from the local ambient pressure` for `psig`), or an
     /// empty string for a unit without one (ADR-013).
     #[must_use]
     pub fn conditions(&self) -> &str {
@@ -385,7 +385,7 @@ pub struct UnitExpr {
     expr: Expr,
     dim: Dim,
     kind: Kind,
-    /// Signed power of the reference state: 1 for `Nm3`, -1 for `1/Nm3`, 0 without one.
+    /// Signed power of the reference state: 1 for `psig`, -1 for `1/psig`, 0 without one.
     ref_exp: i32,
     /// The reference state text of the unit that carries the reference (ADR-013), empty without.
     conditions: String,
@@ -447,7 +447,7 @@ impl UnitExpr {
     }
 
     /// The reference state of the unit that gives this expression its reference kind
-    /// (`273.15 K (0 °C), 101 325 Pa` for `Nm3/h`), or an empty string without one.
+    /// (`gauge: ...` for `psig/h`), or an empty string without one.
     #[must_use]
     pub fn conditions(&self) -> &str {
         &self.conditions
@@ -504,7 +504,7 @@ impl UnitExpr {
         self.kind
     }
 
-    /// The signed power of the reference state (ADR-013): 1 for `Nm3` or `Nm3/h`, -1 for `h/Nm3`,
+    /// The signed power of the reference state (ADR-013): 1 for `psig` or `psig/h`, -1 for `h/psig`,
     /// 0 for a unit without a reference. Two units convert only when kind and power agree.
     #[must_use]
     pub const fn reference_power(&self) -> i32 {
@@ -546,8 +546,8 @@ impl UnitExpr {
     }
 
     /// Kind and reference power of a product (`sign` 1) or quotient (`sign` -1). A reference
-    /// survives (`Nm3/h` is still a normal volume per time) and its power is tracked, so
-    /// `Nm3/m3` and `m3/Nm3` differ; the same reference cancels; two different references in
+    /// survives (`psig/h` is still a gauge pressure per time) and its power is tracked, so
+    /// `psig/Pa` and `Pa/psig` differ; the same reference cancels; two different references in
     /// one expression are refused.
     fn composed_reference(&self, other: &Self, sign: i32) -> Result<(Kind, i32)> {
         let overflow = || Error::Overflow {
@@ -681,8 +681,8 @@ impl UnitExpr {
         let ref_exp = self.ref_exp.checked_mul(exp).ok_or(Error::Overflow {
             operation: "reference power",
         })?;
-        // A power of 0 cancels the reference: `(scf)^0` is the plain number 1, not a
-        // dimensionless standard volume that would let an actual volume pass as `scf`.
+        // A power of 0 cancels the reference: `(psig)^0` is the plain number 1, not a
+        // dimensionless gauge pressure that would let an absolute pressure pass as `psig`.
         let keeps_reference = self.kind.tracks_power() && ref_exp != 0;
         Ok(Self {
             expr: Expr::Pow(Box::new(self.expr.clone()), exp),

@@ -641,29 +641,29 @@ fn a_density_literal_is_converted_to_kg_per_m3_exactly() {
 }
 
 /// ADR-013: a user unit built on a reference unit keeps the reference kind and its conditions, so
-/// `MMscf` is still a standard volume at 60 degF and 14.696 psia, also inside compound units.
+/// `bigpsig` is still a gauge pressure, also inside compound units.
 #[test]
 fn a_unit_built_on_a_reference_unit_keeps_the_reference_and_its_conditions() {
     let reg = with(
-        "[[unit]]\nsymbol = \"MMscf\"\nbase = \"scf\"\nfactor = \"1000000\"\n\
+        "[[unit]]\nsymbol = \"bigpsig\"\nbase = \"psig\"\nfactor = \"1000\"\n\
          exactness = \"defined\"\nsource = \"test\"\n\
-         [[unit]]\nsymbol = \"Mscfd\"\nbase = \"scf/d\"\nfactor = \"1000\"\n\
+         [[unit]]\nsymbol = \"bigpsigd\"\nbase = \"psig/d\"\nfactor = \"1000\"\n\
          exactness = \"defined\"\nsource = \"test\"\n",
     );
-    let scf = reg.get("scf").unwrap();
-    for symbol in ["MMscf", "Mscfd"] {
+    let psig = reg.get("psig").unwrap();
+    for symbol in ["bigpsig", "bigpsigd"] {
         let unit = reg.get(symbol).unwrap();
-        assert_eq!(unit.kind(), scf.kind(), "{symbol}");
-        assert_eq!(unit.conditions(), scf.conditions(), "{symbol}");
-        assert!(unit.conditions().contains("14.696 psia"), "{symbol}");
+        assert_eq!(unit.kind(), psig.kind(), "{symbol}");
+        assert_eq!(unit.conditions(), psig.conditions(), "{symbol}");
+        assert!(unit.conditions().contains("ambient"), "{symbol}");
     }
     // The size is the plain factor, within the reference.
-    assert_eq!(factor(&reg, "MMscf", "scf"), Ratio::from_int(1_000_000));
-    assert_eq!(factor(&reg, "Mscfd", "scf/d"), Ratio::from_int(1_000));
-    // And the reference still protects it: never to an actual or another reference volume.
-    for to in ["m3", "Nm3", "ft3"] {
+    assert_eq!(factor(&reg, "bigpsig", "psig"), Ratio::from_int(1_000));
+    assert_eq!(factor(&reg, "bigpsigd", "psig/d"), Ratio::from_int(1_000));
+    // And the reference still protects it: never to an absolute pressure.
+    for to in ["psi", "bar"] {
         assert_eq!(
-            reg.conversion("MMscf", to).unwrap_err().code(),
+            reg.conversion("bigpsig", to).unwrap_err().code(),
             "refused",
             "{to}"
         );
@@ -676,42 +676,42 @@ fn a_unit_built_on_a_reference_unit_keeps_the_reference_and_its_conditions() {
     assert_eq!(plain.get("pail").unwrap().conditions(), "");
     // The expression carries the conditions of the unit that has the reference.
     assert!(
-        reg.parse("MMscf/h")
+        reg.parse("bigpsig/h")
             .unwrap()
             .conditions()
-            .contains("14.696 psia")
+            .contains("ambient")
     );
     assert_eq!(reg.parse("m3/h").unwrap().conditions(), "");
-    assert_eq!(reg.parse("scf/scf").unwrap().conditions(), "");
+    assert_eq!(reg.parse("psig/psig").unwrap().conditions(), "");
 }
 
-/// Review of 2026-11-11: a power of 0 cancels a reference. `(scf)^0` is the plain number 1 and a
-/// unit built on it is plain, so it can never let an actual volume pass as `scf`; a reference at
+/// Review of 2026-11-11: a power of 0 cancels a reference. `(psig)^0` is the plain number 1 and a
+/// unit built on it is plain, so it can never let an absolute pressure pass as `psig`; a reference at
 /// any other power than 1 cannot be a base.
 #[test]
 fn a_power_zero_of_a_reference_unit_is_plain_and_cannot_reach_the_reference() {
     let reg = registry().unwrap();
-    let one = reg.parse("(scf)^0").unwrap();
+    let one = reg.parse("(psig)^0").unwrap();
     assert_eq!(one.kind().name(), "plain");
     assert_eq!(one.reference_power(), 0);
     assert_eq!(one.conditions(), "");
-    assert_eq!(reg.conversion("(Nm3)^0", "1").unwrap().factor(), Ratio::ONE);
+    assert_eq!(
+        reg.conversion("(psig)^0", "1").unwrap().factor(),
+        Ratio::ONE
+    );
 
     let reg = with(
-        "[[unit]]\nsymbol = \"stdref\"\nbase = \"(scf)^0\"\nfactor = \"1\"\n\
+        "[[unit]]\nsymbol = \"stdref\"\nbase = \"(psig)^0\"\nfactor = \"1\"\n\
          exactness = \"defined\"\nsource = \"test\"\n",
     );
     let stdref = reg.get("stdref").unwrap();
     assert_eq!(stdref.kind().name(), "plain");
     assert_eq!(stdref.conditions(), "");
-    for to in ["scf", "Nm3"] {
-        assert_eq!(
-            reg.conversion("stdref.m3", to).unwrap_err().code(),
-            "refused",
-            "{to}"
-        );
-    }
-    for base in ["(scf)^2", "1/scf", "Nm3/Nm3.scf"] {
+    assert_eq!(
+        reg.conversion("stdref.Pa", "psig").unwrap_err().code(),
+        "refused"
+    );
+    for base in ["(psig)^2", "1/psig"] {
         let text = format!(
             "[[unit]]\nsymbol = \"x\"\nbase = \"{base}\"\nfactor = \"1\"\n\
              exactness = \"defined\"\nsource = \"test\"\n"

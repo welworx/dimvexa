@@ -34,11 +34,11 @@ Fixing one: remove or change the pinning test, update the entry (or delete it), 
 | KL-20 | (fixed by ADR-018, step 3) A value could only be a plain number, so `2*pi`, `2pi` and `pi/2` were `invalid_number`. A value may now contain `pi`, `* / ^` and parentheses, and stays exact. Still refused: a constant that has a unit (`2*h_P`, `refused`) and any addition. | Nothing for `pi`; a value with `h_P`, `e`, `k_B` or `N_A` is refused. | Fixed for dimensionless constants. | Pinned by `a_value_may_contain_pi_and_operators`. A constant with a unit in a value would have to multiply its unit into FROM; not done.
 | KL-21 | (fixed by ADR-020) Angle is dimensionless, so `rad/s` and `Hz` used to convert 1:1, which is wrong for a frequency (f = w / 2 pi). `Hz` is now the kind `cycle` and the angle units the kind `angle`; the conversion between them is refused (`kind_mismatch`). Still open: `rev`, `turn` and `rpm` are not shipped, and `rad/s` to `Hz` has no built-in 2 pi path. | `convert 1 rad/s Hz` (refused). | Fixed by refusal, not by a factor. | Pinned by `an_angle_rate_and_a_cycle_rate_do_not_convert`. A context option that applies 2 pi, and `rev`/`turn`/`rpm` as units. |
 
-## Gauge pressure and standard volumes (ADR-013)
+## Gauge pressure (ADR-013) and gas volumes (ADR-021)
 
 | ID | Limitation | When you see it | Why it is not fixed yet | Idea for the fix |
 |---|---|---|---|---|
-| KL-22 | A unit tied to a reference state (`Nm3`, `scf`, `psig`, `barg`) converts only within its own reference (ADR-013): `Nm3/h` to `Nm3/min` works, but `Nm3` to `m3`, `Nm3` to `scf` and `scf` to `ft3` are refused with `refused`. Only one reference per family ships (normal 0 degC, standard 60 degF and 14.696 psia); `Sm3` (15 degC), the 20 degC normal volume and 14.73 psia are not available. | `convert 1 Nm3 m3`, `convert 1 Nm3 scf`. | The ratio between two states assumes an ideal gas, which ADR-001 keeps out of the core. A second reference per family needs a reference table (ADR-013). | A cross-reference ratio belongs in a separate crate with its model named, its assumption and error bound stated, and its own ADR. Extra references come by unit request.
+| KL-22 | A unit tied to a reference state (`psig`, `barg`, `Pag`) converts only within its own reference (ADR-013): `psig` to `barg` works, `psig` to `bar` is refused with `refused`. Gas volumes at stated reference conditions (`Nm3`, `Sm3`, `scf` and their multiples such as `MMscf/d`) are not implemented (ADR-021): the error says why and that the step belongs in an engineering tool. | `convert 1 psig bar`, `convert 1 Nm3 m3`. | Relating a standard or normal volume to an actual one assumes a gas model, which ADR-001 keeps out of the library for good. | None planned; the ADR-021 decision would have to be reversed. |
 | KL-23 | Gauge to absolute pressure is refused (`psig` to `bar`, `Pa` to `barg`). Assuming 101.325 kPa would silently be wrong at any real site. | `convert 5 psig bar`. | This is missing data (the ambient pressure), not a gas model. | Let the caller supply the ambient pressure (ADR-013 item 4); a relaxed mode that assumes it needs its own ADR.
 
 ## Numbers with powers of ten and pi (ADR-018)
@@ -60,15 +60,12 @@ against the paper's Table 1; there is no `water_20C` yet for the same reason.
 
 These units ship with a source that was written from memory of the document, not checked against
 its text. The factors were recomputed exactly (and the review of 2026-11-10 recomputed them
-again), so the open question is the wording and the edition of the citation, and for `scf` the
-pressure base itself. Each item is done when someone has the document open, confirms or corrects
+again), so the open question is the wording and the edition of the citation. Each item is done when someone has the document open, confirms or corrects
 the `source` and `note` in `crates/dimvexa-data/data/units/common.toml` and the matching vector in
 `data/vectors/common.toml`, runs `cargo xtask update-data-hash`, and deletes the row here.
 
 | Unit | Claim to verify | Where it is cited | What to look at |
 |---|---|---|---|
-| `scf` | 60 degF and 14.696 psia as the reference state | `source` and `conditions` of `scf` | GPA Standard 2145 (find the edition, and the table that states the base conditions); the review doubted a link to API MPMS 14.3, which is usually quoted with 14.73 psia, so that citation was removed. If the standard gives another base, change `conditions` and the note, not only the source. |
-| `Nm3` | normal condition 273.15 K and 101 325 Pa | `source` and `conditions` of `Nm3` | DIN 1343 (the year 1990 is cited); the standard is paywalled. Check the year and that "normal condition" is the term it uses. |
 | `bbl` | 42 US gallons per petroleum barrel, 1.589 873 E-01 m^3 | `source` of `bbl` and its vector | NIST SP 811 (2008), Appendix B.8, entry "barrel [for petroleum, 42 gallons (U.S.)]"; confirm the exact wording and the printed value. |
 | `psig`, `barg`, `Pag` | gauge pressure is measured from the ambient pressure | `source` of the three units | NIST SP 811 gives `psi` and `bar` only; look for a standard that defines gauge pressure (for example ISO 80000-4 or ISO 80000-1) and cite it, or keep the current wording as a statement of the definition. |
 

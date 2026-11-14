@@ -223,10 +223,6 @@ psig	psig	Pound-force per square inch gauge	gauge_pressure	defined	none	-	NIST S
 barg	barg	Bar gauge	gauge_pressure	defined	none	-	NIST SP 811 (2008), Appendix B (bar = 100 kPa); gauge pressure is measured from the ambient pressure (ADR-013)
 Pag	Pag	Pascal gauge	gauge_pressure	defined	si	-	BIPM SI Brochure (2019), Table 4 (pascal); gauge pressure is measured from the ambient pressure (ADR-013)
 
-## volume
-Nm3	Nm³	Normal cubic metre	normal_volume	defined	none	Nm³	DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa
-scf	scf	Standard cubic foot	standard_volume	defined	none	-	NIST SP 811 (2008), Appendix B (foot, so the cubic foot is 0.3048^3 m^3); reference state 60 degF and 14.696 psia per GPA Standard 2145 (edition not checked)
-
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note
 ton	ton_short, ton_long, tonne	-	short ton (2000 lb), long ton (2240 lb) and metric tonne (1000 kg) are all called ton

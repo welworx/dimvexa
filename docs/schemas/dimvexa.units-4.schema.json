@@ -114,8 +114,6 @@
                   "absolute_temperature",
                   "temperature_difference",
                   "gauge_pressure",
-                  "normal_volume",
-                  "standard_volume",
                   "angle",
                   "cycle"
                 ]
@@ -477,8 +475,6 @@
                 "absolute_temperature",
                 "temperature_difference",
                 "gauge_pressure",
-                "normal_volume",
-                "standard_volume",
                 "angle",
                 "cycle"
               ]

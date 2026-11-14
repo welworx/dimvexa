@@ -111,7 +111,7 @@ fn known_limitation_kl_9_prefix_mode_is_not_checked_against_the_unit() {
 #[test]
 fn known_limitation_kl_22_reference_states_never_convert_across() {
     let reg = registry().unwrap();
-    for (from, to) in [("Nm3", "m3"), ("scf", "Nm3"), ("m3", "Nm3"), ("scf", "ft3")] {
+    for (from, to) in [("psig", "bar"), ("Pa", "barg"), ("psig", "psi")] {
         let err = reg.conversion(from, to).unwrap_err();
         assert_eq!(
             err.code(),

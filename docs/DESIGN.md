@@ -36,7 +36,6 @@ Each unit has a `Kind` on top of its dimension.
 | Pressure | `AbsPressure`, `GaugePressure`, `PressureDifference` | gauge → absolute needs an explicit reference pressure (default 101325 Pa, overridable) |
 | Composition | `MassFraction`, `MoleFraction`, `VolumeFraction`, concentrations | not convertible to each other without composition data. Bare `ppm` is rejected; use `ppmw`, `ppmv`, `ppmmol` |
 | Angle and cycle | `Angle`, `Cycle` | angle stays dimensionless (ADR-007). `rad/s` and `Hz` do not convert (they differ by 2 pi per cycle, ADR-020); each converts to a plain `1/s` |
-| Standard volume | Nm³, Sm³, scf, MMSCFD | stored as a volume (m^3) with a reference kind (ADR-013); the reference state (T, p) is the unit's `conditions` text. Conversion to actual volume needs an equation of state and is refused by the core |
 
 ### 3.3 Conversion shapes
 A small closed set. Each shape has an exact inverse.
@@ -48,7 +47,7 @@ A small closed set. Each shape has an exact inverse.
 | Logarithmic | dB, Np, pH, magnitudes |
 | Reciprocal | mpg ↔ L/100 km |
 | Formula scale | API gravity, Baumé, Brix, Twaddell, wire gauges |
-| Context-dependent | mass ↔ mole, mass ↔ volume, standard volumes |
+| Context-dependent | mass ↔ mole, mass ↔ volume |
 
 Formula scales are chosen from this set by name in the data table, so a plugin can add a Baumé-style scale without Rust code.
 
@@ -75,7 +74,7 @@ Units are data (TOML, with a JSON export). Fields:
 ## 5. Parser
 
 - UCUM-like grammar: `.` and `/`, integer exponents, SI prefixes.
-- Engineering aliases: `kmol/h`, `Nm3/h`, `barg`, `cP`, `gal/min`, `bbl/d`.
+- Engineering aliases: `kmol/h`, `barg`, `cP`, `gal/min`, `bbl/d`.
 - Explicit precedence rules. Patterns like `m^3 Pa / mol K` are rejected as ambiguous or parsed by a documented rule, with a lint.
 - Parsing happens once per binding, never per evaluation.
 
@@ -88,7 +87,7 @@ Users take the base and choose what else they need, or take everything.
 | Crate / feature | Contents |
 |---|---|
 | `dimvexa-core` (base) | dimensions, kinds, shapes, rational factors, parser, registry, SI and SI-derived units, SI prefixes, binary prefixes |
-| `pack-process` | pressure (bar, atm, mmHg, psi, barg), flow (Nm3/h, kmol/h, gal/min), viscosity (cP), energy (BTU variants, kcal), thermal conductivity, standard volumes |
+| `pack-process` | pressure (bar, atm, mmHg, psi, barg), flow (kmol/h, gal/min), viscosity (cP), energy (BTU variants, kcal), thermal conductivity |
 | `pack-imperial` | US customary, imperial, survey units, apothecary, avoirdupois, troy |
 | `pack-science` | CGS, atomic units, natural units, astronomy, particle physics (measured constants marked) |
 | `pack-engineering` | electrical, acoustics, wire gauges, hardness and other engineering scales |
@@ -157,7 +156,7 @@ dimvexa/
 
 - **Rust API:** docs.rs from rustdoc. Doc examples are compiled and run as tests.
 - **Python API and user guide:** Sphinx on Read the Docs, with type stubs for autodoc and per-version docs.
-- **Concepts pages:** absolute vs delta temperature, gauge vs absolute pressure, standard volumes, mass vs mole fractions, why bare `ppm` is rejected, exact vs fast mode.
+- **Concepts pages:** absolute vs delta temperature, gauge vs absolute pressure, mass vs mole fractions, why bare `ppm` is rejected, exact vs fast mode.
 - **Unit reference:** generated from the unit tables (symbol, aliases, dimension, kind, exact factor, namespace, source), so it cannot drift.
 - **Pack guide:** what each pack contains and how to choose.
 - **Plugin guide:** adding namespaced units and scales through data.
@@ -168,7 +167,7 @@ dimvexa/
 
 1. **M0 (spike):** dimension vector, rational factors, linear and affine shapes, small parser, 50 units, first Criterion benchmarks. Goal: validate the speed targets.
 2. **M1:** kinds (temperature, pressure), registry with namespaces, `pack-process`, Python binding.
-3. **M2:** composition kinds, standard volumes, formula and logarithmic shapes, `pack-scales`, WASM binding.
+3. **M2:** composition kinds, formula and logarithmic shapes, `pack-scales`, WASM binding.
 4. **M3:** remaining packs, UCUM conformance, docs site, iai-callgrind CI.
 5. **Later:** Excel add-in, C ABI, Pint/unyt adapters.
 
@@ -186,6 +185,6 @@ dimvexa/
 ## 12. Known limits
 
 - No library can cover every unit. The aim is an authoritative, extensible table, with loud failure for unknown or ambiguous input.
-- Standard-volume handling in the core covers definitions only. Actual volumes need an equation of state outside this library.
+- Gas volumes at stated reference conditions (`Nm3`, `scf`) are not implemented (ADR-021): relating them to an actual volume needs an equation of state, which this library never includes.
 - Measured constants (eV, Dalton, G) change between CODATA releases; the table pins a CODATA version.
 - Not verified: Excel Office.js WASM limits (memory, startup time, Mac behaviour), and all speed targets.

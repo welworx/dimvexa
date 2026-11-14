@@ -116,8 +116,6 @@ fn unit_def(t: &toml_lite::Table) -> Res<String> {
         "absolute_temperature" => "Kind::AbsoluteTemperature",
         "temperature_difference" => "Kind::TemperatureDifference",
         "gauge_pressure" => "Kind::GaugePressure",
-        "normal_volume" => "Kind::NormalVolume",
-        "standard_volume" => "Kind::StandardVolume",
         "angle" => "Kind::Angle",
         "cycle" => "Kind::Cycle",
         other => return Err(ctx(format!("unknown kind '{other}'"))),

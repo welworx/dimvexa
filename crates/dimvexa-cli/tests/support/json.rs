@@ -317,8 +317,6 @@ pub fn check_units_schema(v: &V) {
                 "absolute_temperature",
                 "temperature_difference",
                 "gauge_pressure",
-                "normal_volume",
-                "standard_volume",
                 "angle",
                 "cycle",
             ]

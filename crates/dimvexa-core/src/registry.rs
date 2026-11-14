@@ -52,6 +52,32 @@ pub struct Registry {
     lowered: HashMap<String, Vec<String>>,
 }
 
+/// Gas volumes at stated reference conditions (normal, standard, ...). They are not units of
+/// this library (ADR-021): relating them to an actual volume, to another reference state or to
+/// a mass or an amount needs an equation of state or a gas model (ADR-001).
+const OUT_OF_SCOPE_GAS_VOLUMES: [&str; 17] = [
+    "Nm3", "Nm\u{b3}", "Sm3", "Sm\u{b3}", "scf", "Mscf", "MMscf", "Bscf", "Tscf", "scfd", "scfm",
+    "scfh", "Mscfd", "MMscfd", "MMSCFD", "NM3", "SCF",
+];
+
+/// The error for a name in [`OUT_OF_SCOPE_GAS_VOLUMES`]: not implemented, and why.
+fn out_of_scope(symbol: &str) -> Option<Error> {
+    if !OUT_OF_SCOPE_GAS_VOLUMES.contains(&symbol) {
+        return None;
+    }
+    Some(Error::Refused {
+        reason: format!(
+            "'{symbol}' is not implemented: it is a gas volume at stated reference conditions, \
+             and relating it to an actual volume, to another reference state or to a mass or \
+             an amount of gas needs an equation of state or a gas model, which dimvexa does not \
+             include and will not (ADR-001, ADR-021). Do that step in an engineering tool with \
+             your own gas model and conditions, then convert the resulting actual volume here \
+             (m3, L, ft3, ...)"
+        ),
+        suggestions: Vec::new(),
+    })
+}
+
 impl Registry {
     /// An empty registry.
     #[must_use]
@@ -114,7 +140,9 @@ impl Registry {
         if self.by_symbol.contains_key(name) {
             return false;
         }
+        // A name that is only "not implemented" (ADR-021) is free for a config to define.
         self.ambiguous.contains_key(name)
+            || out_of_scope(name).is_some()
             || matches!(self.resolve_symbol(name), Err(Error::UnknownUnit { .. }))
     }
 
@@ -436,6 +464,9 @@ impl Registry {
                         candidates: cands.iter().map(|c| format!("{}{c}", p.symbol)).collect(),
                     });
                 }
+                if let Some(e) = out_of_scope(symbol) {
+                    return Err(e);
+                }
                 Err(Error::UnknownUnit {
                     symbol: symbol.to_string(),
                     suggestions: self.suggestions(symbol),
@@ -482,6 +513,12 @@ impl Registry {
                             });
                         }
                         return self.resolve_symbol(&joined);
+                    }
+                    // `Nm3` lexes as `Nm` to the power 3: say what it is, not "unknown unit Nm".
+                    if self.get(&joined).is_none() && self.resolve_symbol(s).is_err() {
+                        if let Some(e) = out_of_scope(&joined) {
+                            return Err(e);
+                        }
                     }
                 }
                 self.resolve(a)?.pow(*n)

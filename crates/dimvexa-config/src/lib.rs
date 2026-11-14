@@ -1136,8 +1136,8 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
         .map_err(|e| at(&u.origin, u.line, e))?
         .with_prefixes(u.prefixes)
         .with_provenance(base.exactness().combine(u.exactness), &u.source, &note)
-        // A unit built on a reference unit (a config `MMscf` from `scf`) keeps its reference
-        // state text, so `units MMscf` still says where the volume is measured (ADR-013).
+        // A unit built on a reference unit (a config `bigpsig` from `psig`) keeps its reference
+        // state text, so `units bigpsig` still says what the pressure is measured from (ADR-013).
         .with_conditions(base.conditions())
         .with_namespace("user");
     reg.register(unit).map_err(|e| at(&u.origin, u.line, e))

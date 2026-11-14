@@ -553,18 +553,3 @@ to = "Pag"
 expect = "1000"
 source = "BIPM SI Brochure (2019), Table 7 (prefix kilo = 10^3), both gauge"
 
-[[vector]]
-unit = "Nm3"
-value = "60"
-from = "Nm3/h"
-to = "Nm3/min"
-expect = "1"
-source = "BIPM SI Brochure (2019), Table 8 (1 h = 60 min); the normal cubic metre keeps its reference state"
-
-[[vector]]
-unit = "scf"
-value = "1"
-from = "scf/min"
-to = "scf/h"
-expect = "60"
-source = "BIPM SI Brochure (2019), Table 8 (1 h = 60 min); the standard cubic foot keeps its reference state"

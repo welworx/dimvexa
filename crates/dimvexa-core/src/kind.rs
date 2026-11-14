@@ -32,10 +32,6 @@ pub enum Kind {
     /// A pressure read relative to the (unspecified) ambient pressure: `psig`, `barg`, `Pag`
     /// (ADR-013). It converts only to another gauge unit.
     GaugePressure,
-    /// A gas volume at the normal state of DIN 1343 (273.15 K, 101 325 Pa): `Nm3` (ADR-013).
-    NormalVolume,
-    /// A gas volume at 60 degF and 14.696 psia: `scf` (ADR-013).
-    StandardVolume,
     /// A plane angle (`rad`, `deg`, `arcmin`, ...). Angle stays dimensionless (ADR-007), but it
     /// does not convert to a cycle count (ADR-020): `rad/s` and `Hz` differ by a factor 2 pi.
     Angle,
@@ -47,13 +43,10 @@ pub enum Kind {
 impl Kind {
     /// True for a kind that is tied to a stated reference state (ADR-013). Such a unit
     /// converts only to a unit of the same kind, and the kind survives in compound units
-    /// (`Nm3/h` keeps the reference of `Nm3`).
+    /// (`psig/h` keeps the reference of `psig`).
     #[must_use]
     pub const fn is_reference(self) -> bool {
-        matches!(
-            self,
-            Self::GaugePressure | Self::NormalVolume | Self::StandardVolume
-        )
+        matches!(self, Self::GaugePressure)
     }
 
     /// True for [`Kind::Angle`] and [`Kind::Cycle`] (ADR-020). Their power is tracked through
@@ -79,8 +72,6 @@ impl Kind {
             Self::AbsoluteTemperature => "absolute_temperature",
             Self::TemperatureDifference => "temperature_difference",
             Self::GaugePressure => "gauge_pressure",
-            Self::NormalVolume => "normal_volume",
-            Self::StandardVolume => "standard_volume",
             Self::Angle => "angle",
             Self::Cycle => "cycle",
         }
@@ -94,8 +85,6 @@ impl Kind {
             "absolute_temperature" => Some(Self::AbsoluteTemperature),
             "temperature_difference" => Some(Self::TemperatureDifference),
             "gauge_pressure" => Some(Self::GaugePressure),
-            "normal_volume" => Some(Self::NormalVolume),
-            "standard_volume" => Some(Self::StandardVolume),
             "angle" => Some(Self::Angle),
             "cycle" => Some(Self::Cycle),
             _ => None,
@@ -204,8 +193,8 @@ mod tests {
         Kind::AbsoluteTemperature,
         Kind::TemperatureDifference,
         Kind::GaugePressure,
-        Kind::NormalVolume,
-        Kind::StandardVolume,
+        Kind::Angle,
+        Kind::Cycle,
     ];
 
     #[test]

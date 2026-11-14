@@ -198,7 +198,7 @@ Runs in CI and fails on:
 
 Full model: `unit-system-design.md`. The points below are decisions the first implementation must settle, each as a short ADR in `docs/adr/`.
 
-- **ADR-001, no equations.** The library performs no conversion that needs an equation of state, a density or an empirical correlation. Standard volumes (Nm3, Sm3, scf and similar) are separate units, each defined by an exact stated reference condition. Conversion between two different reference conditions, or between a standard volume and an actual volume, is refused (no caller-supplied factor mechanism exists yet). Compositions (mass, mole, volume fractions) never convert into each other without caller-supplied composition data.
+- **ADR-001, no equations.** The library performs no conversion that needs an equation of state, a density or an empirical correlation. Gas volumes at stated reference conditions (Nm3, Sm3, scf and similar) are not implemented (ADR-021): they need an equation of state to relate to an actual volume. Compositions (mass, mole, volume fractions) never convert into each other without caller-supplied composition data.
 - **ADR-002, exactness.** Every factor is a rational. Each unit is marked `defined` (exact by definition) or `measured` (with the CODATA release pinned, proposed CODATA 2022). Measured values are stored as exact rationals of the published decimal, with the uncertainty recorded alongside.
 - **ADR-003, `no_std`.** Decide whether the core is `no_std` + `alloc`. Helps WASM size and embedded users. Cost: restrictions on dependencies.
 - **ADR-004, number representation.** Candidates: `i128` rational with checked arithmetic (fast, may overflow on exotic compound units); big rational behind an `exact` feature (slow, always exact); decimal. Proposed: `i128` rational in the core with checked ops, an `exact` feature with big integers for audits and for compounding at load time, and a collapsed `f64` multiply-add for the fast path. Prototype in M0 and measure overflow on the planned table.
@@ -544,7 +544,7 @@ The API below is a provisional sketch to show the intent, not a final design.
    println!("{}", energy.to("kWh")?);   // 264 kWh
    println!("{}", energy.to("MJ")?);    // 950.4 MJ
    ```
-2. **Process plant:** gauge to absolute pressure (`barg` to `bar` with an explicit atmospheric pressure), `kmol/h` and `lbmol/h`, `Nm3/h` as a stated reference-condition unit, and what happens when you try to convert `Nm3/h` to `m3/h` (a refusal with a clear message, plus how to pass your own factor).
+2. **Process plant:** gauge to absolute pressure (`barg` to `bar` with an explicit atmospheric pressure), `kmol/h` and `lbmol/h`, and that `Nm3/h` or `scf/h` is deliberately not implemented (ADR-021), with the reason in the error.
 3. **Temperature done right:** absolute vs difference; why `degC` to `delta_degC` is refused (the error suggests the `delta_` unit), why `degC` to `K` converts, and why a K inside a compound unit such as kJ/(kg K) or W/(m K) is a temperature difference, so `kJ/(kg K)` and `kJ/(kg delta_K)` are the same unit. (Adding and subtracting temperatures was removed by ADR-014: dimvexa converts only.)
 4. **Home heating:** gas consumption in m3, kWh, MJ, therm and MMBtu using stated calorific-value factors supplied by the caller (not computed by the library).
 5. **Cooking and household:** US cup, tablespoon, fluid ounce vs imperial ones; why a bare `gal` or `oz` is rejected unless a config such as `us` or `gb` is loaded.
@@ -559,7 +559,7 @@ The API below is a provisional sketch to show the intent, not a final design.
 |---|---|
 | base | SI base and derived units, SI prefixes, binary prefixes, dimensionless units, time units, percent and per-mille, temperature kinds (points: K, degC, degF, degR; differences: delta_K, delta_degC, delta_degF, delta_degR) |
 | `common` | The optional pack of everyday conversions: energy (kWh, MJ, BTU variants, kcal, therm), power (kW, hp variants), volume (L, US and imperial gal, cup, fl oz), mass (lb, oz variants, tonne, US ton, long ton), length (in, ft, yd, mi, nmi), pressure (bar, psi, atm, mmHg, torr), speed, area, fuel economy. Ambiguous names only through configs |
-| `process` | barg/psig, kmol/h, lbmol/h, standard-volume units with stated reference conditions, cP, cSt, W/(m K), kJ/(kg K), Btu/(lb degF), bbl/d, ppm variants, mol%, wt% |
+| `process` | barg/psig, kmol/h, lbmol/h, cP, cSt, W/(m K), kJ/(kg K), Btu/(lb degF), bbl/d, ppm variants, mol%, wt% |
 | `imperial` | Full US customary, imperial, survey units, avoirdupois, troy, apothecary |
 
 `science`, `engineering`, `scales`, `historical`, `ucum` follow in later milestones. The Tier 1 list (about 150 to 300 units) will come from the inventory research that is scheduled; until then, seed M0 with about 50 units chosen from the table above.
@@ -583,8 +583,8 @@ Create these as GitHub issues and a milestone each.
 - Temperature kinds and pressure kinds, namespaces and configs, `process` and `common` packs (Tier 1 subset), mdBook skeleton, first cookbook examples (pool pump first), `release-plz`, first `0.1.0`.
 - `dimvexa-cli` with `convert`, `batch`, `info`, `list`, `search`, `--exact` and `--json` (schema `dimvexa.convert/1`), snapshot tests, release binaries.
 
-**M2: composition, standard volumes, scales**
-- Composition kinds, standard-volume units with reference conditions, logarithmic and reciprocal shapes, `scales` pack per ADR-005, exact (big-rational) feature, unit reference generation, mutation testing and long fuzz in the weekly job.
+**M2: composition, scales**
+- Composition kinds, logarithmic and reciprocal shapes, `scales` pack per ADR-005, exact (big-rational) feature, unit reference generation, mutation testing and long fuzz in the weekly job.
 - `parallel` feature (rayon) with thresholds and speed-up benchmarks; determinism test against the serial path.
 
 **M3: breadth and hardening**
