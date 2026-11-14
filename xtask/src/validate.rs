@@ -197,6 +197,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
     }
 
     // ---- units
+    let mut unit_sources: BTreeMap<String, String> = BTreeMap::new();
     let mut rows: BTreeMap<String, Row> = BTreeMap::new();
     let mut names: BTreeMap<String, String> = BTreeMap::new(); // symbol or alias -> owner
     for (fname, t) in &unit_tables {
@@ -218,6 +219,14 @@ pub fn run(root: &Path) -> Result<Report, String> {
                 Ok(_) => err(format!("{at}: '{key}' is empty")),
                 Err(_) => err(format!("{at}: missing '{key}'")),
             }
+        }
+        if let Ok(src) = t.str("source") {
+            if let Some(word) = banned_source(src) {
+                err(format!(
+                    "{at}: source cites '{word}', which is not a primary source"
+                ));
+            }
+            unit_sources.insert(sym.clone(), src.trim().to_lowercase());
         }
         match t.str("exactness") {
             Ok("defined" | "measured") => {}
@@ -397,6 +406,19 @@ pub fn run(root: &Path) -> Result<Report, String> {
         if let Ok(Some(tol)) = t.opt_str("rel_tol") {
             if tol.parse::<Ratio>().is_err() {
                 err(format!("{at}: rel_tol '{tol}' is not a number"));
+            }
+        }
+        if let Ok(src) = t.str("source") {
+            if let Some(word) = banned_source(src) {
+                err(format!(
+                    "{at}: source cites '{word}', which is not a primary source"
+                ));
+            }
+            let own = t.str("unit").ok().and_then(|u| unit_sources.get(u));
+            if own.is_some_and(|o| *o == src.trim().to_lowercase()) {
+                err(format!(
+                    "{at}: the vector cites the same source string as the unit; give it its own citation (the derivation of 'expect')"
+                ));
             }
         }
         if let Ok(u) = t.str("unit") {
@@ -598,6 +620,30 @@ fn unit_expression_is_known(expr: &str, rows: &BTreeMap<String, Row>) -> bool {
     })
 }
 
+/// Sources that are not primary: GPL unit data (never copied, see rule 3 of `AGENTS.md`), wikis
+/// and another library's output. Returns the offending word.
+fn banned_source(source: &str) -> Option<&'static str> {
+    let lower = source.to_lowercase();
+    [
+        "gnu units",
+        "units.dat",
+        "rink",
+        "wikipedia",
+        "wikidata",
+        "stackoverflow",
+    ]
+    .into_iter()
+    .find(|w| {
+        lower.match_indices(w).any(|(at, _)| {
+            let before = lower.get(..at).and_then(|h| h.chars().next_back());
+            let after = lower
+                .get(at.saturating_add(w.len())..)
+                .and_then(|h| h.chars().next());
+            !before.is_some_and(char::is_alphanumeric) && !after.is_some_and(char::is_alphanumeric)
+        })
+    })
+}
+
 #[cfg(test)]
 #[allow(
     clippy::unwrap_used,
@@ -647,6 +693,35 @@ mod tests {
     fn the_real_table_is_valid() {
         let report = run(&crate::repo_root()).unwrap();
         assert!(report.errors.is_empty(), "{:?}", report.errors);
+    }
+
+    #[test]
+    fn banned_sources_are_found_as_whole_words() {
+        assert_eq!(
+            banned_source("GNU units, definitions.units"),
+            Some("gnu units")
+        );
+        assert_eq!(banned_source("Wikipedia: Foot"), Some("wikipedia"));
+        assert_eq!(
+            banned_source("BIPM SI Brochure, 9th ed. (2019), ch. 2"),
+            None
+        );
+        assert_eq!(
+            banned_source("NIST SP 811, Appendix B (pinta, drinker)"),
+            None
+        );
+    }
+
+    #[test]
+    fn detects_a_banned_source() {
+        let e = errors_after("src", "units/common.toml", |t| {
+            t.replacen(
+                "source = \"NIST SP 811 (2008), Appendix B (bar = 100 kPa)\"",
+                "source = \"GNU units definitions.units\"",
+                1,
+            )
+        });
+        assert!(has(&e, "not a primary source"), "{e:?}");
     }
 
     #[test]

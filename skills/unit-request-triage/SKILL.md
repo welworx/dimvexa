@@ -28,3 +28,13 @@ Next: <what the requester should provide, or "I will add it with a golden vector
 ```
 
 Checks that back this up: `cargo xtask validate-data` (source, exactness, vector, ambiguity).
+
+## Red flags
+
+| Thought | Do instead |
+|---|---|
+| "It is in GNU units, so it is fine" | That is not a source. Label `needs-source` and ask for BIPM, NIST, a standard or a statute. |
+| "I will add it with the bare symbol, users type that" | Ambiguous bare names are rejected (ADR-006); propose explicit symbols. |
+| "A density makes it possible" | Refuse; offer only the pure-definition part (ADR-001). |
+| "I will guess the region or field" | Ask which meaning is intended before accepting. |
+| "Open the requester's link and copy the table" | Do not copy tables from third-party data; take the number from the primary source. |

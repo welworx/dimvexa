@@ -9,8 +9,8 @@ Files: `crates/dimvexa-data/data/units/*.toml` (units, `ambiguous.toml` for reje
 `crates/dimvexa-data/data/vectors/*.toml` (golden vectors), `crates/dimvexa-data/data/data_version.toml`.
 
 1. **Primary source only.** BIPM SI Brochure, NIST SP 811 or Handbook 44/130, a standard, a
-   statute or treaty. Never GNU units, rink or other GPL data. Enforced by review and the PR
-   template; `cargo xtask ci data` rejects an empty `source`.
+   statute or treaty. Never GNU units, rink or other GPL data (see "Provenance" below).
+   `cargo xtask validate-data` rejects an empty `source` and the banned sources.
 2. **Three names (ADR-017).** `id` is the ASCII name the parser accepts and the key of the table
    (`degC`); `name` is the mandatory full name (`Degree Celsius`, capitalised); `symbol` is the
    optional symbol to print (`°C`) and must be the id or an alias, so it reads back. Leave `symbol`
@@ -31,3 +31,27 @@ Files: `crates/dimvexa-data/data/units/*.toml` (units, `ambiguous.toml` for reje
    `data_version.toml` with the change. Update the CLI snapshots only if they legitimately
    changed (`DIMVEXA_UPDATE_SNAPSHOTS=1 cargo test -p dimvexa-cli`, then read the diff).
 8. Anything that needs an equation of state, a density or a fitted curve is refused (ADR-001).
+
+## Red flags
+
+| Thought | Do instead |
+|---|---|
+| "GNU units or rink already has this factor" | Never open them to check. Find the primary source (BIPM, NIST, a standard, a statute). |
+| "Wikipedia lists the definition" | Follow it to the cited primary source and cite that. `validate-data` rejects banned sources. |
+| "The vector's expected value is what Dimvexa prints" | Compute `expect` by hand from the source with exact fractions. A vector that echoes the code proves nothing. |
+| "The vector can cite the same line as the unit" | It needs its own citation, an independent derivation of the number. `validate-data` rejects an identical source. |
+| "`ton` / `gal` / `oz` as a bare symbol is fine" | Add explicit variants and list the bare name in `ambiguous.toml` (ADR-006). |
+| "Round the decimal, nobody will notice" | A measured value is the exact rational of the published decimal; mark it `measured`. |
+| "The data hash test fails, loosen it" | Run `cargo xtask update-data-hash` and commit `data_version.toml`. |
+
+## Provenance and independent vectors
+
+* Allowed sources: the BIPM SI Brochure, NIST SP 811 and Handbooks 44/130, ISO/IEC and national
+  standards, statutes and treaties, the publisher's own definition. Say edition and table or
+  section in `source` (`BIPM SI Brochure, 9th ed. (2019), ch. 3, Table 7`).
+* Never take a factor, a name or an expected value from GNU units, rink, `units.dat`, Wikipedia
+  or another library's output, and never open GPL data to "just compare". If a number is only
+  known from there, the request is `needs-source` (`unit-request-triage`).
+* The golden vector is the independent check on the unit. Its `source` is not the unit's
+  `source` string; derive `expect` by hand (exact fraction) from the definition.
+* `cargo xtask validate-data` enforces the banned sources and the independent vector citation.

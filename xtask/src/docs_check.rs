@@ -6,7 +6,7 @@
 //!   skills exists, and every stage named after `cargo xtask ci` is a real stage;
 //! * every path under a known top-level directory that those files name in backticks exists;
 //! * `CONTRIBUTING.md` names every stage of `cargo xtask ci`;
-//! * the skills table of `AGENTS.md` equals the folders of `.claude/skills/`, and each
+//! * the skills table of `AGENTS.md` equals the folders of `skills/`, and each
 //!   `SKILL.md` has front matter whose `name` is its folder name and a `description`;
 //! * workflows: every job has `timeout-minutes`, none uses `pull_request_target` or a `@master`
 //!   action reference;
@@ -31,6 +31,7 @@ const COMMANDS: &[&str] = &[
 /// Top-level directories whose paths are checked for existence when named in backticks.
 const ROOTS: &[&str] = &[
     "crates/",
+    "skills/",
     "docs/",
     ".github/",
     ".claude/",
@@ -83,7 +84,7 @@ fn xtask_invocations(text: &str) -> Vec<Vec<String>> {
 }
 
 fn skill_dirs(root: &Path) -> Vec<String> {
-    let mut names: Vec<String> = fs::read_dir(root.join(".claude/skills"))
+    let mut names: Vec<String> = fs::read_dir(root.join("skills"))
         .map(|rd| {
             rd.filter_map(Result::ok)
                 .filter(|e| e.path().is_dir())
@@ -122,6 +123,99 @@ fn files_under(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
+/// Schema ids such as `dimvexa.convert/3` named in a text, sorted and de-duplicated.
+fn schema_ids(text: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    for cmd in ["convert", "units", "configs", "constants"] {
+        let head = format!("dimvexa.{cmd}/");
+        for (at, _) in text.match_indices(&head) {
+            let rest = text.get(at.saturating_add(head.len())..).unwrap_or("");
+            let digits: String = rest.chars().take_while(char::is_ascii_digit).collect();
+            if !digits.is_empty() {
+                out.push(format!("{head}{digits}"));
+            }
+        }
+    }
+    out.sort();
+    out.dedup();
+    out
+}
+
+/// Facts that are written in several places must agree, and a few rules must stay enforced.
+fn consistency(root: &Path, agents: &str, errors: &mut Vec<String>) {
+    // The JSON schema versions in AGENTS.md and the api-change skill equal those of the CLI.
+    let cli = schema_ids(&read(&root.join("crates/dimvexa-cli/src/lib.rs")));
+    for f in ["AGENTS.md", "skills/api-change/SKILL.md"] {
+        let named = schema_ids(&read(&root.join(f)));
+        if named != cli {
+            errors.push(format!(
+                "{f}: schema versions {named:?} differ from crates/dimvexa-cli/src/lib.rs {cli:?}"
+            ));
+        }
+    }
+
+    // AGENTS.md names every xtask command.
+    let named = xtask_invocations(agents);
+    for cmd in COMMANDS {
+        if !named
+            .iter()
+            .any(|inv| inv.first().is_some_and(|c| c == cmd))
+        {
+            errors.push(format!("AGENTS.md: `cargo xtask {cmd}` is not mentioned"));
+        }
+    }
+
+    // Each ADR file `NNN-name.md` starts with `# ADR-NNN:` and has a `Status:` line.
+    let mut adrs: Vec<PathBuf> = Vec::new();
+    files_under(&root.join("docs/adr"), &mut adrs);
+    for f in adrs {
+        let name = f.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        let Some((num, _)) = name.split_once('-') else {
+            continue;
+        };
+        if Path::new(name).extension().is_none_or(|e| e != "md")
+            || !num.chars().all(|c| c.is_ascii_digit())
+        {
+            continue;
+        }
+        let text = read(&f);
+        if !text.starts_with(&format!("# ADR-{num}:")) {
+            errors.push(format!(
+                "docs/adr/{name}: first line must start with `# ADR-{num}:`"
+            ));
+        }
+        if !text.lines().any(|l| l.starts_with("Status:")) {
+            errors.push(format!("docs/adr/{name}: no `Status:` line"));
+        }
+    }
+
+    // Library code is held to the workspace lints (no unwrap, expect, panic, indexing, casts).
+    let mut manifests = Vec::new();
+    files_under(&root.join("crates"), &mut manifests);
+    manifests.push(root.join("xtask/Cargo.toml"));
+    for m in manifests {
+        if m.file_name().is_none_or(|n| n != "Cargo.toml") {
+            continue;
+        }
+        let rel = m.strip_prefix(root).unwrap_or(&m).display().to_string();
+        let text = read(&m);
+        let inherits = text.lines().map(str::trim).any(|l| l == "[lints]")
+            && text.lines().map(str::trim).any(|l| l == "workspace = true");
+        // The testkit has its own lint tables (it needs one `unsafe` allocator, see its manifest).
+        if !inherits && !rel.contains("dimvexa-testkit") {
+            errors.push(format!(
+                "{rel}: must inherit the workspace lints (`[lints] workspace = true`)"
+            ));
+        }
+    }
+
+    // `.claude/skills` is a symlink to `skills/`, so Claude Code finds the skills.
+    let link = root.join(".claude/skills");
+    if fs::read_link(&link).is_err() && link.exists() {
+        errors.push(".claude/skills must be a symlink to ../skills".to_string());
+    }
+}
+
 /// Returns the list of problems (empty when everything is consistent).
 pub fn run(root: &Path) -> Vec<String> {
     let mut errors = Vec::new();
@@ -130,7 +224,7 @@ pub fn run(root: &Path) -> Vec<String> {
         .map(|f| root.join(f))
         .collect();
     for s in skill_dirs(root) {
-        docs.push(root.join(".claude/skills").join(s).join("SKILL.md"));
+        docs.push(root.join("skills").join(s).join("SKILL.md"));
     }
     let stage_names = ci::stage_names();
 
@@ -194,26 +288,31 @@ pub fn run(root: &Path) -> Vec<String> {
     let in_table: Vec<String> = table.into_iter().filter(|n| expected.contains(n)).collect();
     if in_table != expected {
         errors.push(format!(
-            "AGENTS.md: skills table {in_table:?} differs from the folders in .claude/skills {expected:?}"
+            "AGENTS.md: skills table {in_table:?} differs from the folders in skills {expected:?}"
         ));
     }
     for d in &dirs {
-        let text = read(&root.join(".claude/skills").join(d).join("SKILL.md"));
+        let text = read(&root.join("skills").join(d).join("SKILL.md"));
         match front_matter(&text) {
-            None => errors.push(format!(".claude/skills/{d}/SKILL.md: no front matter")),
+            None => errors.push(format!("skills/{d}/SKILL.md: no front matter")),
             Some(fm) => {
                 let get = |k: &str| fm.iter().find(|(key, _)| key == k).map(|(_, v)| v.as_str());
                 if get("name") != Some(d.as_str()) {
-                    errors.push(format!(".claude/skills/{d}/SKILL.md: `name` must be `{d}`"));
+                    errors.push(format!("skills/{d}/SKILL.md: `name` must be `{d}`"));
                 }
                 if get("description").is_none_or(str::is_empty) {
+                    errors.push(format!("skills/{d}/SKILL.md: missing `description`"));
+                }
+                if !text.contains("\n## Red flags\n") {
                     errors.push(format!(
-                        ".claude/skills/{d}/SKILL.md: missing `description`"
+                        "skills/{d}/SKILL.md: missing a `## Red flags` section (a table of wrong shortcuts and what to do instead)"
                     ));
                 }
             }
         }
     }
+
+    consistency(root, &agents, &mut errors);
 
     // Workflows.
     let mut files = Vec::new();

@@ -48,3 +48,14 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
   "most accurate" or a similar claim in the README, docs or release notes without a link to a dated
   run that shows it. Do not invent or edit competitor numbers; runners that were not run are listed
   as such in the status table of that page. Corpus: `python3 benchmarks/tools/gen_corpus.py --check`.
+
+## Red flags
+
+| Thought | Do instead |
+|---|---|
+| "It looks 5 percent faster" | Compare medians with their spread. Inside the spread is `(noise)`; write no claim. |
+| "One run is enough" | Repeat a surprising result; shared machines are noisy. |
+| "I will put the new numbers next to last month's table" | Never mix bench files or days in one table; rerun the matrix with the current `m0.rs`. |
+| "Competitor X is about 3x slower, I remember" | Never invent or edit competitor numbers. Link a dated run or say nothing. |
+| "The bench is faster, so the change is good" | It must also be bit-identical or inside the bound, proven by `differential.rs`. |
+| "Re-record the baseline so the guard passes" | Only on a new machine or toolchain, or for an explained and accepted change. |

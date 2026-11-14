@@ -178,7 +178,7 @@ value = "1"
 from = "min"
 to = "s"
 expect = "60"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
+source = "Hand derivation from BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8: 1 min = 60 s"
 
 [[vector]]
 unit = "h"
@@ -186,7 +186,7 @@ value = "1"
 from = "h"
 to = "min"
 expect = "60"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
+source = "Hand derivation from BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8: 1 h = 60 min"
 
 [[vector]]
 unit = "d"
@@ -194,7 +194,7 @@ value = "1"
 from = "d"
 to = "h"
 expect = "24"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)"
+source = "Hand derivation from BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8: 1 d = 24 h"
 
 [[vector]]
 unit = "L"
@@ -330,7 +330,7 @@ value = "1"
 from = "ar"
 to = "m^2"
 expect = "100"
-source = "NIST SP 811 (2008), Appendix B.8 (are = 1 dam^2 = 10^2 m^2)"
+source = "Hand derivation from NIST SP 811 (2008), Appendix B.8: 1 are = 1 dam^2 = (10 m)^2 = 100 m^2"
 
 [[vector]]
 unit = "au"

@@ -51,3 +51,14 @@ PyPI and npm (`docs/releasing.md`).
    Known gap: crates.io trusted publishing is not confirmed to work yet (the first release
    skipped every crate because they already existed). If `publish to crates.io` fails at the
    token step, see `docs/releasing.md`.
+
+## Red flags
+
+| Thought | Do instead |
+|---|---|
+| "Preparing the release means publishing it" | Stop at a reviewed release commit; only the owner publishes. |
+| "CI exited 0 through `| tail`" | Check the exit status of `cargo xtask ci` itself (chain with `&&`). |
+| "The bindings have the same version, I assume" | Run `scripts/check-versions.sh` and the `cargo metadata --locked` checks. |
+| "Benchmarks from the last release will do" | Rerun the matrix with the current `m0.rs`; commit the generated reports. |
+| "I will add a DOI or a date later" | Never invent them; fill `CITATION.cff` with real values only. |
+| "A red check is probably flaky" | Read the check run. Fix it, or say plainly which check is red and why. |
