@@ -99,6 +99,8 @@ Read the matching skill in `skills/<name>/SKILL.md` (`.claude/skills` is a symli
 | `bug-repro` | turning a bug report into a failing test |
 | `panic-free` | writing or reviewing library code that parses, does arithmetic or can fail; fixing a panic or hang |
 | `report-bug` | turning a user's problem into a minimal, public-safe bug report |
+| `review` | reviewing a diff or pull request, yours or someone else's |
+| `bindings` | changing or releasing `bindings/python`, `wasm` or `excel`, or carrying a core change to them |
 
 ## Conventions
 
