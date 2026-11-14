@@ -15,9 +15,24 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
   table with the change per row (about 1 to 3 minutes, mostly the two builds). Rerun a flagged row
   before believing it: on a shared VM, HEAD against itself moves single rows by up to about 10 percent
   (alignment, noise). Never run the matrix for this.
-* **The matrix is manual only.** `bench-matrix` (every released version, minutes per round) runs only
-  when the owner asks for it, when a version is released, or when `m0.rs` rows change. A feature
-  change does not trigger it; no CI job or hook runs it.
+* **A code change that touches a hot path gets `--quick` before it is called done, and the result is
+  reported** (the table, with the rows that moved). Where there are several ways to implement
+  something, measure each (`--quick` against the same merge base) and say which was chosen and why.
+* **If a guarded row is more than 10 percent slower and still slower after a repeat** (above the
+  spread; not a `(noise)` row), do not accept it silently: spawn a subagent with `model: "opus"`
+  (Agent tool, `subagent_type: "general-purpose"`) to look for a smarter, faster implementation. Give it
+  the diff, the slow rows with their before/after numbers, the rules in `AGENTS.md` (MSRV 1.85, no
+  unsafe, no panics, 1 ulp / 2 ulp bounds in `docs/precision.md`, bit-identical or inside the bound
+  per `differential.rs`) and tell it to measure with `cargo xtask bench-check --quick`. Take its
+  result only if the differential tests pass and `--quick` shows the slowdown gone or explained;
+  otherwise explain the slowdown to the owner.
+* **A release is benchmarked as the current version only: `cargo xtask bench-matrix --release`.** It
+  measures the version being released and the release before it (same bench file, same machine,
+  6 alternating runs) and writes only the generated report of that version (for example `docs/benchmarks/v0.5.0.md`). `matrix.md` and `matrix-raw.tsv` are
+  not touched.
+* **The full matrix (`cargo xtask bench-matrix --reports`, every released version) is manual only**:
+  when the owner asks for it, or when `m0.rs` rows are added, renamed or the harness changes (all
+  versions must then be re-measured, see below). No feature change, release, CI job or hook runs it.
 * **Every release has solid numbers.** `cargo xtask bench-matrix --reports` runs the *current*
   `m0.rs` on every released version listed in `docs/benchmarks/releases.tsv` and on the working
   tree, round-robin (round r runs every version once) with 6 runs each by default (fewer than 3 is
@@ -30,7 +45,7 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
   `crates/dimvexa/benches/m0.rs`, rerun `cargo xtask bench-matrix --reports` (all versions, new
   bench file) and commit the regenerated files; a version that does not build with the new file is
   listed in `matrix.md`, not dropped silently. A row an old version cannot express shows `-`.
-* **When a version is released**, add `version<TAB>commit` to `docs/benchmarks/releases.tsv` (the commit
+* **After a release is published**, add `version<TAB>commit` to `docs/benchmarks/releases.tsv` (the commit
   the tag points to: `git rev-list -n1 vX.Y.Z`; not a version-bump commit) and rerun the matrix so it is measured as a released version.
 * **Read numbers with the spread.** A change is "faster" or "slower" only if it is larger than the
   spread of both sides; the matrix marks the others `(noise)`. Do not write a performance claim for

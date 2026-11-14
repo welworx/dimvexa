@@ -36,16 +36,15 @@ PyPI and npm (`docs/releasing.md`).
    are already on a registry.
 6. Public API diff: `cargo semver-checks` once a baseline release exists (`api-change` skill).
 7. Benchmarks and `docs/precision.md` still match the code (`benchmarks`, `precision` skills):
-   `cargo xtask bench-matrix --reports` has been run with the current `m0.rs` (so every released
-   version and this one were measured with one bench file, 6 alternating runs each), the generated
-   `docs/benchmarks/matrix.md`, `matrix-raw.tsv` and `vX.Y.Z.md` reports are committed (one report per
-   release, listed in `docs/benchmarks/README.md`), and a hand-written narrative exists for this
+   `cargo xtask bench-matrix --release` has been run (this version and the release before it, one
+   bench file, 6 alternating runs each; not all releases), the generated `vX.Y.Z.md` report is
+   committed (one report per release, listed in `docs/benchmarks/README.md`), and a hand-written narrative exists for this
    version if a row moved beyond the noise. The cross-library comparison of this version exists too:
    a full `benchmarks/run_all.sh` on a clean checkout of the release commit (it refuses unpinned
    competitor versions), the regenerated `docs/benchmarks/comparison/comparison.md`, `img/` and
    `benchmarks/results/` committed, and the hand-written `vX.Y.Z.md` in the `docs/benchmarks/comparison` folder from them
    (`docs/benchmarking.md`, rule 5). After the release is published, add the commit its tag points to
-   (`git rev-list -n1 vX.Y.Z`) to `docs/benchmarks/releases.tsv` and rerun the matrix.
+   (`git rev-list -n1 vX.Y.Z`) to `docs/benchmarks/releases.tsv` (no matrix rerun).
 8. After the merge, the owner approves the run. Verify, do not assume: the five crates on
    crates.io, `dimvexa` on PyPI (5 wheels + sdist), `@dimvexa/wasm` on npm and the tag `vX.Y.Z`.
    Known gap: crates.io trusted publishing is not confirmed to work yet (the first release

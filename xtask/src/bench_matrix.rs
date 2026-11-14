@@ -6,6 +6,8 @@
 //! cargo xtask bench-matrix --runs 8         # runs per version (default 6)
 //! cargo xtask bench-matrix --reports        # also (re)write the generated vX.Y.Z.md reports
 //! cargo xtask bench-matrix --only 0.4.0     # only these versions (repeatable); the working tree stays
+//! cargo xtask bench-matrix --release        # a release: only this version and the one before it,
+//!                                           # writes only vX.Y.Z.md (matrix.md and raw stay as they are)
 //! cargo xtask bench-matrix --rerender --reports   # rebuild the files from matrix-raw.tsv, no measuring
 //! ```
 //!
@@ -47,6 +49,7 @@ struct Opts {
     runs: usize,
     reports: bool,
     rerender: bool,
+    release: bool,
     only: Vec<String>,
 }
 
@@ -55,6 +58,7 @@ fn parse_opts(args: &[String]) -> Result<Opts, String> {
         runs: DEFAULT_RUNS,
         reports: false,
         rerender: false,
+        release: false,
         only: Vec::new(),
     };
     let mut it = args.iter();
@@ -62,6 +66,10 @@ fn parse_opts(args: &[String]) -> Result<Opts, String> {
         match a.as_str() {
             "--reports" => o.reports = true,
             "--rerender" => o.rerender = true,
+            "--release" => {
+                o.release = true;
+                o.reports = true;
+            }
             "--runs" => {
                 o.runs = it
                     .next()
@@ -260,11 +268,18 @@ fn report_md(
     series: &Series,
     meta: &str,
     runs: usize,
+    release_only: bool,
 ) -> String {
     let mut s = format!("{MARKER}\n# Benchmarks for {version}\n\n{meta}\n");
+    let source = if release_only {
+        "A release run (`--release`: this version and the one before it only, one bench file,"
+            .to_string()
+    } else {
+        "Generated from the matrix run of `docs/benchmarks/matrix.md` (all versions, one bench file,".to_string()
+    };
     let _ = writeln!(
         s,
-        "Generated from the matrix run of `docs/benchmarks/matrix.md` (all versions, one bench file, {runs} alternating runs each). \
+        "{source} {runs} alternating runs each). \
          The numbers are the median over the runs of each run's median ns/op; spread = (max - min) / median. \
          This report has no narrative: what changed in the code is in the CHANGELOG.\n"
     );
@@ -292,10 +307,17 @@ fn execute(args: &[String], root: &Path) -> Result<(), String> {
     if o.rerender {
         return rerender(root, o.reports);
     }
-    let releases: Vec<(String, String)> = read_releases(root)?
+    let mut releases: Vec<(String, String)> = read_releases(root)?
         .into_iter()
         .filter(|(v, _)| o.only.is_empty() || o.only.contains(v))
         .collect();
+    if o.release {
+        // Only the release before the current version: the new version is measured against it.
+        let cur = cargo_version(root);
+        releases.retain(|(v, _)| *v != cur);
+        let keep = releases.len().saturating_sub(1);
+        releases.drain(..keep);
+    }
     let bench_src = root.join(BENCH_FILE);
     let tmp_root = root.join("target").join("bench-matrix");
     let target = tmp_root.join("target");
@@ -402,7 +424,15 @@ fn execute(args: &[String], root: &Path) -> Result<(), String> {
         },
         commits.join(", "),
     );
-    write_outputs(root, &versions, &series, &failed, &meta, o.runs, o.reports)
+    write_outputs(
+        root,
+        &versions,
+        &series,
+        &failed,
+        &meta,
+        o.runs,
+        (o.reports, o.release),
+    )
 }
 
 fn write_outputs(
@@ -412,9 +442,40 @@ fn write_outputs(
     failed: &[(String, String)],
     meta: &str,
     runs: usize,
-    reports: bool,
+    (reports, release_only): (bool, bool),
 ) -> Result<(), String> {
     let dir = root.join("docs").join("benchmarks");
+    if !release_only {
+        write_matrix(&dir, versions, series, failed, meta, runs)?;
+    }
+    if reports {
+        for (i, v) in versions.iter().enumerate() {
+            if release_only && i + 1 != versions.len() {
+                continue; // the previous release already has its own report
+            }
+            let path = dir.join(format!("v{v}.md"));
+            let hand_written = std::fs::read_to_string(&path).is_ok_and(|t| !t.starts_with(MARKER));
+            if hand_written {
+                println!("bench-matrix: kept the hand-written v{v}.md");
+                continue;
+            }
+            let prev = i.checked_sub(1).map(|j| versions[j].as_str());
+            std::fs::write(&path, report_md(v, prev, series, meta, runs, release_only))
+                .map_err(|e| e.to_string())?;
+            println!("bench-matrix: wrote v{v}.md");
+        }
+    }
+    Ok(())
+}
+
+fn write_matrix(
+    dir: &Path,
+    versions: &[String],
+    series: &Series,
+    failed: &[(String, String)],
+    meta: &str,
+    runs: usize,
+) -> Result<(), String> {
     std::fs::write(
         dir.join("matrix.md"),
         matrix_md(versions, series, failed, meta, runs),
@@ -430,20 +491,6 @@ fn write_outputs(
     }
     std::fs::write(dir.join("matrix-raw.tsv"), raw).map_err(|e| e.to_string())?;
     println!("bench-matrix: wrote docs/benchmarks/matrix.md and matrix-raw.tsv");
-    if reports {
-        for (i, v) in versions.iter().enumerate() {
-            let path = dir.join(format!("v{v}.md"));
-            let hand_written = std::fs::read_to_string(&path).is_ok_and(|t| !t.starts_with(MARKER));
-            if hand_written {
-                println!("bench-matrix: kept the hand-written v{v}.md");
-                continue;
-            }
-            let prev = i.checked_sub(1).map(|j| versions[j].as_str());
-            std::fs::write(&path, report_md(v, prev, series, meta, runs))
-                .map_err(|e| e.to_string())?;
-            println!("bench-matrix: wrote v{v}.md");
-        }
-    }
     Ok(())
 }
 
@@ -488,7 +535,7 @@ fn rerender(root: &Path, reports: bool) -> Result<(), String> {
         versions.push(current);
     }
     versions.retain(|v| series.contains_key(v));
-    write_outputs(root, &versions, &series, &[], &meta, runs, reports)
+    write_outputs(root, &versions, &series, &[], &meta, runs, (reports, false))
 }
 
 fn record(series: &mut Series, label: &str, rows: &Rows) {
@@ -544,6 +591,8 @@ mod tests {
     #[test]
     fn runs_below_three_are_refused() {
         assert!(parse_opts(&["--runs".into(), "2".into()]).is_err());
+        let r = parse_opts(&["--release".into()]).unwrap();
+        assert!(r.release && r.reports);
         assert_eq!(
             parse_opts(&["--runs".into(), "6".into(), "--reports".into()])
                 .map(|o| (o.runs, o.reports)),
