@@ -10,7 +10,7 @@ value = "1"
 from = "bar"
 to = "kPa"
 expect = "100"
-source = "NIST SP 811 (2008), Appendix B (bar = 100 kPa)"
+source = "Hand derivation from NIST SP 811 (2008), Appendix B: 1 bar = 100 kPa"
 
 [[vector]]
 unit = "atm"
@@ -470,7 +470,7 @@ value = "1"
 from = "carat"
 to = "mg"
 expect = "200"
-source = "NIST SP 811 (2008), Appendix B (carat, metric = 2.0 E-04 kg)"
+source = "Hand derivation from NIST SP 811 (2008), Appendix B: 1 metric carat = 2.0 E-04 kg = 200 mg"
 
 [[vector]]
 unit = "erg"

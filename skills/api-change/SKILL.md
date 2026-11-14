@@ -29,3 +29,14 @@ description: Use when changing a public item, an error code, the CLI output or t
   examples. Record the decision in an ADR (ADR-017 is the model).
 * Library code must build on the MSRV (1.85): no let chains, no newer std APIs. `cargo xtask ci
   msrv` checks it.
+
+## Red flags
+
+| Thought | Do instead |
+|---|---|
+| "Renaming this JSON field is harmless" | Removing or renaming is breaking: new schema version, new file under `docs/schemas/`, ADR. |
+| "I added a field, so I bump the schema" | Adding a field stays in the current version; do not bump. |
+| "The snapshot diff is just formatting, regenerate" | Read the diff line by line before committing the snapshots. |
+| "The help text can wait for a follow-up" | Help, `Examples:`, `docs/guide.md` and `CHANGELOG.md` change in the same commit. |
+| "Schema versions, I will copy them from memory" | `cargo xtask check-docs` fails when `AGENTS.md` or this skill differs from the CLI. |
+| "I will remove an error code, nobody uses it" | `Error::ALL_CODES` is a stable contract; removal is breaking. |

@@ -7,7 +7,7 @@ publishes all of them from `main`.
 
 ## Cutting a release
 
-1. Follow the `release` skill (`.claude/skills/release/SKILL.md`): bump the version in
+1. Follow the `release` skill (`skills/release/SKILL.md`): bump the version in
    `Cargo.toml`, `bindings/python/Cargo.toml` (also its `dimvexa = "x.y.z"` dependency) and
    `bindings/wasm/Cargo.toml` and `bindings/excel/manifest.xml` (`<Version>X.Y.Z.0</Version>`),
    refresh the root `Cargo.lock` and both bindings' `Cargo.lock`, update `CHANGELOG.md`.

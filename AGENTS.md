@@ -6,6 +6,13 @@ Dimvexa is a Rust unit-conversion library. Tagline: *Exact factors. Loud failure
 guessing.* Conversion factors are exact rationals with a cited source. A wrong number is worse
 than an error.
 
+## Start here
+
+Where to find work: the open issues (`good first issue`, `help wanted`, `unit request`),
+`docs/PLAN.md` for the roadmap and `docs/known-limitations.md` for pinned limitations. Check open
+pull requests first so nobody does the same work twice. Read the skill for your task (table below)
+before you start; each ends with a `## Red flags` table of shortcuts that look right and are not.
+
 ## Build, test, check
 
 ```console
@@ -16,10 +23,15 @@ cargo xtask ci                 # the one command: fmt, clippy -D warnings, msrv 
                                # check, pool_pump example
 cargo xtask ci fmt clippy      # only some stages (see: cargo xtask ci --list)
 cargo test --workspace         # quick loop
+cargo xtask check-docs         # docs, skills, ADRs, workflows and manifests stay consistent
 cargo xtask validate-data      # after touching the unit tables
 cargo xtask update-data-hash   # after a data change; commit the new data_version.toml
-cargo xtask bench-check        # after a hot-path change: >10% slowdown on guarded rows fails
+cargo xtask bench-impact       # once per change: skips if no hot-path file changed, else A/B against
+                               # the merge base; paste the output in the PR (benchmarks skill)
+cargo xtask bench-check        # the guard under it: >10% slowdown on guarded rows fails
 cargo xtask bench-check --against REV   # same, A/B against a revision on this machine (no baseline)
+cargo xtask bench-release      # once per release: every row of m0.rs on this commit, writes docs/benchmarks/vX.Y.Z.md
+cargo xtask bench-matrix --reports      # all released versions side by side; manual only, never as part of a release
 ```
 
 The workspace has no third-party dependencies and must build offline (std only). Do not add a
@@ -27,21 +39,33 @@ dependency without an issue and an ADR. Edition 2024, MSRV 1.85 (do not change i
 
 ## Rules (do not break these)
 
+Each rule names what enforces it. "Reviewed" means no automatic check exists: a human or an agent
+reviewing the diff is the only guard, so look for it.
+
 1. No `unsafe` in library crates. No `unwrap`, `expect`, `panic!`, indexing or lossy `as`
    casts in library code (tests may; see `clippy.toml`). Checked arithmetic only.
-2. No equations of state, density correlations or empirical formulas (ADR-001).
+   Enforced by the workspace lints (`cargo xtask ci clippy`), by `cargo xtask check-docs` (every
+   crate inherits them) and by `crates/dimvexa-testkit/tests/hostile_inputs.rs`. Skill: `panic-free`.
+2. No equations of state, density correlations or empirical formulas (ADR-001). Reviewed
+   (`unit-request-triage` refuses them).
 3. Every unit needs a primary source, an `exactness` flag and a golden test vector with its own
-   citation. Never copy from GNU units, rink or other GPL data.
+   citation. Never copy from GNU units, rink or other GPL data. Enforced by `cargo xtask
+   validate-data` (sources, exactness, vectors, banned sources); that nothing was copied is
+   reviewed. Skill: `add-unit`.
 4. Ambiguity, overflow and unsupported requests are errors with a stable code, never guesses.
+   Enforced by `Error::ALL_CODES` and the tests in `crates/dimvexa-cli/tests/cli.rs`,
+   `overflow_census.rs` and `hostile_inputs.rs`.
 5. Fast path accuracy is a documented contract: linear at most 1 ulp, affine at most 2 ulp
    (`docs/precision.md`), enforced by `crates/dimvexa-testkit/tests/differential.rs`. Do not
-   loosen a bound to make a test pass; find the bug.
-6. Never claim something passed unless you ran it and saw it pass.
+   loosen a bound to make a test pass; find the bug. Skill: `precision`.
+6. Never claim something passed unless you ran it and saw it pass. Reviewed: report the command,
+   its exit status and what did not run.
 7. Write code that compiles on the MSRV, 1.85, not only on the pinned toolchain (1.99): no let
    chains (`if let ... && ...` needs 1.88), no APIs stabilised after 1.85. `cargo xtask ci msrv`
    checks it; CI's `msrv` job fails the PR otherwise. Do not raise the MSRV to make code compile.
 8. No performance or accuracy claim against another library ("fastest", "most accurate") without a
    link to a dated benchmark run (`docs/benchmarking.md`). Never invent competitor numbers.
+   Reviewed. Skill: `benchmarks`.
 
 ## Where things live
 
@@ -53,7 +77,9 @@ dependency without an issue and an ADR. Edition 2024, MSRV 1.85 (do not change i
 | `crates/dimvexa` | facade crate (re-exports core + data) |
 | `crates/dimvexa-cli` | `dimvexa convert`, `units`, `configs`, `constants`, `update` (self-update, ADR-015); no conversion logic of its own; snapshots in `tests/snapshots` |
 | `crates/dimvexa-testkit` | test helpers; differential, exact-path, property, overflow and zero-allocation tests |
-| `xtask` | `ci`, `validate-data`, `update-data-hash`, `bench-check` |
+| `xtask` | `ci`, `check-docs`, `validate-data`, `update-data-hash`, `bench-check`, `bench-impact`, `bench-release`, `bench-matrix` |
+| `bindings/` | `python`, `wasm`, `excel`: thin wrappers with no conversion logic; versions equal (`scripts/check-versions.sh`) |
+| `skills/` | the agent skills (`.claude/skills` is a symlink to it) |
 | `docs/` | `guide.md` (CLI user guide; its examples are tested in `crates/dimvexa-cli/tests/cli.rs`), `PLAN.md`, `DESIGN.md`, `adr/`, `excel.md`, `brand/` (logo, icons, design guidelines), `precision.md`, `benchmarks/`, `ci-pinning.md`, `schemas/` |
 | `.github/` | workflows (pinned actions, see `docs/ci-pinning.md`), issue forms, PR template |
 | `extras/`, `fuzz/` | network-only tooling; separate workspaces, never built offline |
@@ -61,7 +87,7 @@ dependency without an issue and an ADR. Edition 2024, MSRV 1.85 (do not change i
 
 ## Skills
 
-Read the matching skill in `.claude/skills/<name>/SKILL.md` before the task.
+Read the matching skill in `skills/<name>/SKILL.md` (`.claude/skills` is a symlink to it, so Claude Code finds them too) before the task.
 
 | Skill | Use it when |
 |---|---|
@@ -74,6 +100,10 @@ Read the matching skill in `.claude/skills/<name>/SKILL.md` before the task.
 | `release` | preparing (never publishing) a release |
 | `api-change` | changing a public item, an error code or the JSON schema |
 | `bug-repro` | turning a bug report into a failing test |
+| `panic-free` | writing or reviewing library code that parses, does arithmetic or can fail; fixing a panic or hang |
+| `report-bug` | turning a user's problem into a minimal, public-safe bug report |
+| `review` | reviewing a diff or pull request, yours or someone else's |
+| `bindings` | changing or releasing `bindings/python`, `wasm` or `excel`, or carrying a core change to them |
 
 ## Conventions
 

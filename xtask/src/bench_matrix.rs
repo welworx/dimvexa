@@ -13,8 +13,9 @@
 //! same machine, the same compiler and the same hour. So the *current*
 //! `crates/dimvexa/benches/m0.rs` is copied into a detached worktree of every release and run
 //! there, round-robin (round r runs every version once), so slow drift of a shared VM hits all
-//! versions alike. When a row is added to the bench, run this again: every release is re-measured
-//! with the new row (the `benchmarks` skill makes that a rule).
+//! versions alike. It is manual: run it when a side-by-side of releases is wanted, not on a release
+//! (`cargo xtask bench-release` measures only the version being released) and not when a bench row
+//! changes (the report names the bench file revision it used).
 //!
 //! Output (`docs/benchmarks/`): `matrix.md` (medians, spread, change against the previous
 //! version, marked when the change is inside the noise), `matrix-raw.tsv` (every run of every
@@ -108,7 +109,7 @@ fn read_releases(root: &Path) -> Result<Vec<(String, String)>, String> {
     Ok(out)
 }
 
-fn cargo_version(root: &Path) -> String {
+pub fn cargo_version(root: &Path) -> String {
     std::fs::read_to_string(root.join("Cargo.toml"))
         .ok()
         .and_then(|t| {
@@ -121,14 +122,14 @@ fn cargo_version(root: &Path) -> String {
         .unwrap_or_else(|| "working tree".to_string())
 }
 
-fn command_line(cmd: &str, args: &[&str]) -> String {
+pub fn command_line(cmd: &str, args: &[&str]) -> String {
     Command::new(cmd).args(args).output().map_or_else(
         |_| "unknown".to_string(),
         |o| String::from_utf8_lossy(&o.stdout).trim().to_string(),
     )
 }
 
-fn cpu() -> String {
+pub fn cpu() -> String {
     let model = std::fs::read_to_string("/proc/cpuinfo")
         .ok()
         .and_then(|t| {
@@ -147,7 +148,7 @@ fn median(v: &mut [f64]) -> f64 {
 }
 
 /// `(median of the run medians, spread in percent = (max - min) / median)`.
-fn stat(values: &[f64]) -> (f64, f64) {
+pub fn stat(values: &[f64]) -> (f64, f64) {
     let mut v = values.to_vec();
     let m = median(&mut v);
     let (lo, hi) = (v[0], v[v.len() - 1]);
@@ -179,7 +180,7 @@ fn change(prev_runs: &[f64], now_runs: &[f64]) -> String {
     }
 }
 
-fn fmt_ns(v: f64) -> String {
+pub fn fmt_ns(v: f64) -> String {
     if v >= 1000.0 {
         format!("{v:.0}")
     } else {
@@ -433,7 +434,9 @@ fn write_outputs(
     if reports {
         for (i, v) in versions.iter().enumerate() {
             let path = dir.join(format!("v{v}.md"));
-            let hand_written = std::fs::read_to_string(&path).is_ok_and(|t| !t.starts_with(MARKER));
+            let hand_written = std::fs::read_to_string(&path).is_ok_and(|t| {
+                !t.starts_with(MARKER) && !t.starts_with(crate::bench_release::MARKER)
+            });
             if hand_written {
                 println!("bench-matrix: kept the hand-written v{v}.md");
                 continue;

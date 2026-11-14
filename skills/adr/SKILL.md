@@ -5,9 +5,9 @@ description: Use when a change needs a decision recorded or an existing ADR chan
 
 # Architecture decision records
 
-Files: `docs/adr/` (one numbered markdown file per decision). Existing ones: 001 no equations, 002 exactness and precision,
-003 std only, 004 number representation, 005 formula scales, 006 ambiguity, 007 angle,
-008 namespaces, 009 user config, 018 constants and exact pi.
+Files: `docs/adr/` (one numbered markdown file per decision, `NNN-short-name.md`, first line
+`# ADR-NNN: ...`, a `Status:` line). The directory is the list of existing decisions; do not copy
+it here. `cargo xtask check-docs` verifies file names, headings and the `Status:` line.
 
 Write an ADR when a change alters the public API, a unit-definition policy, a precision
 guarantee, a dependency policy or the scope. `GOVERNANCE.md` asks for a pull request that
@@ -34,3 +34,13 @@ Status: Proposed | Accepted | Superseded by ADR-MMM | Rejected
 * Do not implement an OPEN sub-decision before the owner confirms it (ADR-005 is the example).
 * Link the ADR from the doc or code comment it constrains. `cargo xtask check-docs` verifies
   that paths named in the docs exist.
+
+## Red flags
+
+| Thought | Do instead |
+|---|---|
+| "It is a small API tweak, no ADR" | A change to the public API, unit policy, precision guarantee, dependency policy or scope needs one. |
+| "I will mark it Accepted, it is obviously right" | Only the owner accepts. Write `Proposed` and list OPEN sub-decisions with a recommended default. |
+| "Implement the OPEN part now to save time" | Wait for the owner's confirmation (ADR-005). |
+| "I will renumber to fill the gap" | Numbers are never reused or renumbered; supersede instead and keep the file. |
+| "I will list the existing ADRs here" | `ls docs/adr`. A list in this skill goes stale; `check-docs` checks the file names and headings. |

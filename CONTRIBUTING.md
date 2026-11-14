@@ -142,8 +142,8 @@ Read `docs/precision.md` before touching anything on the `f64` path, and the ADR
 ## Skills for coding agents
 
 If you work with a coding agent, the repository carries short task guides in
-`.claude/skills/` (add a unit, triage a unit request, precision, benchmarks, tests, ADRs,
-releases, API changes, bug reproduction). `AGENTS.md` lists them. They restate the rules on
+`skills/` (add a unit, triage a unit request, precision, benchmarks, tests, ADRs,
+releases, API changes, bug reproduction, bug reports, panic-free code, reviews, bindings). `AGENTS.md` lists them. They restate the rules on
 this page; the rules and the checks that enforce them are the same.
 
 ## Reporting problems

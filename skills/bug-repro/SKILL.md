@@ -19,3 +19,14 @@ description: Use when a bug report or a suspected wrong result needs a minimal r
 5. Fix the cause, run `cargo xtask ci`, and mention the test and the source in the commit
    message and the `CHANGELOG.md` entry.
 6. Never fix a wrong-result bug by loosening a tolerance (`precision` skill).
+
+## Red flags
+
+| Thought | Do instead |
+|---|---|
+| "I will paste the crashing input in the issue" | A panic, hang or silently wrong number is private: `SECURITY.md`. |
+| "It printed ok, so the result is right" | Compute the expected value yourself from a primary source, with exact fractions. |
+| "Fix first, test afterwards" | Write the failing test first and watch it fail for the right reason. |
+| "The expected value is what the code now returns" | Never derive the expectation from the code under test. |
+| "A looser tolerance fixes the test" | Fix the cause (`precision` skill). |
+| "I could not reproduce it, so there is no bug" | Say what you tried and what is missing; do not close it. |

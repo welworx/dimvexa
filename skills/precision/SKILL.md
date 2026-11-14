@@ -21,5 +21,16 @@ Source of truth: `docs/precision.md`, ADR-002, ADR-004.
   results are bit-identical to scalar results.
 * No equations of state, no density correlations, no empirical formulas (ADR-001), and no
   silent fallback: overflow is an `overflow` error on the exact path.
-* After a hot-path change rerun `cargo bench -p dimvexa --bench m0` (see the `benchmarks` skill)
-  and update `docs/benchmarks/history/M0.md` with measured numbers only.
+* After a hot-path change run `cargo xtask bench-impact` and put its output in the pull request
+  (`benchmarks` skill; measured numbers only). `docs/benchmarks/history/M0.md` is history, not
+  where new numbers go.
+
+## Red flags
+
+| Thought | Do instead |
+|---|---|
+| "It is off by 1 ulp, widen the bound" | Find the bug. Changing a guarantee needs the owner's decision, `docs/precision.md` and ADR-002. |
+| "Use an FMA, it is more accurate" | The fast path stays std-only, no FMA, no allocation, bit-identical in slices. |
+| "Overflow: return infinity or clamp" | Overflow is an `overflow` error on the exact path; never a silent fallback. |
+| "A density or a fitted curve would make this conversion work" | Refuse it (ADR-001). |
+| "The differential test passes on my three inputs" | Run the whole `differential` and `exact_f64` tests, and look at subnormals, NaN and signed zero. |
