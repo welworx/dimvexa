@@ -5,7 +5,7 @@ use core::fmt;
 
 use crate::dim::Dim;
 use crate::error::{Error, Result};
-use crate::expr::{Expr, is_valid_symbol_for};
+use crate::expr::{Expr, is_valid_symbol};
 use crate::kind::{Exactness, Kind, Shape};
 use crate::prefix::PrefixMode;
 use crate::ratio::Ratio;
@@ -117,7 +117,7 @@ impl Unit {
             symbol: symbol.to_string(),
             message: message.to_string(),
         };
-        if !is_valid_symbol_for(symbol, kind) {
+        if !is_valid_symbol(symbol) {
             return Err(bad(
                 "symbol must be non-empty and contain only letters, '_' or the degree sign",
             ));
@@ -175,7 +175,7 @@ impl Unit {
             return Err(bad("affine units cannot take prefixes"));
         }
         for alias in def.aliases {
-            if !is_valid_symbol_for(alias, def.kind) {
+            if !is_valid_symbol(alias) {
                 return Err(bad(
                     "alias contains characters that cannot appear in a symbol",
                 ));
@@ -234,7 +234,7 @@ impl Unit {
     /// [`Error::InvalidDefinition`] if an alias is not a well-formed symbol.
     pub fn with_aliases(mut self, aliases: &[&str]) -> Result<Self> {
         for a in aliases {
-            if !is_valid_symbol_for(a, self.kind) {
+            if !is_valid_symbol(a) {
                 return Err(Error::InvalidDefinition {
                     symbol: self.id,
                     message: format!("alias '{a}' is not a well-formed symbol"),

@@ -4,7 +4,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use dimvexa_core::{Kind, Ratio, is_valid_symbol, is_valid_symbol_for};
+use dimvexa_core::{Kind, Ratio, is_valid_symbol};
 
 use crate::chains;
 use crate::toml_lite::{self, Table};
@@ -209,8 +209,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
             }
         };
         let at = format!("{fname}:{} unit '{sym}'", t.line);
-        let kind_of_row = t.str("kind").ok().and_then(Kind::from_name);
-        if !kind_of_row.map_or_else(|| is_valid_symbol(&sym), |k| is_valid_symbol_for(&sym, k)) {
+        if !is_valid_symbol(&sym) {
             err(format!("{at}: symbol is not well-formed"));
         }
         for key in ["name", "source", "note", "namespace"] {
@@ -306,7 +305,7 @@ pub fn run(root: &Path) -> Result<Report, String> {
             Err(e) => err(format!("{at}: {e}")),
         }
         for n in &all_names {
-            if !(is_valid_symbol(n) || kind_of_row.is_some_and(|k| is_valid_symbol_for(n, k))) {
+            if !is_valid_symbol(n) {
                 err(format!("{at}: name '{n}' is not well-formed"));
             }
             if let Some(owner) = names.insert(n.clone(), sym.clone()) {

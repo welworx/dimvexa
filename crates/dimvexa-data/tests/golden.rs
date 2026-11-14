@@ -430,7 +430,7 @@ fn time_area_and_superscript_names() {
             "{bare}"
         );
     }
-    // A superscript digit is allowed only on a reference unit: `m³` is not `m^3`.
+    // No unit symbol contains a superscript digit: `m³` is not `m^3`.
     assert!(reg.parse("m\u{b3}").is_err());
 }
 

@@ -36,8 +36,10 @@ Follows [ADR-001](001-no-equations.md).
 ## Consequences
 
 * Breaking for a caller who used `Nm3` or `scf`. Allowed while the crate is 0.x. Data version 22.
-* The code that lets a reference unit's symbol end in a digit (`Nm3` lexes as `Nm` to the power 3,
-  ADR-013) has no shipped unit that uses it now. It is left in place and removing it is a
-  separate cleanup.
+* The code that let a reference unit's symbol end in a digit (`Nm3` as one unit, ADR-013) is
+  removed: `is_valid_symbol_for` and the public `is_superscript_digit` are gone (breaking, 0.x),
+  every unit symbol is letters only, and `Nm3` is read as `Nm` to the power 3 again. The lexer
+  still keeps a superscript digit attached to a name so that `Nm³` is reported as not
+  implemented and not as a parse error.
 * The cross-library benchmark corpus under `benchmarks/` still lists `Nm3` and `scf` cases. It is
   a separate workspace and is not changed here.

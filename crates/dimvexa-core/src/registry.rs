@@ -495,26 +495,9 @@ impl Registry {
             Expr::Mul(a, b) => self.resolve(a)?.mul(&self.resolve(b)?),
             Expr::Div(a, b) => self.resolve(a)?.div(&self.resolve(b)?),
             Expr::Pow(a, n) => {
-                // `Nm3` lexes as `Nm` to the power 3; a registered reference unit written with
-                // trailing digits wins (ADR-013).
+                // `Nm3` lexes as `Nm` to the power 3: say what it is, not "unknown unit Nm".
                 if let Expr::Unit(s) = &**a {
                     let joined = format!("{s}{n}");
-                    if self.get(&joined).is_some_and(|u| u.kind().is_reference()) {
-                        // A unit never changes meaning: if the plain reading (`Nm`) is also a
-                        // unit, `Nm3` could be either, so it is an error, not a guess.
-                        if self.resolve_symbol(s).is_ok() {
-                            return Err(Error::AmbiguousExpression {
-                                input: joined.clone(),
-                                message: format!(
-                                    "'{s}' is a unit and '{joined}' is also a unit with a reference \
-                                     state; rename your '{s}' (a config unit) so that '{joined}' \
-                                     has one meaning"
-                                ),
-                            });
-                        }
-                        return self.resolve_symbol(&joined);
-                    }
-                    // `Nm3` lexes as `Nm` to the power 3: say what it is, not "unknown unit Nm".
                     if self.get(&joined).is_none() && self.resolve_symbol(s).is_err() {
                         if let Some(e) = out_of_scope(&joined) {
                             return Err(e);
