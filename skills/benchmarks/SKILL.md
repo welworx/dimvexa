@@ -5,6 +5,24 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
 
 # Benchmarks
 
+## When to benchmark
+
+| Situation | Run | Output goes |
+|---|---|---|
+| Any change, before the pull request | `cargo xtask bench-impact` | The pull request body |
+| The diff touches no hot-path file | nothing: `bench-impact` prints "skipped" and says why | One line in the pull request: "no hot path touched" |
+| `bench-impact` fails (a guarded row more than 10 percent slower, outside the noise) | Explain the slowdown, or ask a fresh Opus subagent for a faster implementation, then rerun | The pull request body |
+| Many ways to implement it, speed decides | `bench-impact --base REV` once per candidate | Pick by the table, say so |
+| A release | `bench-matrix --reports`, only when the owner asks for the release report | `docs/benchmarks/` |
+| A claim against another library | `benchmarks/run_all.sh` (see `docs/benchmarking.md`) | `docs/benchmarks/comparison/` |
+
+`bench-impact` lists the files changed since the merge base with `origin/main` (committed, staged,
+unstaged, new). A file counts as hot path if it is under `crates/dimvexa-core/src/` or
+`crates/dimvexa/benches/`, or is `Cargo.toml`, `Cargo.lock` or `rust-toolchain.toml`
+(`HOT_PATHS` in `xtask/src/bench_impact.rs`; a test checks that every entry exists). If the diff
+touches one, it runs the A/B guard below against the merge base; there is no baseline to keep and
+no old release is run. Never run the matrix for an ordinary change.
+
 * Run: `cargo bench -p dimvexa --bench m0` (std-only harness in `crates/dimvexa/benches/m0.rs`,
   15 samples per row, median reported). Vectorisation check:
   `crates/dimvexa-testkit/examples/asm_probe.rs`. The criterion and iai suites in `extras/` need
@@ -53,6 +71,7 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
 
 | Thought | Do instead |
 |---|---|
+| "It is a small change, I will skip the benchmark" | Run `cargo xtask bench-impact`; it decides from the files in the diff and prints the skip if there is nothing to measure. |
 | "It looks 5 percent faster" | Compare medians with their spread. Inside the spread is `(noise)`; write no claim. |
 | "One run is enough" | Repeat a surprising result; shared machines are noisy. |
 | "I will put the new numbers next to last month's table" | Never mix bench files or days in one table; rerun the matrix with the current `m0.rs`. |

@@ -25,6 +25,7 @@ const COMMANDS: &[&str] = &[
     "update-data-hash",
     "check-docs",
     "bench-check",
+    "bench-impact",
     "bench-matrix",
 ];
 

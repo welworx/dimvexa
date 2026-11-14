@@ -18,6 +18,16 @@ cargo xtask ci
 - [ ] New or changed behaviour has a test, and a property test where a law applies
 - [ ] Public items are documented and the doc examples compile
 
+## Speed
+
+Paste the output of `cargo xtask bench-impact`. If it says "skipped: no hot-path file changed",
+write "no hot path touched". A guarded row more than 10 percent slower outside the noise needs an
+explanation here, or a faster implementation.
+
+```
+cargo xtask bench-impact
+```
+
 ## Changes a default?
 
 Does this change a default, a unit symbol, an error code, a rounding rule or an output format

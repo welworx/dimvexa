@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! Repository automation: `cargo xtask ci`, `check-docs`, `bench-check`,
+//! Repository automation: `cargo xtask ci`, `check-docs`, `bench-check`, `bench-impact`,
 //! `validate-data` and `update-data-hash`.
 //!
 //! `validate-data` is the gatekeeper of the unit table. It fails on a missing source,
@@ -20,6 +20,7 @@
 mod toml_lite;
 
 mod bench_check;
+mod bench_impact;
 mod bench_matrix;
 mod chains;
 mod ci;
@@ -70,6 +71,7 @@ fn main() -> ExitCode {
             }
         }
         "bench-check" => bench_check::run(&rest, &root),
+        "bench-impact" => bench_impact::run(&rest, &root),
         "bench-matrix" => bench_matrix::run(&rest, &root),
         "check-docs" => {
             let errors = docs_check::run(&root);
@@ -96,7 +98,7 @@ fn main() -> ExitCode {
         },
         _ => {
             eprintln!(
-                "usage: cargo xtask <ci [STAGE...] | check-docs | bench-check | bench-matrix | validate-data | update-data-hash>"
+                "usage: cargo xtask <ci [STAGE...] | check-docs | bench-check | bench-impact | bench-matrix | validate-data | update-data-hash>"
             );
             ExitCode::from(2)
         }

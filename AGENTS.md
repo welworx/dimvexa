@@ -26,9 +26,11 @@ cargo test --workspace         # quick loop
 cargo xtask check-docs         # docs, skills, ADRs, workflows and manifests stay consistent
 cargo xtask validate-data      # after touching the unit tables
 cargo xtask update-data-hash   # after a data change; commit the new data_version.toml
-cargo xtask bench-check        # after a hot-path change: >10% slowdown on guarded rows fails
+cargo xtask bench-impact       # once per change: skips if no hot-path file changed, else A/B against
+                               # the merge base; paste the output in the PR (benchmarks skill)
+cargo xtask bench-check        # the guard under it: >10% slowdown on guarded rows fails
 cargo xtask bench-check --against REV   # same, A/B against a revision on this machine (no baseline)
-cargo xtask bench-matrix --reports      # every release round-robin, regenerates docs/benchmarks (benchmarks skill)
+cargo xtask bench-matrix --reports      # every release round-robin, manual only (benchmarks skill)
 ```
 
 The workspace has no third-party dependencies and must build offline (std only). Do not add a

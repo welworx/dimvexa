@@ -526,7 +526,7 @@ fn execute_against(rev: &str, o: &Opts, root: &Path) -> Result<bool, String> {
     Ok(slow.is_empty() && missing.is_empty())
 }
 
-fn execute(args: &[String], root: &Path) -> Result<bool, String> {
+pub fn execute(args: &[String], root: &Path) -> Result<bool, String> {
     let o = parse_opts(args)?;
     if let Some(rev) = &o.against {
         return execute_against(rev, &o, root);

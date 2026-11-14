@@ -31,9 +31,9 @@ ran, nothing else (rule 6). Commands to start: `git diff --stat BASE...`, `cargo
    change; snapshot diffs were read, not just regenerated.
 7. **Speed impact (`benchmarks` skill).** Decide from the diff whether it touches a hot path
    (scalar apply, `apply_slice`, `apply_in_place`, the registry lookup, `m0.rs`).
-   * Hot path touched: the pull request must show a benchmark of the change against its merge
-     base (`cargo xtask bench-check --against REV` today; `bench-impact` once it exists), with
-     the machine. No output is a blocking finding.
+   * Hot path touched: the pull request must show the output of `cargo xtask bench-impact`
+     (a benchmark of the change against its merge base, with the machine). No output is a
+     blocking finding.
    * Read the table, not the verdict. A slowdown above about 10% outside the spread needs an
      explanation or a faster alternative; a row marked `(noise)` supports no claim in either
      direction; a "faster" claim must also stay bit-identical or inside the ulp bound
