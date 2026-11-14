@@ -39,7 +39,7 @@ Files: `crates/dimvexa-data/data/units/*.toml` (units, `ambiguous.toml` for reje
 | "GNU units or rink already has this factor" | Never open them to check. Find the primary source (BIPM, NIST, a standard, a statute). |
 | "Wikipedia lists the definition" | Follow it to the cited primary source and cite that. `validate-data` rejects banned sources. |
 | "The vector's expected value is what Dimvexa prints" | Compute `expect` by hand from the source with exact fractions. A vector that echoes the code proves nothing. |
-| "The vector can cite the same line as the unit" | It needs its own citation, an independent derivation of the number. `validate-data` rejects an identical source. |
+| "The vector can cite the same line as the unit" | It needs its own citation, an independent derivation of the number. `validate-data` rejects an identical source string; review checks that it is a real derivation. |
 | "`ton` / `gal` / `oz` as a bare symbol is fine" | Add explicit variants and list the bare name in `ambiguous.toml` (ADR-006). |
 | "Round the decimal, nobody will notice" | A measured value is the exact rational of the published decimal; mark it `measured`. |
 | "The data hash test fails, loosen it" | Run `cargo xtask update-data-hash` and commit `data_version.toml`. |
@@ -52,6 +52,11 @@ Files: `crates/dimvexa-data/data/units/*.toml` (units, `ambiguous.toml` for reje
 * Never take a factor, a name or an expected value from GNU units, rink, `units.dat`, Wikipedia
   or another library's output, and never open GPL data to "just compare". If a number is only
   known from there, the request is `needs-source` (`unit-request-triage`).
-* The golden vector is the independent check on the unit. Its `source` is not the unit's
-  `source` string; derive `expect` by hand (exact fraction) from the definition.
-* `cargo xtask validate-data` enforces the banned sources and the independent vector citation.
+* The golden vector is the independent check on the unit. Derive `expect` by hand (exact
+  fraction) from the definition, and write that derivation in the vector's `source`. Where the
+  only primary source is one table (as for `min`, `h`, `d`), the vector may cite the same table;
+  say "Hand derivation from ..." and show the arithmetic, and prefer a second document (for
+  example the BIPM definition plus the prefix table) when one exists.
+* `cargo xtask validate-data` enforces the banned sources and that the vector's `source` string
+  differs from the unit's. That is a prompt to write the derivation, not proof of independence;
+  review is what checks that the vector is not just the unit's factor restated.

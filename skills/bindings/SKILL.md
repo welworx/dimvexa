@@ -20,8 +20,10 @@ ADR-011 (wasm), ADR-012 (python), ADR-016 (excel); `docs/python-binding.md`, `do
   not build them, with one exception: the CI `excel` job builds the WASM binding and runs the
   Node tests. The Python binding has no pull-request check (`docs/python-binding.md` lists the
   gap), so nothing but you and the release workflow catches a break: build and test it by hand.
-* **`#![deny(unsafe_code)]`** in the binding crates; the macro expansion is a dependency's, not
-  ours. Do not add `unsafe` to make an export work.
+* **No `unsafe` of our own.** `bindings/wasm` has `#![deny(unsafe_code)]`; `bindings/python`
+  does not (PyO3's macros expand to `unsafe`, so a crate-wide deny may not compile: check before
+  adding it). In both, the macro expansion is a dependency's, not ours. Do not write `unsafe`
+  to make an export work.
 * **One version.** The crates, `bindings/python/Cargo.toml` (and its `dimvexa` and
   `dimvexa-config` dependencies), `bindings/wasm/Cargo.toml` and `bindings/excel/manifest.xml`
   (`<Version>` is the version plus `.0`) are equal. `scripts/check-versions.sh` prints the
@@ -61,6 +63,6 @@ as passed (rule 6).
 | "`cargo xtask ci` is green, so the bindings build" | It does not build them. Build and test them, or say you did not. |
 | "I will bump only the crate version" | All of them, plus the three lockfiles; run `scripts/check-versions.sh`. |
 | "Add the new constant to Python now, wasm later" | Parity in the same release, or a recorded gap in the docs and `CHANGELOG.md`. |
-| "Use `unsafe` so the export compiles" | Keep `#![deny(unsafe_code)]`; use the binding crate's safe API. |
+| "Use `unsafe` so the export compiles" | Do not write `unsafe`; use the binding crate's safe API. |
 | "The mocked Excel test passes, so Excel works" | It tests the functions with a mocked runtime. Real Excel is a manual check (ADR-016). |
 | "Publish the wheel to see if it works" | Never. The owner approves the release workflow. |

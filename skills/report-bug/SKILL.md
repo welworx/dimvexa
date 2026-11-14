@@ -10,7 +10,8 @@ five minutes, without leaking anything private. Fixing it is the `bug-repro` ski
 
 1. **Public or private first.** A panic, a hang, unbounded memory or a silently wrong number
    caused by the code goes to the private path in `SECURITY.md`; do not put the input in a
-   public issue or a pull request. A wrong factor in the table, a confusing message, a missing
+   public issue or a pull request (it appears in the fix's regression test only after the private
+   report is handled and the owner agrees). A wrong factor in the table, a confusing message, a missing
    unit or a docs error is an ordinary issue (`.github/ISSUE_TEMPLATE/`; a unit request uses
    the unit request form and the `unit-request-triage` skill).
 2. **Search first.** Look through open and closed issues and `docs/known-limitations.md`

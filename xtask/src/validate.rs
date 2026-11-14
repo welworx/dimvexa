@@ -627,6 +627,7 @@ fn banned_source(source: &str) -> Option<&'static str> {
     [
         "gnu units",
         "units.dat",
+        "definitions.units",
         "rink",
         "wikipedia",
         "wikidata",

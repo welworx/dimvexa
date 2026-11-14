@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //! Hostile input never panics and never hangs (rule 1 and rule 4 of `AGENTS.md`, `panic-free`
 //! skill). Every public entry point that takes text or a float gets hand-written nasty cases and
-//! seeded random junk; the result may be an error with a stable code, but never a panic.
+//! seeded random junk; the result may be an error, and its code must be a stable one
+//! (`Error::ALL_CODES`), but never a panic.
 //!
 //! A panic fixed in the field gets a case here (add it to `NASTY`), plus a test next to the code.
-//! Replay a failure with `DIMVEXA_PROP_SEED=<seed>`; the seed is printed on failure.
+//! Each case is printed before it runs (the harness shows it when a test fails), with the seed;
+//! replay with `DIMVEXA_PROP_SEED=<seed>`. The tests also count what they reached, so a change
+//! that makes the generators produce only rejected input fails instead of passing quietly.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use dimvexa::registry;
 use dimvexa_config::{Config, apply};
-use dimvexa_core::Ratio;
+use dimvexa_core::{Error, Ratio};
 
 /// Cases that have broken, or could break, a parser: huge exponents, deep nesting, odd Unicode,
 /// control characters, empty and near-empty input, numbers at the edge of `i128`.
@@ -153,101 +156,177 @@ fn inputs() -> Vec<String> {
     all
 }
 
+/// Real units, so that hostile text is paired with something a conversion can be built from.
+const VALID: &[&str] = &[
+    "m", "ft", "km/h", "m/s", "kg", "lb", "degC", "degF", "K", "Pa", "bar", "mol", "rad", "deg",
+];
+
+/// Numbers that stress rounding, overflow and the exact path.
+const HOSTILE_FLOATS: &[f64] = &[
+    0.0,
+    -0.0,
+    1.0,
+    -1.0,
+    f64::MAX,
+    f64::MIN,
+    f64::MIN_POSITIVE,
+    5e-324,
+    f64::NAN,
+    f64::INFINITY,
+    f64::NEG_INFINITY,
+];
+
+fn assert_stable(e: &Error, what: &str) {
+    assert!(
+        Error::ALL_CODES.contains(&e.code()),
+        "{what}: code {:?} is not in Error::ALL_CODES",
+        e.code()
+    );
+}
+
 #[test]
 fn parsing_unit_expressions_never_panics() {
     let reg = registry().unwrap();
+    let mut parsed = 0_usize;
+    eprintln!("seed {}", seed());
     for (i, text) in inputs().iter().enumerate() {
-        // An error is fine; a panic fails the test, and `i` plus the seed replay it.
-        let result = reg.parse(text);
-        if let Ok(e) = result {
-            // What parses must print and parse again to the same thing.
-            let printed = e.to_string();
-            let again = reg.parse(&printed).map(|x| x.to_string());
-            assert_eq!(
-                again.as_deref(),
-                Ok(printed.as_str()),
-                "case {i} ({text:?}), seed {}",
-                seed()
-            );
-        }
-    }
-}
-
-#[test]
-fn building_conversions_never_panics() {
-    let reg = registry().unwrap();
-    let inputs = inputs();
-    for pair in inputs.windows(2) {
-        let (Some(from), Some(to)) = (pair.first(), pair.get(1)) else {
-            continue;
-        };
-        if let Ok(c) = reg.conversion(from, to) {
-            // A built conversion must also apply to hostile numbers without panicking.
-            for x in [
-                0.0,
-                -0.0,
-                1.0,
-                -1.0,
-                f64::MAX,
-                f64::MIN,
-                f64::MIN_POSITIVE,
-                5e-324,
-            ] {
-                let _ = c.apply_exact_f64(x);
+        eprintln!("case {i}: {text:?}");
+        match reg.parse(text) {
+            Ok(e) => {
+                parsed += 1;
+                // What parses must print and parse again to the same thing.
+                let printed = e.to_string();
+                let again = reg.parse(&printed).map(|x| x.to_string());
+                assert_eq!(
+                    again.as_deref(),
+                    Ok(printed.as_str()),
+                    "case {i} ({text:?})"
+                );
             }
-            let _ = c.apply_exact(Ratio::new(i128::MAX, 1).unwrap());
-            let _ = c.apply_exact(Ratio::new(i128::MIN + 1, i128::MAX).unwrap());
+            Err(e) => assert_stable(&e, text),
         }
     }
+    assert!(
+        parsed >= 20,
+        "only {parsed} hostile inputs parsed; the generator went quiet"
+    );
 }
 
 #[test]
-fn applying_non_finite_floats_never_panics() {
+fn building_and_applying_conversions_never_panics() {
     let reg = registry().unwrap();
-    for (from, to) in [("m", "ft"), ("degC", "degF"), ("K", "degC"), ("kg", "lb")] {
-        let c = reg.conversion(from, to).unwrap();
-        for x in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-            let _ = c.apply_exact_f64(x);
+    let mut built = 0_usize;
+    let apply = |c: &dimvexa_core::Conversion| {
+        for x in HOSTILE_FLOATS {
+            let _ = c.apply_exact_f64(*x);
+        }
+        let _ = c.apply_exact(Ratio::new(i128::MAX, 1).unwrap());
+        let _ = c.apply_exact(Ratio::new(i128::MIN + 1, i128::MAX).unwrap());
+    };
+    eprintln!("seed {}", seed());
+    // Hostile text on one side, a real unit on the other (both orders), and real pairs.
+    for text in inputs() {
+        eprintln!("case: {text:?}");
+        for v in VALID {
+            for (from, to) in [(text.as_str(), *v), (*v, text.as_str())] {
+                match reg.conversion(from, to) {
+                    Ok(c) => {
+                        built += 1;
+                        apply(&c);
+                    }
+                    Err(e) => assert_stable(&e, &format!("{from:?} -> {to:?}")),
+                }
+            }
         }
     }
+    for from in VALID {
+        for to in VALID {
+            if let Ok(c) = reg.conversion(from, to) {
+                built += 1;
+                apply(&c);
+            }
+        }
+    }
+    assert!(
+        built >= 100,
+        "only {built} conversions were built; the test went quiet"
+    );
 }
 
 #[test]
 fn parsing_exact_numbers_never_panics() {
+    eprintln!("seed {}", seed());
     for text in inputs() {
+        eprintln!("case: {text:?}");
         let _ = Ratio::parse_symbolic(&text);
         let _ = text.parse::<Ratio>();
         let _ = Ratio::parse_prefix(&text);
     }
 }
 
+/// A TOML string value: only `\"` and `\\` are escapes in a config file, and a control character
+/// is replaced so the line structure survives and the value reaches the unit validation.
+fn quoted(value: &str) -> String {
+    let clean: String = value
+        .chars()
+        .map(|c| if c.is_control() { ' ' } else { c })
+        .collect();
+    format!("\"{}\"", clean.replace('\\', "\\\\").replace('"', "\\\""))
+}
+
 #[test]
 fn parsing_and_applying_config_files_never_panics() {
     let reg = registry().unwrap();
+    let (mut parsed, mut applied) = (0_usize, 0_usize);
+    eprintln!("seed {}", seed());
     for text in inputs() {
-        // The whole text as a file, and as the value of each key a config understands.
-        let mut texts = vec![text.clone()];
-        for key in [
+        eprintln!("case: {text:?}");
+        // The raw text as a file, and the text as the value of each key of a complete entry.
+        let mut files = vec![text.clone()];
+        let fields = [
             "symbol",
             "base",
             "factor",
-            "name",
-            "source",
             "exactness",
+            "source",
             "prefixes",
-        ] {
-            texts.push(format!("[[unit]]\n{key} = \"{}\"\n", text.escape_default()));
+        ];
+        for hostile in fields {
+            let mut body = String::from("[[unit]]\n");
+            for key in fields {
+                let value = if key == hostile {
+                    quoted(&text)
+                } else {
+                    match key {
+                        "symbol" => "\"hx\"".to_string(),
+                        "base" => "\"m\"".to_string(),
+                        "factor" => "\"3\"".to_string(),
+                        "exactness" => "\"defined\"".to_string(),
+                        "source" => "\"s\"".to_string(),
+                        _ => "\"si\"".to_string(),
+                    }
+                };
+                body += &[key, " = ", &value, "\n"].concat();
+            }
+            files.push(body);
         }
-        texts.push(format!(
-            "[[unit]]\nsymbol = \"hx\"\nbase = \"{}\"\nfactor = \"{}\"\nexactness = \"defined\"\nsource = \"s\"\n",
-            text.escape_default(),
-            text.escape_default()
-        ));
-        for t in texts {
-            if let Ok(cfg) = Config::parse(&t, "hostile.toml") {
+        for file in files {
+            if let Ok(cfg) = Config::parse(&file, "hostile.toml") {
+                parsed += 1;
                 let mut r = reg.clone();
-                let _ = apply(&mut r, &[cfg]);
+                match apply(&mut r, &[cfg]) {
+                    Ok(_) => applied += 1,
+                    Err(e) => assert_stable(&e, &file),
+                }
             }
         }
     }
+    assert!(
+        parsed >= 1000,
+        "only {parsed} hostile configs parsed; the test went quiet"
+    );
+    assert!(
+        applied >= 100,
+        "only {applied} hostile configs applied; the test went quiet"
+    );
 }

@@ -141,10 +141,55 @@ fn schema_ids(text: &str) -> Vec<String> {
     out
 }
 
+/// The schema ids the CLI really emits, read from the arms of `fn schema_id` (not from comments).
+fn emitted_schema_ids(cli: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut inside = false;
+    for line in cli.lines().map(str::trim) {
+        if line.starts_with("fn schema_id") {
+            inside = true;
+            continue;
+        }
+        if inside && line.starts_with("format!") {
+            break;
+        }
+        if !inside {
+            continue;
+        }
+        let Some((pat, num)) = line.split_once("=>") else {
+            continue;
+        };
+        let num: String = num.chars().filter(char::is_ascii_digit).collect();
+        let pat = pat.trim();
+        let name = if pat == "_" {
+            Some("convert")
+        } else {
+            pat.strip_prefix('"').and_then(|p| p.strip_suffix('"'))
+        };
+        if let (Some(name), false) = (name, num.is_empty()) {
+            out.push(format!("dimvexa.{name}/{num}"));
+        }
+    }
+    out.sort();
+    out
+}
+
 /// Facts that are written in several places must agree, and a few rules must stay enforced.
 fn consistency(root: &Path, agents: &str, errors: &mut Vec<String>) {
     // The JSON schema versions in AGENTS.md and the api-change skill equal those of the CLI.
-    let cli = schema_ids(&read(&root.join("crates/dimvexa-cli/src/lib.rs")));
+    let cli_text = read(&root.join("crates/dimvexa-cli/src/lib.rs"));
+    let cli = emitted_schema_ids(&cli_text);
+    if cli.is_empty() {
+        errors.push(
+            "crates/dimvexa-cli/src/lib.rs: cannot find the arms of `fn schema_id`".to_string(),
+        );
+    }
+    let mentioned = schema_ids(&cli_text);
+    if mentioned != cli {
+        errors.push(format!(
+            "crates/dimvexa-cli/src/lib.rs: schema ids in comments and help {mentioned:?} differ from `fn schema_id` {cli:?}"
+        ));
+    }
     for f in ["AGENTS.md", "skills/api-change/SKILL.md"] {
         let named = schema_ids(&read(&root.join(f)));
         if named != cli {
@@ -199,8 +244,17 @@ fn consistency(root: &Path, agents: &str, errors: &mut Vec<String>) {
         }
         let rel = m.strip_prefix(root).unwrap_or(&m).display().to_string();
         let text = read(&m);
-        let inherits = text.lines().map(str::trim).any(|l| l == "[lints]")
-            && text.lines().map(str::trim).any(|l| l == "workspace = true");
+        let keys: Vec<&str> = text
+            .lines()
+            .map(str::trim)
+            .filter(|l| !l.is_empty() && !l.starts_with('#'))
+            .collect();
+        // `workspace = true` must be the key right under `[lints]`, not under another table.
+        let inherits = keys
+            .iter()
+            .position(|l| *l == "[lints]")
+            .and_then(|i| keys.get(i.saturating_add(1)))
+            .is_some_and(|l| *l == "workspace = true");
         // The testkit has its own lint tables (it needs one `unsafe` allocator, see its manifest).
         if !inherits && !rel.contains("dimvexa-testkit") {
             errors.push(format!(
@@ -210,9 +264,17 @@ fn consistency(root: &Path, agents: &str, errors: &mut Vec<String>) {
     }
 
     // `.claude/skills` is a symlink to `skills/`, so Claude Code finds the skills.
+    // Git for Windows without symlink support checks it out as a file holding the target path.
     let link = root.join(".claude/skills");
-    if fs::read_link(&link).is_err() && link.exists() {
-        errors.push(".claude/skills must be a symlink to ../skills".to_string());
+    let ok = fs::read_link(&link).map_or_else(
+        |_| read(&link).trim() == "../skills",
+        |target| target == Path::new("../skills"),
+    );
+    if !ok {
+        errors.push(
+            ".claude/skills must be a symlink to ../skills (on Windows: `git config core.symlinks true`)"
+                .to_string(),
+        );
     }
 }
 
@@ -399,6 +461,19 @@ mod tests {
         let inv = xtask_invocations(t);
         assert!(inv.contains(&vec!["ci".to_string(), "fmt".into(), "clippy".into()]));
         assert!(inv.contains(&vec!["validate-data".to_string()]));
+    }
+
+    #[test]
+    fn reads_schema_ids_from_the_match_arms() {
+        let cli = "fn schema_id(c: &str) -> String {\n    let version = match c {\n        \"units\" => 4,\n        _ => 3,\n    };\n    format!(\"x\")\n}\n";
+        assert_eq!(
+            emitted_schema_ids(cli),
+            vec!["dimvexa.convert/3", "dimvexa.units/4"]
+        );
+        assert_eq!(
+            schema_ids("see dimvexa.units/4 and dimvexa.units/4"),
+            vec!["dimvexa.units/4"]
+        );
     }
 
     #[test]

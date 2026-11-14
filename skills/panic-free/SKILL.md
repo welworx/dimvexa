@@ -32,8 +32,9 @@ the long form.
   control characters. Parsers cap length, depth and exponent size and return an error; nothing
   allocates in proportion to a number the input *names* (a hang is as bad as a panic; report it
   privately, `bug-repro` skill).
-* **No printing and no `process::exit`** in library code (`clippy.toml` disallows them); the CLI
-  returns an exit code from `main`.
+* **No printing and no `process::exit`** in library code (`print_stdout` and `print_stderr` are
+  denied in `Cargo.toml`, `process::exit` in `clippy.toml`); the CLI returns an exit code from
+  `main`.
 
 ## How it is enforced
 
@@ -55,8 +56,10 @@ hostile-input test and the fuzz target are what catch a regression.
 ## Fixing a crash
 
 1. Reproduce it with the smallest input (`bug-repro` skill). A panic, hang or silently wrong
-   number is private: `SECURITY.md`, no input in a public issue.
+   number is private: `SECURITY.md`, no input in a public issue or pull request until the
+   private report has been handled and the owner agrees.
 2. Add the input to `NASTY` in `hostile_inputs.rs` and a test beside the code; watch it fail.
+   The input becomes public only in the fix, after the private report is dealt with.
 3. Fix the cause (a cap, a checked operation, a code), not the symptom (no `catch_unwind`).
 4. Run `cargo xtask ci`; mention the test in the commit message and `CHANGELOG.md` (Fixed).
 
