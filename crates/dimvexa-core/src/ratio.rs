@@ -444,8 +444,8 @@ impl Ratio {
     ///
     /// # Errors
     ///
-    /// None for any finite value: the comparison is exact and uses 256-bit products. The
-    /// `Result` is kept so the signature stays stable.
+    /// None in practice: the comparison is exact and uses 256-bit products, so no finite value
+    /// fails. The `Result` is kept so the signature stays stable.
     ///
     /// # Examples
     ///

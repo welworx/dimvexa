@@ -139,20 +139,20 @@ fn order_is_a_total_order_on_wide_fractions() {
     };
     for _ in 0..50_000 {
         let (a, b, c) = (wide(&mut rng), wide(&mut rng), wide(&mut rng));
-        let ab = a.checked_cmp(b).unwrap();
-        let ba = b.checked_cmp(a).unwrap();
-        assert_eq!(ab, ba.reverse(), "antisymmetry {a} {b}");
+        let a_b = a.checked_cmp(b).unwrap();
+        let b_a = b.checked_cmp(a).unwrap();
+        assert_eq!(a_b, b_a.reverse(), "antisymmetry {a} {b}");
         assert_eq!(a.checked_cmp(a), Ok(Ordering::Equal));
         let bc = b.checked_cmp(c).unwrap();
         let ac = a.checked_cmp(c).unwrap();
-        if ab.is_le() && bc.is_le() {
+        if a_b.is_le() && bc.is_le() {
             assert!(ac.is_le(), "transitivity {a} {b} {c}");
         }
         // equality agrees with the order
-        assert_eq!(a.checked_eq(b).unwrap(), ab == Ordering::Equal);
+        assert_eq!(a.checked_eq(b).unwrap(), a_b == Ordering::Equal);
         // the difference has the sign of the order whenever it can be formed
         if let Ok(diff) = a.checked_sub(b) {
-            assert_eq!(diff.signum(), ab as i32, "{a} - {b}");
+            assert_eq!(diff.signum(), a_b as i32, "{a} - {b}");
         }
     }
 }

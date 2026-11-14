@@ -67,6 +67,35 @@ reviewing the diff is the only guard, so look for it.
    link to a dated benchmark run (`docs/benchmarking.md`). Never invent competitor numbers.
    Reviewed. Skill: `benchmarks`.
 
+## Before every commit (a checklist, not a suggestion)
+
+An agent that edits Rust, data, docs or workflows runs all of this **before** `git commit`, and
+says in the final report what it ran and what the exit status was. "Not run" is only acceptable
+when the command cannot run here, and then the report names the command and the reason.
+
+1. `cargo xtask ci` exits 0 (rule 6: the exit status, not a pipe).
+2. `cargo xtask bench-impact` has been run once for the change and its output is in the report
+   (and in the PR). It decides by itself whether a hot path is touched; you do not decide by
+   the size of the diff. In a clone where it cannot find a merge base ("shallow clone?"), pass it
+   explicitly: `cargo xtask bench-impact --base $(git rev-parse HEAD~N)` or the commit the
+   branch started from. "I did not run it" is a finding, never a footnote.
+3. The `review` skill (`skills/review/SKILL.md`) has been read and applied to **your own** diff:
+   go through its checklist top to bottom and put the result (findings, or "no findings" and what
+   you ran) in the report. Scratch or probe files are deleted, an untracked file is either
+   committed on purpose or removed (`git status` is clean afterwards).
+4. The skill of each area you touched (table below) has been read first: `panic-free` for
+   arithmetic or parsing, `precision` for rounding, `tests` for new tests, `api-change` for an
+   error code or output, `benchmarks` for numbers.
+5. The tools the pre-commit hook skips (gitleaks, typos, taplo) are installed when the network
+   allows it, so the hook really scans (`go install` / `cargo install`, see the hook's message).
+   Do not accept "NOT scanned" when you can install the tool.
+
+The network may be available even where an older note says it is not (`fuzz/`, `extras/`):
+try the command (`cargo fetch`, `cargo install`) before you report something as impossible.
+New or changed fuzz targets are built and run for at least a minute
+(`cd fuzz && cargo +nightly fuzz run <target> -- -max_total_time=60`) and `fuzz/Cargo.lock` is
+committed.
+
 ## Where things live
 
 | Path | What |
