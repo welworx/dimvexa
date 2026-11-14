@@ -12,6 +12,7 @@
 
 use crate::error::{Error, Result};
 use crate::ratio::Ratio;
+use crate::wide::mul_wide;
 
 /// `pi` rounded down to 128 bits: `floor(pi * 2^126)`, checked against an independent
 /// computation of pi (Machin's formula) when the constant was written. `pi` is strictly between
@@ -24,26 +25,6 @@ const PI_LO: u128 = 0xC90F_DAA2_2168_C234_C4C6_628B_80DC_1CD1;
 struct Fx {
     m: u128,
     e: i32,
-}
-
-/// Full 256-bit product of two `u128`, as `(high, low)`.
-fn mul_wide(a: u128, b: u128) -> Option<(u128, u128)> {
-    let mask = u128::from(u64::MAX);
-    let (a1, a0) = (a >> 64, a & mask);
-    let (b1, b0) = (b >> 64, b & mask);
-    let p00 = a0.checked_mul(b0)?;
-    let p01 = a0.checked_mul(b1)?;
-    let p10 = a1.checked_mul(b0)?;
-    let p11 = a1.checked_mul(b1)?;
-    let mid = (p00 >> 64)
-        .checked_add(p01 & mask)?
-        .checked_add(p10 & mask)?;
-    let lo = ((mid & mask) << 64) | (p00 & mask);
-    let hi = p11
-        .checked_add(p01 >> 64)?
-        .checked_add(p10 >> 64)?
-        .checked_add(mid >> 64)?;
-    Some((hi, lo))
 }
 
 impl Fx {

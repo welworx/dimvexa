@@ -62,6 +62,7 @@ mod ratio;
 mod registry;
 mod unit;
 mod value_expr;
+mod wide;
 
 pub use constant::ConstantDef;
 pub use conversion::Conversion;

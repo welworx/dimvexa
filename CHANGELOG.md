@@ -5,6 +5,17 @@ All notable changes are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Release notes are generated from Conventional
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
+## [Unreleased]
+### Fixed
+
+- `Ratio::checked_eq` no longer overflows: it compares values in 256 bits, so `1 * 10^100` and `2 * 10^100` are decided (`false`) and `10^-300` equals `10 * 10^-301`. It used to fold powers of ten into `i128` and fail with `overflow`.
+- `Ratio::checked_cmp` forms its cross products in 256 bits, so two ordinary fractions near the `i128` limits (`i128::MAX` against `1/2`) compare instead of failing with `overflow`. Values with different exponents are still refused.
+- `Ratio::is_integer` tests the value, not the representation: `1/2 * 10^1` (5) is an integer; `10^-1` and a value with pi are not.
+
+### Added
+
+- Tests: `ratio_model` (equality, order and integrality against an independent `i128` model) and `roundtrip` (A to B to A is the identity in exact arithmetic and stays within 3 ulp, linear, or 8 ulp of the larger operand, affine, on the fast path).
+
 ## [0.7.0] - 2026-11-12
 ### Added
 
