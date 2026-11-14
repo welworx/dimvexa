@@ -200,7 +200,19 @@ impl Conversion {
                 suggestions: Vec::new(),
             });
         }
-        if from.kind() != to.kind() {
+        if from.kind().is_angular() && to.kind().is_angular() && from.kind() != to.kind() {
+            // ADR-020: an angle per time and a cycle rate (`rad/s` and `Hz`) have the same
+            // dimension but differ by 2 pi per cycle. Which one the caller means is not for the
+            // library to guess; an angle or a cycle still converts to a plain number.
+            return Err(Error::KindMismatch {
+                from: from.kind(),
+                to: to.kind(),
+                operation: "conversion",
+                suggestions: Vec::new(),
+            });
+        }
+        // An angular unit converts to a plain one (`deg` to `1`, `rad/s` to `1/s`).
+        if from.kind() != to.kind() && !from.kind().is_angular() && !to.kind().is_angular() {
             // A point and an interval cannot be converted into each other. Recommend the
             // delta unit of whichever side is the temperature point.
             let mut suggestions: Vec<String> = Vec::new();

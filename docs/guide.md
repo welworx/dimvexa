@@ -427,12 +427,14 @@ What to know:
    6.283185307179586 rad
    ```
 
-4. **Angle is dimensionless** (ADR-007), so `rad/s` and `Hz` are the same dimension and
-   `1 rad/s` converts to `1 Hz`, and `1 deg` converts to a plain number (`dimvexa convert 1 deg 1`
-   gives 0.017453292519943295). Dimvexa does not know that a hertz counts cycles and a radian
-   per second counts radians. Because of this there is no `rev`, `turn` or `rpm`: `1 turn/s`
-   would convert to `6.28 Hz`, which is wrong for a frequency. The example config defines `turn`
-   with that caveat, on your own responsibility.
+4. **Angle is dimensionless** (ADR-007), so `1 deg` converts to a plain number (`dimvexa convert
+   1 deg 1` gives 0.017453292519943295). It is still a kind of its own (ADR-020): a radian per
+   second counts radians and a hertz counts cycles, which differ by 2 pi (f = w / 2 pi), so
+   `dimvexa convert 1 rad/s Hz` is refused with `kind_mismatch` and so is `Hz` to `rad/s`.
+   Both still convert to a plain `1/s` and to units of their own kind (`rad/s` to `deg/s`, `kHz`
+   to `Hz`); to go from one to the other, convert to `1/s` and apply 2 pi yourself. There is no
+   `rev`, `turn` or `rpm` in the tables; the example config defines `turn` on `deg`, so it is an
+   angle and `turn/s` to `Hz` is refused too.
 5. **Missing:** `sr` (steradian), the parsec and angular `mil`.
 
 The number type is described in [`docs/adr/018-constants-and-exact-pi.md`](adr/018-constants-and-exact-pi.md);

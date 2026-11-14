@@ -429,7 +429,7 @@ impl UnitExpr {
             expr,
             dim,
             kind,
-            ref_exp: if kind.is_reference() { 1 } else { 0 },
+            ref_exp: if kind.tracks_power() { 1 } else { 0 },
             conditions: String::new(),
             factor,
             offset,
@@ -554,10 +554,10 @@ impl UnitExpr {
             operation: "reference power",
         };
         let other_exp = other.ref_exp.checked_mul(sign).ok_or_else(overflow)?;
-        match (self.kind.is_reference(), other.kind.is_reference()) {
+        match (self.kind.tracks_power(), other.kind.tracks_power()) {
             (true, true) if self.kind != other.kind => Err(Error::Refused {
                 reason: format!(
-                    "'{}' ({}) and '{}' ({}) each carry a different reference state and cannot be combined",
+                    "'{}' ({}) and '{}' ({}) each carry a different reference state or angular kind and cannot be combined",
                     self.expr, self.kind, other.expr, other.kind
                 ),
                 suggestions: Vec::new(),
@@ -683,7 +683,7 @@ impl UnitExpr {
         })?;
         // A power of 0 cancels the reference: `(scf)^0` is the plain number 1, not a
         // dimensionless standard volume that would let an actual volume pass as `scf`.
-        let keeps_reference = self.kind.is_reference() && ref_exp != 0;
+        let keeps_reference = self.kind.tracks_power() && ref_exp != 0;
         Ok(Self {
             expr: Expr::Pow(Box::new(self.expr.clone()), exp),
             dim: self.dim.checked_scale(exp)?,

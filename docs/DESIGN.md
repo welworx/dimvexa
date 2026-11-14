@@ -35,6 +35,7 @@ Each unit has a `Kind` on top of its dimension.
 | Temperature | `AbsTemperature`, `TempDifference` | abs − abs = diff; abs + diff = abs; abs + abs is an error. Temperature inside compound units (kJ/(kg·K)) is always the difference kind |
 | Pressure | `AbsPressure`, `GaugePressure`, `PressureDifference` | gauge → absolute needs an explicit reference pressure (default 101325 Pa, overridable) |
 | Composition | `MassFraction`, `MoleFraction`, `VolumeFraction`, concentrations | not convertible to each other without composition data. Bare `ppm` is rejected; use `ppmw`, `ppmv`, `ppmmol` |
+| Angle and cycle | `Angle`, `Cycle` | angle stays dimensionless (ADR-007). `rad/s` and `Hz` do not convert (they differ by 2 pi per cycle, ADR-020); each converts to a plain `1/s` |
 | Standard volume | Nm³, Sm³, scf, MMSCFD | stored as a volume (m^3) with a reference kind (ADR-013); the reference state (T, p) is the unit's `conditions` text. Conversion to actual volume needs an equation of state and is refused by the core |
 
 ### 3.3 Conversion shapes

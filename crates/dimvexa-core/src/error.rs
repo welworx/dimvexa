@@ -255,6 +255,14 @@ impl fmt::Display for Error {
                     f,
                     "kind mismatch in {operation}: {from} and {to} are not compatible"
                 )?;
+                if from.is_angular() && to.is_angular() {
+                    write!(
+                        f,
+                        " (an angle per time and a cycle rate differ by 2 pi per cycle, f = w / 2 pi; \
+                         the library does not guess which you mean: convert to a plain unit such \
+                         as 1/s and apply 2 pi yourself)"
+                    )?;
+                }
                 if !suggestions.is_empty() {
                     write!(
                         f,

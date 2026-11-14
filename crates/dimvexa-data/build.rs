@@ -118,6 +118,8 @@ fn unit_def(t: &toml_lite::Table) -> Res<String> {
         "gauge_pressure" => "Kind::GaugePressure",
         "normal_volume" => "Kind::NormalVolume",
         "standard_volume" => "Kind::StandardVolume",
+        "angle" => "Kind::Angle",
+        "cycle" => "Kind::Cycle",
         other => return Err(ctx(format!("unknown kind '{other}'"))),
     };
     let shape = match t.str("shape").map_err(ctx)? {

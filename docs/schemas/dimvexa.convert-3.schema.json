@@ -129,7 +129,9 @@
             "temperature_difference",
             "gauge_pressure",
             "normal_volume",
-            "standard_volume"
+            "standard_volume",
+            "angle",
+            "cycle"
           ]
         },
         "packs": {

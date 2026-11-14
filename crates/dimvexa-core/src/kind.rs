@@ -36,6 +36,12 @@ pub enum Kind {
     NormalVolume,
     /// A gas volume at 60 degF and 14.696 psia: `scf` (ADR-013).
     StandardVolume,
+    /// A plane angle (`rad`, `deg`, `arcmin`, ...). Angle stays dimensionless (ADR-007), but it
+    /// does not convert to a cycle count (ADR-020): `rad/s` and `Hz` differ by a factor 2 pi.
+    Angle,
+    /// A count of cycles (`Hz`). It converts to `1/s` and `Bq`, but not to an angle per time
+    /// (ADR-020).
+    Cycle,
 }
 
 impl Kind {
@@ -50,6 +56,21 @@ impl Kind {
         )
     }
 
+    /// True for [`Kind::Angle`] and [`Kind::Cycle`] (ADR-020). Their power is tracked through
+    /// compound units like a reference's, so `rad/s` is an angle per time and `rad/rad` is
+    /// plain, but a unit of this kind still converts to a plain one (`deg` to `1`, `Hz` to `1/s`).
+    #[must_use]
+    pub const fn is_angular(self) -> bool {
+        matches!(self, Self::Angle | Self::Cycle)
+    }
+
+    /// True for a kind whose signed power is tracked through compound units: a reference kind
+    /// or an angular one.
+    #[must_use]
+    pub const fn tracks_power(self) -> bool {
+        self.is_reference() || self.is_angular()
+    }
+
     /// The stable lower-case name used in data files and JSON output.
     #[must_use]
     pub const fn name(self) -> &'static str {
@@ -60,6 +81,8 @@ impl Kind {
             Self::GaugePressure => "gauge_pressure",
             Self::NormalVolume => "normal_volume",
             Self::StandardVolume => "standard_volume",
+            Self::Angle => "angle",
+            Self::Cycle => "cycle",
         }
     }
 
@@ -73,6 +96,8 @@ impl Kind {
             "gauge_pressure" => Some(Self::GaugePressure),
             "normal_volume" => Some(Self::NormalVolume),
             "standard_volume" => Some(Self::StandardVolume),
+            "angle" => Some(Self::Angle),
+            "cycle" => Some(Self::Cycle),
             _ => None,
         }
     }

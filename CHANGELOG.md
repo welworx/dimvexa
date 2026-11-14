@@ -14,6 +14,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Changed
 
+- **Breaking (ADR-020, Proposed):** `rad/s` and `Hz` no longer convert into each other. `Hz` has the new quantity kind `cycle` and `rad`, `deg`, `arcmin`, `arcsec` and `grad` (and every unit built on them, including a config's `turn`) the kind `angle`; a conversion between the two kinds fails with `kind_mismatch` instead of returning the wrong number (`1 rad/s` was `1 Hz`; a frequency is `w / 2 pi`). Angle is still dimensionless: `deg` converts to `1`, `rad/s` to `1/s` and `deg/s`, `Hz` to `1/s`, `Bq` and `kHz`. The JSON `quantity_kind` field can now read `angle` or `cycle` (the enums of `dimvexa.convert/3` and `dimvexa.units/4` list them). Data version 21. KL-21 is closed.
 - **Breaking (ADR-019, Proposed):** a sum, difference or ordering of two values with different exponents (`1 + pi`), a decimal expansion of a value with pi, and an exact offset with unlike powers of ten return the new error code `unrepresentable` (`Error::Unrepresentable`) instead of `overflow`. `overflow` now means only a number that does not fit its integers or an `f64`. The CLI never produces the new code; `dimvexa.convert/3` lists it.
 
 ### Added

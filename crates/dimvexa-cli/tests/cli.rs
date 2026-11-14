@@ -2120,10 +2120,29 @@ fn guide_angle_examples_are_real() {
     );
 }
 
-/// KL-21: angle is dimensionless.
+/// ADR-020 (KL-21 fixed): an angle per time and a cycle rate are different kinds, so
+/// `rad/s` and `Hz` do not convert; each still converts to a plain `1/s`.
 #[test]
-fn known_limitation_kl_21_dimensionless_angle() {
-    assert_eq!(dimvexa(&["convert", "1", "rad/s", "Hz"]).stdout, "1 Hz\n");
+fn an_angle_rate_and_a_cycle_rate_do_not_convert() {
+    for (from, to) in [("rad/s", "Hz"), ("Hz", "rad/s"), ("deg/s", "kHz")] {
+        let r = dimvexa(&["convert", "1", from, to]);
+        assert_eq!(r.code, 1, "{from} -> {to}: {}", r.stderr);
+        assert!(r.stderr.contains("kind_mismatch"), "{}", r.stderr);
+        assert!(r.stderr.contains("2 pi"), "{}", r.stderr);
+    }
+    // Same kind, and angular or cycle to a plain unit, still convert.
+    for (from, to, want) in [
+        ("rad/s", "1/s", "1 1/s\n"),
+        ("Hz", "1/s", "1 1/s\n"),
+        ("Hz", "Bq", "1 Bq\n"),
+        ("kHz", "Hz", "1000 Hz\n"),
+    ] {
+        assert_eq!(
+            dimvexa(&["convert", "1", from, to]).stdout,
+            want,
+            "{from} -> {to}"
+        );
+    }
 }
 
 /// ADR-018 step 3 (KL-20 fixed): pi and operators in a value, exact.

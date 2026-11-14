@@ -1,6 +1,6 @@
 # ADR-007: Plane angle is dimensionless
 
-Status: Accepted
+Status: Accepted (amended by [ADR-020](020-angle-and-cycle-kinds.md): angle stays dimensionless, but `rad/s` and `Hz` no longer convert)
 
 ## Context
 

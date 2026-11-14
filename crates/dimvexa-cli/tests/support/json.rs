@@ -319,6 +319,8 @@ pub fn check_units_schema(v: &V) {
                 "gauge_pressure",
                 "normal_volume",
                 "standard_volume",
+                "angle",
+                "cycle",
             ]
             .contains(&u.get("quantity_kind").unwrap().as_str())
         );

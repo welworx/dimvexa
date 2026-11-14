@@ -439,8 +439,13 @@ fn dimension_mismatches_are_always_errors() {
         let (a, b) = (rng.pick(&reps).unwrap(), rng.pick(&reps).unwrap());
         let (ea, eb) = (reg.parse(a).unwrap(), reg.parse(b).unwrap());
         let r = Conversion::between(&ea, &eb);
-        if ea.dim() == eb.dim() && ea.kind() == eb.kind() {
-            assert!(r.is_ok());
+        let (ka, kb) = (ea.kind(), eb.kind());
+        // ADR-020: an angle or a cycle converts to a plain unit, not to the other of the two.
+        let angular_to_plain = (ka.is_angular() || kb.is_angular())
+            && ka != kb
+            && !(ka.is_angular() && kb.is_angular());
+        if ea.dim() == eb.dim() && (ka == kb || angular_to_plain) {
+            assert!(r.is_ok(), "{a} -> {b}");
         } else if ea.dim() != eb.dim() {
             assert_eq!(r.unwrap_err().code(), "dimension_mismatch", "{a} -> {b}");
         } else {
