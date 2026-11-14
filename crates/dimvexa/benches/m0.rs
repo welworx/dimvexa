@@ -50,6 +50,16 @@ struct Bench {
 impl Bench {
     /// Times `f`, which performs `ops` operations per call.
     fn run<R>(&mut self, name: &str, ops: u64, note: &str, mut f: impl FnMut() -> R) {
+        // `DIMVEXA_BENCH_ONLY=prefix1;prefix2` runs only the rows whose name starts with one of
+        // the prefixes (`cargo xtask bench-check --quick`); unset runs every row.
+        if let Ok(only) = std::env::var("DIMVEXA_BENCH_ONLY") {
+            if !only
+                .split(';')
+                .any(|p| !p.is_empty() && name.starts_with(p))
+            {
+                return;
+            }
+        }
         // Warm up and calibrate the number of calls per sample to about 40 ms.
         let mut calls = 1_u64;
         loop {

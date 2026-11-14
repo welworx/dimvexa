@@ -9,6 +9,15 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
   15 samples per row, median reported). Vectorisation check:
   `crates/dimvexa-testkit/examples/asm_probe.rs`. The criterion and iai suites in `extras/` need
   network access and have never run; do not quote them.
+* **"What did my change cost?" (the everyday question): `cargo xtask bench-check --quick`.** It
+  runs only the guarded hot-path rows (`DIMVEXA_BENCH_ONLY` in `m0.rs`) on the working tree and on
+  the merge base with main (or `--against REV`), same machine, alternating, and prints a before/after
+  table with the change per row (about 1 to 3 minutes, mostly the two builds). Rerun a flagged row
+  before believing it: on a shared VM, HEAD against itself moves single rows by up to about 10 percent
+  (alignment, noise). Never run the matrix for this.
+* **The matrix is manual only.** `bench-matrix` (every released version, minutes per round) runs only
+  when the owner asks for it, when a version is released, or when `m0.rs` rows change. A feature
+  change does not trigger it; no CI job or hook runs it.
 * **Every release has solid numbers.** `cargo xtask bench-matrix --reports` runs the *current*
   `m0.rs` on every released version listed in `docs/benchmarks/releases.tsv` and on the working
   tree, round-robin (round r runs every version once) with 6 runs each by default (fewer than 3 is

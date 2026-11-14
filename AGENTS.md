@@ -19,6 +19,8 @@ cargo test --workspace         # quick loop
 cargo xtask validate-data      # after touching the unit tables
 cargo xtask update-data-hash   # after a data change; commit the new data_version.toml
 cargo xtask bench-check        # after a hot-path change: >10% slowdown on guarded rows fails
+cargo xtask bench-check --quick   # "what did my feature cost?": hot-path rows only, A/B against the
+                               # merge base with main, 1 to 3 minutes. bench-matrix (all releases) is manual only
 cargo xtask bench-check --against REV   # same, A/B against a revision on this machine (no baseline)
 ```
 

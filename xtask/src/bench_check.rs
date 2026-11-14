@@ -94,6 +94,9 @@ const GUARDED: &[&str] = &[
     "apply_exact_f64",
 ];
 
+/// Set by `--quick`: the bench runs only the guarded rows (`DIMVEXA_BENCH_ONLY`, see m0.rs).
+static QUICK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
 pub type Rows = BTreeMap<String, f64>;
 
 /// Rows short enough (one call, a 1000-element slice) for the alignment of a loop to decide the
@@ -195,6 +198,9 @@ fn run_bench_layout(dir: &Path, target_dir: Option<&Path>, layout: usize) -> Res
     if let Some(t) = target_dir {
         cmd.env("CARGO_TARGET_DIR", t);
     }
+    if QUICK.load(std::sync::atomic::Ordering::Relaxed) {
+        cmd.env("DIMVEXA_BENCH_ONLY", GUARDED.join(";"));
+    }
     // The bench file is one for every release (see bench_matrix.rs). A row that needs an API an
     // older release does not have is compiled out with `--cfg dimvexa_no_value_expr`: values with
     // constants (`Ratio::parse_expression`, 0.7.0) are the first such API. The row then shows `-`.
@@ -272,6 +278,7 @@ struct Opts {
     input: Option<String>,
     threshold: f64,
     runs: usize,
+    quick: bool,
 }
 
 fn parse_opts(args: &[String]) -> Result<Opts, String> {
@@ -282,11 +289,13 @@ fn parse_opts(args: &[String]) -> Result<Opts, String> {
         input: None,
         threshold: DEFAULT_THRESHOLD_PCT,
         runs: DEFAULT_RUNS,
+        quick: false,
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
             "--update" => o.update = true,
+            "--quick" => o.quick = true,
             "--against" => {
                 o.against = Some(it.next().ok_or("--against needs a git revision")?.clone());
             }
@@ -314,6 +323,9 @@ fn parse_opts(args: &[String]) -> Result<Opts, String> {
             }
             other => return Err(format!("unknown option {other}")),
         }
+    }
+    if o.quick && (o.update || o.input.is_some()) {
+        return Err("--quick cannot be combined with --update or --input".to_string());
     }
     if o.against.is_some() && (o.update || o.input.is_some()) {
         return Err("--against cannot be combined with --update or --input".to_string());
@@ -415,6 +427,13 @@ fn execute_against(rev: &str, o: &Opts, root: &Path) -> Result<bool, String> {
         &["rev-parse", "--short", &format!("{rev}^{{commit}}")],
     )?;
     let wt = Worktree::create(root, rev)?;
+    if o.quick {
+        // The old revision's own m0.rs may not know the row filter; measure both sides with the
+        // same harness (as bench-matrix does). Rows the old code cannot express just show up missing.
+        let f = "crates/dimvexa/benches/m0.rs";
+        std::fs::copy(root.join(f), wt.dir.join(f))
+            .map_err(|e| format!("cannot copy the bench file into the worktree: {e}"))?;
+    }
     let target = root.join("target").join("bench-ab-base");
     println!(
         "bench-check: A/B on this machine: {rev} ({short}) against the working tree, alternating rounds"
@@ -527,7 +546,20 @@ fn execute_against(rev: &str, o: &Opts, root: &Path) -> Result<bool, String> {
 }
 
 fn execute(args: &[String], root: &Path) -> Result<bool, String> {
-    let o = parse_opts(args)?;
+    let mut o = parse_opts(args)?;
+    if o.quick {
+        QUICK.store(true, std::sync::atomic::Ordering::Relaxed);
+        if o.against.is_none() {
+            // The feature's own cost: the working tree against where the branch left main.
+            let base = ["origin/main", "main"]
+                .iter()
+                .find_map(|b| git(root, &["merge-base", "HEAD", b]).ok())
+                .ok_or(
+                    "--quick needs origin/main or main to find the merge base; pass --against REV",
+                )?;
+            o.against = Some(base);
+        }
+    }
     if let Some(rev) = &o.against {
         return execute_against(rev, &o, root);
     }
