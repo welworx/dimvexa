@@ -27,6 +27,7 @@ const COMMANDS: &[&str] = &[
     "bench-check",
     "bench-impact",
     "bench-matrix",
+    "bench-release",
 ];
 
 /// Top-level directories whose paths are checked for existence when named in backticks.

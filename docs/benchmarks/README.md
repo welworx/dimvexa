@@ -15,9 +15,10 @@ claim against another library without a link to a dated run (`docs/benchmarking.
 
 All versions side by side, with the spread of every number and the change against the previous version:
 [`matrix.md`](matrix.md) (raw runs: [`matrix-raw.tsv`](matrix-raw.tsv)). It is produced by
-`cargo xtask bench-matrix --reports` from the versions listed in [`releases.tsv`](releases.tsv). Whenever a
-row is added to or changed in `crates/dimvexa/benches/m0.rs`, every release is measured again with the
-new file (the `benchmarks` skill). A change marked `(noise)` is inside the spread of this shared VM and is
+`cargo xtask bench-matrix --reports` from the versions listed in [`releases.tsv`](releases.tsv); that run is
+manual, only when a comparison of releases is wanted. A new release gets one full run of itself,
+`cargo xtask bench-release`, which writes `vX.Y.Z.md` and does not touch the matrix; the report names the
+bench file revision it used. A change marked `(noise)` is inside the spread of this shared VM and is
 not a measured difference.
 
 Layout of this folder:

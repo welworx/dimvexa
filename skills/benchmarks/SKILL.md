@@ -13,7 +13,8 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
 | The diff touches no hot-path file | nothing: `bench-impact` prints "skipped" and says why | One line in the pull request: "no hot path touched" |
 | `bench-impact` fails (a guarded row more than 10 percent slower, outside the noise) | Explain the slowdown, or ask a fresh Opus subagent for a faster implementation, then rerun | The pull request body |
 | Many ways to implement it, speed decides | `bench-impact --base REV` once per candidate | Pick by the table, say so |
-| A release | `bench-matrix --reports`, only when the owner asks for the release report | `docs/benchmarks/` |
+| A release is prepared | `cargo xtask bench-release` (full, this version only) | `docs/benchmarks/v<version>.md` |
+| Releases compared side by side | `bench-matrix --reports`, only when the owner asks | `docs/benchmarks/matrix.md` |
 | A claim against another library | `benchmarks/run_all.sh` (see `docs/benchmarking.md`) | `docs/benchmarks/comparison/` |
 
 `bench-impact` lists the files changed since the merge base with `origin/main` (committed, staged,
@@ -27,20 +28,22 @@ no old release is run. Never run the matrix for an ordinary change.
   15 samples per row, median reported). Vectorisation check:
   `crates/dimvexa-testkit/examples/asm_probe.rs`. The criterion and iai suites in `extras/` need
   network access and have never run; do not quote them.
-* **Every release has solid numbers.** `cargo xtask bench-matrix --reports` runs the *current*
-  `m0.rs` on every released version listed in `docs/benchmarks/releases.tsv` and on the working
-  tree, round-robin (round r runs every version once) with 6 runs each by default (fewer than 3 is
-  refused), and writes `docs/benchmarks/matrix.md` (medians, spread, change against the previous
-  version), `matrix-raw.tsv` (every run) and one generated `vX.Y.Z.md` per version (for example
-  `docs/benchmarks/v0.5.0.md`; the index is `docs/benchmarks/README.md`). Keep the machine idle
-  while it runs (about 65 s per run per version).
-* **Add a bench row, rename one, or change the harness: rerun every release.** Numbers from
-  different bench files or different days are never put in one table. So after any change to
-  `crates/dimvexa/benches/m0.rs`, rerun `cargo xtask bench-matrix --reports` (all versions, new
-  bench file) and commit the regenerated files; a version that does not build with the new file is
-  listed in `matrix.md`, not dropped silently. A row an old version cannot express shows `-`.
-* **When a version is released**, add `version<TAB>commit` to `docs/benchmarks/releases.tsv` (the commit
-  the tag points to: `git rev-list -n1 vX.Y.Z`; not a version-bump commit) and rerun the matrix so it is measured as a released version.
+* **A release gets one full benchmark, of itself.** `cargo xtask bench-release` measures every row
+  of `crates/dimvexa/benches/m0.rs` on the working tree at the release commit (6 runs by default,
+  about a minute each, no older version is built or run) and writes `docs/benchmarks/v<version>.md`
+  (machine, compiler, profile, bench file revision, commit, median and spread of every row). It
+  does not touch `matrix.md`. The report has no comparison column: numbers from another day,
+  machine or bench file are never put in one table. What a change cost was answered when it was
+  made (`cargo xtask bench-impact`). Keep the machine idle while it runs.
+* **Releases side by side are manual.** `cargo xtask bench-matrix --reports` runs the *current*
+  `m0.rs` on every version in `docs/benchmarks/releases.tsv` and on the working tree, round-robin,
+  and rewrites `docs/benchmarks/matrix.md`, `matrix-raw.tsv` and the generated `vX.Y.Z.md` files.
+  It takes about 65 s per run per version, so run it only when the owner asks for a comparison of
+  releases. Adding or changing a bench row does **not** require it; the matrix then says which bench
+  file revision it used, and a row an old version cannot express shows `-`.
+* **When a version is released**, add `version<TAB>commit` to `docs/benchmarks/releases.tsv` (the
+  commit the tag points to: `git rev-list -n1 vX.Y.Z`; not a version-bump commit) so a later matrix
+  run can measure it. No rerun is needed.
 * **Read numbers with the spread.** A change is "faster" or "slower" only if it is larger than the
   spread of both sides; the matrix marks the others `(noise)`. Do not write a performance claim for
   a `(noise)` row, and say what is inside the noise instead. A hand-written narrative for a version
@@ -74,7 +77,7 @@ no old release is run. Never run the matrix for an ordinary change.
 | "It is a small change, I will skip the benchmark" | Run `cargo xtask bench-impact`; it decides from the files in the diff and prints the skip if there is nothing to measure. |
 | "It looks 5 percent faster" | Compare medians with their spread. Inside the spread is `(noise)`; write no claim. |
 | "One run is enough" | Repeat a surprising result; shared machines are noisy. |
-| "I will put the new numbers next to last month's table" | Never mix bench files or days in one table; rerun the matrix with the current `m0.rs`. |
+| "I will put the new numbers next to last month's table" | Never mix bench files or days in one table; run `bench-matrix` for a side-by-side, or leave the comparison out. |
 | "Competitor X is about 3x slower, I remember" | Never invent or edit competitor numbers. Link a dated run or say nothing. |
 | "The bench is faster, so the change is good" | It must also be bit-identical or inside the bound, proven by `differential.rs`. |
 | "Re-record the baseline so the guard passes" | Only on a new machine or toolchain, or for an explained and accepted change. |

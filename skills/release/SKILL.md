@@ -36,16 +36,16 @@ PyPI and npm (`docs/releasing.md`).
    are already on a registry.
 6. Public API diff: `cargo semver-checks` once a baseline release exists (`api-change` skill).
 7. Benchmarks and `docs/precision.md` still match the code (`benchmarks`, `precision` skills):
-   `cargo xtask bench-matrix --reports` has been run with the current `m0.rs` (so every released
-   version and this one were measured with one bench file, 6 alternating runs each), the generated
-   `docs/benchmarks/matrix.md`, `matrix-raw.tsv` and `vX.Y.Z.md` reports are committed (one report per
-   release, listed in `docs/benchmarks/README.md`), and a hand-written narrative exists for this
-   version if a row moved beyond the noise. The cross-library comparison of this version exists too:
+   `cargo xtask bench-release` has been run on the release commit (every row of `m0.rs`, 6 runs,
+   this version only; no older release is measured and `matrix.md` is not touched), the generated
+   `docs/benchmarks/v<version>.md` is committed and listed in `docs/benchmarks/README.md`, and a
+   hand-written narrative exists for this version if the `bench-impact` outputs of its changes
+   showed a row beyond the noise. The cross-library comparison of this version exists too:
    a full `benchmarks/run_all.sh` on a clean checkout of the release commit (it refuses unpinned
    competitor versions), the regenerated `docs/benchmarks/comparison/comparison.md`, `img/` and
    `benchmarks/results/` committed, and the hand-written `vX.Y.Z.md` in the `docs/benchmarks/comparison` folder from them
    (`docs/benchmarking.md`, rule 5). After the release is published, add the commit its tag points to
-   (`git rev-list -n1 vX.Y.Z`) to `docs/benchmarks/releases.tsv` and rerun the matrix.
+   (`git rev-list -n1 vX.Y.Z`) to `docs/benchmarks/releases.tsv`; no rerun.
 8. After the merge, the owner approves the run. Verify, do not assume: the five crates on
    crates.io, `dimvexa` on PyPI (5 wheels + sdist), `@dimvexa/wasm` on npm and the tag `vX.Y.Z`.
    Known gap: crates.io trusted publishing is not confirmed to work yet (the first release
@@ -59,6 +59,7 @@ PyPI and npm (`docs/releasing.md`).
 | "Preparing the release means publishing it" | Stop at a reviewed release commit; only the owner publishes. |
 | "CI exited 0 through `| tail`" | Check the exit status of `cargo xtask ci` itself (chain with `&&`). |
 | "The bindings have the same version, I assume" | Run `scripts/check-versions.sh` and the `cargo metadata --locked` checks. |
-| "Benchmarks from the last release will do" | Rerun the matrix with the current `m0.rs`; commit the generated reports. |
+| "Benchmarks from the last release will do" | Run `cargo xtask bench-release` on this release commit; commit the generated report. |
+| "I will rerun every old release too" | No. `bench-release` measures this version only; the side-by-side matrix is manual. |
 | "I will add a DOI or a date later" | Never invent them; fill `CITATION.cff` with real values only. |
 | "A red check is probably flaky" | Read the check run. Fix it, or say plainly which check is red and why. |

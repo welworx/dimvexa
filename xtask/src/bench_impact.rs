@@ -19,7 +19,7 @@
 //! fresh Opus subagent look for a faster implementation. Paste the output into the pull request.
 //!
 //! It never runs the release matrix or the cross-library comparison; those stay manual
-//! (`bench-matrix`, `benchmarks/run_all.sh`).
+//! (`bench-release` runs once per release, `bench-matrix` and `benchmarks/run_all.sh` are manual).
 #![allow(clippy::arithmetic_side_effects)]
 
 use std::path::Path;

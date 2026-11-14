@@ -30,7 +30,8 @@ cargo xtask bench-impact       # once per change: skips if no hot-path file chan
                                # the merge base; paste the output in the PR (benchmarks skill)
 cargo xtask bench-check        # the guard under it: >10% slowdown on guarded rows fails
 cargo xtask bench-check --against REV   # same, A/B against a revision on this machine (no baseline)
-cargo xtask bench-matrix --reports      # every release round-robin, manual only (benchmarks skill)
+cargo xtask bench-release      # once per release: every row of m0.rs on this commit, writes docs/benchmarks/vX.Y.Z.md
+cargo xtask bench-matrix --reports      # all released versions side by side; manual only, never as part of a release
 ```
 
 The workspace has no third-party dependencies and must build offline (std only). Do not add a
@@ -76,7 +77,7 @@ reviewing the diff is the only guard, so look for it.
 | `crates/dimvexa` | facade crate (re-exports core + data) |
 | `crates/dimvexa-cli` | `dimvexa convert`, `units`, `configs`, `constants`, `update` (self-update, ADR-015); no conversion logic of its own; snapshots in `tests/snapshots` |
 | `crates/dimvexa-testkit` | test helpers; differential, exact-path, property, overflow and zero-allocation tests |
-| `xtask` | `ci`, `check-docs`, `validate-data`, `update-data-hash`, `bench-check`, `bench-matrix` |
+| `xtask` | `ci`, `check-docs`, `validate-data`, `update-data-hash`, `bench-check`, `bench-impact`, `bench-release`, `bench-matrix` |
 | `bindings/` | `python`, `wasm`, `excel`: thin wrappers with no conversion logic; versions equal (`scripts/check-versions.sh`) |
 | `skills/` | the agent skills (`.claude/skills` is a symlink to it) |
 | `docs/` | `guide.md` (CLI user guide; its examples are tested in `crates/dimvexa-cli/tests/cli.rs`), `PLAN.md`, `DESIGN.md`, `adr/`, `excel.md`, `brand/` (logo, icons, design guidelines), `precision.md`, `benchmarks/`, `ci-pinning.md`, `schemas/` |
