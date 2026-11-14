@@ -386,8 +386,9 @@ impl Conversion {
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] if the result does not fit in `i128` fractions, or if `a * x` and
-    /// `b` have different powers of ten that cannot be added exactly. [`Error::Refused`] if
+    /// [`Error::Overflow`] if the result does not fit in `i128` fractions.
+    /// [`Error::Unrepresentable`] if `a * x` and `b` have different powers of ten that cannot be
+    /// added exactly. [`Error::Refused`] if
     /// `x` carries pi and the conversion has an offset (`pi` in `degC` to `degF`): a multiple
     /// of pi plus a rational is not a number of the form rational times a power of pi.
     pub fn apply_exact(&self, x: Ratio) -> Result<Ratio> {

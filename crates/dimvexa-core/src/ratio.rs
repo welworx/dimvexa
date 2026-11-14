@@ -12,6 +12,10 @@ const fn overflow(operation: &'static str) -> Error {
     Error::Overflow { operation }
 }
 
+const fn unrepresentable(operation: &'static str) -> Error {
+    Error::Unrepresentable { operation }
+}
+
 /// Greatest common divisor by Euclid's algorithm. `gcd(0, 0) == 0`.
 ///
 /// Stein's binary algorithm was tried and measured 30 to 40 percent slower on `u128` in M0
@@ -39,8 +43,9 @@ const fn gcd(mut a: u128, mut b: u128) -> u128 {
 /// denominator and cannot overflow them.
 ///
 /// Addition, subtraction and ordering of two non-zero numbers with different exponents are
-/// refused with [`Error::Overflow`]: they would need a value that cannot be written exactly
-/// (`1 + pi`), and the library never approximates. Equality (`==`) compares the stored
+/// refused with [`Error::Unrepresentable`]: they would need a value that cannot be written
+/// exactly (`1 + pi`), and the library never approximates. That is not an overflow, which is
+/// reserved for the bounds of the integers. Equality (`==`) compares the stored
 /// representation, so `5` and `1/2 * 10^1` are different to `==` although they are the same
 /// number ([`checked_eq`](Self::checked_eq) compares values); the exponents only come from
 /// tables, from pi, or from products of such numbers.
@@ -301,6 +306,8 @@ impl Ratio {
     /// # Errors
     ///
     /// [`Error::Overflow`] if an intermediate or the result does not fit in `i128`.
+    /// [`Error::Unrepresentable`] if both numbers are non-zero and have different exponents
+    /// (`1 + pi`).
     pub fn checked_add(self, rhs: Self) -> Result<Self> {
         let err = || overflow("ratio add");
         if self.is_zero() {
@@ -310,7 +317,7 @@ impl Ratio {
             return Ok(self);
         }
         if self.ten != rhs.ten || self.pi != rhs.pi {
-            return Err(overflow("ratio add (different exponents)"));
+            return Err(unrepresentable("ratio add (different exponents)"));
         }
         let g = i128::try_from(gcd(self.den.unsigned_abs(), rhs.den.unsigned_abs()))
             .map_err(|_| err())?;
@@ -330,9 +337,13 @@ impl Ratio {
     /// # Errors
     ///
     /// [`Error::Overflow`] if an intermediate or the result does not fit in `i128`.
+    /// [`Error::Unrepresentable`] if both numbers are non-zero and have different exponents.
     pub fn checked_sub(self, rhs: Self) -> Result<Self> {
         let neg = rhs.checked_neg().map_err(|_| overflow("ratio sub"))?;
-        self.checked_add(neg).map_err(|_| overflow("ratio sub"))
+        self.checked_add(neg).map_err(|e| match e {
+            Error::Unrepresentable { .. } => unrepresentable("ratio sub (different exponents)"),
+            _ => overflow("ratio sub"),
+        })
     }
 
     /// Product, cross-reducing before multiplying.
@@ -495,15 +506,15 @@ impl Ratio {
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] if two non-zero numbers have different exponents (they are never
-    /// compared approximately). The cross products are formed in 256 bits, so ordinary
+    /// [`Error::Unrepresentable`] if two non-zero numbers have different exponents (they are
+    /// never compared approximately). The cross products are formed in 256 bits, so ordinary
     /// fractions never overflow.
     pub fn checked_cmp(self, rhs: Self) -> Result<Ordering> {
         if self.ten != rhs.ten || self.pi != rhs.pi {
             if self.is_zero() || rhs.is_zero() {
                 return Ok(self.signum().cmp(&rhs.signum()));
             }
-            return Err(overflow("ratio compare (different exponents)"));
+            return Err(unrepresentable("ratio compare (different exponents)"));
         }
         let by_sign = self.signum().cmp(&rhs.signum());
         if by_sign != Ordering::Equal || self.is_zero() {
@@ -826,8 +837,9 @@ impl Ratio {
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] on internal overflow (denominators close to `i128::MAX`), for a
-    /// power of ten that does not fit, and for any power of pi.
+    /// [`Error::Overflow`] on internal overflow (denominators close to `i128::MAX`) and for a
+    /// power of ten that does not fit. [`Error::Unrepresentable`] for any power of pi (an
+    /// irrational number has no finite decimal).
     ///
     /// # Examples
     ///
@@ -841,7 +853,7 @@ impl Ratio {
     pub fn to_decimal(self, max_fraction_digits: u32) -> Result<(String, bool)> {
         let err = || overflow("ratio to decimal");
         if self.pi != 0 {
-            return Err(err());
+            return Err(unrepresentable("ratio to decimal (power of pi)"));
         }
         let this = self.folded().map_err(|_| err())?;
         let negative = this.num < 0;
@@ -1313,9 +1325,9 @@ mod tests {
     fn add_and_compare_refuse_different_exponents() {
         let pi = Ratio::PI;
         let one = Ratio::ONE;
-        assert_eq!(one.checked_add(pi).unwrap_err().code(), "overflow");
-        assert_eq!(one.checked_sub(pi).unwrap_err().code(), "overflow");
-        assert_eq!(one.checked_cmp(pi).unwrap_err().code(), "overflow");
+        assert_eq!(one.checked_add(pi).unwrap_err().code(), "unrepresentable");
+        assert_eq!(one.checked_sub(pi).unwrap_err().code(), "unrepresentable");
+        assert_eq!(one.checked_cmp(pi).unwrap_err().code(), "unrepresentable");
         let ev = pi_part(3, 1, -28, 0);
         assert!(one.checked_add(ev).is_err());
         // zero belongs to every exponent
@@ -1431,7 +1443,10 @@ mod tests {
 
     #[test]
     fn exponents_in_decimal_text_and_equality_keep_working() {
-        assert_eq!(Ratio::PI.to_decimal(5).unwrap_err().code(), "overflow");
+        assert_eq!(
+            Ratio::PI.to_decimal(5).unwrap_err().code(),
+            "unrepresentable"
+        );
         assert_eq!(
             pi_part(1_602_176_634, 1, -28, 0).to_decimal(40).unwrap(),
             ("0.0000000000000000001602176634".to_string(), true)

@@ -140,9 +140,18 @@ fn known_limitation_kl_23_gauge_to_absolute_is_refused() {
 #[test]
 fn known_limitation_kl_24_unlike_exponents_cannot_be_added_or_ordered() {
     let pi = Ratio::PI;
-    assert_eq!(Ratio::ONE.checked_add(pi).unwrap_err().code(), "overflow");
-    assert_eq!(Ratio::ONE.checked_sub(pi).unwrap_err().code(), "overflow");
-    assert_eq!(Ratio::ONE.checked_cmp(pi).unwrap_err().code(), "overflow");
+    assert_eq!(
+        Ratio::ONE.checked_add(pi).unwrap_err().code(),
+        "unrepresentable"
+    );
+    assert_eq!(
+        Ratio::ONE.checked_sub(pi).unwrap_err().code(),
+        "unrepresentable"
+    );
+    assert_eq!(
+        Ratio::ONE.checked_cmp(pi).unwrap_err().code(),
+        "unrepresentable"
+    );
     let ev = Ratio::new(1_602_176_634, 1).unwrap().with_exponents(-28, 0);
     let plain = Ratio::new(801_088_317, 5_000_000_000_000_000_000_000_000_000).unwrap();
     assert_ne!(ev, plain, "KL-24 fixed? then `==` compares values");

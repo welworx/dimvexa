@@ -249,6 +249,7 @@ fn every_error_code_has_a_cli_test() {
         let not_reachable = [
             "division_by_zero",
             "length_mismatch",
+            "unrepresentable", // only a sum or an order of unlike exponents, never from the CLI
             "invalid_definition",
             "duplicate_symbol",
         ];

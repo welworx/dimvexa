@@ -86,6 +86,13 @@ pub enum Error {
         /// The operation that overflowed.
         operation: &'static str,
     },
+    /// The exact result exists but cannot be written in the number form of the library
+    /// (`num/den * 10^k * pi^m`), for example `1 + pi`. The value is never approximated. Not an
+    /// overflow: no bound of the integers is involved. Code `unrepresentable`.
+    Unrepresentable {
+        /// The operation that has no exact result in this form.
+        operation: &'static str,
+    },
     /// Division by zero in exact arithmetic. Code `division_by_zero`.
     DivisionByZero,
     /// Input and output slices have different lengths. Code `length_mismatch`.
@@ -128,6 +135,7 @@ impl Error {
         "dimension_mismatch",
         "kind_mismatch",
         "overflow",
+        "unrepresentable",
         "division_by_zero",
         "length_mismatch",
         "refused",
@@ -156,6 +164,7 @@ impl Error {
             Self::DimensionMismatch { .. } => "dimension_mismatch",
             Self::KindMismatch { .. } => "kind_mismatch",
             Self::Overflow { .. } => "overflow",
+            Self::Unrepresentable { .. } => "unrepresentable",
             Self::DivisionByZero => "division_by_zero",
             Self::LengthMismatch { .. } => "length_mismatch",
             Self::Refused { .. } => "refused",
@@ -259,6 +268,11 @@ impl fmt::Display for Error {
             Self::Overflow { operation } => {
                 write!(f, "integer overflow in exact arithmetic ({operation})")
             }
+            Self::Unrepresentable { operation } => write!(
+                f,
+                "the exact result cannot be written as a fraction times powers of ten and pi \
+                 ({operation}); it is never approximated"
+            ),
             Self::DivisionByZero => f.write_str("division by zero"),
             Self::LengthMismatch { input, output } => {
                 write!(
@@ -279,3 +293,29 @@ impl std::error::Error for Error {}
 
 /// Result alias used throughout the crate.
 pub type Result<T> = core::result::Result<T, Error>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unrepresentable_is_not_overflow() {
+        let e = Error::Unrepresentable {
+            operation: "ratio add (different exponents)",
+        };
+        assert_eq!(e.code(), "unrepresentable");
+        assert!(Error::ALL_CODES.contains(&e.code()));
+        let text = e.to_string();
+        assert!(text.contains("never approximated"), "{text}");
+        assert!(!text.contains("overflow"), "{text}");
+        assert_ne!(e.code(), Error::Overflow { operation: "x" }.code());
+    }
+
+    #[test]
+    fn every_code_is_listed_once() {
+        let mut codes = Error::ALL_CODES.to_vec();
+        codes.sort_unstable();
+        codes.dedup();
+        assert_eq!(codes.len(), Error::ALL_CODES.len());
+    }
+}

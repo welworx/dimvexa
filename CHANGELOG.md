@@ -12,6 +12,10 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 - `Ratio::checked_cmp` forms its cross products in 256 bits, so two ordinary fractions near the `i128` limits (`i128::MAX` against `1/2`) compare instead of failing with `overflow`. Values with different exponents are still refused.
 - `Ratio::is_integer` tests the value, not the representation: `1/2 * 10^1` (5) is an integer; `10^-1` and a value with pi are not.
 
+### Changed
+
+- **Breaking (ADR-019, Proposed):** a sum, difference or ordering of two values with different exponents (`1 + pi`), a decimal expansion of a value with pi, and an exact offset with unlike powers of ten return the new error code `unrepresentable` (`Error::Unrepresentable`) instead of `overflow`. `overflow` now means only a number that does not fit its integers or an `f64`. The CLI never produces the new code; `dimvexa.convert/3` lists it.
+
 ### Added
 
 - `cargo xtask bench-impact --guard` and a pre-commit step: a commit that stages a hot-path file is blocked until `bench-impact` has run for the current hot-path files; commits that touch only docs, skills, workflows or other crates are not affected.
