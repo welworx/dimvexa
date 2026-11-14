@@ -29,8 +29,21 @@ ran, nothing else (rule 6). Commands to start: `git diff --stat BASE...`, `cargo
    fields added only inside the current schema version, or a new version, schema file, ADR and
    snapshots together; CLI help (`HELP*`), `docs/guide.md` and `CHANGELOG.md` updated in the same
    change; snapshot diffs were read, not just regenerated.
-7. **Claims (rule 8, `benchmarks` skill).** No "fastest" or "most accurate" without a dated run;
-   numbers come from a real run with the machine and revision stated; `(noise)` rows make no claim.
+7. **Speed impact (`benchmarks` skill).** Decide from the diff whether it touches a hot path
+   (scalar apply, `apply_slice`, `apply_in_place`, the registry lookup, `m0.rs`).
+   * Hot path touched: the pull request must show a benchmark of the change against its merge
+     base (`cargo xtask bench-check --against REV` today; `bench-impact` once it exists), with
+     the machine. No output is a blocking finding.
+   * Read the table, not the verdict. A slowdown above about 10% outside the spread needs an
+     explanation or a faster alternative; a row marked `(noise)` supports no claim in either
+     direction; a "faster" claim must also stay bit-identical or inside the ulp bound
+     (`differential.rs`).
+   * No hot path touched: say so in the review ("no hot path in the diff, no benchmark needed").
+     A skipped benchmark is fine only for that reason.
+   * Re-run it yourself only when the evidence is missing, its base is not the merge base, or the
+     numbers contradict the diff; a re-run on a shared machine mostly measures noise.
+   * Claims against other libraries ("fastest", "most accurate") need a link to a dated run
+     (rule 8); numbers come from a real run with the machine and revision stated.
 8. **Compatibility (rule 7).** Builds on 1.85: no let chains, no newer std APIs; MSRV unchanged;
    no new dependency without an issue and an ADR (std only, offline).
 9. **Scope and hygiene.** One topic per pull request; the title matches the pattern in
@@ -52,6 +65,7 @@ ran, nothing else (rule 6). Commands to start: `git diff --stat BASE...`, `cargo
 
 | Thought | Do instead |
 |---|---|
+| "It is only a small change, no benchmark" | Decide from the files in the diff, not from its size. A one-line change in a hot path can cost 30%. |
 | "CI is green, so it is fine" | Green proves the gates ran. Read the diff against the checklist; many rules are only reviewed. |
 | "The tests changed along with the code, so they agree" | Ask where each changed expectation comes from. It must be a source, not the new output. |
 | "The snapshot diff is large, I skimmed it" | Read every changed line, or say you did not. |
