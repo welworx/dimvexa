@@ -261,6 +261,7 @@
                 "dimension_mismatch",
                 "kind_mismatch",
                 "overflow",
+                "unrepresentable",
                 "division_by_zero",
                 "length_mismatch",
                 "refused",

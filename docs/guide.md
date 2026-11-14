@@ -398,7 +398,7 @@ What to know:
    to `deg`, `100 grad` to `deg` and `180 deg` to `rad` carry no error. The decimal is rounded
    once, at the end, to the nearest `f64`. These units are `defined` in `dimvexa units deg`.
 2. **Addition is not defined for values with different exponents.** Combining `pi` with a plain
-   number in a sum (`1 + pi`) is refused with `overflow`, never approximated. A conversion only
+   number in a sum (`1 + pi`) is refused with `unrepresentable` (not `overflow`: no integer bound is involved), never approximated. A conversion only
    multiplies, so this shows up only through the library (`Ratio::checked_add`). The one conversion that adds is a temperature scale with an offset, so `dimvexa convert pi degC degF` is refused (`refused`): use a decimal.
 3. **A value may contain `pi`** (ADR-018, step 3). `4pi`, `4π`, `4 pi`, `pi/2`, `1/2*pi`,
    `2*pi^2` and `1/(2*pi)` are all values; so are `4 pi rad deg` and `2 * pi rad deg` written

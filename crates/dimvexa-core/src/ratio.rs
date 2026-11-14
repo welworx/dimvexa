@@ -6,9 +6,14 @@ use core::fmt;
 use core::str::FromStr;
 
 use crate::error::{Error, Result};
+use crate::wide::{mul_wide, mul10};
 
 const fn overflow(operation: &'static str) -> Error {
     Error::Overflow { operation }
+}
+
+const fn unrepresentable(operation: &'static str) -> Error {
+    Error::Unrepresentable { operation }
 }
 
 /// Greatest common divisor by Euclid's algorithm. `gcd(0, 0) == 0`.
@@ -38,8 +43,9 @@ const fn gcd(mut a: u128, mut b: u128) -> u128 {
 /// denominator and cannot overflow them.
 ///
 /// Addition, subtraction and ordering of two non-zero numbers with different exponents are
-/// refused with [`Error::Overflow`]: they would need a value that cannot be written exactly
-/// (`1 + pi`), and the library never approximates. Equality (`==`) compares the stored
+/// refused with [`Error::Unrepresentable`]: they would need a value that cannot be written
+/// exactly (`1 + pi`), and the library never approximates. That is not an overflow, which is
+/// reserved for the bounds of the integers. Equality (`==`) compares the stored
 /// representation, so `5` and `1/2 * 10^1` are different to `==` although they are the same
 /// number ([`checked_eq`](Self::checked_eq) compares values); the exponents only come from
 /// tables, from pi, or from products of such numbers.
@@ -203,10 +209,55 @@ impl Ratio {
         self.num == 0
     }
 
-    /// True if the number is an integer (denominator 1, no pi, no negative power of ten).
+    /// True if the value is a mathematical integer, whatever its representation: `1/2 * 10^1`
+    /// is 5, so it is an integer; `1/3 * 10^1` and `10^-1` are not. A number with a power of pi
+    /// is never an integer (zero aside).
     #[must_use]
     pub const fn is_integer(self) -> bool {
-        self.den == 1 && self.ten >= 0 && self.pi == 0
+        if self.num == 0 {
+            return true;
+        }
+        if self.pi != 0 {
+            return false;
+        }
+        if self.ten >= 0 {
+            // `num/den` is reduced, so `den` must divide `10^ten`: only 2s and 5s, no more of
+            // each than `ten`.
+            let mut d = self.den.unsigned_abs();
+            if d == 0 {
+                return false;
+            }
+            let twos = d.trailing_zeros();
+            d = match d.checked_shr(twos) {
+                Some(v) => v,
+                None => return false,
+            };
+            let mut fives: u32 = 0;
+            while let (Some(0), Some(q)) = (d.checked_rem(5), d.checked_div(5)) {
+                d = q;
+                fives = fives.saturating_add(1);
+            }
+            let ten = self.ten.unsigned_abs();
+            d == 1 && twos <= ten && fives <= ten
+        } else {
+            // `num / (den * 10^k)` with `num/den` reduced: `den` must be 1 and `10^k` must
+            // divide `num`.
+            if self.den != 1 {
+                return false;
+            }
+            let mut n = self.num.unsigned_abs();
+            let mut k = self.ten.unsigned_abs();
+            while k > 0 {
+                match (n.checked_rem(10), n.checked_div(10)) {
+                    (Some(0), Some(q)) => {
+                        n = q;
+                        k = k.saturating_sub(1);
+                    }
+                    _ => return false,
+                }
+            }
+            true
+        }
     }
 
     /// Sign as -1, 0 or 1.
@@ -255,6 +306,8 @@ impl Ratio {
     /// # Errors
     ///
     /// [`Error::Overflow`] if an intermediate or the result does not fit in `i128`.
+    /// [`Error::Unrepresentable`] if both numbers are non-zero and have different exponents
+    /// (`1 + pi`).
     pub fn checked_add(self, rhs: Self) -> Result<Self> {
         let err = || overflow("ratio add");
         if self.is_zero() {
@@ -264,7 +317,7 @@ impl Ratio {
             return Ok(self);
         }
         if self.ten != rhs.ten || self.pi != rhs.pi {
-            return Err(overflow("ratio add (different exponents)"));
+            return Err(unrepresentable("ratio add (different exponents)"));
         }
         let g = i128::try_from(gcd(self.den.unsigned_abs(), rhs.den.unsigned_abs()))
             .map_err(|_| err())?;
@@ -284,9 +337,13 @@ impl Ratio {
     /// # Errors
     ///
     /// [`Error::Overflow`] if an intermediate or the result does not fit in `i128`.
+    /// [`Error::Unrepresentable`] if both numbers are non-zero and have different exponents.
     pub fn checked_sub(self, rhs: Self) -> Result<Self> {
         let neg = rhs.checked_neg().map_err(|_| overflow("ratio sub"))?;
-        self.checked_add(neg).map_err(|_| overflow("ratio sub"))
+        self.checked_add(neg).map_err(|e| match e {
+            Error::Unrepresentable { .. } => unrepresentable("ratio sub (different exponents)"),
+            _ => overflow("ratio sub"),
+        })
     }
 
     /// Product, cross-reducing before multiplying.
@@ -398,8 +455,8 @@ impl Ratio {
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] if the numbers differ in representation and a power of ten does not
-    /// fit the fraction, so the comparison cannot be made exactly.
+    /// None in practice: the comparison is exact and uses 256-bit products, so no finite value
+    /// fails. The `Result` is kept so the signature stays stable.
     ///
     /// # Examples
     ///
@@ -415,34 +472,65 @@ impl Ratio {
         if self == rhs {
             return Ok(true);
         }
-        if self.pi != rhs.pi {
+        // Zero is stored canonically, so a zero here differs from the other number. Pi is
+        // transcendental, so numbers with different powers of pi are never equal.
+        if self.signum() != rhs.signum() || self.pi != rhs.pi {
             return Ok(false);
         }
-        Ok(self.folded()? == rhs.folded()?)
+        // `a/b * 10^k == c/d * 10^j` with `k >= j` holds iff `a*d * 10^(k-j) == c*b`. Both
+        // sides are computed in 256 bits, so nothing is folded and nothing overflows: a left
+        // side that outgrows 256 bits is larger than any right side.
+        let (hi, lo) = if self.ten >= rhs.ten {
+            (self, rhs)
+        } else {
+            (rhs, self)
+        };
+        let Some(mut left) = mul_wide(hi.num.unsigned_abs(), lo.den.unsigned_abs()) else {
+            return Ok(false);
+        };
+        let Some(right) = mul_wide(lo.num.unsigned_abs(), hi.den.unsigned_abs()) else {
+            return Ok(false);
+        };
+        let mut steps = i64::from(hi.ten).saturating_sub(i64::from(lo.ten));
+        while steps > 0 {
+            let Some(next) = mul10(left) else {
+                return Ok(false);
+            };
+            left = next;
+            steps = steps.saturating_sub(1);
+        }
+        Ok(left == right)
     }
 
     /// Exact comparison.
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] if the cross products do not fit in `i128`, or if two non-zero
-    /// numbers have different exponents (they are never compared approximately).
+    /// [`Error::Unrepresentable`] if two non-zero numbers have different exponents (they are
+    /// never compared approximately). The cross products are formed in 256 bits, so ordinary
+    /// fractions never overflow.
     pub fn checked_cmp(self, rhs: Self) -> Result<Ordering> {
         if self.ten != rhs.ten || self.pi != rhs.pi {
             if self.is_zero() || rhs.is_zero() {
                 return Ok(self.signum().cmp(&rhs.signum()));
             }
-            return Err(overflow("ratio compare (different exponents)"));
+            return Err(unrepresentable("ratio compare (different exponents)"));
         }
-        let l = self
-            .num
-            .checked_mul(rhs.den)
+        let by_sign = self.signum().cmp(&rhs.signum());
+        if by_sign != Ordering::Equal || self.is_zero() {
+            return Ok(by_sign);
+        }
+        // Same sign, same exponents: compare `|a|*d` with `|c|*b` in 256 bits.
+        let l = mul_wide(self.num.unsigned_abs(), rhs.den.unsigned_abs())
             .ok_or_else(|| overflow("ratio compare"))?;
-        let r = rhs
-            .num
-            .checked_mul(self.den)
+        let r = mul_wide(rhs.num.unsigned_abs(), self.den.unsigned_abs())
             .ok_or_else(|| overflow("ratio compare"))?;
-        Ok(l.cmp(&r))
+        let magnitude = l.cmp(&r);
+        Ok(if self.signum() < 0 {
+            magnitude.reverse()
+        } else {
+            magnitude
+        })
     }
 
     /// The correctly rounded (round-half-to-even) `f64` nearest to this value.
@@ -749,8 +837,9 @@ impl Ratio {
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] on internal overflow (denominators close to `i128::MAX`), for a
-    /// power of ten that does not fit, and for any power of pi.
+    /// [`Error::Overflow`] on internal overflow (denominators close to `i128::MAX`) and for a
+    /// power of ten that does not fit. [`Error::Unrepresentable`] for any power of pi (an
+    /// irrational number has no finite decimal).
     ///
     /// # Examples
     ///
@@ -764,7 +853,7 @@ impl Ratio {
     pub fn to_decimal(self, max_fraction_digits: u32) -> Result<(String, bool)> {
         let err = || overflow("ratio to decimal");
         if self.pi != 0 {
-            return Err(err());
+            return Err(unrepresentable("ratio to decimal (power of pi)"));
         }
         let this = self.folded().map_err(|_| err())?;
         let negative = this.num < 0;
@@ -1236,9 +1325,9 @@ mod tests {
     fn add_and_compare_refuse_different_exponents() {
         let pi = Ratio::PI;
         let one = Ratio::ONE;
-        assert_eq!(one.checked_add(pi).unwrap_err().code(), "overflow");
-        assert_eq!(one.checked_sub(pi).unwrap_err().code(), "overflow");
-        assert_eq!(one.checked_cmp(pi).unwrap_err().code(), "overflow");
+        assert_eq!(one.checked_add(pi).unwrap_err().code(), "unrepresentable");
+        assert_eq!(one.checked_sub(pi).unwrap_err().code(), "unrepresentable");
+        assert_eq!(one.checked_cmp(pi).unwrap_err().code(), "unrepresentable");
         let ev = pi_part(3, 1, -28, 0);
         assert!(one.checked_add(ev).is_err());
         // zero belongs to every exponent
@@ -1264,10 +1353,11 @@ mod tests {
         assert_eq!(plain.checked_eq(ev), Ok(true));
         assert_eq!(ev.checked_eq(pi_part(1_602_176_635, 1, -28, 0)), Ok(false));
         assert_eq!(Ratio::PI.checked_eq(Ratio::ONE), Ok(false));
-        // a power of ten that cannot be folded and differs in representation cannot be decided
+        // a power of ten that cannot be folded is still decided exactly
         let tiny = pi_part(1, 1, -300, 0);
         assert_eq!(tiny.checked_eq(tiny), Ok(true));
-        assert!(tiny.checked_eq(pi_part(10, 1, -301, 0)).is_err());
+        assert_eq!(tiny.checked_eq(pi_part(10, 1, -301, 0)), Ok(true));
+        assert_eq!(tiny.checked_eq(pi_part(11, 1, -301, 0)), Ok(false));
         assert_eq!(ev.folded(), Ok(plain));
         assert_eq!(pi_part(1, 2, 3, 1).folded(), Ok(pi_part(500, 1, 0, 1)));
     }
@@ -1353,7 +1443,10 @@ mod tests {
 
     #[test]
     fn exponents_in_decimal_text_and_equality_keep_working() {
-        assert_eq!(Ratio::PI.to_decimal(5).unwrap_err().code(), "overflow");
+        assert_eq!(
+            Ratio::PI.to_decimal(5).unwrap_err().code(),
+            "unrepresentable"
+        );
         assert_eq!(
             pi_part(1_602_176_634, 1, -28, 0).to_decimal(40).unwrap(),
             ("0.0000000000000000001602176634".to_string(), true)
@@ -1380,6 +1473,96 @@ mod tests {
         assert_eq!(r(1, 3).checked_cmp(r(1, 2)), Ok(Ordering::Less));
         assert_eq!(r(1, 2).checked_cmp(r(2, 4)), Ok(Ordering::Equal));
         assert_eq!(r(-1, 2).signum(), -1);
-        assert!(Ratio::from_int(i128::MAX).checked_cmp(r(1, 2)).is_err());
+        assert_eq!(
+            Ratio::from_int(i128::MAX).checked_cmp(r(1, 2)),
+            Ok(Ordering::Greater)
+        );
+    }
+
+    #[test]
+    fn compare_does_not_overflow_on_large_fractions() {
+        let a = r(
+            100_000_000_000_000_000_000_000_000_007,
+            100_000_000_000_000_000_000_000_000_003,
+        );
+        let b = r(
+            100_000_000_000_000_000_000_000_000_009,
+            100_000_000_000_000_000_000_000_000_001,
+        );
+        assert_eq!(a.checked_cmp(b), Ok(Ordering::Less));
+        assert_eq!(b.checked_cmp(a), Ok(Ordering::Greater));
+        assert_eq!(a.checked_cmp(a), Ok(Ordering::Equal));
+        let n = a.checked_neg().unwrap();
+        let m = b.checked_neg().unwrap();
+        assert_eq!(n.checked_cmp(m), Ok(Ordering::Greater));
+        assert_eq!(n.checked_cmp(b), Ok(Ordering::Less));
+        assert_eq!(a.checked_cmp(Ratio::ZERO), Ok(Ordering::Greater));
+        assert_eq!(Ratio::ZERO.checked_cmp(n), Ok(Ordering::Greater));
+        let top = Ratio::from_int(i128::MAX);
+        let near = r(i128::MAX - 1, 1);
+        assert_eq!(top.checked_cmp(near), Ok(Ordering::Greater));
+        assert_eq!(
+            r(i128::MAX, i128::MAX - 1).checked_cmp(r(i128::MAX - 1, i128::MAX - 2)),
+            Ok(Ordering::Less)
+        );
+    }
+
+    #[test]
+    fn equality_is_exact_without_folding() {
+        let one = pi_part(1, 1, 100, 0);
+        let two = pi_part(2, 1, 100, 0);
+        assert_eq!(one.checked_eq(two), Ok(false));
+        assert_eq!(one.checked_eq(one), Ok(true));
+        assert_eq!(one.checked_eq(pi_part(10, 1, 99, 0)), Ok(true));
+        assert_eq!(pi_part(10, 1, 99, 0).checked_eq(one), Ok(true));
+        assert_eq!(one.checked_eq(pi_part(1, 10, 101, 0)), Ok(true));
+        assert_eq!(one.checked_eq(pi_part(1, 1, -100, 0)), Ok(false));
+        assert_eq!(one.checked_eq(pi_part(-1, 1, 100, 0)), Ok(false));
+        assert_eq!(one.checked_eq(Ratio::ZERO), Ok(false));
+        assert_eq!(Ratio::ZERO.checked_eq(Ratio::ZERO), Ok(true));
+        // exponents so far apart that no coefficient could close the gap
+        let far = pi_part(1, 1, i32::MAX, 0);
+        let near = pi_part(i128::MAX, 1, i32::MIN, 0);
+        assert_eq!(far.checked_eq(near), Ok(false));
+        assert_eq!(near.checked_eq(far), Ok(false));
+        // a different power of pi is never equal
+        assert_eq!(
+            pi_part(1, 1, 100, 1).checked_eq(pi_part(1, 1, 100, 2)),
+            Ok(false)
+        );
+        assert_eq!(
+            pi_part(1, 1, 100, 1).checked_eq(pi_part(10, 1, 99, 1)),
+            Ok(true)
+        );
+    }
+
+    #[test]
+    fn is_integer_tests_the_value_not_the_representation() {
+        assert!(r(5, 1).is_integer());
+        assert!(Ratio::ZERO.is_integer());
+        assert!(pi_part(1, 2, 1, 0).is_integer()); // 5
+        assert!(pi_part(1, 4, 2, 0).is_integer()); // 25
+        assert!(pi_part(3, 8, 3, 0).is_integer()); // 375
+        assert!(pi_part(1, 5, 1, 0).is_integer()); // 2
+        assert!(pi_part(1, 10, 1, 0).is_integer()); // 1
+        assert!(!pi_part(1, 4, 1, 0).is_integer()); // 5/2
+        assert!(!pi_part(1, 3, 1, 0).is_integer());
+        assert!(!pi_part(1, 8, 2, 0).is_integer()); // 25/2
+        assert!(!pi_part(1, 25, 1, 0).is_integer()); // 2/5
+        assert!(pi_part(1, 25, 2, 0).is_integer()); // 4
+        assert!(!pi_part(1, 1, -300, 0).is_integer());
+        assert!(pi_part(100, 1, -2, 0).is_integer()); // 1
+        assert!(pi_part(1_200, 1, -2, 0).is_integer()); // 12
+        assert!(!pi_part(150, 1, -2, 0).is_integer()); // 3/2
+        assert!(!pi_part(1, 2, -1, 0).is_integer());
+        assert!(!pi_part(100, 1, -3, 0).is_integer());
+        assert!(!Ratio::PI.is_integer());
+        assert!(!pi_part(2, 1, 0, 1).is_integer());
+        assert!(!r(1, 2).is_integer());
+        // huge exponents decide without constructing 10^k
+        assert!(pi_part(1, 1, i32::MAX, 0).is_integer());
+        assert!(!pi_part(1, 1, i32::MIN, 0).is_integer());
+        assert!(pi_part(1, 2, i32::MAX, 0).is_integer());
+        assert!(pi_part(-1, 2, 1, 0).is_integer());
     }
 }

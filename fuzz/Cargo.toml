@@ -23,3 +23,15 @@ name = "parse_unit"
 path = "fuzz_targets/parse_unit.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "ratio_compare"
+path = "fuzz_targets/ratio_compare.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "convert_roundtrip"
+path = "fuzz_targets/convert_roundtrip.rs"
+test = false
+doc = false

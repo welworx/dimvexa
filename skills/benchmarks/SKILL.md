@@ -10,6 +10,7 @@ description: Use when running, recording or quoting Dimvexa performance numbers.
 | Situation | Run | Output goes |
 |---|---|---|
 | Any change, before the pull request | `cargo xtask bench-impact` | The pull request body |
+| The pre-commit hook blocks with `bench-guard:` | Run `cargo xtask bench-impact` (add `--base REV` in a shallow clone), then commit again; never skip with `DIMVEXA_SKIP_BENCH_GUARD=1` yourself | The pull request body |
 | The diff touches no hot-path file | nothing: `bench-impact` prints "skipped" and says why | One line in the pull request: "no hot path touched" |
 | `bench-impact` fails (a guarded row more than 10 percent slower, outside the noise) | Explain the slowdown, or ask a fresh Opus subagent for a faster implementation, then rerun | The pull request body |
 | Many ways to implement it, speed decides | `bench-impact --base REV` once per candidate | Pick by the table, say so |

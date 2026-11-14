@@ -6,6 +6,10 @@
 #   3. taplo fmt --check:  formatting of the staged .toml files
 #   4. Rust, when .rs or Cargo files are staged: cargo fmt --check, clippy -D warnings and a
 #      cargo check on the minimum supported Rust version (the checks CI would fail on)
+#   5. Benchmark evidence, only when a staged file may be a hot path (see HOT_PATHS in
+#      xtask/src/bench_impact.rs): `cargo xtask bench-impact` must have been run for the current
+#      hot-path files. Docs, skills, workflows and CHANGELOG-only commits skip it without
+#      starting cargo. Skip it once, on purpose, with DIMVEXA_SKIP_BENCH_GUARD=1.
 # Enable once per clone:  git config core.hooksPath .githooks
 # Install the tools:      go install github.com/zricethezav/gitleaks/v8@v8.30.1
 #                         cargo install typos-cli taplo-cli --locked
@@ -60,6 +64,18 @@ elif command -v cargo >/dev/null 2>&1; then
   cargo xtask ci fmt clippy msrv || fail=1
 else
   echo "pre-commit: cargo is not installed, so fmt, clippy and the MSRV build were NOT checked." >&2
+fi
+
+# --- 5. benchmark evidence --------------------------------------------------------------------
+# A coarse superset of HOT_PATHS (a test keeps it complete); xtask makes the exact decision.
+HOT_PREFILTER="crates/ .cargo/ Cargo.toml Cargo.lock rust-toolchain.toml"
+# shellcheck disable=SC2086
+if git diff --cached --quiet --diff-filter=ACMRD -- $HOT_PREFILTER; then
+  :
+elif command -v cargo >/dev/null 2>&1; then
+  cargo xtask bench-impact --guard || fail=1
+else
+  echo "pre-commit: cargo is not installed, so the benchmark evidence was NOT checked." >&2
 fi
 
 if [ "$fail" -ne 0 ]; then
