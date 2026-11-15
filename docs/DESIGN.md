@@ -58,7 +58,7 @@ Formula scales are chosen from this set by name in the data table, so a plugin c
 Factors are composed symbolically as rationals while parsing a compound unit, then collapsed to f64 for runtime use.
 
 ### 3.5 Variants are separate units
-`US:gal` vs `imp:gal`, `BTU_IT` vs `BTU_th`, `cal_th` vs `cal_IT`, short, long and metric tons, survey vs international foot. A config can map a bare symbol to a variant (e.g. the shipped `us` config resolves `gal` to `gal_us`, `gb` to `gal_imp`); without a config it is an error. A shipped config is a bundled file in the same format as a user file (ADR-014).
+`US:gal` vs `imp:gal`, `BTU_IT` vs `BTU_th`, `cal_th` vs `cal_IT`, short, long and metric tons, survey vs international foot. A config can map a bare symbol to a variant (e.g. the shipped `us` config resolves `gal` to `gal_us`, `imperial` to `gal_imp`); without a config it is an error. A shipped config is a bundled file in the same format as a user file (ADR-014).
 
 ## 4. Unit table
 
@@ -176,7 +176,7 @@ dimvexa/
 1. Final set of conversion shapes and their exact inverses.
 2. Error-bound guarantee for the fast path (≤ 1 ulp or other).
 3. Default behaviour of angle (dimensionless) vs UCUM.
-4. How configs resolve ambiguous symbols (decided in ADR-009 and ADR-014: `--config NAME_OR_PATH`; shipped: `us`, `gb`, `metric-trade`, `year-julian`, `year-civil`, `water`).
+4. How configs resolve ambiguous symbols (decided in ADR-009 and ADR-014: `--config NAME_OR_PATH`; shipped: `us`, `imperial`, `metric-trade`, `year-julian`, `year-civil`, `water`).
 5. Whether `i128` rationals suffice, or big rationals are needed at load time.
 6. Licence and the policy for data derived from external tables (GPL sources are excluded).
 7. Name and namespace availability.

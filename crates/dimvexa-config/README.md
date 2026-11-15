@@ -26,7 +26,7 @@ refuses needs, such as the density of water for litres to kilograms, and the res
 with the constant's exactness. A built-in constant name (`pi`, `h_P`, ...) cannot be redefined. See `examples/configs/water.toml`. `Density::density_from_text`
 reads a density the caller writes (`998.2067kg/m3`).
 
-Configs also ship inside the crate: `us`, `gb`, `metric-trade`, `year-julian`, `year-civil` and
+Configs also ship inside the crate: `us`, `imperial`, `metric-trade`, `year-julian`, `year-civil` and
 `water` (`BUNDLED`, `bundled(name)`). `is_path` tells a path from a shipped name: a value with
 a `/` or `\`, or ending in `.toml`, is a path.
 

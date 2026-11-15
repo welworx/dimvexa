@@ -1,0 +1,27 @@
+# British imperial names. Nothing is guessed: each name points at one existing unit.
+#
+#   dimvexa convert 1 ton kg --config imperial
+#   dimvexa convert 1 gal L --config imperial
+#
+# `oz` is not mapped: it is a mass (oz_av, oz_troy) or a volume (fl_oz_imp) in the UK as well.
+# `quarter` is not mapped: it is a mass (qtr_mass_imp) or a volume (qtr_vol_imp).
+
+[map]
+ton = "ton_long"
+mile = "mi"
+gal = "gal_imp"
+pt = "pt_imp"
+qt = "qt_imp"
+chain = "chain_int"
+link = "link_int"
+rod = "rod_int"
+furlong = "furlong_int"
+league = "league_int"
+fathom = "fathom_int"
+cable = "cable_int"
+gill = "gill_imp"
+peck = "peck_imp"
+bushel = "bushel_imp"
+minim = "minim_imp"
+dram = "dram_av"
+cwt = "cwt_long"

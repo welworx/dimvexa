@@ -37,8 +37,8 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 
 | Group | Unit ids |
 |---|---|
-| length | `m`, `au`, `angstrom`, `in`, `ft`, `yd`, `mi`, `nmi`, `ft_us_survey`, `mi_us_survey`, `ly` |
-| mass | `g`, `tonne`, `Da`, `lb`, `oz_av`, `oz_troy`, `ton_short`, `ton_long`, `grain`, `carat` |
+| length | `m`, `au`, `angstrom`, `in`, `ft`, `yd`, `mi`, `nmi`, `ft_us_survey`, `mi_us_survey`, `ly`, `twip`, `thou`, `barleycorn`, `hand`, `link_int`, `rod_int`, `chain_int`, `furlong_int`, `league_int`, `fathom_int`, `cable_int` |
+| mass | `g`, `tonne`, `Da`, `lb`, `oz_av`, `oz_troy`, `ton_short`, `ton_long`, `grain`, `carat`, `dram_av`, `stone`, `qtr_mass_imp`, `cwt_long`, `slug` |
 | time | `s`, `min`, `h`, `d`, `week`, `yr_common`, `yr_julian` |
 | electric_current | `A` |
 | temperature | `K`, `degC`, `delta_K`, `delta_degC`, `degF`, `degR`, `delta_degF`, `delta_degR` |
@@ -57,8 +57,8 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | magnetic_flux | `Wb` |
 | magnetic_flux_density | `T` |
 | inductance | `H` |
-| volume | `m3`, `dm3`, `cm3`, `mm3`, `km3`, `in3`, `ft3`, `yd3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp`, `bbl`, `Nm3`, `scf` |
-| area | `m2`, `dm2`, `cm2`, `mm2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `ar`, `ha`, `acre_int`, `acre_us_survey` |
+| volume | `m3`, `dm3`, `cm3`, `mm3`, `km3`, `in3`, `ft3`, `yd3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp`, `bbl`, `Nm3`, `scf`, `gill_imp`, `peck_imp`, `bushel_imp`, `qtr_vol_imp`, `minim_imp`, `scruple_fl_imp`, `drachm_fl_imp` |
+| area | `m2`, `dm2`, `cm2`, `mm2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `ar`, `ha`, `acre_int`, `acre_us_survey`, `perch_sq`, `rood` |
 | absorbed_dose | `Gy`, `Sv` |
 | illuminance | `lx` |
 | catalytic_activity | `kat` |
@@ -178,7 +178,7 @@ Dimvexa refuses ambiguous names such as `ton` and `mt`, and it never guesses. Wi
 units and constants. One option, two kinds of value (ADR-014,
 [`docs/adr/014-one-config-mechanism.md`](adr/014-one-config-mechanism.md)):
 
-- a **name** (`us`, `gb`, `metric-trade`, `year-julian`, `year-civil`, `water`) loads a config
+- a **name** (`us`, `imperial`, `metric-trade`, `year-julian`, `year-civil`, `water`) loads a config
   that ships with dimvexa;
 - a **path** (anything with a `/` or `\`, or ending in `.toml`) loads your own file. A file called `us`
   in the current directory is written `./us`.
@@ -186,7 +186,7 @@ units and constants. One option, two kinds of value (ADR-014,
 ```console
 $ dimvexa convert 1 ton kg --config us
 907.18474 kg
-$ dimvexa convert 1 ton kg --config gb
+$ dimvexa convert 1 ton kg --config imperial
 1016.0469088 kg
 $ dimvexa convert 1 mt kg --config metric-trade
 1000 kg
@@ -198,7 +198,7 @@ error[ambiguous_symbol]: 'oz' is ambiguous: use oz_av or oz_troy or fl_oz_us or 
 
 `dimvexa configs` lists the shipped configs and `dimvexa configs us` shows exactly what one
 contains: the names it maps, the units it defines and every constant with its value, conditions
-and source. `oz` stays refused in `us` and `gb` because it means a mass or a volume in both.
+and source. `oz` stays refused in `us` and `imperial` because it means a mass or a volume in both.
 `--config` can be repeated and a later config overrides an earlier one, so
 `--config us --config ./mine.toml` starts from the US names and adds yours. Replacing is allowed
 but never silent: every name, unit or constant that replaces one of an earlier config prints

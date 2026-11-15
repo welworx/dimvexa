@@ -612,7 +612,7 @@ fn units_groups_lists_only_the_groups() {
     let r = dimvexa(&["units", "--groups"]);
     assert_eq!(r.code, 0);
     snapshot("units_groups.txt", &r.stdout);
-    assert!(r.stdout.lines().any(|l| l == "volume\t15"));
+    assert!(r.stdout.lines().any(|l| l == "volume\t22"));
     assert!(!r.stdout.contains("psi\t"));
     let v = json::parse(&dimvexa(&["units", "--groups", "--json"]).stdout).unwrap();
     json::check_units_schema(&v);
@@ -1341,7 +1341,7 @@ fn guide_shipped_configs_are_real() {
     let section = readme_section(&readme, "## Names and densities: `--config`");
     for args in [
         &["convert", "1", "ton", "kg", "--config", "us"][..],
-        &["convert", "1", "ton", "kg", "--config", "gb"],
+        &["convert", "1", "ton", "kg", "--config", "imperial"],
         &["convert", "1", "mt", "kg", "--config", "metric-trade"],
         &["convert", "1", "yr", "d", "--config", "year-julian"],
         &["convert", "1", "oz", "g", "--config", "us"],
@@ -1479,8 +1479,8 @@ fn units_shows_which_units_are_yours() {
     // The group table counts it too.
     let g = dimvexa_at_root(&["units", "--groups", "--config", OIL_CFG]);
     let base = dimvexa(&["units", "--groups"]);
-    assert!(g.stdout.lines().any(|l| l == "volume\t16"));
-    assert!(base.stdout.lines().any(|l| l == "volume\t15"));
+    assert!(g.stdout.lines().any(|l| l == "volume\t23"));
+    assert!(base.stdout.lines().any(|l| l == "volume\t22"));
 
     let v =
         json::parse(&dimvexa_at_root(&["units", "--json", "--config", OIL_CFG]).stdout).unwrap();
@@ -1867,7 +1867,7 @@ fn outputs_validate_against_the_schema_files() {
             &convert,
             vec!["convert", "1", "ton", "kg", "--json", "--config", "us"],
         ),
-        (&units, vec!["units", "--json", "--config", "gb"]),
+        (&units, vec!["units", "--json", "--config", "imperial"]),
         (&configs, vec!["configs", "--json"]),
         (&configs, vec!["configs", "us", "--json"]),
         (&configs, vec!["configs", "water", "--json"]),
@@ -2224,9 +2224,9 @@ fn config_takes_a_shipped_name_or_a_path() {
     let cfg = &v.get("config").unwrap().as_array()[0];
     assert_eq!(cfg.get("file").unwrap().as_str(), "bundled:us");
     assert!(cfg.get("hash").unwrap().as_str().starts_with("fnv1a64:"));
-    // Left to right, later wins: gb after us gives the long ton.
+    // Left to right, later wins: imperial after us gives the long ton.
     let r = dimvexa(&[
-        "convert", "1", "ton", "kg", "--config", "us", "--config", "gb",
+        "convert", "1", "ton", "kg", "--config", "us", "--config", "imperial",
     ]);
     assert_eq!(r.stdout, "1016.0469088 kg\n");
     // A bare word is never a file, even when a file of that name exists: ./name is the file.
@@ -2247,7 +2247,11 @@ fn config_takes_a_shipped_name_or_a_path() {
     let r = dimvexa(&["convert", "1", "ton", "kg", "--config", "uss"]);
     assert_eq!(r.code, 2);
     assert!(r.stderr.contains("no config named 'uss'"), "{}", r.stderr);
-    assert!(r.stderr.contains("us, gb, metric-trade"), "{}", r.stderr);
+    assert!(
+        r.stderr.contains("us, imperial, metric-trade"),
+        "{}",
+        r.stderr
+    );
     // Without any config the strict names stay refused.
     assert_eq!(dimvexa(&["convert", "1", "ton", "kg"]).code, 1);
 }
@@ -2256,7 +2260,7 @@ fn config_takes_a_shipped_name_or_a_path() {
 fn the_shipped_configs_resolve_their_names() {
     for (cfg, args, want) in [
         ("us", ["1", "gal", "L"], "3.785411784 L\n"),
-        ("gb", ["1", "gal", "L"], "4.54609 L\n"),
+        ("imperial", ["1", "gal", "L"], "4.54609 L\n"),
         ("us", ["1", "mile", "km"], "1.609344 km\n"),
         ("metric-trade", ["1", "mt", "kg"], "1000 kg\n"),
         ("year-julian", ["1", "yr", "d"], "365.25 d\n"),
@@ -2271,7 +2275,7 @@ fn the_shipped_configs_resolve_their_names() {
         );
     }
     // oz is refused in both: a mass or a volume in each country.
-    for cfg in ["us", "gb"] {
+    for cfg in ["us", "imperial"] {
         let r = dimvexa(&["convert", "1", "oz", "g", "--config", cfg]);
         assert_eq!(r.code, 1);
         assert!(

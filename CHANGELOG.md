@@ -6,6 +6,14 @@ All notable changes are documented here. The format follows
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
 ## [Unreleased]
+### Changed
+
+- The shipped config `gb` is now called `imperial` (`--config imperial`). It also maps the bare imperial names `chain`, `link`, `rod`, `furlong`, `league`, `fathom`, `cable`, `gill`, `peck`, `bushel`, `minim`, `dram` and `cwt`.
+
+### Added
+
+- Imperial units: `twip`, `thou`, `barleycorn`, `hand`, `link_int`, `rod_int`, `chain_int`, `furlong_int`, `league_int`, `fathom_int`, `cable_int`, `perch_sq`, `rood`, `gill_imp`, `peck_imp`, `bushel_imp`, `qtr_vol_imp`, `minim_imp`, `scruple_fl_imp`, `drachm_fl_imp`, `dram_av`, `stone`, `qtr_mass_imp`, `cwt_long` and `slug`, each with a golden vector. The bare names that are ambiguous (`chain`, `dram`, `cwt`, `quarter`, ...) are refused with candidates.
+
 ### Fixed
 
 - `Ratio::checked_eq` no longer overflows: it compares values in 256 bits, so `1 * 10^100` and `2 * 10^100` are decided (`false`) and `10^-300` equals `10 * 10^-301`. It used to fold powers of ten into `i128` and fail with `overflow`.
@@ -177,7 +185,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 ### Added
 
 - One option for configs: `--config NAME_OR_PATH`. A bare name loads a config that ships with
-  dimvexa: `us`, `gb`, `metric-trade`, `year-julian`, `year-civil` and `water`. A value with a `/`
+  dimvexa: `us`, `imperial`, `metric-trade`, `year-julian`, `year-civil` and `water`. A value with a `/`
   or ending in `.toml` is a file. Loading is left to right and a later config wins; with no
   `--config` the names stay strict SI.
 - `--density NAME_OR_VALUE`: a density from a loaded config, or your own number such as

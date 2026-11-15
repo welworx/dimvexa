@@ -24,7 +24,7 @@ Formula	Expected	Note
 =DIMVEXA.CONVERT(1E+308,"km","mm")	error: dimvexa overflow: the result is too large for a number	shows #NUM!
 # Configs (fifth argument; empty fourth argument)		
 =DIMVEXA.CONVERT(1,"ton","kg",,"us")	907.18474	
-=DIMVEXA.CONVERT(1,"ton","kg",,"gb")	1016.0469088	
+=DIMVEXA.CONVERT(1,"ton","kg",,"imperial")	1016.0469088	
 =DIMVEXA.CONVERT(1,"ton","kg",,"metric-trade")	1000	
 =DIMVEXA.CONVERT(1,"yr","d",,"year-julian")	365.25	
 =DIMVEXA.CONVERT(1,"yr","d",,"year-civil")	365	
