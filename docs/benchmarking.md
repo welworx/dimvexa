@@ -126,16 +126,16 @@ on a networked machine.
 
 ## Status of the runners
 
-Latest full run: 2026-11-12, for release 0.5.0, see [`benchmarks/comparison/v0.5.0.md`](benchmarks/comparison/v0.5.0.md) (earlier dated runs:
+Latest full run: 2026-11-15, for release 0.10.0, see [`benchmarks/comparison/v0.10.0.md`](benchmarks/comparison/v0.10.0.md) (earlier dated runs:
 [`benchmarks/comparison/history/`](benchmarks/comparison/history/)) for
 the summary, the caveats and the cases where Dimvexa is slower, and
 [`benchmarks/comparison/comparison.md`](benchmarks/comparison/comparison.md) for every table. One run on one shared VM:
-indicative; the 0.5.0 run does not support a "fastest" claim (it lists the rows Dimvexa does not win).
+indicative; the 0.10.0 run does not support a "fastest" claim (it lists the rows Dimvexa does not win).
 
 | Runner | Run on a networked machine |
 |---|---|
 | Corpus generator, report generator | yes |
-| Corpus with 28 independent cases and the refusal groups | Dimvexa semantics run on the new corpus; the competitor result files are **from the older corpus** and have not been rerun (no network in the authoring environment). `benchmarks/run_all.sh` refreshes everything |
+| Corpus with 40 independent cases and the refusal groups | yes; every result file of the 2026-11-15 run is on corpus `69bf1471279e6d39` |
 | Dimvexa, Rust API, and Rust ceilings | yes, full run |
 | Dimvexa CLI (spawn per conversion) | yes, full run |
 | uom (needed a one-line fix to compile) | yes, 20 typed pairs only |
@@ -145,5 +145,5 @@ indicative; the 0.5.0 run does not support a "fastest" claim (it lists the rows 
 | Dimvexa Python binding (`run_dimvexa_py.py`) and WASM binding (`run_dimvexa_wasm.js`) | yes, full run (run 2) |
 | `bench-compare.yml` | not run on GitHub yet (its action pins are verified; use `benchmarks/run_all.sh` locally) |
 
-Python packages in this run were installed without hashes (`lockfile: unknown`). Expect residual
+In the 2026-11-15 run every library matched its lockfile (`lockfile: pinned`). Expect residual
 mapping errors in the translation files and fix the runner, never the numbers.
