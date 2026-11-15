@@ -768,3 +768,11 @@ from = "slug"
 to = "kg"
 expect = "8896443230521/609600000000"
 source = "Hand derivation: 0.45359237 kg * 9.80665 / 0.3048 as an exact fraction"
+
+[[vector]]
+unit = "board_ft"
+value = "12"
+from = "board_ft"
+to = "ft^3"
+expect = "1"
+source = "Hand derivation: 12 board feet = 12 * 144 in^3 = 1728 in^3 = 1 ft^3 (12 in per ft, cubed)"

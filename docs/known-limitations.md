@@ -60,12 +60,13 @@ against the paper's Table 1; there is no `water_20C` yet for the same reason.
 
 The Wikipedia article "United States customary units" lists more units than Dimvexa ships. The
 article is not an allowed source (`add-unit`), so each of these waits for a primary source. Until
-then they fail loudly with `unknown_unit`. Neither NIST SP 811 (2008) nor NIST Handbook 44 (2024),
-Appendix C, defines the units in KL-26.
+then they fail loudly with `unknown_unit`. Neither NIST SP 811 (2008), NIST Handbook 44 (2024)
+Appendix C nor NIST Handbook 130 (2024) defines the units in KL-26 (Handbook 130 does define the
+board foot and the cord, which ship).
 
 | ID | Limitation | When you see it | Why it is not fixed yet | Idea for the fix |
 |---|---|---|---|---|
-| KL-26 | No US liquid barrel (`bbl_us_liquid`, 31.5 gal), hogshead, beer and whiskey barrel (31 and 40 gal), dry gallon, dry barrel (7056 in^3), board foot, ton-force, survey section and township, drop, grain of water, jig and pottle. Also no quad, ton of refrigeration, pound-foot, R-value, circular mil, leather ounce, alcohol proof or langley. | `convert 1 hogshead L` is `unknown_unit`. | Not found in SP 811 or Handbook 44; the article's values are unverified (parts of it were read from a summary). | Find a statute, a standard or Handbook 130 that defines each one, then add it with `add-unit`. The dry barrel may be 15 U.S.C. 256, the beer barrel 26 U.S.C. 5051; check the text first. |
+| KL-26 | No US liquid barrel (`bbl_us_liquid`, 31.5 gal), hogshead, beer and whiskey barrel (31 and 40 gal), dry gallon, dry barrel (7056 in^3), ton-force, survey section and township, drop, grain of water, jig and pottle. Also no quad, ton of refrigeration, pound-foot, R-value, circular mil, leather ounce, alcohol proof or langley. | `convert 1 hogshead L` is `unknown_unit`. | Not found in SP 811, Handbook 44 or Handbook 130 (2024); the article's values are unverified (parts of it were read from a summary). | Find a statute or a standard that defines each one, then add it with `add-unit`. The dry barrel may be 15 U.S.C. 256, the beer barrel 26 U.S.C. 5051; check the text first. |
 | KL-27 | No printer's point, pica or twip, no `hand`, no rack unit. The article uses the desktop-publishing point of 1/72 in; SP 811 lists the older printer's point of 0.013 837 in. | `convert 1 pica mm` is `unknown_unit`. | Two different points exist, so a bare name would be a guess (rule 4). | Ship both as explicit ids (`point_dtp`, `point_printers`) with a standard for each, and list the bare `point` and `pica` in `ambiguous.toml`. |
 | KL-28 | No league, survey league, fathom, cable or inch of mercury. | `convert 1 fathom m` is `unknown_unit`. | The fathom is 6 ft in Handbook 44 but sits on the survey foot in SP 811, and the league and cable are given on one foot or the other depending on the source. An inch of mercury depends on the mercury density and temperature convention. | Decide the foot per unit (ids `fathom` and `fathom_us_survey`), cite the page, and pick one inHg convention such as the conventional mmHg density. |
 

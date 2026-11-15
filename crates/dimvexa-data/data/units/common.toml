@@ -1317,3 +1317,18 @@ prefixes = "none"
 namespace = "std"
 source = "NIST SP 811 (2008), Appendix B (slug = 1.459 390 E+01 kg)"
 note = "slug = lbf/(ft/s^2) = 14.59390293720... kg"
+
+[[unit]]
+id = "board_ft"
+name = "Board foot"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "18435447/7812500000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 130 (2024), Uniform Regulation for the Method of Sale of Commodities, section 2.12.1.1 (board foot, 144 in^3)"
+note = "board foot = 1 ft x 1 ft x 1 in = 144 in^3 = 2.359737216 L"

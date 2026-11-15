@@ -25,6 +25,7 @@ qt_us_dry	qt_us_dry	US dry quart	plain	defined	none	-	NIST Handbook 44 (2024), A
 pt_us_dry	pt_us_dry	US dry pint	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 2 pints = 1 quart); NIST SP 811 (2008), Appendix B (pint, U.S. dry = 5.506 105 E-04 m^3)
 acre_ft_us_survey	acre_ft_us_survey	US survey acre-foot	plain	defined	none	-	NIST SP 811 (2008), Appendix B (acre-foot, based on U.S. survey foot)
 cord	cord	Cord	plain	defined	none	-	NIST SP 811 (2008), Appendix B (cord = 128 ft^3)
+board_ft	board_ft	Board foot	plain	defined	none	-	NIST Handbook 130 (2024), Uniform Regulation for the Method of Sale of Commodities, section 2.12.1.1 (board foot, 144 in^3)
 
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note

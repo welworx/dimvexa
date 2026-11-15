@@ -612,7 +612,7 @@ fn units_groups_lists_only_the_groups() {
     let r = dimvexa(&["units", "--groups"]);
     assert_eq!(r.code, 0);
     snapshot("units_groups.txt", &r.stdout);
-    assert!(r.stdout.lines().any(|l| l == "volume\t24"));
+    assert!(r.stdout.lines().any(|l| l == "volume\t25"));
     assert!(!r.stdout.contains("psi\t"));
     let v = json::parse(&dimvexa(&["units", "--groups", "--json"]).stdout).unwrap();
     json::check_units_schema(&v);
@@ -1479,8 +1479,8 @@ fn units_shows_which_units_are_yours() {
     // The group table counts it too.
     let g = dimvexa_at_root(&["units", "--groups", "--config", OIL_CFG]);
     let base = dimvexa(&["units", "--groups"]);
-    assert!(g.stdout.lines().any(|l| l == "volume\t25"));
-    assert!(base.stdout.lines().any(|l| l == "volume\t24"));
+    assert!(g.stdout.lines().any(|l| l == "volume\t26"));
+    assert!(base.stdout.lines().any(|l| l == "volume\t25"));
 
     let v =
         json::parse(&dimvexa_at_root(&["units", "--json", "--config", OIL_CFG]).stdout).unwrap();
@@ -1742,13 +1742,7 @@ fn a_usage_error_follows_the_command_word_not_an_option_value() {
 /// KL-26, KL-27, KL-28: US customary units that need a primary source are not shipped.
 #[test]
 fn known_limitation_kl_26_us_customary_units_without_a_source_are_unknown() {
-    for unit in [
-        "hogshead",
-        "bbl_us_liquid",
-        "board_ft",
-        "ton_force_short",
-        "pottle",
-    ] {
+    for unit in ["hogshead", "bbl_us_liquid", "ton_force_short", "pottle"] {
         let r = dimvexa(&["convert", "1", unit, "L"]);
         assert_eq!(
             r.code, 1,

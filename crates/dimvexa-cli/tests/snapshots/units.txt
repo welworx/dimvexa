@@ -262,6 +262,9 @@ pdl	pdl	Poundal	plain	defined	none	-	NIST SP 811 (2008), Appendix B (poundal = 1
 ## mass
 slug	slug	Slug	plain	defined	none	-	NIST SP 811 (2008), Appendix B (slug = 1.459 390 E+01 kg)
 
+## volume
+board_ft	board_ft	Board foot	plain	defined	none	-	NIST Handbook 130 (2024), Uniform Regulation for the Method of Sale of Commodities, section 2.12.1.1 (board foot, 144 in^3)
+
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note
 ton	ton_short, ton_long, tonne	-	short ton (2000 lb), long ton (2240 lb) and metric tonne (1000 kg) are all called ton
