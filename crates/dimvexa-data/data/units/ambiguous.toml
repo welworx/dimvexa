@@ -172,7 +172,7 @@ note = "6 ft (1.8288 m, used by the British Admiralty) and 1/1000 nautical mile 
 
 [[ambiguous]]
 symbol = "cable"
-candidates = ["cable_int", "cable_us_survey"]
+candidates = ["cable_int", "cable_us_survey", "cable_ft"]
 planned = []
 note = "international cable (185.2 m), UK Admiralty cable (608 ft) and US cable (720 ft) differ"
 

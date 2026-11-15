@@ -1,312 +1,315 @@
-# columns: id, symbol, name, quantity_kind, exactness, prefixes, aliases, source
+# columns: id, symbol, name, quantity_kind, exactness, status, prefixes, aliases, source
 
 ## length
-m	m	Metre	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
+m	m	Metre	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## mass
-g	g	Gram	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
+g	g	Gram	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## time
-s	s	Second	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
+s	s	Second	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## electric_current
-A	A	Ampere	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
+A	A	Ampere	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## temperature
-K	K	Kelvin	absolute_temperature	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
+K	K	Kelvin	absolute_temperature	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## amount_of_substance
-mol	mol	Mole	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
+mol	mol	Mole	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## luminous_intensity
-cd	cd	Candela	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
+cd	cd	Candela	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## frequency
-Hz	Hz	Hertz	cycle	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+Hz	Hz	Hertz	cycle	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## force
-N	N	Newton	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+N	N	Newton	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## pressure
-Pa	Pa	Pascal	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+Pa	Pa	Pascal	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## energy
-J	J	Joule	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+J	J	Joule	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## power
-W	W	Watt	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+W	W	Watt	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## electric_charge
-C	C	Coulomb	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+C	C	Coulomb	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## voltage
-V	V	Volt	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+V	V	Volt	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## resistance
-ohm	Ω	Ohm	plain	defined	si	Ω, Ω	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+ohm	Ω	Ohm	plain	defined	current	si	Ω, Ω	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## capacitance
-F	F	Farad	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+F	F	Farad	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## conductance
-S	S	Siemens	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+S	S	Siemens	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## magnetic_flux
-Wb	Wb	Weber	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+Wb	Wb	Weber	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## magnetic_flux_density
-T	T	Tesla	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+T	T	Tesla	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## inductance
-H	H	Henry	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+H	H	Henry	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## time
-min	min	Minute	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
-h	h	Hour	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
-d	d	Day	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
+min	min	Minute	plain	defined	current	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
+h	h	Hour	plain	defined	current	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
+d	d	Day	plain	defined	current	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
 
 ## volume
-L	L	Litre	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
+L	L	Litre	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
 
 ## mass
-tonne	t	Tonne	plain	defined	si	t	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
+tonne	t	Tonne	plain	defined	current	si	t	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
 
 ## energy
-Wh	Wh	Watt hour	plain	defined	si	-	definition: watt (SI Brochure 9th ed., Table 4) times hour (SI Brochure 9th ed., ch. 4); NIST SP 811 (2008), Appendix B lists kW h = 3.6E+06 J
+Wh	Wh	Watt hour	plain	defined	current	si	-	definition: watt (SI Brochure 9th ed., Table 4) times hour (SI Brochure 9th ed., ch. 4); NIST SP 811 (2008), Appendix B lists kW h = 3.6E+06 J
 
 ## temperature
-degC	°C	Degree Celsius	absolute_temperature	defined	none	°C	BIPM SI Brochure, 9th ed. (2019), ch. 2 (degree Celsius, t/degC = T/K - 273.15)
-delta_K	ΔK	Kelvin difference	temperature_difference	defined	none	ΔK	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (kelvin); section 2.3.4 (a temperature difference of 1 K equals that of 1 degC)
-delta_degC	Δ°C	Degree Celsius difference	temperature_difference	defined	none	Δ°C	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4, note (f) (degree Celsius, temperature intervals)
+degC	°C	Degree Celsius	absolute_temperature	defined	current	none	°C	BIPM SI Brochure, 9th ed. (2019), ch. 2 (degree Celsius, t/degC = T/K - 273.15)
+delta_K	ΔK	Kelvin difference	temperature_difference	defined	current	none	ΔK	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (kelvin); section 2.3.4 (a temperature difference of 1 K equals that of 1 degC)
+delta_degC	Δ°C	Degree Celsius difference	temperature_difference	defined	current	none	Δ°C	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4, note (f) (degree Celsius, temperature intervals)
 
 ## area
-ar	ar	Are	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (are = 1 dam^2 = 10^2 m^2)
-ha	ha	Hectare	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (hectare = 1 hm^2 = 10^4 m^2)
+ar	ar	Are	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B.8 (are = 1 dam^2 = 10^2 m^2)
+ha	ha	Hectare	plain	defined	current	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (hectare = 1 hm^2 = 10^4 m^2)
 
 ## length
-au	au	Astronomical unit	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 and note (j) (astronomical unit = 149 597 870 700 m; IAU 2012 Resolution B2)
-angstrom	Å	Angstrom	plain	defined	none	Å, Å	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (other non-SI units: angstrom = 0.1 nm = 10^-10 m)
+au	au	Astronomical unit	plain	defined	current	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 and note (j) (astronomical unit = 149 597 870 700 m; IAU 2012 Resolution B2)
+angstrom	Å	Angstrom	plain	defined	current	none	Å, Å	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (other non-SI units: angstrom = 0.1 nm = 10^-10 m)
 
 ## frequency
-Bq	Bq	Becquerel	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+Bq	Bq	Becquerel	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## absorbed_dose
-Gy	Gy	Gray	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
-Sv	Sv	Sievert	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+Gy	Gy	Gray	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+Sv	Sv	Sievert	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## luminous_intensity
-lm	lm	Lumen	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+lm	lm	Lumen	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## illuminance
-lx	lx	Lux	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+lx	lx	Lux	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## catalytic_activity
-kat	kat	Katal	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+kat	kat	Katal	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## angle
-rad	rad	Radian	angle	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
-deg	°	Degree of arc	angle	defined	none	°	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (degree = (pi/180) rad)
-arcmin	arcmin	Arcminute	angle	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcminute = (1/60) degree)
-arcsec	arcsec	Arcsecond	angle	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcsecond = (1/60) arcminute)
+rad	rad	Radian	angle	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+deg	°	Degree of arc	angle	defined	current	none	°	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (degree = (pi/180) rad)
+arcmin	arcmin	Arcminute	angle	defined	current	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcminute = (1/60) degree)
+arcsec	arcsec	Arcsecond	angle	defined	current	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcsecond = (1/60) arcminute)
 
 ## energy
-eV	eV	Electronvolt	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (1 eV = 1.602 176 634 x 10^-19 J, exact since the elementary charge e is fixed, ch. 2, Table 1)
+eV	eV	Electronvolt	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (1 eV = 1.602 176 634 x 10^-19 J, exact since the elementary charge e is fixed, ch. 2, Table 1)
 
 ## mass
-Da	Da	Dalton	plain	measured	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (dalton = unified atomic mass unit); CODATA 2018 recommended value of the atomic mass constant m_u = 1.660 539 066 60(50) x 10^-27 kg (Tiesinga et al., Rev. Mod. Phys. 93, 025010 (2021))
+Da	Da	Dalton	plain	measured	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (dalton = unified atomic mass unit); CODATA 2018 recommended value of the atomic mass constant m_u = 1.660 539 066 60(50) x 10^-27 kg (Tiesinga et al., Rev. Mod. Phys. 93, 025010 (2021))
 
 ## pressure
-bar	bar	Bar	plain	defined	si	-	NIST SP 811 (2008), Appendix B (bar = 100 kPa)
-atm	atm	Standard atmosphere	plain	defined	none	-	NIST SP 811 (2008), Appendix B (standard atmosphere); 10th CGPM (1954), Resolution 4
+bar	bar	Bar	plain	defined	current	si	-	NIST SP 811 (2008), Appendix B (bar = 100 kPa)
+atm	atm	Standard atmosphere	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (standard atmosphere); 10th CGPM (1954), Resolution 4
 
 ## acceleration
-g_n	g_n	Standard gravity	plain	defined	none	-	NIST SP 811 (2008), Appendix B (standard acceleration of gravity); 3rd CGPM (1901), Declaration (980.665 cm/s^2)
+g_n	g_n	Standard gravity	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (standard acceleration of gravity); 3rd CGPM (1901), Declaration (980.665 cm/s^2)
 
 ## force
-lbf	lbf	Pound-force	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pound-force)
+lbf	lbf	Pound-force	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (pound-force)
 
 ## pressure
-psi	psi	Pound-force per square inch	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pound-force per square inch)
-mmHg	mmHg	Millimetre of mercury	plain	defined	none	-	NIST SP 811 (2008), Appendix B (conventional millimeter of mercury); NIST SP 811, Chapter 5, Table 9 (1 mmHg ~ 133.322 Pa)
-torr	torr	Torr	plain	defined	none	-	NIST SP 811 (2008), Appendix B (torr = 101325/760 Pa)
+psi	psi	Pound-force per square inch	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (pound-force per square inch)
+mmHg	mmHg	Millimetre of mercury	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (conventional millimeter of mercury); NIST SP 811, Chapter 5, Table 9 (1 mmHg ~ 133.322 Pa)
+torr	torr	Torr	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (torr = 101325/760 Pa)
 
 ## energy
-cal_th	cal_th	Thermochemical calorie	plain	defined	si	-	NIST SP 811 (2008), Appendix B (calorie_th)
-cal_IT	cal_IT	International Table calorie	plain	defined	si	-	NIST SP 811 (2008), Appendix B (calorie_IT); 5th International Conference on the Properties of Steam (1956)
-Btu_IT	Btu_IT	International Table British thermal unit	plain	defined	si	-	NIST SP 811 (2008), Appendix B (Btu_IT)
-Btu_th	Btu_th	Thermochemical British thermal unit	plain	defined	si	-	NIST SP 811 (2008), Appendix B (Btu_th)
+cal_th	cal_th	Thermochemical calorie	plain	defined	current	si	-	NIST SP 811 (2008), Appendix B (calorie_th)
+cal_IT	cal_IT	International Table calorie	plain	defined	current	si	-	NIST SP 811 (2008), Appendix B (calorie_IT); 5th International Conference on the Properties of Steam (1956)
+Btu_IT	Btu_IT	International Table British thermal unit	plain	defined	current	si	-	NIST SP 811 (2008), Appendix B (Btu_IT)
+Btu_th	Btu_th	Thermochemical British thermal unit	plain	defined	current	si	-	NIST SP 811 (2008), Appendix B (Btu_th)
 
 ## power
-hp_mech	hp_mech	Mechanical horsepower	plain	defined	none	-	NIST SP 811 (2008), Appendix B (horsepower, 550 ft lbf/s)
-hp_metric	hp_metric	Metric horsepower	plain	defined	none	-	NIST SP 811 (2008), Appendix B (horsepower, metric = 7.354 988 E+02 W; 75 kgf m/s with kgf = 9.806 65 N)
+hp_mech	hp_mech	Mechanical horsepower	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (horsepower, 550 ft lbf/s)
+hp_metric	hp_metric	Metric horsepower	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (horsepower, metric = 7.354 988 E+02 W; 75 kgf m/s with kgf = 9.806 65 N)
 
 ## length
-in	in	Inch	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
-ft	ft	Foot	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
-yd	yd	Yard	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
-mi	mi	Mile	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
-nmi	nmi	Nautical mile	plain	defined	none	-	NIST SP 811 (2008), Appendix B (nautical mile); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 and note (k) (1st Extraordinary International Hydrographic Conference, 1929)
-ft_us_survey	ft_us_survey	US survey foot	plain	defined	none	-	NIST SP 811 (2008), Appendix B (foot, U.S. survey); NIST SP 811 (2008), Appendix B.6 (1200/3937 m)
-mi_us_survey	mi_us_survey	US survey mile	plain	defined	none	-	NIST SP 811 (2008), Appendix B (mile, U.S. statute)
+in	in	Inch	plain	defined	current	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
+ft	ft	Foot	plain	defined	current	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
+yd	yd	Yard	plain	defined	current	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
+mi	mi	Mile	plain	defined	current	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
+nmi	nmi	Nautical mile	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (nautical mile); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 and note (k) (1st Extraordinary International Hydrographic Conference, 1929)
+ft_us_survey	ft_us_survey	US survey foot	plain	defined	legacy	none	-	NIST SP 811 (2008), Appendix B (foot, U.S. survey); NIST SP 811 (2008), Appendix B.6 (1200/3937 m)
+mi_us_survey	mi_us_survey	US survey mile	plain	defined	legacy	none	-	NIST SP 811 (2008), Appendix B (mile, U.S. statute)
 
 ## mass
-lb	lb	Pound	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
-oz_av	oz_av	Avoirdupois ounce	plain	defined	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
-oz_troy	oz_troy	Troy ounce	plain	defined	none	-	NIST SP 811 (2008), Appendix B (ounce, troy or apothecary)
-ton_short	ton_short	Short ton	plain	defined	none	-	NIST SP 811 (2008), Appendix B (ton, short, 2000 lb)
-ton_long	ton_long	Long ton	plain	defined	none	-	NIST SP 811 (2008), Appendix B (ton, long, 2240 lb)
+lb	lb	Pound	plain	defined	current	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
+oz_av	oz_av	Avoirdupois ounce	plain	defined	current	none	-	International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B
+oz_troy	oz_troy	Troy ounce	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (ounce, troy or apothecary)
+ton_short	ton_short	Short ton	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (ton, short, 2000 lb)
+ton_long	ton_long	Long ton	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (ton, long, 2240 lb)
 
 ## volume
-gal_us	gal_us	US liquid gallon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gallon, U.S. = 3.785 412 E-03 m^3); NIST Handbook 44, Appendix C (231 in^3)
-gal_imp	gal_imp	Imperial gallon	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (4.54609 dm^3); NIST SP 811 (2008), Appendix B (gallon, Canadian and U.K.)
-pt_us	pt_us	US liquid pint	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pint, U.S. liquid)
-pt_imp	pt_imp	Imperial pint	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part IV (pint = 0.568 261 25 dm^3)
+gal_us	gal_us	US liquid gallon	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (gallon, U.S. = 3.785 412 E-03 m^3); NIST Handbook 44, Appendix C (231 in^3)
+gal_imp	gal_imp	Imperial gallon	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (4.54609 dm^3); NIST SP 811 (2008), Appendix B (gallon, Canadian and U.K.)
+pt_us	pt_us	US liquid pint	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (pint, U.S. liquid)
+pt_imp	pt_imp	Imperial pint	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part IV (pint = 0.568 261 25 dm^3)
 
 ## amount_of_substance
-lbmol	lbmol	Pound-mole	plain	defined	none	-	derived from the pound definition (International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B); standard process-engineering convention
+lbmol	lbmol	Pound-mole	plain	defined	current	none	-	derived from the pound definition (International yard and pound agreement (1959); NIST SP 811 (2008), Appendix B); standard process-engineering convention
 
 ## temperature
-degF	°F	Degree Fahrenheit	absolute_temperature	defined	none	°F	NIST SP 811 (2008), Appendix B (degree Fahrenheit)
-degR	°R	Degree Rankine	absolute_temperature	defined	none	°R	NIST SP 811 (2008), Appendix B (degree Rankine)
-delta_degF	Δ°F	Degree Fahrenheit difference	temperature_difference	defined	none	Δ°F	NIST SP 811 (2008), Appendix B (degree Fahrenheit, temperature interval)
-delta_degR	Δ°R	Degree Rankine difference	temperature_difference	defined	none	Δ°R	NIST SP 811 (2008), Appendix B (degree Rankine, temperature interval)
+degF	°F	Degree Fahrenheit	absolute_temperature	defined	current	none	°F	NIST SP 811 (2008), Appendix B (degree Fahrenheit)
+degR	°R	Degree Rankine	absolute_temperature	defined	current	none	°R	NIST SP 811 (2008), Appendix B (degree Rankine)
+delta_degF	Δ°F	Degree Fahrenheit difference	temperature_difference	defined	current	none	Δ°F	NIST SP 811 (2008), Appendix B (degree Fahrenheit, temperature interval)
+delta_degR	Δ°R	Degree Rankine difference	temperature_difference	defined	current	none	Δ°R	NIST SP 811 (2008), Appendix B (degree Rankine, temperature interval)
 
 ## time
-week	week	Week	plain	defined	none	wk, w	ISO 8601-1:2019 (week of 7 days); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (day = 86 400 s)
-yr_common	yr_common	Common year	plain	defined	none	-	NIST SP 811 (2008), Appendix B (year, 365 days)
-yr_julian	yr_julian	Julian year	plain	defined	none	-	IAU Style Manual (1989), Julian year a = 365.25 d; BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (day = 86 400 s)
+week	week	Week	plain	defined	current	none	wk, w	ISO 8601-1:2019 (week of 7 days); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (day = 86 400 s)
+yr_common	yr_common	Common year	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (year, 365 days)
+yr_julian	yr_julian	Julian year	plain	defined	current	none	-	IAU Style Manual (1989), Julian year a = 365.25 d; BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (day = 86 400 s)
 
 ## length
-ly	ly	Light year	plain	defined	none	-	IAU Style Manual (1989) (light year = c x Julian year); BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (c = 299 792 458 m/s)
+ly	ly	Light year	plain	defined	current	none	-	IAU Style Manual (1989) (light year = c x Julian year); BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (c = 299 792 458 m/s)
 
 ## area
-acre_int	acre_int	International acre	plain	defined	none	-	NIST SP 811 (2008), Appendix B.6 (160 rd^2 = 1 acre = 43 560 ft^2); International yard and pound agreement (1959)
-acre_us_survey	acre_us_survey	US survey acre	plain	defined	none	-	NIST SP 811 (2008), Appendix B (acre, based on U.S. survey foot); NIST SP 811 (2008), Appendix B.6
+acre_int	acre_int	International acre	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B.6 (160 rd^2 = 1 acre = 43 560 ft^2); International yard and pound agreement (1959)
+acre_us_survey	acre_us_survey	US survey acre	plain	defined	legacy	none	-	NIST SP 811 (2008), Appendix B (acre, based on U.S. survey foot); NIST SP 811 (2008), Appendix B.6
 
 ## speed
-kn	kn	Knot	plain	defined	none	-	NIST SP 811 (2008), Appendix B (knot = nautical mile per hour); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 and note (k)
+kn	kn	Knot	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (knot = nautical mile per hour); BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 and note (k)
 
 ## volume
-fl_oz_us	fl_oz_us	US fluid ounce	plain	defined	none	-	NIST SP 811 (2008), Appendix B (fluid ounce, U.S. = 2.957 353 E-05 m^3); NIST Handbook 44, Appendix C (1 gallon = 128 fluid ounces)
-cup_us	cup_us	US cup	plain	defined	none	-	NIST SP 811 (2008), Appendix B (cup, U.S. liquid measure)
-qt_us	qt_us	US liquid quart	plain	defined	none	-	NIST SP 811 (2008), Appendix B (quart, U.S. liquid)
-tbsp_us	tbsp_us	US tablespoon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (tablespoon, U.S.)
-tsp_us	tsp_us	US teaspoon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (teaspoon, U.S.)
-fl_oz_imp	fl_oz_imp	Imperial fluid ounce	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (fluid ounce = 1/20 pint)
-qt_imp	qt_imp	Imperial quart	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (quart = 1/4 gallon)
+fl_oz_us	fl_oz_us	US fluid ounce	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (fluid ounce, U.S. = 2.957 353 E-05 m^3); NIST Handbook 44, Appendix C (1 gallon = 128 fluid ounces)
+cup_us	cup_us	US cup	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (cup, U.S. liquid measure)
+qt_us	qt_us	US liquid quart	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (quart, U.S. liquid)
+tbsp_us	tbsp_us	US tablespoon	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (tablespoon, U.S.)
+tsp_us	tsp_us	US teaspoon	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (teaspoon, U.S.)
+fl_oz_imp	fl_oz_imp	Imperial fluid ounce	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (fluid ounce = 1/20 pint)
+qt_imp	qt_imp	Imperial quart	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (quart = 1/4 gallon)
 
 ## mass
-grain	grain	Grain	plain	defined	none	-	NIST SP 811 (2008), Appendix B (grain, 1/7000 pound avoirdupois)
-carat	carat	Metric carat	plain	defined	none	-	NIST SP 811 (2008), Appendix B (carat, metric = 2.0 E-04 kg)
+grain	grain	Grain	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (grain, 1/7000 pound avoirdupois)
+carat	carat	Metric carat	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (carat, metric = 2.0 E-04 kg)
 
 ## energy
-erg	erg	Erg	plain	defined	none	-	NIST SP 811 (2008), Appendix B (erg)
+erg	erg	Erg	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (erg)
 
 ## force
-dyn	dyn	Dyne	plain	defined	none	-	NIST SP 811 (2008), Appendix B (dyne)
-kgf	kgf	Kilogram-force	plain	defined	none	-	NIST SP 811 (2008), Appendix B (kilogram-force)
+dyn	dyn	Dyne	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (dyne)
+kgf	kgf	Kilogram-force	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (kilogram-force)
 
 ## angle
-grad	grad	Gradian	angle	defined	none	gon	NIST SP 811 (2008), Appendix B (grade); ISO 80000-3:2019 (gon)
+grad	grad	Gradian	angle	defined	current	none	gon	NIST SP 811 (2008), Appendix B (grade); ISO 80000-3:2019 (gon)
 
 ## dynamic_viscosity
-P	P	Poise	plain	defined	si	poise	NIST SP 811 (2008), Appendix B.8 (poise = 1.0 E-01 Pa s)
+P	P	Poise	plain	defined	current	si	poise	NIST SP 811 (2008), Appendix B.8 (poise = 1.0 E-01 Pa s)
 
 ## kinematic_viscosity
-St	St	Stokes	plain	defined	si	stokes	NIST SP 811 (2008), Appendix B.8 (stokes = 1.0 E-04 m^2/s)
+St	St	Stokes	plain	defined	current	si	stokes	NIST SP 811 (2008), Appendix B.8 (stokes = 1.0 E-04 m^2/s)
 
 ## volume
-bbl	bbl	Oil barrel	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)
+bbl	bbl	Oil barrel	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)
 
 ## length
-twip	twip	Twip	plain	defined	none	-	Imperial typographic unit: 1 twip = 1/20 point = 1/1440 in (international inch, International yard and pound agreement 1959)
-thou	thou	Thou (mil)	plain	defined	none	-	International yard and pound agreement (1959): 1 in = 0.0254 m; thou = 1/1000 in
-barleycorn	barleycorn	Barleycorn	plain	defined	none	-	Imperial length relations: 3 barleycorns = 1 in (international inch, 1959 agreement)
-hand	hand	Hand	plain	defined	none	-	Imperial length relations: 1 hand = 4 in (international inch, 1959 agreement)
-link_int	link_int	Gunter's link (international)	plain	defined	none	-	Imperial length relations: 100 links = 1 chain = 66 ft (international foot, 1959 agreement)
-rod_int	rod_int	Rod (pole, perch)	plain	defined	none	-	Imperial length relations: 1 rod = 5.5 yd = 16.5 ft (international foot, 1959 agreement)
-chain_int	chain_int	Chain (Gunter's)	plain	defined	none	-	Imperial length relations: 1 chain = 22 yd = 66 ft (international foot, 1959 agreement)
-furlong_int	furlong_int	Furlong	plain	defined	none	-	Imperial length relations: 1 furlong = 220 yd = 660 ft (international foot, 1959 agreement)
-league_int	league_int	League	plain	defined	none	-	Imperial length relations: 1 league = 3 mi (international mile = 5280 ft, 1959 agreement)
-fathom_ft	fathom_ft	Fathom (6 ft)	plain	defined	none	-	Imperial length relations: 1 fathom = 6 ft (international foot, 1959 agreement)
-fathom_nmi	fathom_nmi	Fathom (1/1000 nautical mile)	plain	defined	none	-	International nautical mile = 1852 m (International Hydrographic Conference 1929); fathom = 1/1000 nautical mile
-cable_int	cable_int	Cable (international)	plain	defined	none	-	International nautical mile = 1852 m (International Hydrographic Conference 1929); cable = 1/10 nautical mile
+twip	twip	Twip	plain	defined	current	none	-	Imperial typographic unit: 1 twip = 1/20 point = 1/1440 in (international inch, International yard and pound agreement 1959)
+thou	thou	Thou (mil)	plain	defined	current	none	-	International yard and pound agreement (1959): 1 in = 0.0254 m; thou = 1/1000 in
+barleycorn	barleycorn	Barleycorn	plain	defined	current	none	-	Imperial length relations: 3 barleycorns = 1 in (international inch, 1959 agreement)
+hand	hand	Hand	plain	defined	current	none	-	Imperial length relations: 1 hand = 4 in (international inch, 1959 agreement)
+link_int	link_int	Gunter's link (international)	plain	defined	current	none	-	Imperial length relations: 100 links = 1 chain = 66 ft (international foot, 1959 agreement)
+rod_int	rod_int	Rod (pole, perch)	plain	defined	current	none	-	Imperial length relations: 1 rod = 5.5 yd = 16.5 ft (international foot, 1959 agreement)
+chain_int	chain_int	Chain (Gunter's)	plain	defined	current	none	-	Imperial length relations: 1 chain = 22 yd = 66 ft (international foot, 1959 agreement)
+furlong_int	furlong_int	Furlong	plain	defined	current	none	-	Imperial length relations: 1 furlong = 220 yd = 660 ft (international foot, 1959 agreement)
+league_int	league_int	League	plain	defined	current	none	-	Imperial length relations: 1 league = 3 mi (international mile = 5280 ft, 1959 agreement)
+fathom_ft	fathom_ft	Fathom (6 ft)	plain	defined	current	none	-	Imperial length relations: 1 fathom = 6 ft (international foot, 1959 agreement)
+fathom_nmi	fathom_nmi	Fathom (1/1000 nautical mile)	plain	defined	current	none	-	International nautical mile = 1852 m (International Hydrographic Conference 1929); fathom = 1/1000 nautical mile
+cable_int	cable_int	Cable (international)	plain	defined	current	none	-	International nautical mile = 1852 m (International Hydrographic Conference 1929); cable = 1/10 nautical mile
 
 ## area
-perch_sq	perch_sq	Square perch	plain	defined	none	-	Imperial area relations: 1 square perch = 1 rod x 1 rod = 272.25 ft^2 (international foot, 1959 agreement)
-rood	rood	Rood	plain	defined	none	-	Imperial area relations: 1 rood = 1210 yd^2 = 1/4 acre (international yard, 1959 agreement)
+perch_sq	perch_sq	Square perch	plain	defined	current	none	-	Imperial area relations: 1 square perch = 1 rod x 1 rod = 272.25 ft^2 (international foot, 1959 agreement)
+rood	rood	Rood	plain	defined	current	none	-	Imperial area relations: 1 rood = 1210 yd^2 = 1/4 acre (international yard, 1959 agreement)
 
 ## volume
-gill_imp	gill_imp	Imperial gill	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); gill = 1/4 pint = 5 fl oz
-peck_imp	peck_imp	Imperial peck	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); peck = 2 gallons
-bushel_imp	bushel_imp	Imperial bushel	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); bushel = 8 gallons
-quarter_vol_imp	quarter_vol_imp	Imperial quarter (volume)	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); quarter = 64 gallons
-minim_imp	minim_imp	Imperial minim	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); minim = 1/9600 pint (British apothecaries' measure)
-scruple_fl_imp	scruple_fl_imp	Fluid scruple	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid scruple = 20 minims = 1/480 pint
-drachm_fl_imp	drachm_fl_imp	Fluid drachm	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid drachm = 3 fluid scruples = 1/160 pint
+gill_imp	gill_imp	Imperial gill	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); gill = 1/4 pint = 5 fl oz
+peck_imp	peck_imp	Imperial peck	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); peck = 2 gallons
+bushel_imp	bushel_imp	Imperial bushel	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); bushel = 8 gallons
+quarter_vol_imp	quarter_vol_imp	Imperial quarter (volume)	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); quarter = 64 gallons
+minim_imp	minim_imp	Imperial minim	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); minim = 1/9600 pint (British apothecaries' measure)
+scruple_fl_imp	scruple_fl_imp	Fluid scruple	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid scruple = 20 minims = 1/480 pint
+drachm_fl_imp	drachm_fl_imp	Fluid drachm	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid drachm = 3 fluid scruples = 1/160 pint
 
 ## mass
-dram_av	dram_av	Avoirdupois dram	plain	defined	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; dram = 1/16 oz = 1/256 lb
-stone	stone	Stone	plain	defined	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; stone = 14 lb
-quarter_mass_imp	quarter_mass_imp	Imperial quarter (mass)	plain	defined	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; quarter = 28 lb = 2 stone
-cwt_long	cwt_long	Long hundredweight	plain	defined	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; hundredweight = 112 lb = 8 stone
-slug	slug	Slug	plain	defined	none	-	NIST SP 811 (2008), Appendix B (slug); defined as the mass accelerated 1 ft/s^2 by 1 lbf
+dram_av	dram_av	Avoirdupois dram	plain	defined	current	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; dram = 1/16 oz = 1/256 lb
+stone	stone	Stone	plain	defined	current	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; stone = 14 lb
+quarter_mass_imp	quarter_mass_imp	Imperial quarter (mass)	plain	defined	current	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; quarter = 28 lb = 2 stone
+cwt_long	cwt_long	Long hundredweight	plain	defined	current	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; hundredweight = 112 lb = 8 stone
+slug	slug	Slug	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (slug); defined as the mass accelerated 1 ft/s^2 by 1 lbf
 
 ## length
-mil	mil	Mil	plain	defined	none	-	NIST SP 811 (2008), Appendix B (mil = 0.001 in)
-link_us_survey	link_us_survey	US survey link	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 link = 0.66 ft)
-rod_us_survey	rod_us_survey	US survey rod	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 rod = 16.5 ft = 25 links); NIST SP 811 (2008), Appendix B (rod, based on U.S. survey foot)
-chain_us_survey	chain_us_survey	US survey chain	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 chain = 66 ft); NIST SP 811 (2008), Appendix B (chain, based on U.S. survey foot)
-furlong_us_survey	furlong_us_survey	US survey furlong	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Length: 1 furlong = 660 ft = 10 chains)
+mil	mil	Mil	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (mil = 0.001 in)
+link_us_survey	link_us_survey	US survey link	plain	defined	legacy	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 link = 0.66 ft)
+rod_us_survey	rod_us_survey	US survey rod	plain	defined	legacy	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 rod = 16.5 ft = 25 links); NIST SP 811 (2008), Appendix B (rod, based on U.S. survey foot)
+chain_us_survey	chain_us_survey	US survey chain	plain	defined	legacy	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 chain = 66 ft); NIST SP 811 (2008), Appendix B (chain, based on U.S. survey foot)
+furlong_us_survey	furlong_us_survey	US survey furlong	plain	defined	legacy	none	-	NIST Handbook 44 (2024), Appendix C (Units of Length: 1 furlong = 660 ft = 10 chains)
 
 ## volume
-minim_us	minim_us	US minim	plain	defined	none	-	NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)
-fl_dr_us	fl_dr_us	US fluid dram	plain	defined	none	-	NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)
-gill_us	gill_us	US gill	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gill, U.S.); NIST Handbook 44 (2024), Appendix C (Units of Liquid Volume: 4 gills = 1 pint)
-bu_us	bu_us	US bushel	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 1 bushel = 2150.42 cubic inches); NIST SP 811 (2008), Appendix B (bushel, U.S. = 3.523 907 E-02 m^3)
-pk_us	pk_us	US peck	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 4 pecks = 1 bushel); NIST SP 811 (2008), Appendix B (peck, U.S. = 8.809 768 E-03 m^3)
-qt_us_dry	qt_us_dry	US dry quart	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 8 quarts = 1 peck); NIST SP 811 (2008), Appendix B (quart, U.S. dry = 1.101 221 E-03 m^3)
-pt_us_dry	pt_us_dry	US dry pint	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 2 pints = 1 quart); NIST SP 811 (2008), Appendix B (pint, U.S. dry = 5.506 105 E-04 m^3)
-acre_ft_us_survey	acre_ft_us_survey	US survey acre-foot	plain	defined	none	-	NIST SP 811 (2008), Appendix B (acre-foot, based on U.S. survey foot)
-cord	cord	Cord	plain	defined	none	-	NIST SP 811 (2008), Appendix B (cord = 128 ft^3)
+minim_us	minim_us	US minim	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)
+fl_dr_us	fl_dr_us	US fluid dram	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)
+gill_us	gill_us	US gill	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (gill, U.S.); NIST Handbook 44 (2024), Appendix C (Units of Liquid Volume: 4 gills = 1 pint)
+bu_us	bu_us	US bushel	plain	defined	current	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 1 bushel = 2150.42 cubic inches); NIST SP 811 (2008), Appendix B (bushel, U.S. = 3.523 907 E-02 m^3)
+pk_us	pk_us	US peck	plain	defined	current	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 4 pecks = 1 bushel); NIST SP 811 (2008), Appendix B (peck, U.S. = 8.809 768 E-03 m^3)
+qt_us_dry	qt_us_dry	US dry quart	plain	defined	current	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 8 quarts = 1 peck); NIST SP 811 (2008), Appendix B (quart, U.S. dry = 1.101 221 E-03 m^3)
+pt_us_dry	pt_us_dry	US dry pint	plain	defined	current	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 2 pints = 1 quart); NIST SP 811 (2008), Appendix B (pint, U.S. dry = 5.506 105 E-04 m^3)
+acre_ft_us_survey	acre_ft_us_survey	US survey acre-foot	plain	defined	legacy	none	-	NIST SP 811 (2008), Appendix B (acre-foot, based on U.S. survey foot)
+cord	cord	Cord	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (cord = 128 ft^3)
 
 ## mass
-cwt_short	cwt_short	Short hundredweight	plain	defined	none	-	NIST SP 811 (2008), Appendix B (hundredweight, short = 100 lb); NIST Handbook 44 (2024), Appendix C (Avoirdupois Units of Mass)
-dwt	dwt	Pennyweight	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Troy Units of Mass: 24 grains = 1 pennyweight); NIST SP 811 (2008), Appendix B (pennyweight = 1.555 174 E-03 kg)
-lb_troy	lb_troy	Troy pound	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Troy Units of Mass: 12 ounces troy = 1 pound troy = 5760 grains)
-scruple_ap	scruple_ap	Apothecaries' scruple	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Apothecaries Units of Mass: 20 grains = 1 scruple)
-dram_ap	dram_ap	Apothecaries' dram	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Apothecaries Units of Mass: 3 scruples = 1 dram apothecaries)
+cwt_short	cwt_short	Short hundredweight	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (hundredweight, short = 100 lb); NIST Handbook 44 (2024), Appendix C (Avoirdupois Units of Mass)
+dwt	dwt	Pennyweight	plain	defined	current	none	-	NIST Handbook 44 (2024), Appendix C (Troy Units of Mass: 24 grains = 1 pennyweight); NIST SP 811 (2008), Appendix B (pennyweight = 1.555 174 E-03 kg)
+lb_troy	lb_troy	Troy pound	plain	defined	current	none	-	NIST Handbook 44 (2024), Appendix C (Troy Units of Mass: 12 ounces troy = 1 pound troy = 5760 grains)
+scruple_ap	scruple_ap	Apothecaries' scruple	plain	defined	current	none	-	NIST Handbook 44 (2024), Appendix C (Apothecaries Units of Mass: 20 grains = 1 scruple)
+dram_ap	dram_ap	Apothecaries' dram	plain	defined	current	none	-	NIST Handbook 44 (2024), Appendix C (Apothecaries Units of Mass: 3 scruples = 1 dram apothecaries)
 
 ## force
-ozf	ozf	Ounce-force	plain	defined	none	-	NIST SP 811 (2008), Appendix B (ounce (avoirdupois)-force = 2.780 139 E-01 N); 1/16 lbf
-kip	kip	Kip	plain	defined	none	-	NIST SP 811 (2008), Appendix B (kip, 1 kip = 1000 lbf = 4.448 222 E+03 N)
-pdl	pdl	Poundal	plain	defined	none	-	NIST SP 811 (2008), Appendix B (poundal = 1.382 550 E-01 N)
+ozf	ozf	Ounce-force	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (ounce (avoirdupois)-force = 2.780 139 E-01 N); 1/16 lbf
+kip	kip	Kip	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (kip, 1 kip = 1000 lbf = 4.448 222 E+03 N)
+pdl	pdl	Poundal	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (poundal = 1.382 550 E-01 N)
 
 ## volume
-board_ft	board_ft	Board foot	plain	defined	none	-	NIST Handbook 130 (2024), Uniform Regulation for the Method of Sale of Commodities, section 2.12.1.1 (board foot, 144 in^3)
-bbl_us_dry	bbl_us_dry	US dry barrel	plain	defined	none	-	US Code title 15, section 234 (standard barrel for fruits, vegetables and other dry commodities: a barrel of a capacity of 7056 cubic inches); NBS Miscellaneous Publication M121 (1936), section 4 Capacity
+board_ft	board_ft	Board foot	plain	defined	current	none	-	NIST Handbook 130 (2024), Uniform Regulation for the Method of Sale of Commodities, section 2.12.1.1 (board foot, 144 in^3)
+bbl_us_dry	bbl_us_dry	US dry barrel	plain	defined	current	none	-	US Code title 15, section 234 (standard barrel for fruits, vegetables and other dry commodities: a barrel of a capacity of 7056 cubic inches); NBS Miscellaneous Publication M121 (1936), section 4 Capacity
 
 ## length
-fathom_us_survey	fathom_us_survey	US survey fathom	plain	defined	none	-	NIST SP 811 (2008), Appendix B (fathom, based on U.S. survey foot, 1.828 804 E+00 m); NIST Handbook 44 (2024), Appendix C (1 fathom = 6 feet)
-cable_us_survey	cable_us_survey	US survey cable length	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 cable's length = 720 feet = 120 fathoms)
+fathom_us_survey	fathom_us_survey	US survey fathom	plain	defined	legacy	none	-	NIST SP 811 (2008), Appendix B (fathom, based on U.S. survey foot, 1.828 804 E+00 m); NIST Handbook 44 (2024), Appendix C (1 fathom = 6 feet)
+cable_us_survey	cable_us_survey	US survey cable length	plain	defined	legacy	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 cable's length = 720 feet = 120 fathoms)
 
 ## power
-ton_refrigeration	ton_refrigeration	Ton of refrigeration	plain	defined	none	-	NIST SP 1038 (2006), section 5.2.13 Power (ton, refrigeration, 12 000 Btu/h) with note 31 (the Btu is the International Table Btu)
+ton_refrigeration	ton_refrigeration	Ton of refrigeration	plain	defined	current	none	-	NIST SP 1038 (2006), section 5.2.13 Power (ton, refrigeration, 12 000 Btu/h) with note 31 (the Btu is the International Table Btu)
 
 ## pressure
-inHg	inHg	Inch of mercury (conventional)	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (inch of mercury, conventional); ISO 80000-4 conventional mercury density via SP 811 note 12
-cmHg	cmHg	Centimeter of mercury (conventional)	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (centimeter of mercury, conventional); ISO 80000-4 conventional mercury density via SP 811 note 12
-ftHg	ftHg	Foot of mercury (conventional)	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (foot of mercury, conventional); ISO 80000-4 conventional mercury density via SP 811 note 12
-cmWC	cmWC	Centimeter of water (conventional)	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (centimeter of water, conventional); ISO 80000-4 conventional water density via SP 811 note 12
-inWC	inWC	Inch of water (conventional)	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (inch of water, conventional); ISO 80000-4 conventional water density via SP 811 note 12
-ftWC	ftWC	Foot of water (conventional)	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (foot of water, conventional); ISO 80000-4 conventional water density via SP 811 note 12
+inHg	inHg	Inch of mercury (conventional)	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B.8 (inch of mercury, conventional); ISO 80000-4 conventional mercury density via SP 811 note 12
+cmHg	cmHg	Centimeter of mercury (conventional)	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B.8 (centimeter of mercury, conventional); ISO 80000-4 conventional mercury density via SP 811 note 12
+ftHg	ftHg	Foot of mercury (conventional)	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B.8 (foot of mercury, conventional); ISO 80000-4 conventional mercury density via SP 811 note 12
+cmWC	cmWC	Centimeter of water (conventional)	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B.8 (centimeter of water, conventional); ISO 80000-4 conventional water density via SP 811 note 12
+inWC	inWC	Inch of water (conventional)	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B.8 (inch of water, conventional); ISO 80000-4 conventional water density via SP 811 note 12
+ftWC	ftWC	Foot of water (conventional)	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B.8 (foot of water, conventional); ISO 80000-4 conventional water density via SP 811 note 12
 
 ## volume
-bbl_beer_us	bbl_beer_us	US beer barrel	plain	defined	none	-	US Code title 26, section 5051(a)(1)(B) (a barrel of beer, not more than 31 gallons, for the excise tax)
+bbl_beer_us	bbl_beer_us	US beer barrel	plain	defined	current	none	-	US Code title 26, section 5051(a)(1)(B) (a barrel of beer, not more than 31 gallons, for the excise tax)
 
 ## area
-section_us_survey	section_us_survey	US survey section	plain	defined	none	-	43 U.S.C. 751 (townships of six miles square, subdivided into sections of one mile square, as nearly as may be 640 acres)
-township_us_survey	township_us_survey	US survey township	plain	defined	none	-	43 U.S.C. 751 (townships of six miles square, 36 sections)
+section_us_survey	section_us_survey	US survey section	plain	defined	legacy	none	-	43 U.S.C. 751 (townships of six miles square, subdivided into sections of one mile square, as nearly as may be 640 acres)
+township_us_survey	township_us_survey	US survey township	plain	defined	legacy	none	-	43 U.S.C. 751 (townships of six miles square, 36 sections)
+
+## length
+cable_ft	cable_ft	Cable length (720 ft)	plain	defined	current	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 cable's length = 720 feet = 120 fathoms)
 
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note
@@ -338,7 +341,7 @@ rod	rod_int, rod_us_survey	-	international rod (16.5 ft = 5.0292 m) and US surve
 furlong	furlong_int, furlong_us_survey	-	international furlong (660 ft) and US survey furlong differ by about 2 ppm
 league	league_int	-	statute league (3 mi) and nautical leagues (3 nmi) differ
 fathom	fathom_ft, fathom_nmi, fathom_us_survey	-	6 ft (1.8288 m, used by the British Admiralty) and 1/1000 nautical mile (1.852 m) differ by about 1 percent
-cable	cable_int, cable_us_survey	-	international cable (185.2 m), UK Admiralty cable (608 ft) and US cable (720 ft) differ
+cable	cable_int, cable_us_survey, cable_ft	-	international cable (185.2 m), UK Admiralty cable (608 ft) and US cable (720 ft) differ
 gill	gill_imp, gill_us	-	imperial gill (142.0653125 mL) and US gill (118.29411825 mL) differ
 peck	peck_imp, pk_us	-	imperial peck (2 imperial gallons) and US dry peck differ
 bushel	bushel_imp, bu_us	-	imperial bushel (8 imperial gallons) and US dry bushel differ

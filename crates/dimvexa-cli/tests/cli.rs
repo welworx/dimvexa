@@ -572,8 +572,8 @@ fn units_lists_every_table_entry_by_group() {
     let n = dimvexa_data::registry().unwrap().len();
     let r = dimvexa(&["units"]);
     assert_eq!(r.code, 0);
-    // Unit rows have eight tab-separated columns; the ambiguous rows have four.
-    let rows = r.stdout.lines().filter(|l| l.split('\t').count() == 8);
+    // Unit rows have nine tab-separated columns; the ambiguous rows have four.
+    let rows = r.stdout.lines().filter(|l| l.split('\t').count() == 9);
     assert_eq!(rows.count(), n);
     assert!(r.stdout.lines().any(|l| l == "## volume"));
     assert!(r.stdout.lines().any(|l| l.starts_with("psi\t")));
@@ -1815,6 +1815,52 @@ fn known_limitation_kl_30_us_survey_league_is_unknown() {
         r.code, 1,
         "KL-30 fixed? then the survey league ships: update the entry"
     );
+}
+
+/// ADR-026: a unit has a status; the units built on the US survey foot are legacy.
+#[test]
+fn units_show_their_status() {
+    let status = |id: &str| {
+        let r = dimvexa(&["units", id, "--json"]);
+        assert_eq!(r.code, 0, "{id}");
+        json::parse(&r.stdout)
+            .unwrap()
+            .get("unit")
+            .unwrap()
+            .get("status")
+            .unwrap()
+            .as_str()
+            .to_string()
+    };
+    assert_eq!(status("m"), "current");
+    assert_eq!(status("ft"), "current");
+    for id in [
+        "ft_us_survey",
+        "mi_us_survey",
+        "acre_us_survey",
+        "chain_us_survey",
+    ] {
+        assert_eq!(status(id), "legacy", "{id}");
+    }
+    // a prefixed unit is current
+    assert_eq!(status("km"), "current");
+    let text = dimvexa(&["units", "ft_us_survey"]).stdout;
+    assert!(
+        text.lines()
+            .any(|l| l.trim_end() == "  status        legacy")
+    );
+    // the list has a status column, and every row has a status
+    let list = dimvexa(&["units"]).stdout;
+    assert!(list.contains("exactness, status, prefixes"));
+    let json = json::parse(&dimvexa(&["units", "--json"]).stdout).unwrap();
+    let legacy = json
+        .get("units")
+        .unwrap()
+        .as_array()
+        .iter()
+        .filter(|u| u.get("status").unwrap().as_str() == "legacy")
+        .count();
+    assert!(legacy >= 12, "{legacy}");
 }
 
 /// `docs/known-limitations.md` lists every limitation these tests pin, and each pinned entry

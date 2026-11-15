@@ -191,8 +191,9 @@ Forms:
                    refused
   units --groups   only the groups (length, mass, volume, ...) with their sizes
   units GROUP      one group
-  units UNIT       one unit: id, symbol, name, factor, exactness, sources; a
-                   prefixed unit (km) is named from its parts
+  units UNIT       one unit: id, symbol, name, factor, exactness, status
+                   (current or legacy), sources; a prefixed unit (km) is
+                   named from its parts
 
 Options:
   --json           machine-readable output (schema dimvexa.units/5)
@@ -1673,7 +1674,7 @@ fn units_text(
     user: &[ConfigUnit],
 ) -> String {
     let mut s = String::from(
-        "# columns: id, symbol, name, quantity_kind, exactness, prefixes, aliases, source\n",
+        "# columns: id, symbol, name, quantity_kind, exactness, status, prefixes, aliases, source\n",
     );
     let mut current: Option<&str> = None;
     for (g, u) in units {
@@ -1683,12 +1684,13 @@ fn units_text(
         }
         let _ = writeln!(
             s,
-            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
             cell(u.id()),
             cell(u.symbol()),
             cell(u.name()),
             u.kind().name(),
             u.exactness().name(),
+            u.status().name(),
             u.prefixes().name(),
             cell(&u.aliases().join(", ")),
             cell(&user_unit(user, u.id()).map_or_else(
@@ -1771,7 +1773,7 @@ fn units_json(
             let aliases: Vec<String> = u.aliases().iter().map(|a| json_string(a)).collect();
             let dims: Vec<String> = u.dim().exponents().iter().map(ToString::to_string).collect();
             format!(
-                "{{\"id\":{},\"symbol\":{},\"name\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"source\":{},\"origin\":{}}}",
+                "{{\"id\":{},\"symbol\":{},\"name\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"status\":{},\"prefixes\":{},\"namespace\":{},\"source\":{},\"origin\":{}}}",
                 json_string(u.id()),
                 json_string(u.symbol()),
                 json_string(u.name()),
@@ -1780,6 +1782,7 @@ fn units_json(
                 dims.join(","),
                 json_string(u.kind().name()),
                 json_string(u.exactness().name()),
+                json_string(u.status().name()),
                 json_string(u.prefixes().name()),
                 json_string(u.namespace()),
                 json_string(u.source()),
@@ -1878,6 +1881,8 @@ struct Detail {
     dim: Dim,
     quantity_kind: &'static str,
     exactness: &'static str,
+    /// `current` or `legacy` (ADR-026); a prefixed or user unit is `current`.
+    status: &'static str,
     /// Only for a table unit.
     prefixes: Option<&'static str>,
     namespace: Option<String>,
@@ -1910,6 +1915,7 @@ fn unit_detail(
             dim: u.dim(),
             quantity_kind: u.kind().name(),
             exactness: u.exactness().name(),
+            status: u.status().name(),
             prefixes: Some(u.prefixes().name()),
             namespace: Some(u.namespace().to_string()),
             factor: u.factor().to_fraction_string(),
@@ -1953,6 +1959,7 @@ fn unit_detail(
         dim: e.dim(),
         quantity_kind: e.kind().name(),
         exactness: e.exactness().name(),
+        status: "current",
         prefixes: None,
         namespace: None,
         factor: e.factor().to_fraction_string(),
@@ -1995,6 +2002,7 @@ fn detail_text(d: &Detail) -> String {
     line("dimension", d.dim.to_string());
     line("quantity kind", d.quantity_kind.to_string());
     line("exactness", d.exactness.to_string());
+    line("status", d.status.to_string());
     if let Some(p) = d.prefixes {
         line("prefixes", p.to_string());
     }
@@ -2037,7 +2045,7 @@ fn detail_json(d: &Detail, warnings: &[String]) -> String {
     let opt = |v: Option<&str>| v.map_or_else(|| "null".to_string(), json_string);
     let dims: Vec<String> = d.dim.exponents().iter().map(ToString::to_string).collect();
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"id\":{},\"symbol\":{},\"name\":{},\"prefix\":{},\"base\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"note\":{},\"origin\":{},\"mapping\":{}}},\"warnings\":{}}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"id\":{},\"symbol\":{},\"name\":{},\"prefix\":{},\"base\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"status\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"note\":{},\"origin\":{},\"mapping\":{}}},\"warnings\":{}}}",
         json_string(&schema_id("units")),
         json_string(&dimvexa::data_version()),
         json_string(&d.id),
@@ -2066,6 +2074,7 @@ fn detail_json(d: &Detail, warnings: &[String]) -> String {
         dims.join(","),
         json_string(d.quantity_kind),
         json_string(d.exactness),
+        json_string(d.status),
         opt(d.prefixes),
         opt(d.namespace.as_deref()),
         json_string(&d.factor),

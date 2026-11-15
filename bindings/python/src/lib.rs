@@ -510,7 +510,8 @@ fn units(configs: Option<Vec<String>>, config_texts: Option<Vec<String>>) -> PyR
 }
 
 /// Details of one unit (a table unit, or one a config defines, or a name a config maps), or
-/// `None` if the symbol is not a unit. A unit a config defines has `defined_in` (`file:line`).
+/// `None` if the symbol is not a unit. `status` is `current` or `legacy` (ADR-026). A unit a config
+/// defines has `defined_in` (`file:line`).
 #[pyfunction]
 #[pyo3(signature = (symbol, *, configs = None, config_texts = None))]
 fn unit_info<'py>(
@@ -544,6 +545,7 @@ fn unit_info<'py>(
     d.set_item("factor", u.factor().to_fraction_string())?;
     d.set_item("offset", u.offset().to_fraction_string())?;
     d.set_item("exactness", u.exactness().to_string())?;
+    d.set_item("status", u.status().to_string())?;
     d.set_item("namespace", u.namespace())?;
     d.set_item("source", u.source())?;
     d.set_item("note", u.note())?;

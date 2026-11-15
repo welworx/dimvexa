@@ -1,38 +1,38 @@
-# columns: id, symbol, name, quantity_kind, exactness, prefixes, aliases, source
+# columns: id, symbol, name, quantity_kind, exactness, status, prefixes, aliases, source
 
 ## volume
-L	L	Litre	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
-gal_us	gal_us	US liquid gallon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gallon, U.S. = 3.785 412 E-03 m^3); NIST Handbook 44, Appendix C (231 in^3)
-gal_imp	gal_imp	Imperial gallon	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (4.54609 dm^3); NIST SP 811 (2008), Appendix B (gallon, Canadian and U.K.)
-pt_us	pt_us	US liquid pint	plain	defined	none	-	NIST SP 811 (2008), Appendix B (pint, U.S. liquid)
-pt_imp	pt_imp	Imperial pint	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part IV (pint = 0.568 261 25 dm^3)
-fl_oz_us	fl_oz_us	US fluid ounce	plain	defined	none	-	NIST SP 811 (2008), Appendix B (fluid ounce, U.S. = 2.957 353 E-05 m^3); NIST Handbook 44, Appendix C (1 gallon = 128 fluid ounces)
-cup_us	cup_us	US cup	plain	defined	none	-	NIST SP 811 (2008), Appendix B (cup, U.S. liquid measure)
-qt_us	qt_us	US liquid quart	plain	defined	none	-	NIST SP 811 (2008), Appendix B (quart, U.S. liquid)
-tbsp_us	tbsp_us	US tablespoon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (tablespoon, U.S.)
-tsp_us	tsp_us	US teaspoon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (teaspoon, U.S.)
-fl_oz_imp	fl_oz_imp	Imperial fluid ounce	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (fluid ounce = 1/20 pint)
-qt_imp	qt_imp	Imperial quart	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (quart = 1/4 gallon)
-bbl	bbl	Oil barrel	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)
-gill_imp	gill_imp	Imperial gill	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); gill = 1/4 pint = 5 fl oz
-peck_imp	peck_imp	Imperial peck	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); peck = 2 gallons
-bushel_imp	bushel_imp	Imperial bushel	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); bushel = 8 gallons
-quarter_vol_imp	quarter_vol_imp	Imperial quarter (volume)	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); quarter = 64 gallons
-minim_imp	minim_imp	Imperial minim	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); minim = 1/9600 pint (British apothecaries' measure)
-scruple_fl_imp	scruple_fl_imp	Fluid scruple	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid scruple = 20 minims = 1/480 pint
-drachm_fl_imp	drachm_fl_imp	Fluid drachm	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid drachm = 3 fluid scruples = 1/160 pint
-minim_us	minim_us	US minim	plain	defined	none	-	NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)
-fl_dr_us	fl_dr_us	US fluid dram	plain	defined	none	-	NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)
-gill_us	gill_us	US gill	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gill, U.S.); NIST Handbook 44 (2024), Appendix C (Units of Liquid Volume: 4 gills = 1 pint)
-bu_us	bu_us	US bushel	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 1 bushel = 2150.42 cubic inches); NIST SP 811 (2008), Appendix B (bushel, U.S. = 3.523 907 E-02 m^3)
-pk_us	pk_us	US peck	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 4 pecks = 1 bushel); NIST SP 811 (2008), Appendix B (peck, U.S. = 8.809 768 E-03 m^3)
-qt_us_dry	qt_us_dry	US dry quart	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 8 quarts = 1 peck); NIST SP 811 (2008), Appendix B (quart, U.S. dry = 1.101 221 E-03 m^3)
-pt_us_dry	pt_us_dry	US dry pint	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 2 pints = 1 quart); NIST SP 811 (2008), Appendix B (pint, U.S. dry = 5.506 105 E-04 m^3)
-acre_ft_us_survey	acre_ft_us_survey	US survey acre-foot	plain	defined	none	-	NIST SP 811 (2008), Appendix B (acre-foot, based on U.S. survey foot)
-cord	cord	Cord	plain	defined	none	-	NIST SP 811 (2008), Appendix B (cord = 128 ft^3)
-board_ft	board_ft	Board foot	plain	defined	none	-	NIST Handbook 130 (2024), Uniform Regulation for the Method of Sale of Commodities, section 2.12.1.1 (board foot, 144 in^3)
-bbl_us_dry	bbl_us_dry	US dry barrel	plain	defined	none	-	US Code title 15, section 234 (standard barrel for fruits, vegetables and other dry commodities: a barrel of a capacity of 7056 cubic inches); NBS Miscellaneous Publication M121 (1936), section 4 Capacity
-bbl_beer_us	bbl_beer_us	US beer barrel	plain	defined	none	-	US Code title 26, section 5051(a)(1)(B) (a barrel of beer, not more than 31 gallons, for the excise tax)
+L	L	Litre	plain	defined	current	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (Non-SI units)
+gal_us	gal_us	US liquid gallon	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (gallon, U.S. = 3.785 412 E-03 m^3); NIST Handbook 44, Appendix C (231 in^3)
+gal_imp	gal_imp	Imperial gallon	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (4.54609 dm^3); NIST SP 811 (2008), Appendix B (gallon, Canadian and U.K.)
+pt_us	pt_us	US liquid pint	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (pint, U.S. liquid)
+pt_imp	pt_imp	Imperial pint	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part IV (pint = 0.568 261 25 dm^3)
+fl_oz_us	fl_oz_us	US fluid ounce	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (fluid ounce, U.S. = 2.957 353 E-05 m^3); NIST Handbook 44, Appendix C (1 gallon = 128 fluid ounces)
+cup_us	cup_us	US cup	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (cup, U.S. liquid measure)
+qt_us	qt_us	US liquid quart	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (quart, U.S. liquid)
+tbsp_us	tbsp_us	US tablespoon	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (tablespoon, U.S.)
+tsp_us	tsp_us	US teaspoon	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (teaspoon, U.S.)
+fl_oz_imp	fl_oz_imp	Imperial fluid ounce	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (fluid ounce = 1/20 pint)
+qt_imp	qt_imp	Imperial quart	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (quart = 1/4 gallon)
+bbl	bbl	Oil barrel	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)
+gill_imp	gill_imp	Imperial gill	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); gill = 1/4 pint = 5 fl oz
+peck_imp	peck_imp	Imperial peck	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); peck = 2 gallons
+bushel_imp	bushel_imp	Imperial bushel	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); bushel = 8 gallons
+quarter_vol_imp	quarter_vol_imp	Imperial quarter (volume)	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); quarter = 64 gallons
+minim_imp	minim_imp	Imperial minim	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); minim = 1/9600 pint (British apothecaries' measure)
+scruple_fl_imp	scruple_fl_imp	Fluid scruple	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid scruple = 20 minims = 1/480 pint
+drachm_fl_imp	drachm_fl_imp	Fluid drachm	plain	defined	current	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid drachm = 3 fluid scruples = 1/160 pint
+minim_us	minim_us	US minim	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)
+fl_dr_us	fl_dr_us	US fluid dram	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)
+gill_us	gill_us	US gill	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (gill, U.S.); NIST Handbook 44 (2024), Appendix C (Units of Liquid Volume: 4 gills = 1 pint)
+bu_us	bu_us	US bushel	plain	defined	current	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 1 bushel = 2150.42 cubic inches); NIST SP 811 (2008), Appendix B (bushel, U.S. = 3.523 907 E-02 m^3)
+pk_us	pk_us	US peck	plain	defined	current	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 4 pecks = 1 bushel); NIST SP 811 (2008), Appendix B (peck, U.S. = 8.809 768 E-03 m^3)
+qt_us_dry	qt_us_dry	US dry quart	plain	defined	current	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 8 quarts = 1 peck); NIST SP 811 (2008), Appendix B (quart, U.S. dry = 1.101 221 E-03 m^3)
+pt_us_dry	pt_us_dry	US dry pint	plain	defined	current	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 2 pints = 1 quart); NIST SP 811 (2008), Appendix B (pint, U.S. dry = 5.506 105 E-04 m^3)
+acre_ft_us_survey	acre_ft_us_survey	US survey acre-foot	plain	defined	legacy	none	-	NIST SP 811 (2008), Appendix B (acre-foot, based on U.S. survey foot)
+cord	cord	Cord	plain	defined	current	none	-	NIST SP 811 (2008), Appendix B (cord = 128 ft^3)
+board_ft	board_ft	Board foot	plain	defined	current	none	-	NIST Handbook 130 (2024), Uniform Regulation for the Method of Sale of Commodities, section 2.12.1.1 (board foot, 144 in^3)
+bbl_us_dry	bbl_us_dry	US dry barrel	plain	defined	current	none	-	US Code title 15, section 234 (standard barrel for fruits, vegetables and other dry commodities: a barrel of a capacity of 7056 cubic inches); NBS Miscellaneous Publication M121 (1936), section 4 Capacity
+bbl_beer_us	bbl_beer_us	US beer barrel	plain	defined	current	none	-	US Code title 26, section 5051(a)(1)(B) (a barrel of beer, not more than 31 gallons, for the excise tax)
 
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note

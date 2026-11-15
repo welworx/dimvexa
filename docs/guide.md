@@ -37,7 +37,7 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 
 | Group | Unit ids |
 |---|---|
-| length | `m`, `au`, `angstrom`, `in`, `ft`, `yd`, `mi`, `nmi`, `ft_us_survey`, `mi_us_survey`, `ly`, `twip`, `thou`, `barleycorn`, `hand`, `link_int`, `rod_int`, `chain_int`, `furlong_int`, `league_int`, `fathom_ft`, `fathom_nmi`, `cable_int`, `mil`, `link_us_survey`, `rod_us_survey`, `chain_us_survey`, `furlong_us_survey`, `fathom_us_survey`, `cable_us_survey` |
+| length | `m`, `au`, `angstrom`, `in`, `ft`, `yd`, `mi`, `nmi`, `ft_us_survey`, `mi_us_survey`, `ly`, `twip`, `thou`, `barleycorn`, `hand`, `link_int`, `rod_int`, `chain_int`, `furlong_int`, `league_int`, `fathom_ft`, `fathom_nmi`, `cable_int`, `mil`, `link_us_survey`, `rod_us_survey`, `chain_us_survey`, `furlong_us_survey`, `fathom_us_survey`, `cable_us_survey`, `cable_ft` |
 | mass | `g`, `tonne`, `Da`, `lb`, `oz_av`, `oz_troy`, `ton_short`, `ton_long`, `grain`, `carat`, `dram_av`, `stone`, `quarter_mass_imp`, `cwt_long`, `slug`, `cwt_short`, `dwt`, `lb_troy`, `scruple_ap`, `dram_ap` |
 | time | `s`, `min`, `h`, `d`, `week`, `yr_common`, `yr_julian` |
 | electric_current | `A` |
@@ -121,6 +121,7 @@ ton_short
   dimension     kg
   quantity kind plain
   exactness     defined
+  status        current
   prefixes      none
   namespace     std
   factor to SI  45359237/50000
@@ -199,7 +200,9 @@ error[ambiguous_symbol]: 'oz' is ambiguous: use oz_av or oz_troy or fl_oz_us or 
 **Historic units.** NIST and NOAA retired the US survey foot on 1 January 2023, so `us-customary`
 maps the bare `mile`, `chain`, `link`, `rod` and `furlong` to the international units. The survey
 ones are kept for land records from before 2023: always by id (`chain_us_survey`, `mi_us_survey`,
-`acre_us_survey`, ...), and as bare names with `--config us-survey`. Their notes say "legacy".
+`acre_us_survey`, ...), and as bare names with `--config us-survey`. They carry `status = legacy`
+(ADR-026): `dimvexa units chain_us_survey` shows it, `dimvexa units --json` has a `status` field
+on every unit, and the note says why. A legacy unit converts like any other; nothing is refused.
 
 ```console
 $ dimvexa convert 1 chain m --config us-customary
@@ -367,6 +370,7 @@ bbl_oil
   dimension     m^3
   quantity kind plain
   exactness     defined
+  status        current
   prefixes      si
   namespace     user
   factor to SI  9936705933/62500000000

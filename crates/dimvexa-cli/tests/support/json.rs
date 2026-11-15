@@ -300,6 +300,7 @@ pub fn check_units_schema(v: &V) {
             "dimension",
             "quantity_kind",
             "exactness",
+            "status",
             "prefixes",
             "namespace",
             "source",
@@ -322,6 +323,7 @@ pub fn check_units_schema(v: &V) {
             .contains(&u.get("quantity_kind").unwrap().as_str())
         );
         assert!(["defined", "measured"].contains(&u.get("exactness").unwrap().as_str()));
+        assert!(["current", "legacy"].contains(&u.get("status").unwrap().as_str()));
         assert!(["none", "si", "si_binary"].contains(&u.get("prefixes").unwrap().as_str()));
         assert_ne!(u.get("source").unwrap().as_str(), "");
         let _ = u.get("aliases").unwrap().as_array();
@@ -353,6 +355,7 @@ pub fn check_unit_detail_schema(v: &V) {
         "dimension",
         "quantity_kind",
         "exactness",
+        "status",
         "prefixes",
         "namespace",
         "factor",

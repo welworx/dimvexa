@@ -158,6 +158,46 @@ impl Exactness {
     }
 }
 
+/// Whether a unit is in current use or kept for historic data (ADR-026).
+///
+/// A `Legacy` unit still converts exactly like any other; the flag only tells a reader that the
+/// unit is retired or superseded (for example the US survey foot, retired on 2023-01-01).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[non_exhaustive]
+pub enum Status {
+    /// In current use.
+    Current,
+    /// Retired or superseded; kept for historic data.
+    Legacy,
+}
+
+impl Status {
+    /// The stable lower-case name used in data files and JSON output.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Current => "current",
+            Self::Legacy => "legacy",
+        }
+    }
+
+    /// Reads a name produced by [`Status::name`].
+    #[must_use]
+    pub fn from_name(name: &str) -> Option<Self> {
+        match name {
+            "current" => Some(Self::Current),
+            "legacy" => Some(Self::Legacy),
+            _ => None,
+        }
+    }
+}
+
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.name())
+    }
+}
+
 impl fmt::Display for Exactness {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.name())

@@ -598,13 +598,10 @@ fn us_customary_maps_the_active_names_and_us_survey_the_legacy_ones() {
     ] {
         assert_eq!(factor(&us, bare, to), factor(&us, id, to), "{bare}");
     }
-    // fathom and cable stay refused: the US and other definitions differ
-    for name in ["fathom", "cable"] {
-        assert_eq!(
-            us.conversion(name, "m").unwrap_err().code(),
-            "ambiguous_symbol"
-        );
-    }
+    // fathom is 6 ft and cable is 720 ft in US usage (Handbook 44)
+    assert_eq!(factor(&us, "fathom", "m"), factor(&us, "fathom_ft", "m"));
+    assert_eq!(factor(&us, "cable", "m"), factor(&us, "cable_ft", "m"));
+    assert_ne!(factor(&us, "cable", "m"), factor(&us, "cable_int", "m"));
     let survey = bundled_registry(&["us-survey"]);
     for (bare, id) in [
         ("mile", "mi_us_survey"),

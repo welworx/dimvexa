@@ -1024,3 +1024,11 @@ from = "township_us_survey"
 to = "section_us_survey"
 expect = "36"
 source = "Hand derivation: 6 mi * 6 mi = 36 mi^2, 36 sections of 1 mi^2"
+
+[[vector]]
+unit = "cable_ft"
+value = "1"
+from = "cable_ft"
+to = "m"
+expect = "219.456"
+source = "Hand derivation: 720 ft * 0.3048 m/ft = 219.456 m (international foot, 1959 agreement); 120 fathoms * 1.8288 m"

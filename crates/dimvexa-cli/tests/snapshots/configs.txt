@@ -1,5 +1,5 @@
 # columns: name, names, units, constants, hash
-us-customary	14	0	0	fnv1a64:<hash>
+us-customary	16	0	0	fnv1a64:<hash>
 us-survey	7	0	0	fnv1a64:<hash>
 imperial	17	0	0	fnv1a64:<hash>
 metric-trade	2	0	0	fnv1a64:<hash>
