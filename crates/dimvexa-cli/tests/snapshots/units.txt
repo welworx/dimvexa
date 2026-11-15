@@ -264,6 +264,12 @@ slug	slug	Slug	plain	defined	none	-	NIST SP 811 (2008), Appendix B (slug = 1.459
 
 ## volume
 board_ft	board_ft	Board foot	plain	defined	none	-	NIST Handbook 130 (2024), Uniform Regulation for the Method of Sale of Commodities, section 2.12.1.1 (board foot, 144 in^3)
+bbl_us_dry	bbl_us_dry	US dry barrel	plain	defined	none	-	NBS Miscellaneous Publication M121 (1936), section 4 Capacity (barrel for fruits, vegetables and other dry commodities, 7056 cubic inches, as fixed by the standard barrel act, 15 U.S.C. ch. 6)
+
+## length
+hand	hand	Hand	plain	defined	none	-	NBS Miscellaneous Publication M121 (1936), section 1 Length (1 hand = 4 inches)
+fathom_us_survey	fathom_us_survey	US survey fathom	plain	defined	none	-	NIST SP 811 (2008), Appendix B (fathom, based on U.S. survey foot, 1.828 804 E+00 m); NIST Handbook 44 (2024), Appendix C (1 fathom = 6 feet)
+cable_us_survey	cable_us_survey	US survey cable length	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 cable's length = 720 feet = 120 fathoms)
 
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note

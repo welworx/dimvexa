@@ -19,7 +19,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Added
 
-- US customary units, each with a NIST SP 811 or Handbook 44 source and a golden vector: `mil`, survey `link_us_survey`, `rod_us_survey`, `chain_us_survey`, `furlong_us_survey`; `minim_us`, `fl_dr_us`, `gill_us`, dry `pt_us_dry`, `qt_us_dry`, `pk_us`, `bu_us`, `acre_ft_us_survey`, `cord`, `board_ft`; `dram_av`, `cwt_short`, `cwt_long`, `dwt`, `lb_troy`, `scruple_ap`, `dram_ap`, `slug`; `ozf`, `kip`, `pdl`. The bare name `cwt` is ambiguous.
+- US customary units, each with a NIST SP 811 or Handbook 44 source and a golden vector: `mil`, survey `link_us_survey`, `rod_us_survey`, `chain_us_survey`, `furlong_us_survey`; `minim_us`, `fl_dr_us`, `gill_us`, dry `pt_us_dry`, `qt_us_dry`, `pk_us`, `bu_us`, `acre_ft_us_survey`, `cord`, `board_ft`, `bbl_us_dry`, `hand`, `fathom_us_survey`, `cable_us_survey`; `dram_av`, `cwt_short`, `cwt_long`, `dwt`, `lb_troy`, `scruple_ap`, `dram_ap`, `slug`; `ozf`, `kip`, `pdl`. The bare name `cwt` is ambiguous.
 - `cargo xtask bench-impact --guard` and a pre-commit step: a commit that stages a hot-path file is blocked until `bench-impact` has run for the current hot-path files; commits that touch only docs, skills, workflows or other crates are not affected.
 - Tests: `ratio_model` (equality, order and integrality against an independent `i128` model) and `roundtrip` (A to B to A is the identity in exact arithmetic and stays within 3 ulp, linear, or 8 ulp of the larger operand, affine, on the fast path).
 

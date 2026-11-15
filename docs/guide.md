@@ -37,7 +37,7 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 
 | Group | Unit ids |
 |---|---|
-| length | `m`, `au`, `angstrom`, `in`, `ft`, `yd`, `mi`, `nmi`, `ft_us_survey`, `mi_us_survey`, `ly`, `mil`, `link_us_survey`, `rod_us_survey`, `chain_us_survey`, `furlong_us_survey` |
+| length | `m`, `au`, `angstrom`, `in`, `ft`, `yd`, `mi`, `nmi`, `ft_us_survey`, `mi_us_survey`, `ly`, `mil`, `link_us_survey`, `rod_us_survey`, `chain_us_survey`, `furlong_us_survey`, `hand`, `fathom_us_survey`, `cable_us_survey` |
 | mass | `g`, `tonne`, `Da`, `lb`, `oz_av`, `oz_troy`, `ton_short`, `ton_long`, `grain`, `carat`, `dram_av`, `cwt_short`, `cwt_long`, `dwt`, `lb_troy`, `scruple_ap`, `dram_ap`, `slug` |
 | time | `s`, `min`, `h`, `d`, `week`, `yr_common`, `yr_julian` |
 | electric_current | `A` |
@@ -57,7 +57,7 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | magnetic_flux | `Wb` |
 | magnetic_flux_density | `T` |
 | inductance | `H` |
-| volume | `m3`, `dm3`, `cm3`, `mm3`, `km3`, `in3`, `ft3`, `yd3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp`, `bbl`, `Nm3`, `scf`, `minim_us`, `fl_dr_us`, `gill_us`, `bu_us`, `pk_us`, `qt_us_dry`, `pt_us_dry`, `acre_ft_us_survey`, `cord`, `board_ft` |
+| volume | `m3`, `dm3`, `cm3`, `mm3`, `km3`, `in3`, `ft3`, `yd3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp`, `bbl`, `Nm3`, `scf`, `minim_us`, `fl_dr_us`, `gill_us`, `bu_us`, `pk_us`, `qt_us_dry`, `pt_us_dry`, `acre_ft_us_survey`, `cord`, `board_ft`, `bbl_us_dry` |
 | area | `m2`, `dm2`, `cm2`, `mm2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `ar`, `ha`, `acre_int`, `acre_us_survey` |
 | absorbed_dose | `Gy`, `Sv` |
 | illuminance | `lx` |

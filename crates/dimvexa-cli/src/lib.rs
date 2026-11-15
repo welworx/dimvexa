@@ -2761,7 +2761,7 @@ mod tests {
         assert!(out.lines().any(|l| l.starts_with("ton\t")));
         let (code, out, _) = run_str(&["units", "--groups"]);
         assert_eq!(code, 0);
-        assert!(out.lines().any(|l| l == "volume\t25"));
+        assert!(out.lines().any(|l| l == "volume\t26"));
         let (code, out, _) = run_str(&["units", "psi"]);
         assert_eq!(code, 0);
         assert!(out.contains("group         pressure"));

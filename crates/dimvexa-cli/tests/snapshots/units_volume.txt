@@ -26,6 +26,7 @@ pt_us_dry	pt_us_dry	US dry pint	plain	defined	none	-	NIST Handbook 44 (2024), Ap
 acre_ft_us_survey	acre_ft_us_survey	US survey acre-foot	plain	defined	none	-	NIST SP 811 (2008), Appendix B (acre-foot, based on U.S. survey foot)
 cord	cord	Cord	plain	defined	none	-	NIST SP 811 (2008), Appendix B (cord = 128 ft^3)
 board_ft	board_ft	Board foot	plain	defined	none	-	NIST Handbook 130 (2024), Uniform Regulation for the Method of Sale of Commodities, section 2.12.1.1 (board foot, 144 in^3)
+bbl_us_dry	bbl_us_dry	US dry barrel	plain	defined	none	-	NBS Miscellaneous Publication M121 (1936), section 4 Capacity (barrel for fruits, vegetables and other dry commodities, 7056 cubic inches, as fixed by the standard barrel act, 15 U.S.C. ch. 6)
 
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note

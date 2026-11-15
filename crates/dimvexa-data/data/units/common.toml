@@ -1332,3 +1332,63 @@ prefixes = "none"
 namespace = "std"
 source = "NIST Handbook 130 (2024), Uniform Regulation for the Method of Sale of Commodities, section 2.12.1.1 (board foot, 144 in^3)"
 note = "board foot = 1 ft x 1 ft x 1 in = 144 in^3 = 2.359737216 L"
+
+[[unit]]
+id = "bbl_us_dry"
+name = "US dry barrel"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "903336903/7812500000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NBS Miscellaneous Publication M121 (1936), section 4 Capacity (barrel for fruits, vegetables and other dry commodities, 7056 cubic inches, as fixed by the standard barrel act, 15 U.S.C. ch. 6)"
+note = "dry barrel = 7056 in^3 = 115.627123584 L (about 105 dry quarts, M121 rounds it); the bare word bbl is the 42 gal petroleum barrel; cranberry and liquid barrels are not included"
+
+[[unit]]
+id = "hand"
+name = "Hand"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "127/1250"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NBS Miscellaneous Publication M121 (1936), section 1 Length (1 hand = 4 inches)"
+note = "hand = 4 in = 101.6 mm (the unit used for the height of horses)"
+
+[[unit]]
+id = "fathom_us_survey"
+name = "US survey fathom"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "7200/3937"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (fathom, based on U.S. survey foot, 1.828 804 E+00 m); NIST Handbook 44 (2024), Appendix C (1 fathom = 6 feet)"
+note = "fathom = 6 survey feet = 7200/3937 m; deprecated with the survey foot from 2023-01-01, kept for legacy data"
+
+[[unit]]
+id = "cable_us_survey"
+name = "US survey cable length"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "864000/3937"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 cable's length = 720 feet = 120 fathoms)"
+note = "cable's length = 720 survey feet = 120 fathom_us_survey = 864000/3937 m; deprecated with the survey foot"

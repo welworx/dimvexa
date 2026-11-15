@@ -776,3 +776,35 @@ from = "board_ft"
 to = "ft^3"
 expect = "1"
 source = "Hand derivation: 12 board feet = 12 * 144 in^3 = 1728 in^3 = 1 ft^3 (12 in per ft, cubed)"
+
+[[vector]]
+unit = "bbl_us_dry"
+value = "1"
+from = "bbl_us_dry"
+to = "in^3"
+expect = "7056"
+source = "NIST Circular 593 (1958), Standard Apple-Barrel Act of 1912 and Standard Barrel Act of 1915: a standard barrel of 7056 cubic inches"
+
+[[vector]]
+unit = "hand"
+value = "1"
+from = "hand"
+to = "mm"
+expect = "101.6"
+source = "Hand derivation: 4 in * 25.4 mm/in (international inch, 1959 agreement)"
+
+[[vector]]
+unit = "fathom_us_survey"
+value = "1"
+from = "fathom_us_survey"
+to = "m"
+expect = "7200/3937"
+source = "Hand derivation: 6 * 1200/3937 m = 7200/3937 m = 1.828804 m (SP 811 prints 1.828 804)"
+
+[[vector]]
+unit = "cable_us_survey"
+value = "1"
+from = "cable_us_survey"
+to = "ft_us_survey"
+expect = "720"
+source = "Hand derivation: 120 fathoms * 6 ft = 720 ft (Handbook 44 App. C)"
