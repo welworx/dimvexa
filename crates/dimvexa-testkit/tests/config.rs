@@ -559,20 +559,26 @@ fn us_and_gb_resolve_the_regional_names() {
     assert_eq!(factor(&us, "gal", "L"), factor(&us, "gal_us", "L"));
     assert_eq!(factor(&us, "pt", "L"), factor(&us, "pt_us", "L"));
     assert_eq!(factor(&us, "qt", "L"), factor(&us, "qt_us", "L"));
-    let gb = bundled_registry(&["gb"]);
-    assert_eq!(factor(&gb, "ton", "kg"), factor(&gb, "ton_long", "kg"));
-    assert_eq!(factor(&gb, "gal", "L"), factor(&gb, "gal_imp", "L"));
+    let imperial = bundled_registry(&["imperial"]);
+    assert_eq!(
+        factor(&imperial, "ton", "kg"),
+        factor(&imperial, "ton_long", "kg")
+    );
+    assert_eq!(
+        factor(&imperial, "gal", "L"),
+        factor(&imperial, "gal_imp", "L")
+    );
     // The US and the UK gallon differ, so the same name gives different answers per config.
-    assert_ne!(factor(&us, "gal", "L"), factor(&gb, "gal", "L"));
+    assert_ne!(factor(&us, "gal", "L"), factor(&imperial, "gal", "L"));
     // oz stays refused: mass or volume, in both countries
-    for reg in [&us, &gb] {
+    for reg in [&us, &imperial] {
         assert_eq!(
             reg.conversion("oz", "g").unwrap_err().code(),
             "ambiguous_symbol"
         );
     }
-    // later wins: us then gb gives the British ton
-    let both = bundled_registry(&["us", "gb"]);
+    // later wins: us then imperial gives the British ton
+    let both = bundled_registry(&["us", "imperial"]);
     assert_eq!(factor(&both, "ton", "kg"), factor(&both, "ton_long", "kg"));
 }
 

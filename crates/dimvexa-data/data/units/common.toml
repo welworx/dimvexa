@@ -861,3 +861,393 @@ prefixes = "none"
 namespace = "std"
 source = "NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)"
 note = "petroleum (oil) barrel = 42 gal_us = 42 * 231 in^3 = 158.987294928 L exactly. The US liquid barrel (31.5 gal) and the dry barrel (7056 in^3) are different units and not included, so read bbl as the oil barrel only"
+
+[[unit]]
+id = "twip"
+name = "Twip"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "127/7200000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "Imperial typographic unit: 1 twip = 1/20 point = 1/1440 in (international inch, International yard and pound agreement 1959)"
+note = "twip = ft/17280 = in/1440"
+
+[[unit]]
+id = "thou"
+name = "Thou (mil)"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "127/5000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International yard and pound agreement (1959): 1 in = 0.0254 m; thou = 1/1000 in"
+note = "thou = in/1000 = 25.4 um; also called mil (the bare word mil is not accepted)"
+
+[[unit]]
+id = "barleycorn"
+name = "Barleycorn"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "127/15000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "Imperial length relations: 3 barleycorns = 1 in (international inch, 1959 agreement)"
+note = "barleycorn = in/3"
+
+[[unit]]
+id = "hand"
+name = "Hand"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "127/1250"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "Imperial length relations: 1 hand = 4 in (international inch, 1959 agreement)"
+note = "hand = 4 in = 0.1016 m"
+
+[[unit]]
+id = "link_int"
+name = "Gunter's link (international)"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "12573/62500"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "Imperial length relations: 100 links = 1 chain = 66 ft (international foot, 1959 agreement)"
+note = "link = 0.66 ft = 0.201168 m; the US survey link differs by about 2 ppm"
+
+[[unit]]
+id = "rod_int"
+name = "Rod (pole, perch)"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "12573/2500"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "Imperial length relations: 1 rod = 5.5 yd = 16.5 ft (international foot, 1959 agreement)"
+note = "rod = 16.5 ft = 5.0292 m"
+
+[[unit]]
+id = "chain_int"
+name = "Chain (Gunter's)"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "12573/625"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "Imperial length relations: 1 chain = 22 yd = 66 ft (international foot, 1959 agreement)"
+note = "chain = 66 ft = 20.1168 m; the US survey chain differs by about 2 ppm"
+
+[[unit]]
+id = "furlong_int"
+name = "Furlong"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "25146/125"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "Imperial length relations: 1 furlong = 220 yd = 660 ft (international foot, 1959 agreement)"
+note = "furlong = 660 ft = 201.168 m"
+
+[[unit]]
+id = "league_int"
+name = "League"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "603504/125"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "Imperial length relations: 1 league = 3 mi (international mile = 5280 ft, 1959 agreement)"
+note = "league = 3 mi = 15 840 ft = 4828.032 m"
+
+[[unit]]
+id = "fathom_ft"
+name = "Fathom (6 ft)"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1143/625"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "Imperial length relations: 1 fathom = 6 ft (international foot, 1959 agreement)"
+note = "fathom = 6 ft = 1.8288 m; the British Admiralty used this value in practice (while the fathom was nominally 1/1000 of the then 6080 ft Admiralty mile); fathom_nmi is 1/1000 of the international nautical mile; the bare word fathom is ambiguous and rejected"
+
+[[unit]]
+id = "fathom_nmi"
+name = "Fathom (1/1000 nautical mile)"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "463/250"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International nautical mile = 1852 m (International Hydrographic Conference 1929); fathom = 1/1000 nautical mile"
+note = "fathom = nmi/1000 = 1.852 m (about 6.0761 ft); 100 of them make one cable_int; the bare word fathom is ambiguous and rejected; the pre-1970 Admiralty mile (6080 ft) is not shipped"
+
+[[unit]]
+id = "cable_int"
+name = "Cable (international)"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "926/5"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International nautical mile = 1852 m (International Hydrographic Conference 1929); cable = 1/10 nautical mile"
+note = "cable = nmi/10 = 185.2 m; the UK Admiralty (608 ft) and US (720 ft) cables differ"
+
+[[unit]]
+id = "perch_sq"
+name = "Square perch"
+aliases = []
+dim = [0, 2, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "158080329/6250000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "Imperial area relations: 1 square perch = 1 rod x 1 rod = 272.25 ft^2 (international foot, 1959 agreement)"
+note = "square rod = 30.25 yd^2 = 25.29285264 m^2"
+
+[[unit]]
+id = "rood"
+name = "Rood"
+aliases = []
+dim = [0, 2, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "158080329/156250"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "Imperial area relations: 1 rood = 1210 yd^2 = 1/4 acre (international yard, 1959 agreement)"
+note = "rood = 40 square perches = 10 890 ft^2 = 1011.7141056 m^2"
+
+[[unit]]
+id = "gill_imp"
+name = "Imperial gill"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "454609/3200000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); gill = 1/4 pint = 5 fl oz"
+note = "imperial gill = gal_imp/32 = 142.0653125 mL"
+
+[[unit]]
+id = "peck_imp"
+name = "Imperial peck"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "454609/50000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); peck = 2 gallons"
+note = "imperial peck = 2 gal_imp = 9.09218 L"
+
+[[unit]]
+id = "bushel_imp"
+name = "Imperial bushel"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "454609/12500000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); bushel = 8 gallons"
+note = "imperial bushel = 8 gal_imp = 36.36872 L"
+
+[[unit]]
+id = "quarter_vol_imp"
+name = "Imperial quarter (volume)"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "454609/1562500"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); quarter = 64 gallons"
+note = "imperial quarter (volume) = 64 gal_imp = 290.94976 L"
+
+[[unit]]
+id = "minim_imp"
+name = "Imperial minim"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "454609/7680000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); minim = 1/9600 pint (British apothecaries' measure)"
+note = "minim = gal_imp/76800 = 59.1938802083... uL"
+
+[[unit]]
+id = "scruple_fl_imp"
+name = "Fluid scruple"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "454609/384000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid scruple = 20 minims = 1/480 pint"
+note = "fluid scruple = gal_imp/3840 = 20 minims"
+
+[[unit]]
+id = "drachm_fl_imp"
+name = "Fluid drachm"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "454609/128000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid drachm = 3 fluid scruples = 1/160 pint"
+note = "fluid drachm = gal_imp/1280 = 3.5516328125 mL; 8 fluid drachms = 1 fl oz"
+
+[[unit]]
+id = "dram_av"
+name = "Avoirdupois dram"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "45359237/25600000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International yard and pound agreement (1959): 1 lb = 0.45359237 kg; dram = 1/16 oz = 1/256 lb"
+note = "dram = lb/256 = 1.7718451953125 g; the apothecaries' dram (60 grains) is a different unit"
+
+[[unit]]
+id = "stone"
+name = "Stone"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "317514659/50000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International yard and pound agreement (1959): 1 lb = 0.45359237 kg; stone = 14 lb"
+note = "stone = 14 lb = 6.35029318 kg"
+
+[[unit]]
+id = "quarter_mass_imp"
+name = "Imperial quarter (mass)"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "317514659/25000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International yard and pound agreement (1959): 1 lb = 0.45359237 kg; quarter = 28 lb = 2 stone"
+note = "quarter (mass) = 28 lb = 12.70058636 kg"
+
+[[unit]]
+id = "cwt_long"
+name = "Long hundredweight"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "317514659/6250000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International yard and pound agreement (1959): 1 lb = 0.45359237 kg; hundredweight = 112 lb = 8 stone"
+note = "long hundredweight = 112 lb = 50.80234544 kg; the US short hundredweight is 100 lb"
+
+[[unit]]
+id = "slug"
+name = "Slug"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "8896443230521/609600000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (slug); defined as the mass accelerated 1 ft/s^2 by 1 lbf"
+note = "slug = lbf s^2 / ft = lb * g_n / ft = 14.5939029... kg"

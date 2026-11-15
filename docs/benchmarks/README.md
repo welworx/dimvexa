@@ -8,6 +8,7 @@ claim against another library without a link to a dated run (`docs/benchmarking.
 
 | Version | Report |
 |---|---|
+| 0.9.0 | [`v0.9.0.md`](v0.9.0.md): generated, measured on 2026-11-15 on the release commit 98d6479 (bench file 32bb2b9, 6 runs, 70 rows). The release adds imperial units to the table and renames a config; `bench-impact` against `origin/main` found no guarded row slower than the threshold, so there is no hand-written narrative. Many rows have a spread above 50% on this shared VM, so none is quoted as a change. **Not run:** the cross-library comparison (`comparison/v0.9.0.md`, a full `benchmarks/run_all.sh`) |
 | 0.6.0 | [`v0.6.0.md`](v0.6.0.md): generated, measured on 2026-11-12 as a released version (tag commit b7e3e19) with the bench file of 0.7.0; no row moved beyond the noise against 0.5.1, so there is no hand-written narrative. **Not run:** the cross-library comparison (`comparison/v0.6.0.md`, a full `benchmarks/run_all.sh`) |
 | 0.7.0 | [`v0.7.0.md`](v0.7.0.md): generated, measured on 2026-11-12 on the working tree of the release preparation (bench file d3eb865, every version re-measured with it). No row of 0.6.0 moved beyond the noise (the largest, `Quantity::to_unit` +12.4%, has a 25% spread), so there is no hand-written narrative. New rows (values with constants, ADR-018 step 3) show `-` for older versions. **Not run:** the cross-library comparison (`comparison/v0.7.0.md`, a full `benchmarks/run_all.sh`) |
 | 0.5.1 | [`v0.5.1.md`](v0.5.1.md): generated, measured afterwards at the tagged commit `c1e0be3` with the bench file of 0.5.0 |

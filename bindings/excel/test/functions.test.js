@@ -131,11 +131,11 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
   // Configs (ADR-014): a shipped config resolves an otherwise ambiguous name.
   await assert.rejects(async () => associated.CONVERT(1, "ton", "kg"), /ambiguous/);
   assert.strictEqual(await associated.CONVERT(1, "ton", "kg", "", "us"), 907.18474);
-  assert.strictEqual(await associated.CONVERT(1, "ton", "kg", null, "gb"), 1016.0469088);
+  assert.strictEqual(await associated.CONVERT(1, "ton", "kg", null, "imperial"), 1016.0469088);
   assert.strictEqual(await associated.CONVERT(1, "ton", "kg", undefined, "metric-trade"), 1000);
   assert.strictEqual(await associated.CONVERT(1, "ton", "kg", "", "us, water"), 907.18474);
   assert.deepStrictEqual(await associated.CONVERTRANGE([[1, 2]], "ton", "kg", "", "us"), [[907.18474, 1814.36948]]);
-  await assert.rejects(async () => associated.CONVERT(1, "ton", "kg", "", "nope"), /no shipped config named 'nope'.*us, gb/);
+  await assert.rejects(async () => associated.CONVERT(1, "ton", "kg", "", "nope"), /no shipped config named 'nope'.*us, imperial/);
   await assert.rejects(async () => associated.CONVERT(1, "ton", "kg", "", "./us.toml"), /a file path cannot be used/);
   assert.deepStrictEqual(
     (await associated.CONVERTRANGE([[1], [2]], "L", "kg", "1000kg/m3")).flat().map((x) => +x.toFixed(9)),

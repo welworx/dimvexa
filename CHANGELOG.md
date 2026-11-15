@@ -7,6 +7,15 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-15
+### Changed
+
+- **Breaking:** the shipped config `gb` is now called `imperial` (`--config imperial`); `--config gb` is an unknown config and no alias is kept. It also maps the bare imperial names `chain`, `link`, `rod`, `furlong`, `league`, `cable`, `gill`, `peck`, `bushel`, `minim`, `dram` and `cwt`.
+
+### Added
+
+- Imperial units: `twip`, `thou`, `barleycorn`, `hand`, `link_int`, `rod_int`, `chain_int`, `furlong_int`, `league_int`, `fathom_ft`, `fathom_nmi`, `cable_int`, `perch_sq`, `rood`, `gill_imp`, `peck_imp`, `bushel_imp`, `quarter_vol_imp`, `minim_imp`, `scruple_fl_imp`, `drachm_fl_imp`, `dram_av`, `stone`, `quarter_mass_imp`, `cwt_long` and `slug`, each with a golden vector. The bare names that are ambiguous (`chain`, `dram`, `cwt`, `quarter`, ...) are refused with candidates.
+
 ## [0.8.0] - 2026-11-15
 ### Fixed
 
@@ -188,7 +197,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 ### Added
 
 - One option for configs: `--config NAME_OR_PATH`. A bare name loads a config that ships with
-  dimvexa: `us`, `gb`, `metric-trade`, `year-julian`, `year-civil` and `water`. A value with a `/`
+  dimvexa: `us`, `imperial`, `metric-trade`, `year-julian`, `year-civil` and `water`. A value with a `/`
   or ending in `.toml` is a file. Loading is left to right and a later config wins; with no
   `--config` the names stay strict SI.
 - `--density NAME_OR_VALUE`: a density from a loaded config, or your own number such as

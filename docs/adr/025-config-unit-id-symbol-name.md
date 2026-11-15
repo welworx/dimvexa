@@ -34,7 +34,7 @@ Amends [ADR-017](017-id-and-symbol.md) (a unit has an `id`, a `symbol` and a `na
 ## Consequences
 
 * Every existing config with a `[[unit]]` must rename `symbol` to `id`. The shipped configs
-  (`us`, `gb`, `metric-trade`, `year-julian`, `year-civil`, `water`) have no `[[unit]]`; the
+  (`us`, `imperial`, `metric-trade`, `year-julian`, `year-civil`, `water`) have no `[[unit]]`; the
   example configs are updated.
 * `dimvexa units NAME` shows the symbol, the name and the alias of a user unit like those of a
   shipped one.

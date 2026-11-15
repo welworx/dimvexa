@@ -78,7 +78,7 @@ Commands:
   units --groups   list only the groups (length, mass, volume, ...) and sizes
   units GROUP      list one group, for example: dimvexa units volume
   units UNIT       show one unit in detail, for example: dimvexa units psi
-  configs          list the configs that ship with dimvexa (us, gb, water, ...)
+  configs          list the configs that ship with dimvexa (us, imperial, ...)
   configs NAME     show what a config contains: names, units, constants with
                    their conditions and sources; a path shows your own file
   constants        list the constants: name, exact value, unit, conditions and
@@ -104,9 +104,10 @@ Options:
   --config NAME_OR_PATH
                    (beta) apply a config; repeatable, later ones win and a
                    warning names what they replace. A shipped one is named
-                   (us, gb, metric-trade, year-julian, year-civil, water); a
-                   file has a path (./mine.toml, or anything with a / or
-                   ending in .toml). Without --config the names stay strict.
+                   (us, imperial, metric-trade, year-julian, year-civil,
+                   water); a file has a path (./mine.toml, or anything with
+                   a / or ending in .toml). Without --config the names stay
+                   strict.
                    See docs/adr/014-one-config-mechanism.md
   --const NAME_OR_VALUE
                    density for mass <-> volume: the name of a constant of a
@@ -157,9 +158,9 @@ Options:
   --config NAME_OR_PATH
                    (beta) apply a config; repeatable, later ones win and a
                    warning names what they replace. A shipped one is named
-                   (us, gb, metric-trade, year-julian, year-civil, water); a
-                   file has a path (./mine.toml, or anything with a / or
-                   ending in .toml). See: dimvexa configs --help
+                   (us, imperial, metric-trade, year-julian, year-civil,
+                   water); a file has a path (./mine.toml, or anything with
+                   a / or ending in .toml). See: dimvexa configs --help
   --const NAME_OR_VALUE
                    density for mass <-> volume: the name of a constant of a
                    density unit (--config water --const water_25C) or your own
@@ -223,8 +224,8 @@ Examples:
   dimvexa configs us --json
 
 Forms:
-  configs          the configs that ship with dimvexa (us, gb, metric-trade,
-                   year-julian, year-civil, water)
+  configs          the configs that ship with dimvexa (us, imperial,
+                   metric-trade, year-julian, year-civil, water)
   configs NAME     its names, units, and constants with their conditions and
                    sources
   configs PATH     the same for your own file (./mine.toml, or a name with a /
@@ -2766,7 +2767,7 @@ mod tests {
         assert!(out.lines().any(|l| l.starts_with("ton\t")));
         let (code, out, _) = run_str(&["units", "--groups"]);
         assert_eq!(code, 0);
-        assert!(out.lines().any(|l| l == "volume\t13"));
+        assert!(out.lines().any(|l| l == "volume\t20"));
         let (code, out, _) = run_str(&["units", "psi"]);
         assert_eq!(code, 0);
         assert!(out.contains("group         pressure"));

@@ -994,8 +994,8 @@ pub const BUNDLED: &[Bundled] = &[
         text: include_str!("../configs/us.toml"),
     },
     Bundled {
-        name: "gb",
-        text: include_str!("../configs/gb.toml"),
+        name: "imperial",
+        text: include_str!("../configs/imperial.toml"),
     },
     Bundled {
         name: "metric-trade",
@@ -1021,7 +1021,7 @@ pub const BUNDLED: &[Bundled] = &[
 ///
 /// ```
 /// use dimvexa_config::{BUNDLED, bundled};
-/// assert!(bundled("gb").is_some() && bundled("nope").is_none());
+/// assert!(bundled("imperial").is_some() && bundled("nope").is_none());
 /// assert!(BUNDLED.iter().all(|b| bundled(b.name) == Some(b)));
 /// ```
 #[must_use]

@@ -133,3 +133,87 @@ symbol = "mo"
 candidates = []
 planned = ["month_30", "month_julian"]
 note = "same as month"
+
+[[ambiguous]]
+symbol = "chain"
+candidates = ["chain_int"]
+planned = []
+note = "international chain (66 ft = 20.1168 m) and US survey chain (about 2 ppm longer) differ"
+
+[[ambiguous]]
+symbol = "link"
+candidates = ["link_int"]
+planned = []
+note = "international Gunter's link (0.66 ft) and US survey link differ by about 2 ppm; a link is also a hyperlink"
+
+[[ambiguous]]
+symbol = "rod"
+candidates = ["rod_int"]
+planned = []
+note = "international rod (16.5 ft = 5.0292 m) and US survey rod differ by about 2 ppm"
+
+[[ambiguous]]
+symbol = "furlong"
+candidates = ["furlong_int"]
+planned = []
+note = "international furlong (660 ft) and US survey furlong differ by about 2 ppm"
+
+[[ambiguous]]
+symbol = "league"
+candidates = ["league_int"]
+planned = []
+note = "statute league (3 mi) and nautical leagues (3 nmi) differ"
+
+[[ambiguous]]
+symbol = "fathom"
+candidates = ["fathom_ft", "fathom_nmi"]
+planned = []
+note = "6 ft (1.8288 m, used by the British Admiralty) and 1/1000 nautical mile (1.852 m) differ by about 1 percent"
+
+[[ambiguous]]
+symbol = "cable"
+candidates = ["cable_int"]
+planned = []
+note = "international cable (185.2 m), UK Admiralty cable (608 ft) and US cable (720 ft) differ"
+
+[[ambiguous]]
+symbol = "gill"
+candidates = ["gill_imp"]
+planned = []
+note = "imperial gill (142.0653125 mL) and US gill (118.29411825 mL) differ"
+
+[[ambiguous]]
+symbol = "peck"
+candidates = ["peck_imp"]
+planned = []
+note = "imperial peck (2 imperial gallons) and US dry peck differ"
+
+[[ambiguous]]
+symbol = "bushel"
+candidates = ["bushel_imp"]
+planned = []
+note = "imperial bushel (8 imperial gallons) and US dry bushel differ"
+
+[[ambiguous]]
+symbol = "minim"
+candidates = ["minim_imp"]
+planned = []
+note = "imperial minim (1/9600 imperial pint) and US minim (1/7680 US liquid pint) differ"
+
+[[ambiguous]]
+symbol = "dram"
+candidates = ["dram_av"]
+planned = []
+note = "avoirdupois dram (1/16 oz), apothecaries' dram (60 grains) and the fluid drams differ"
+
+[[ambiguous]]
+symbol = "cwt"
+candidates = ["cwt_long"]
+planned = []
+note = "long hundredweight (112 lb) and short hundredweight (100 lb) differ"
+
+[[ambiguous]]
+symbol = "quarter"
+candidates = ["quarter_mass_imp", "quarter_vol_imp"]
+planned = []
+note = "imperial quarter is 28 lb as a mass and 64 imperial gallons as a volume; the US quarter is 25 lb or a quarter of a dollar or a year"
