@@ -808,3 +808,12 @@ from = "cable_us_survey"
 to = "ft_us_survey"
 expect = "720"
 source = "Hand derivation: 120 fathoms * 6 ft = 720 ft (Handbook 44 App. C)"
+
+[[vector]]
+unit = "ton_refrigeration"
+value = "1"
+from = "ton_refrigeration"
+to = "kW"
+expect = "3.516853"
+rel_tol = "1e-6"
+source = "NIST SP 1038 (2006), section 5.2.13, printed factor 3.516 853 kW (rounded to seven digits); hand derivation: 12000 * 1.055 055 852 62 kJ / 3600 s = 3.51685284 kW"

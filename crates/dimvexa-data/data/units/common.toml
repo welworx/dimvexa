@@ -1392,3 +1392,18 @@ prefixes = "none"
 namespace = "std"
 source = "NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 cable's length = 720 feet = 120 fathoms)"
 note = "cable's length = 720 survey feet = 120 fathom_us_survey = 864000/3937 m; deprecated with the survey foot"
+
+[[unit]]
+id = "ton_refrigeration"
+name = "Ton of refrigeration"
+aliases = []
+dim = [1, 2, -3, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "52752792631/15000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 1038 (2006), section 5.2.13 Power (ton, refrigeration, 12 000 Btu/h) with note 31 (the Btu is the International Table Btu)"
+note = "ton of refrigeration = 12 000 Btu_IT/h = 3516.8528420667 W; the US ton of refrigeration only, not a mass ton"

@@ -10,7 +10,7 @@ frequency	2
 force	7
 pressure	9
 energy	8
-power	3
+power	4
 electric_charge	1
 voltage	1
 resistance	1

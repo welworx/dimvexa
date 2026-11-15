@@ -271,6 +271,9 @@ hand	hand	Hand	plain	defined	none	-	NBS Miscellaneous Publication M121 (1936), s
 fathom_us_survey	fathom_us_survey	US survey fathom	plain	defined	none	-	NIST SP 811 (2008), Appendix B (fathom, based on U.S. survey foot, 1.828 804 E+00 m); NIST Handbook 44 (2024), Appendix C (1 fathom = 6 feet)
 cable_us_survey	cable_us_survey	US survey cable length	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 cable's length = 720 feet = 120 fathoms)
 
+## power
+ton_refrigeration	ton_refrigeration	Ton of refrigeration	plain	defined	none	-	NIST SP 1038 (2006), section 5.2.13 Power (ton, refrigeration, 12 000 Btu/h) with note 31 (the Btu is the International Table Btu)
+
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note
 ton	ton_short, ton_long, tonne	-	short ton (2000 lb), long ton (2240 lb) and metric tonne (1000 kg) are all called ton

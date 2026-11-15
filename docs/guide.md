@@ -48,7 +48,7 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | force | `N`, `lbf`, `dyn`, `kgf`, `ozf`, `kip`, `pdl` |
 | pressure | `Pa`, `bar`, `atm`, `psi`, `mmHg`, `torr`, `psig`, `barg`, `Pag` |
 | energy | `J`, `Wh`, `eV`, `cal_th`, `cal_IT`, `Btu_IT`, `Btu_th`, `erg` |
-| power | `W`, `hp_mech`, `hp_metric` |
+| power | `W`, `hp_mech`, `hp_metric`, `ton_refrigeration` |
 | electric_charge | `C` |
 | voltage | `V` |
 | resistance | `ohm` |
