@@ -39,7 +39,7 @@ All functions live in the `DIMVEXA` namespace. Excel ignores letter case, so
   checked even when the conversion does not need it, so a typo is never ignored. A density is never
   assumed and never computed.
 * **`config`** (optional): a shipped config that resolves names that are otherwise refused as
-  ambiguous (ADR-006, ADR-014): `us`, `gb`, `metric-trade`, `year-julian`, `year-civil`, `water`.
+  ambiguous (ADR-006, ADR-014): `us`, `imperial`, `metric-trade`, `year-julian`, `year-civil`, `water`.
   Several can be combined: `"us-customary,water"`. A file path cannot be used from a worksheet.
 * **Ranges (`DIMVEXA.CONVERTRANGE`):** a blank cell, or one with only spaces, stays blank in the
   result and is never read as 0. A cell that is not a number (text, TRUE, an error) makes the

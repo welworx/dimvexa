@@ -28,7 +28,7 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
 1. **One option: `--config NAME_OR_PATH`.** Repeatable, loaded left to right, later entries win
    (as ADR-009 already says for `[map]`).
    * A value that contains `/` or `\`, or ends in `.toml`, is a **path**: that file is read.
-   * Any other value is a **bundled name** (`us`, `gb`, ...): the config shipped in the binary.
+   * Any other value is a **bundled name** (`us`, `imperial`, ...): the config shipped in the binary.
    * An unknown bundled name is an error that lists the bundled names. It never falls back to a
      file in the current directory; a local file called `us` is written `./us`.
    * No config means plain SI and the strict table. Nothing is loaded implicitly: no environment
@@ -90,16 +90,19 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
 ## Open sub-decisions (recommended default first; not implemented before the owner confirms)
 
 * **OPEN 1: names and contents of the bundled configs.** The five names are confirmed by the
-  owner on 2026-11-09: `us`, `gb`, `metric-trade`, `year-julian`, `year-civil`. Their contents
+  owner on 2026-11-09: `us`, `imperial`, `metric-trade`, `year-julian`, `year-civil`. Their contents
   are the proposal below, checked against the shipped table; it is not confirmed until the
   owner says so.
   * `us`: `ton` = `ton_short`, `mile` = `mi`, `gal` = `gal_us`, `pt` = `pt_us`, `qt` = `qt_us`.
-  * `gb`: `ton` = `ton_long`, `mile` = `mi`, `gal` = `gal_imp`, `pt` = `pt_imp`, `qt` = `qt_imp`.
+  * `imperial`: `ton` = `ton_long`, `mile` = `mi`, `gal` = `gal_imp`, `pt` = `pt_imp`, `qt` = `qt_imp`, plus the imperial
+    names that only have an international or imperial variant (`chain`, `link`, `rod`, `furlong`,
+    `league`, `cable`, `gill`, `peck`, `bushel`, `minim`, `dram`, `cwt`). `quarter` and `fathom` are not
+    mapped: a quarter is a mass or a volume, a fathom is 6 ft or 1/1000 nautical mile. The config was called `gb` before it was renamed.
   * `metric-trade`: `mt` = `tonne`, `ton` = `tonne`.
   * `year-julian`: `yr`, `year` = `yr_julian`. `year-civil`: `yr`, `year` = `yr_common`.
-  * `oz` is not mapped by `us` or `gb`: it is a mass (`oz_av`, `oz_troy`) or a volume
+  * `oz` is not mapped by `us` or `imperial`: it is a mass (`oz_av`, `oz_troy`) or a volume
     (`fl_oz_us`, `fl_oz_imp`) in both countries. Mapping it would guess, so it stays refused.
-  * `stone` is not in the unit table, so `gb` cannot map it; adding it is an `add-unit` change.
+  * `stone` is a unit of its own (added later), so `imperial` needs no mapping for it.
   * `mile` is also declared ambiguous against `mi_us_survey`; `us` picks the international `mi`.
 * **OPEN 2: which densities ship.** Implemented default: water at 25 degC (997.04702 kg/m3) and
   at its temperature of maximum density, 3.983035 degC (999.97495 kg/m3). Both values are quoted
@@ -110,7 +113,7 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
   still carries it as the caller's own number). Seawater, ethanol and diesel need a primary
   source that states the conditions and are not shipped.
 * **OPEN 3: densities in the regional configs.** Decided by the owner on 2026-11-09 after the
-  first implementation: densities ship only in the `water` config, not in `us`, `gb` or
+  first implementation: densities ship only in the `water` config, not in `us`, `imperial` or
   `metric-trade`, so a name config never brings a number with it. Use
   `--config us --config water --density water_25C`.
 * **OPEN 4: scope of the removal in point 7.** Implemented: `Quantity::checked_add` and

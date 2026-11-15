@@ -194,12 +194,12 @@ fn a_density_does_nothing_for_anything_but_a_density() {
     assert!(!dimvexa_config::Density::density_needed(kg.dim(), kg.dim()));
 }
 
-const BARREL: &str = "[[unit]]\nsymbol = \"bbl_oil\"\nbase = \"gal_us\"\nfactor = \"42\"\n\
+const BARREL: &str = "[[unit]]\nid = \"bbl_oil\"\nbase = \"gal_us\"\nfactor = \"42\"\n\
 exactness = \"defined\"\nprefixes = \"si\"\nsource = \"NIST SP 811 (2008), Appendix B\"\n";
 
 fn unit_text(symbol: &str, base: &str, factor: &str, extra: &str) -> String {
     format!(
-        "[[unit]]\nsymbol = \"{symbol}\"\nbase = \"{base}\"\nfactor = \"{factor}\"\n\
+        "[[unit]]\nid = \"{symbol}\"\nbase = \"{base}\"\nfactor = \"{factor}\"\n\
          exactness = \"defined\"\nsource = \"test\"\n{extra}"
     )
 }
@@ -430,7 +430,7 @@ fn overriding_a_unit_keeps_the_units_that_build_on_it_working() {
         Ratio::from_int(15),
         "ub follows the new uu"
     );
-    let order: Vec<&str> = applied.units.iter().map(|u| u.symbol.as_str()).collect();
+    let order: Vec<&str> = applied.units.iter().map(|u| u.id.as_str()).collect();
     assert_eq!(order, ["uu", "ub"], "an override keeps its position");
     assert_eq!(applied.units[0].origin, "B.toml");
 }
@@ -559,20 +559,26 @@ fn us_and_gb_resolve_the_regional_names() {
     assert_eq!(factor(&us, "gal", "L"), factor(&us, "gal_us", "L"));
     assert_eq!(factor(&us, "pt", "L"), factor(&us, "pt_us", "L"));
     assert_eq!(factor(&us, "qt", "L"), factor(&us, "qt_us", "L"));
-    let gb = bundled_registry(&["gb"]);
-    assert_eq!(factor(&gb, "ton", "kg"), factor(&gb, "ton_long", "kg"));
-    assert_eq!(factor(&gb, "gal", "L"), factor(&gb, "gal_imp", "L"));
+    let imperial = bundled_registry(&["imperial"]);
+    assert_eq!(
+        factor(&imperial, "ton", "kg"),
+        factor(&imperial, "ton_long", "kg")
+    );
+    assert_eq!(
+        factor(&imperial, "gal", "L"),
+        factor(&imperial, "gal_imp", "L")
+    );
     // The US and the UK gallon differ, so the same name gives different answers per config.
-    assert_ne!(factor(&us, "gal", "L"), factor(&gb, "gal", "L"));
+    assert_ne!(factor(&us, "gal", "L"), factor(&imperial, "gal", "L"));
     // oz stays refused: mass or volume, in both countries
-    for reg in [&us, &gb] {
+    for reg in [&us, &imperial] {
         assert_eq!(
             reg.conversion("oz", "g").unwrap_err().code(),
             "ambiguous_symbol"
         );
     }
-    // later wins: us then gb gives the British ton
-    let both = bundled_registry(&["us-customary", "gb"]);
+    // later wins: us then imperial gives the British ton
+    let both = bundled_registry(&["us-customary", "imperial"]);
     assert_eq!(factor(&both, "ton", "kg"), factor(&both, "ton_long", "kg"));
 }
 
@@ -637,88 +643,6 @@ fn a_density_literal_is_converted_to_kg_per_m3_exactly() {
         "998", "kg/m3", "0 kg/m3", "-1 kg/m3", "5 m", "5 degC", "x kg/m3",
     ] {
         assert!(Density::density_from_text(&reg, bad).is_err(), "{bad}");
-    }
-}
-
-/// ADR-013: a user unit built on a reference unit keeps the reference kind and its conditions, so
-/// `MMscf` is still a standard volume at 60 degF and 14.696 psia, also inside compound units.
-#[test]
-fn a_unit_built_on_a_reference_unit_keeps_the_reference_and_its_conditions() {
-    let reg = with(
-        "[[unit]]\nsymbol = \"MMscf\"\nbase = \"scf\"\nfactor = \"1000000\"\n\
-         exactness = \"defined\"\nsource = \"test\"\n\
-         [[unit]]\nsymbol = \"Mscfd\"\nbase = \"scf/d\"\nfactor = \"1000\"\n\
-         exactness = \"defined\"\nsource = \"test\"\n",
-    );
-    let scf = reg.get("scf").unwrap();
-    for symbol in ["MMscf", "Mscfd"] {
-        let unit = reg.get(symbol).unwrap();
-        assert_eq!(unit.kind(), scf.kind(), "{symbol}");
-        assert_eq!(unit.conditions(), scf.conditions(), "{symbol}");
-        assert!(unit.conditions().contains("14.696 psia"), "{symbol}");
-    }
-    // The size is the plain factor, within the reference.
-    assert_eq!(factor(&reg, "MMscf", "scf"), Ratio::from_int(1_000_000));
-    assert_eq!(factor(&reg, "Mscfd", "scf/d"), Ratio::from_int(1_000));
-    // And the reference still protects it: never to an actual or another reference volume.
-    for to in ["m3", "Nm3", "ft3"] {
-        assert_eq!(
-            reg.conversion("MMscf", to).unwrap_err().code(),
-            "refused",
-            "{to}"
-        );
-    }
-    // A unit built on a plain unit has no conditions.
-    let plain = with(
-        "[[unit]]\nsymbol = \"pail\"\nbase = \"L\"\nfactor = \"20\"\n\
-         exactness = \"defined\"\nsource = \"test\"\n",
-    );
-    assert_eq!(plain.get("pail").unwrap().conditions(), "");
-    // The expression carries the conditions of the unit that has the reference.
-    assert!(
-        reg.parse("MMscf/h")
-            .unwrap()
-            .conditions()
-            .contains("14.696 psia")
-    );
-    assert_eq!(reg.parse("m3/h").unwrap().conditions(), "");
-    assert_eq!(reg.parse("scf/scf").unwrap().conditions(), "");
-}
-
-/// Review of 2026-11-11: a power of 0 cancels a reference. `(scf)^0` is the plain number 1 and a
-/// unit built on it is plain, so it can never let an actual volume pass as `scf`; a reference at
-/// any other power than 1 cannot be a base.
-#[test]
-fn a_power_zero_of_a_reference_unit_is_plain_and_cannot_reach_the_reference() {
-    let reg = registry().unwrap();
-    let one = reg.parse("(scf)^0").unwrap();
-    assert_eq!(one.kind().name(), "plain");
-    assert_eq!(one.reference_power(), 0);
-    assert_eq!(one.conditions(), "");
-    assert_eq!(reg.conversion("(Nm3)^0", "1").unwrap().factor(), Ratio::ONE);
-
-    let reg = with(
-        "[[unit]]\nsymbol = \"stdref\"\nbase = \"(scf)^0\"\nfactor = \"1\"\n\
-         exactness = \"defined\"\nsource = \"test\"\n",
-    );
-    let stdref = reg.get("stdref").unwrap();
-    assert_eq!(stdref.kind().name(), "plain");
-    assert_eq!(stdref.conditions(), "");
-    for to in ["scf", "Nm3"] {
-        assert_eq!(
-            reg.conversion("stdref.m3", to).unwrap_err().code(),
-            "refused",
-            "{to}"
-        );
-    }
-    for base in ["(scf)^2", "1/scf", "Nm3/Nm3.scf"] {
-        let text = format!(
-            "[[unit]]\nsymbol = \"x\"\nbase = \"{base}\"\nfactor = \"1\"\n\
-             exactness = \"defined\"\nsource = \"test\"\n"
-        );
-        let mut reg = registry().unwrap();
-        let outcome = apply(&mut reg, &[cfg(&text, "test.toml")]);
-        assert!(outcome.is_err(), "{base}");
     }
 }
 
@@ -797,7 +721,7 @@ fn load_builds_the_constants_and_densities_in_one_place() {
     let pi = cfg(&WATER.replace("water_20C", "pi"), "pi.toml");
     assert!(dimvexa_config::load(reg.clone(), &[pi], builtin).is_err());
     let unit = cfg(
-        "[[unit]]\nsymbol = \"blob\"\nbase = \"g\"\nfactor = \"7\"\nexactness = \"defined\"\nsource = \"s\"\n",
+        "[[unit]]\nid = \"blob\"\nbase = \"g\"\nfactor = \"7\"\nexactness = \"defined\"\nsource = \"s\"\n",
         "u.toml",
     );
     let c = cfg(&WATER.replace("kg/m3", "blob/m3"), "c.toml");
@@ -823,4 +747,94 @@ fn a_config_that_replaces_an_entry_of_an_earlier_one_gets_a_warning() {
     assert_eq!(loaded.densities[0].value, Ratio::from_int(1000));
     let twice = dimvexa_config::load(reg, &[a.clone(), a], builtin).unwrap();
     assert_eq!(twice.warnings, Vec::<String>::new());
+}
+
+const SITE: &str = "[[unit]]\nid = \"barg_site\"\nbase = \"bar\"\nfactor = \"1\"\n\
+                    offset = \"1.01325\"\nexactness = \"defined\"\nsource = \"my site\"\n";
+
+/// ADR-022: a config unit may have an offset, so a user can write a gauge reading with their own
+/// ambient pressure. `base value = factor * x + offset`, exact, in both directions.
+#[test]
+fn a_config_unit_with_an_offset_is_an_exact_affine_scale() {
+    let reg = with(SITE);
+    let to_bar = reg.conversion("barg_site", "bar").unwrap();
+    assert_eq!(to_bar.factor(), Ratio::ONE);
+    assert_eq!(to_bar.offset(), "1.01325".parse().unwrap());
+    let back = reg.conversion("bar", "barg_site").unwrap();
+    assert_eq!(back.offset(), "-1.01325".parse().unwrap());
+    // 2 barg_site is 3.01325 bar, and in Pa the offset is scaled by the base factor.
+    let to_pa = reg.conversion("barg_site", "Pa").unwrap();
+    assert_eq!(to_pa.factor(), Ratio::from_int(100_000));
+    assert_eq!(to_pa.offset(), Ratio::from_int(101_325));
+    // A scale of your own is an ordinary unit of the group for the rest.
+    assert_eq!(reg.get("barg_site").unwrap().namespace(), "user");
+}
+
+/// ADR-022: what an offset may not do. Each case is refused when the config is applied.
+#[test]
+fn an_offset_is_refused_where_it_would_be_wrong() {
+    let site = |extra: &str, base: &str| {
+        format!(
+            "[[unit]]\nid = \"x_site\"\nbase = \"{base}\"\nfactor = \"1\"\noffset = \"1\"\n\
+             exactness = \"defined\"\nsource = \"test\"\n{extra}"
+        )
+    };
+    for (text, want) in [
+        (site("", "deg"), "only a plain unit can take an offset"),
+        (site("", "Hz"), "only a plain unit can take an offset"),
+        (site("", "K"), "temperature point"),
+        (site("prefixes = \"si\"\n", "bar"), "cannot take prefixes"),
+        (site("", "delta_K"), "only a plain unit can take an offset"),
+    ] {
+        let mut reg = registry().unwrap();
+        let err = apply(&mut reg, &[cfg(&text, "test.toml")])
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains(want), "{want}: {err}");
+    }
+    // A pi in the offset is not a plain fraction.
+    let pi = SITE.replace("\"1.01325\"", "\"pi\"");
+    assert!(Config::parse(&pi, "test.toml").is_err());
+    // A unit with an offset cannot be part of a compound unit, like a temperature scale.
+    let reg = with(SITE);
+    assert_eq!(
+        reg.conversion("barg_site/s", "bar/s").unwrap_err().code(),
+        "refused"
+    );
+    // The built-in gauge names are not implemented (ADR-023); the user's own scale is.
+    let err = reg.conversion("barg", "barg_site").unwrap_err();
+    assert!(err.to_string().contains("not implemented"), "{err}");
+}
+
+/// ADR-025: a config unit has an `id` (typed), an optional printed `symbol` (also accepted when
+/// typed) and an optional full `name`, like a shipped unit.
+#[test]
+fn a_config_unit_may_have_a_printed_symbol_and_a_name() {
+    let reg = with(
+        "[[unit]]\nid = \"ohm_x\"\nsymbol = \"\u{3a9}_x\"\nname = \"Test ohm\"\nbase = \"ohm\"\n\
+         factor = \"1\"\nexactness = \"defined\"\nsource = \"test\"\n\
+         [[unit]]\nid = \"plain_x\"\nbase = \"ohm\"\nfactor = \"2\"\nexactness = \"defined\"\n\
+         source = \"test\"\n",
+    );
+    let u = reg.get("ohm_x").unwrap();
+    assert_eq!(
+        (u.id(), u.symbol(), u.name()),
+        ("ohm_x", "\u{3a9}_x", "Test ohm")
+    );
+    // What is printed reads back: the symbol is an alias.
+    assert_eq!(factor(&reg, "\u{3a9}_x", "ohm"), Ratio::ONE);
+    // Without them the unit prints and reads as its id.
+    let p = reg.get("plain_x").unwrap();
+    assert_eq!(
+        (p.id(), p.symbol(), p.name()),
+        ("plain_x", "plain_x", "plain_x")
+    );
+    // The symbol must be free like the id: it cannot take the name of an existing unit.
+    let mut reg = registry().unwrap();
+    let text = "[[unit]]\nid = \"ohm_y\"\nsymbol = \"m\"\nbase = \"ohm\"\nfactor = \"1\"\n\
+                exactness = \"defined\"\nsource = \"test\"\n";
+    let err = apply(&mut reg, &[cfg(text, "test.toml")])
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("'m' already means a unit"), "{err}");
 }

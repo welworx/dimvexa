@@ -22,6 +22,8 @@ cargo xtask ci                 # the one command: fmt, clippy -D warnings, msrv 
                                # Rust 1.85), tests, doc tests, docs, data validation, package
                                # check, pool_pump example
 cargo xtask ci fmt clippy      # only some stages (see: cargo xtask ci --list)
+typos && taplo fmt --check     # spelling and TOML format of the whole tree: the CI job `typos and
+                               # TOML format`; not part of `cargo xtask ci`, so run it yourself
 cargo test --workspace         # quick loop
 cargo xtask check-docs         # docs, skills, ADRs, workflows and manifests stay consistent
 cargo xtask validate-data      # after touching the unit tables
@@ -93,7 +95,10 @@ when the command cannot run here, and then the report names the command and the 
    error code or output, `benchmarks` for numbers.
 5. The tools the pre-commit hook skips (gitleaks, typos, taplo) are installed when the network
    allows it, so the hook really scans (`go install` / `cargo install`, see the hook's message).
-   Do not accept "NOT scanned" when you can install the tool.
+   Do not accept "NOT scanned" when you can install the tool. The hook checks only the staged
+   files and skips a missing tool silently enough to miss it, so also run `typos` and
+   `taplo fmt --check` over the whole tree and say in the report that both exited 0. Deleting the
+   last entry of a `.toml` table leaves a trailing blank line that `taplo` rejects and CI fails on.
 
 The network may be available even where an older note says it is not (`fuzz/`, `extras/`):
 try the command (`cargo fetch`, `cargo install`) before you report something as impossible.
@@ -161,7 +166,7 @@ Read the matching skill in `skills/<name>/SKILL.md` (`.claude/skills` is a symli
   passes locally but fails in CI (a different toolchain, OS or lock state) means the local
   gate is missing something: add it to `cargo xtask ci` or the hook, not only a fix.
 * Keep error codes stable (`Error::ALL_CODES`); adding a field to the JSON schema is allowed
-  within the current schema version (`dimvexa.convert/3`, `dimvexa.units/4`, `dimvexa.configs/2`, `dimvexa.constants/1`);
+  within the current schema version (`dimvexa.convert/3`, `dimvexa.units/5`, `dimvexa.configs/3`, `dimvexa.constants/1`);
   removing or renaming one needs a new version (ADR-014 did that for `/2`).
 * The CLI help is part of the interface. A new or changed command, option, config, JSON schema,
   exit code or error behaviour updates, in the same change: the overview (`HELP`) and the page

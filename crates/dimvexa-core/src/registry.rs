@@ -52,6 +52,55 @@ pub struct Registry {
     lowered: HashMap<String, Vec<String>>,
 }
 
+/// Gas volumes at stated reference conditions (normal, standard, ...). They are not units of
+/// this library (ADR-021): relating them to an actual volume, to another reference state or to
+/// a mass or an amount needs an equation of state or a gas model (ADR-001).
+const OUT_OF_SCOPE_GAS_VOLUMES: [&str; 17] = [
+    "Nm3", "Nm\u{b3}", "Sm3", "Sm\u{b3}", "scf", "Mscf", "MMscf", "Bscf", "Tscf", "scfd", "scfm",
+    "scfh", "Mscfd", "MMscfd", "MMSCFD", "NM3", "SCF",
+];
+
+/// Gauge pressure units, with or without an SI prefix (`psig`, `barg`, `kPag`). They are not
+/// units of this library (ADR-023): a gauge reading is measured from an ambient pressure that
+/// only the caller knows.
+const OUT_OF_SCOPE_GAUGE_PRESSURES: [&str; 3] = ["psig", "barg", "Pag"];
+
+fn is_gauge_pressure_name(symbol: &str) -> bool {
+    OUT_OF_SCOPE_GAUGE_PRESSURES
+        .iter()
+        .any(|g| symbol == *g || all_prefixes().any(|p| symbol.strip_prefix(p.symbol) == Some(*g)))
+}
+
+/// The error for a name that is not implemented on purpose (ADR-021, ADR-023), and why.
+fn out_of_scope(symbol: &str) -> Option<Error> {
+    if is_gauge_pressure_name(symbol) {
+        return Some(Error::Refused {
+            reason: format!(
+                "'{symbol}' is not implemented: a gauge pressure is measured from the ambient \
+                 pressure, which varies with altitude and weather, so it cannot become an \
+                 absolute pressure without a number only you know (ADR-023). Define your own \
+                 gauge unit with an offset in a config (examples/configs/ambient.toml), then \
+                 convert it to bar, psi or Pa"
+            ),
+            suggestions: Vec::new(),
+        });
+    }
+    if !OUT_OF_SCOPE_GAS_VOLUMES.contains(&symbol) {
+        return None;
+    }
+    Some(Error::Refused {
+        reason: format!(
+            "'{symbol}' is not implemented: it is a gas volume at stated reference conditions, \
+             and relating it to an actual volume, to another reference state or to a mass or \
+             an amount of gas needs an equation of state or a gas model, which dimvexa does not \
+             include and will not (ADR-001, ADR-021). Do that step in an engineering tool with \
+             your own gas model and conditions, then convert the resulting actual volume here \
+             (m3, L, ft3, ...)"
+        ),
+        suggestions: Vec::new(),
+    })
+}
+
 impl Registry {
     /// An empty registry.
     #[must_use]
@@ -114,7 +163,9 @@ impl Registry {
         if self.by_symbol.contains_key(name) {
             return false;
         }
+        // A name that is only "not implemented" (ADR-021) is free for a config to define.
         self.ambiguous.contains_key(name)
+            || out_of_scope(name).is_some()
             || matches!(self.resolve_symbol(name), Err(Error::UnknownUnit { .. }))
     }
 
@@ -283,12 +334,6 @@ impl Registry {
         self.by_symbol.get(symbol).and_then(|&i| self.units.get(i))
     }
 
-    /// Candidates for a declared-ambiguous bare symbol.
-    #[must_use]
-    pub fn ambiguous_candidates(&self, symbol: &str) -> Option<&[String]> {
-        self.ambiguous.get(symbol).map(Vec::as_slice)
-    }
-
     fn unit_expr(&self, text: &str, unit: &Unit, prefix: Option<Prefix>) -> Result<UnitExpr> {
         let (factor, mut sources) = match prefix {
             Some(p) => (
@@ -330,7 +375,6 @@ impl Registry {
             unit.exactness(),
             sources,
         )
-        .with_conditions(unit.conditions())
         .with_difference(difference))
     }
 
@@ -436,6 +480,9 @@ impl Registry {
                         candidates: cands.iter().map(|c| format!("{}{c}", p.symbol)).collect(),
                     });
                 }
+                if let Some(e) = out_of_scope(symbol) {
+                    return Err(e);
+                }
                 Err(Error::UnknownUnit {
                     symbol: symbol.to_string(),
                     suggestions: self.suggestions(symbol),
@@ -464,24 +511,13 @@ impl Registry {
             Expr::Mul(a, b) => self.resolve(a)?.mul(&self.resolve(b)?),
             Expr::Div(a, b) => self.resolve(a)?.div(&self.resolve(b)?),
             Expr::Pow(a, n) => {
-                // `Nm3` lexes as `Nm` to the power 3; a registered reference unit written with
-                // trailing digits wins (ADR-013).
+                // `Nm3` lexes as `Nm` to the power 3: say what it is, not "unknown unit Nm".
                 if let Expr::Unit(s) = &**a {
                     let joined = format!("{s}{n}");
-                    if self.get(&joined).is_some_and(|u| u.kind().is_reference()) {
-                        // A unit never changes meaning: if the plain reading (`Nm`) is also a
-                        // unit, `Nm3` could be either, so it is an error, not a guess.
-                        if self.resolve_symbol(s).is_ok() {
-                            return Err(Error::AmbiguousExpression {
-                                input: joined.clone(),
-                                message: format!(
-                                    "'{s}' is a unit and '{joined}' is also a unit with a reference \
-                                     state; rename your '{s}' (a config unit) so that '{joined}' \
-                                     has one meaning"
-                                ),
-                            });
+                    if self.get(&joined).is_none() && self.resolve_symbol(s).is_err() {
+                        if let Some(e) = out_of_scope(&joined) {
+                            return Err(e);
                         }
-                        return self.resolve_symbol(&joined);
                     }
                 }
                 self.resolve(a)?.pow(*n)

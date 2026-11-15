@@ -8,7 +8,7 @@ A process-engineering consumer will want conversions such as standard volume to 
 
 ## Decision
 
-The library performs no conversion that needs an equation of state, a density, a composition or an empirical formula. Standard volumes (Nm3, Sm3, scf) are separate units, each with an exact stated reference condition. Converting between reference conditions, or to an actual volume, is refused with a clear error unless the caller passes an explicit factor. Mass, mole and volume fractions never convert into each other without caller-supplied data.
+The library performs no conversion that needs an equation of state, a density, a composition or an empirical formula. Gas volumes at stated reference conditions (Nm3, Sm3, scf) are not implemented (ADR-021): relating them to an actual volume or to another reference needs an equation of state, so the error says so. Mass, mole and volume fractions never convert into each other without caller-supplied data.
 
 ## Consequences
 

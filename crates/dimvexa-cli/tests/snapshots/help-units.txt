@@ -20,7 +20,7 @@ Forms:
                    prefixed unit (km) is named from its parts
 
 Options:
-  --json           machine-readable output (schema dimvexa.units/4)
+  --json           machine-readable output (schema dimvexa.units/5)
   --pretty         --json, indented for reading
   --config NAME_OR_PATH
                    include the units and names of a config; repeatable (a

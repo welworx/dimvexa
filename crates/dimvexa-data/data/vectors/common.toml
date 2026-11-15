@@ -529,45 +529,212 @@ expect = "158.987294928"
 source = "NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)]) with Appendix B (gallon, U.S. = 3.785 411 784 L)"
 
 [[vector]]
-unit = "psig"
-value = "10"
-from = "psig"
-to = "barg"
-expect = "0.6894757293168361"
-rel_tol = "1e-12"
-source = "NIST SP 811 (2008), Appendix B (psi = 6.894 757 293 168 E+03 Pa) and bar = 100 kPa, both gauge"
-
-[[vector]]
-unit = "barg"
-value = "2"
-from = "barg"
-to = "kPag"
-expect = "200"
-source = "by definition: bar = 100 kPa (NIST SP 811 (2008), Appendix B), both gauge"
-
-[[vector]]
-unit = "Pag"
-value = "1"
-from = "kPag"
-to = "Pag"
-expect = "1000"
-source = "BIPM SI Brochure (2019), Table 7 (prefix kilo = 10^3), both gauge"
-
-[[vector]]
-unit = "Nm3"
-value = "60"
-from = "Nm3/h"
-to = "Nm3/min"
+unit = "twip"
+value = "1440"
+from = "twip"
+to = "in"
 expect = "1"
-source = "BIPM SI Brochure (2019), Table 8 (1 h = 60 min); the normal cubic metre keeps its reference state"
+source = "Hand derivation: 20 twips = 1 point and 72 points = 1 in, so 1440 twips = 1 in"
 
 [[vector]]
-unit = "scf"
+unit = "thou"
+value = "1000"
+from = "thou"
+to = "in"
+expect = "1"
+source = "Hand derivation: 1 in = 25.4 mm and 1 thou = 0.0254 mm, so 1000 thou = 1 in"
+
+[[vector]]
+unit = "barleycorn"
+value = "3"
+from = "barleycorn"
+to = "in"
+expect = "1"
+source = "Hand derivation: 3 barleycorns = 1 in by definition of the barleycorn"
+
+[[vector]]
+unit = "hand"
 value = "1"
-from = "scf/min"
-to = "scf/h"
-expect = "60"
-source = "BIPM SI Brochure (2019), Table 8 (1 h = 60 min); the standard cubic foot keeps its reference state"
+from = "hand"
+to = "m"
+expect = "0.1016"
+source = "Hand derivation: 4 x 0.0254 m = 0.1016 m"
+
+[[vector]]
+unit = "link_int"
+value = "100"
+from = "link_int"
+to = "ft"
+expect = "66"
+source = "Hand derivation: 100 links = 1 chain = 66 ft"
+
+[[vector]]
+unit = "rod_int"
+value = "1"
+from = "rod_int"
+to = "m"
+expect = "5.0292"
+source = "Hand derivation: 16.5 x 0.3048 m = 5.0292 m"
+
+[[vector]]
+unit = "chain_int"
+value = "80"
+from = "chain_int"
+to = "mi"
+expect = "1"
+source = "Hand derivation: 80 chains x 66 ft = 5280 ft = 1 mi"
+
+[[vector]]
+unit = "furlong_int"
+value = "8"
+from = "furlong_int"
+to = "mi"
+expect = "1"
+source = "Hand derivation: 8 furlongs x 660 ft = 5280 ft = 1 mi"
+
+[[vector]]
+unit = "league_int"
+value = "1"
+from = "league_int"
+to = "ft"
+expect = "15840"
+source = "Hand derivation: 3 mi x 5280 ft = 15 840 ft"
+
+[[vector]]
+unit = "fathom_ft"
+value = "1"
+from = "fathom_ft"
+to = "m"
+expect = "1.8288"
+source = "Hand derivation: 6 x 0.3048 m = 1.8288 m"
+
+[[vector]]
+unit = "cable_int"
+value = "10"
+from = "cable_int"
+to = "nmi"
+expect = "1"
+source = "Hand derivation: 10 cables = 1 nautical mile by definition of the cable"
+
+[[vector]]
+unit = "perch_sq"
+value = "160"
+from = "perch_sq"
+to = "acre_int"
+expect = "1"
+source = "Hand derivation: 160 square perches x 272.25 ft^2 = 43 560 ft^2 = 1 acre"
+
+[[vector]]
+unit = "rood"
+value = "4"
+from = "rood"
+to = "acre_int"
+expect = "1"
+source = "Hand derivation: 4 roods x 10 890 ft^2 = 43 560 ft^2 = 1 acre"
+
+[[vector]]
+unit = "gill_imp"
+value = "1"
+from = "gill_imp"
+to = "fl_oz_imp"
+expect = "5"
+source = "Hand derivation: gill = 1/4 pint and pint = 20 fl oz, so 1 gill = 5 fl oz"
+
+[[vector]]
+unit = "peck_imp"
+value = "1"
+from = "peck_imp"
+to = "L"
+expect = "9.09218"
+source = "Hand derivation: 2 x 4.54609 L = 9.09218 L"
+
+[[vector]]
+unit = "bushel_imp"
+value = "1"
+from = "bushel_imp"
+to = "L"
+expect = "36.36872"
+source = "Hand derivation: 8 x 4.54609 L = 36.36872 L"
+
+[[vector]]
+unit = "quarter_vol_imp"
+value = "1"
+from = "quarter_vol_imp"
+to = "L"
+expect = "290.94976"
+source = "Hand derivation: 64 x 4.54609 L = 290.94976 L"
+
+[[vector]]
+unit = "minim_imp"
+value = "480"
+from = "minim_imp"
+to = "fl_oz_imp"
+expect = "1"
+source = "Hand derivation: pint = 9600 minims and 20 fl oz, so 480 minims = 1 fl oz"
+
+[[vector]]
+unit = "scruple_fl_imp"
+value = "24"
+from = "scruple_fl_imp"
+to = "fl_oz_imp"
+expect = "1"
+source = "Hand derivation: 1 fl oz = 8 drachms = 24 scruples"
+
+[[vector]]
+unit = "drachm_fl_imp"
+value = "8"
+from = "drachm_fl_imp"
+to = "fl_oz_imp"
+expect = "1"
+source = "Hand derivation: 8 fluid drachms = 1 fl oz"
+
+[[vector]]
+unit = "dram_av"
+value = "16"
+from = "dram_av"
+to = "oz_av"
+expect = "1"
+source = "Hand derivation: dram = 1/16 oz, so 16 drams = 1 oz"
+
+[[vector]]
+unit = "stone"
+value = "1"
+from = "stone"
+to = "kg"
+expect = "6.35029318"
+source = "Hand derivation: 14 x 0.45359237 kg = 6.35029318 kg"
+
+[[vector]]
+unit = "quarter_mass_imp"
+value = "1"
+from = "quarter_mass_imp"
+to = "stone"
+expect = "2"
+source = "Hand derivation: 28 lb = 2 x 14 lb"
+
+[[vector]]
+unit = "cwt_long"
+value = "20"
+from = "cwt_long"
+to = "ton_long"
+expect = "1"
+source = "Hand derivation: 20 x 112 lb = 2240 lb = 1 long ton"
+
+[[vector]]
+unit = "slug"
+value = "1"
+from = "slug*ft/s^2"
+to = "lbf"
+expect = "1"
+source = "Hand derivation: 1 lbf accelerates 1 slug at 1 ft/s^2; from field is slug ft/s^2"
+
+[[vector]]
+unit = "fathom_nmi"
+value = "1000"
+from = "fathom_nmi"
+to = "m"
+expect = "1852"
+source = "Hand derivation: 1000 fathoms = 1 nautical mile = 1852 m, so 1 fathom = 1.852 m (about 6.0761 ft)"
 
 [[vector]]
 unit = "mil"
@@ -682,28 +849,12 @@ expect = "128"
 source = "Hand derivation: 4*4*8 = 128 cubic feet"
 
 [[vector]]
-unit = "dram_av"
-value = "16"
-from = "dram_av"
-to = "oz_av"
-expect = "1"
-source = "Hand derivation: 16 drams = 1 ounce"
-
-[[vector]]
 unit = "cwt_short"
 value = "20"
 from = "cwt_short"
 to = "ton_short"
 expect = "1"
 source = "Hand derivation: 20 short cwt = 2000 lb = 1 short ton"
-
-[[vector]]
-unit = "cwt_long"
-value = "20"
-from = "cwt_long"
-to = "ton_long"
-expect = "1"
-source = "Hand derivation: 20 long cwt = 2240 lb = 1 long ton"
 
 [[vector]]
 unit = "dwt"
@@ -762,14 +913,6 @@ expect = "0.138254954376"
 source = "Hand derivation: 0.45359237 * 0.3048 = 0.138254954376"
 
 [[vector]]
-unit = "slug"
-value = "1"
-from = "slug"
-to = "kg"
-expect = "8896443230521/609600000000"
-source = "Hand derivation: 0.45359237 kg * 9.80665 / 0.3048 as an exact fraction"
-
-[[vector]]
 unit = "board_ft"
 value = "12"
 from = "board_ft"
@@ -784,14 +927,6 @@ from = "bbl_us_dry"
 to = "in^3"
 expect = "7056"
 source = "NIST Circular 593 (1958), Standard Apple-Barrel Act of 1912 and Standard Barrel Act of 1915: a standard barrel of 7056 cubic inches"
-
-[[vector]]
-unit = "hand"
-value = "1"
-from = "hand"
-to = "mm"
-expect = "101.6"
-source = "Hand derivation: 4 in * 25.4 mm/in (international inch, 1959 agreement)"
 
 [[vector]]
 unit = "fathom_us_survey"

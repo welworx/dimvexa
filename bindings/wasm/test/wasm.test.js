@@ -46,7 +46,7 @@ assert.strictEqual(code(() => d.constants("", [constant("x", "1", "Zorp")])), "i
 assert.strictEqual(code(() => d.constants("nope", [])), "invalid_definition");
 
 // a unit another loaded config defines may be used by a constant
-const unit = `[[unit]]\nsymbol = "blob"\nbase = "g"\nfactor = "7"\nexactness = "defined"\nsource = "s"\n`;
+const unit = `[[unit]]\nid = "blob"\nbase = "g"\nfactor = "7"\nexactness = "defined"\nsource = "s"\n`;
 assert.strictEqual(d.convertWith(1, "L", "kg", "b", "", [unit, constant("b", "1", "blob/m3")]), 0.000007);
 
 // replacing is allowed but warns, once per distinct combination (the registry is cached)

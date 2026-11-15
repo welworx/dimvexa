@@ -8,7 +8,7 @@
 # source. It can never take the name of an existing unit, alias or prefixed form.
 
 [[unit]]
-symbol = "bbl_oil"
+id = "bbl_oil"
 base = "gal_us"
 factor = "42"
 exactness = "defined"

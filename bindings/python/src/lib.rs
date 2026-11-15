@@ -547,11 +547,8 @@ fn unit_info<'py>(
     d.set_item("namespace", u.namespace())?;
     d.set_item("source", u.source())?;
     d.set_item("note", u.note())?;
-    // The reference state of a gauge or gas-volume unit (ADR-013), `None` for other units.
-    let conditions = Some(u.conditions()).filter(|c| !c.is_empty());
-    d.set_item("conditions", conditions)?;
     let defined_in = defined
-        .and_then(|units| units.iter().find(|c| c.symbol == u.id()))
+        .and_then(|units| units.iter().find(|c| c.id == u.id()))
         .map(|c| format!("{}:{}", c.origin, c.line));
     d.set_item("defined_in", defined_in)?;
     Ok(Some(d))

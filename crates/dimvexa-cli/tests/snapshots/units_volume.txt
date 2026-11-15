@@ -14,8 +14,13 @@ tsp_us	tsp_us	US teaspoon	plain	defined	none	-	NIST SP 811 (2008), Appendix B (t
 fl_oz_imp	fl_oz_imp	Imperial fluid ounce	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (fluid ounce = 1/20 pint)
 qt_imp	qt_imp	Imperial quart	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (quart = 1/4 gallon)
 bbl	bbl	Oil barrel	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)
-Nm3	Nm³	Normal cubic metre	normal_volume	defined	none	Nm³	DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa
-scf	scf	Standard cubic foot	standard_volume	defined	none	-	NIST SP 811 (2008), Appendix B (foot, so the cubic foot is 0.3048^3 m^3); reference state 60 degF and 14.696 psia per GPA Standard 2145 (edition not checked)
+gill_imp	gill_imp	Imperial gill	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); gill = 1/4 pint = 5 fl oz
+peck_imp	peck_imp	Imperial peck	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); peck = 2 gallons
+bushel_imp	bushel_imp	Imperial bushel	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); bushel = 8 gallons
+quarter_vol_imp	quarter_vol_imp	Imperial quarter (volume)	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); quarter = 64 gallons
+minim_imp	minim_imp	Imperial minim	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); minim = 1/9600 pint (British apothecaries' measure)
+scruple_fl_imp	scruple_fl_imp	Fluid scruple	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid scruple = 20 minims = 1/480 pint
+drachm_fl_imp	drachm_fl_imp	Fluid drachm	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid drachm = 3 fluid scruples = 1/160 pint
 minim_us	minim_us	US minim	plain	defined	none	-	NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)
 fl_dr_us	fl_dr_us	US fluid dram	plain	defined	none	-	NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)
 gill_us	gill_us	US gill	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gill, U.S.); NIST Handbook 44 (2024), Appendix C (Units of Liquid Volume: 4 gills = 1 pint)
@@ -38,3 +43,9 @@ qt	qt_us, qt_imp	-	US liquid quart (946.352946 mL), imperial quart (1.1365225 L)
 cup	cup_us	-	US cup (236.5882365 mL), metric cup (250 mL), imperial cup and the US customary legal cup (240 mL) differ
 tbsp	tbsp_us	-	US (14.78676478125 mL), metric (15 mL), UK and Australian (20 mL) tablespoons differ
 tsp	tsp_us	-	US (4.92892159375 mL) and metric (5 mL) teaspoons differ
+gill	gill_imp, gill_us	-	imperial gill (142.0653125 mL) and US gill (118.29411825 mL) differ
+peck	peck_imp, pk_us	-	imperial peck (2 imperial gallons) and US dry peck differ
+bushel	bushel_imp, bu_us	-	imperial bushel (8 imperial gallons) and US dry bushel differ
+minim	minim_imp, minim_us	-	imperial minim (1/9600 imperial pint) and US minim (1/7680 US liquid pint) differ
+dram	dram_av, dram_ap, fl_dr_us	-	avoirdupois dram (1/16 oz), apothecaries' dram (60 grains) and the fluid drams differ
+quarter	quarter_mass_imp, quarter_vol_imp	-	imperial quarter is 28 lb as a mass and 64 imperial gallons as a volume; the US quarter is 25 lb or a quarter of a dollar or a year

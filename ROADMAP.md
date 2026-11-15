@@ -19,7 +19,7 @@ Detailed design: [`docs/PLAN.md`](docs/PLAN.md). Benchmark rules: [`docs/benchma
 |---|---|---|
 | M0 | Core, parser, seed table, batch API, precision bounds, CI | Done |
 | M1 | Kinds and registry, `process` and `common` packs, contexts (e.g. water head conventions: the convention is stated, never guessed), CLI (`batch`, `info`, `list`, `search`), first crates.io release (done: 0.1.x) | In progress |
-| M2 | Composition kinds, standard volumes, `scales` pack (ADR-005), exact big-rational feature, `parallel` feature | Planned |
+| M2 | Composition kinds, `scales` pack (ADR-005), exact big-rational feature, `parallel` feature | Planned |
 | M3 | Imperial, science, engineering, historical and UCUM packs, UCUM conformance, docs site (GitHub Pages or Read the Docs) | Planned |
 | Benchmarks | Corpus and runners vs uom, pint, unyt, astropy, mathjs, js-quantities, convert-units; first dated run; weekly run | In progress |
 

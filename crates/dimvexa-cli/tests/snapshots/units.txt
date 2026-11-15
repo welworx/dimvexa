@@ -22,7 +22,7 @@ mol	mol	Mole	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2
 cd	cd	Candela	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## frequency
-Hz	Hz	Hertz	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+Hz	Hz	Hertz	cycle	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## force
 N	N	Newton	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
@@ -104,10 +104,10 @@ lx	lx	Lux	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (t
 kat	kat	Katal	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## angle
-rad	rad	Radian	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
-deg	°	Degree of arc	plain	defined	none	°	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (degree = (pi/180) rad)
-arcmin	arcmin	Arcminute	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcminute = (1/60) degree)
-arcsec	arcsec	Arcsecond	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcsecond = (1/60) arcminute)
+rad	rad	Radian	angle	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+deg	°	Degree of arc	angle	defined	none	°	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (degree = (pi/180) rad)
+arcmin	arcmin	Arcminute	angle	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcminute = (1/60) degree)
+arcsec	arcsec	Arcsecond	angle	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcsecond = (1/60) arcminute)
 
 ## energy
 eV	eV	Electronvolt	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (1 eV = 1.602 176 634 x 10^-19 J, exact since the elementary charge e is fixed, ch. 2, Table 1)
@@ -207,7 +207,7 @@ dyn	dyn	Dyne	plain	defined	none	-	NIST SP 811 (2008), Appendix B (dyne)
 kgf	kgf	Kilogram-force	plain	defined	none	-	NIST SP 811 (2008), Appendix B (kilogram-force)
 
 ## angle
-grad	grad	Gradian	plain	defined	none	gon	NIST SP 811 (2008), Appendix B (grade); ISO 80000-3:2019 (gon)
+grad	grad	Gradian	angle	defined	none	gon	NIST SP 811 (2008), Appendix B (grade); ISO 80000-3:2019 (gon)
 
 ## dynamic_viscosity
 P	P	Poise	plain	defined	si	poise	NIST SP 811 (2008), Appendix B.8 (poise = 1.0 E-01 Pa s)
@@ -218,14 +218,39 @@ St	St	Stokes	plain	defined	si	stokes	NIST SP 811 (2008), Appendix B.8 (stokes = 
 ## volume
 bbl	bbl	Oil barrel	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)
 
-## pressure
-psig	psig	Pound-force per square inch gauge	gauge_pressure	defined	none	-	NIST SP 811 (2008), Appendix B (pound-force per square inch); gauge pressure is measured from the ambient pressure (ADR-013)
-barg	barg	Bar gauge	gauge_pressure	defined	none	-	NIST SP 811 (2008), Appendix B (bar = 100 kPa); gauge pressure is measured from the ambient pressure (ADR-013)
-Pag	Pag	Pascal gauge	gauge_pressure	defined	si	-	BIPM SI Brochure (2019), Table 4 (pascal); gauge pressure is measured from the ambient pressure (ADR-013)
+## length
+twip	twip	Twip	plain	defined	none	-	Imperial typographic unit: 1 twip = 1/20 point = 1/1440 in (international inch, International yard and pound agreement 1959)
+thou	thou	Thou (mil)	plain	defined	none	-	International yard and pound agreement (1959): 1 in = 0.0254 m; thou = 1/1000 in
+barleycorn	barleycorn	Barleycorn	plain	defined	none	-	Imperial length relations: 3 barleycorns = 1 in (international inch, 1959 agreement)
+hand	hand	Hand	plain	defined	none	-	Imperial length relations: 1 hand = 4 in (international inch, 1959 agreement)
+link_int	link_int	Gunter's link (international)	plain	defined	none	-	Imperial length relations: 100 links = 1 chain = 66 ft (international foot, 1959 agreement)
+rod_int	rod_int	Rod (pole, perch)	plain	defined	none	-	Imperial length relations: 1 rod = 5.5 yd = 16.5 ft (international foot, 1959 agreement)
+chain_int	chain_int	Chain (Gunter's)	plain	defined	none	-	Imperial length relations: 1 chain = 22 yd = 66 ft (international foot, 1959 agreement)
+furlong_int	furlong_int	Furlong	plain	defined	none	-	Imperial length relations: 1 furlong = 220 yd = 660 ft (international foot, 1959 agreement)
+league_int	league_int	League	plain	defined	none	-	Imperial length relations: 1 league = 3 mi (international mile = 5280 ft, 1959 agreement)
+fathom_ft	fathom_ft	Fathom (6 ft)	plain	defined	none	-	Imperial length relations: 1 fathom = 6 ft (international foot, 1959 agreement)
+fathom_nmi	fathom_nmi	Fathom (1/1000 nautical mile)	plain	defined	none	-	International nautical mile = 1852 m (International Hydrographic Conference 1929); fathom = 1/1000 nautical mile
+cable_int	cable_int	Cable (international)	plain	defined	none	-	International nautical mile = 1852 m (International Hydrographic Conference 1929); cable = 1/10 nautical mile
+
+## area
+perch_sq	perch_sq	Square perch	plain	defined	none	-	Imperial area relations: 1 square perch = 1 rod x 1 rod = 272.25 ft^2 (international foot, 1959 agreement)
+rood	rood	Rood	plain	defined	none	-	Imperial area relations: 1 rood = 1210 yd^2 = 1/4 acre (international yard, 1959 agreement)
 
 ## volume
-Nm3	Nm³	Normal cubic metre	normal_volume	defined	none	Nm³	DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa
-scf	scf	Standard cubic foot	standard_volume	defined	none	-	NIST SP 811 (2008), Appendix B (foot, so the cubic foot is 0.3048^3 m^3); reference state 60 degF and 14.696 psia per GPA Standard 2145 (edition not checked)
+gill_imp	gill_imp	Imperial gill	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); gill = 1/4 pint = 5 fl oz
+peck_imp	peck_imp	Imperial peck	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); peck = 2 gallons
+bushel_imp	bushel_imp	Imperial bushel	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); bushel = 8 gallons
+quarter_vol_imp	quarter_vol_imp	Imperial quarter (volume)	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); quarter = 64 gallons
+minim_imp	minim_imp	Imperial minim	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); minim = 1/9600 pint (British apothecaries' measure)
+scruple_fl_imp	scruple_fl_imp	Fluid scruple	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid scruple = 20 minims = 1/480 pint
+drachm_fl_imp	drachm_fl_imp	Fluid drachm	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid drachm = 3 fluid scruples = 1/160 pint
+
+## mass
+dram_av	dram_av	Avoirdupois dram	plain	defined	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; dram = 1/16 oz = 1/256 lb
+stone	stone	Stone	plain	defined	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; stone = 14 lb
+quarter_mass_imp	quarter_mass_imp	Imperial quarter (mass)	plain	defined	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; quarter = 28 lb = 2 stone
+cwt_long	cwt_long	Long hundredweight	plain	defined	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; hundredweight = 112 lb = 8 stone
+slug	slug	Slug	plain	defined	none	-	NIST SP 811 (2008), Appendix B (slug); defined as the mass accelerated 1 ft/s^2 by 1 lbf
 
 ## length
 mil	mil	Mil	plain	defined	none	-	NIST SP 811 (2008), Appendix B (mil = 0.001 in)
@@ -246,9 +271,7 @@ acre_ft_us_survey	acre_ft_us_survey	US survey acre-foot	plain	defined	none	-	NIS
 cord	cord	Cord	plain	defined	none	-	NIST SP 811 (2008), Appendix B (cord = 128 ft^3)
 
 ## mass
-dram_av	dram_av	Avoirdupois dram	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Avoirdupois Units of Mass: 27 11/32 grains = 1 dram, 16 drams = 1 ounce)
 cwt_short	cwt_short	Short hundredweight	plain	defined	none	-	NIST SP 811 (2008), Appendix B (hundredweight, short = 100 lb); NIST Handbook 44 (2024), Appendix C (Avoirdupois Units of Mass)
-cwt_long	cwt_long	Long hundredweight	plain	defined	none	-	NIST SP 811 (2008), Appendix B (hundredweight, long = 112 lb); NIST Handbook 44 (2024), Appendix C (gross or long hundredweight)
 dwt	dwt	Pennyweight	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Troy Units of Mass: 24 grains = 1 pennyweight); NIST SP 811 (2008), Appendix B (pennyweight = 1.555 174 E-03 kg)
 lb_troy	lb_troy	Troy pound	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Troy Units of Mass: 12 ounces troy = 1 pound troy = 5760 grains)
 scruple_ap	scruple_ap	Apothecaries' scruple	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Apothecaries Units of Mass: 20 grains = 1 scruple)
@@ -259,15 +282,11 @@ ozf	ozf	Ounce-force	plain	defined	none	-	NIST SP 811 (2008), Appendix B (ounce (
 kip	kip	Kip	plain	defined	none	-	NIST SP 811 (2008), Appendix B (kip, 1 kip = 1000 lbf = 4.448 222 E+03 N)
 pdl	pdl	Poundal	plain	defined	none	-	NIST SP 811 (2008), Appendix B (poundal = 1.382 550 E-01 N)
 
-## mass
-slug	slug	Slug	plain	defined	none	-	NIST SP 811 (2008), Appendix B (slug = 1.459 390 E+01 kg)
-
 ## volume
 board_ft	board_ft	Board foot	plain	defined	none	-	NIST Handbook 130 (2024), Uniform Regulation for the Method of Sale of Commodities, section 2.12.1.1 (board foot, 144 in^3)
 bbl_us_dry	bbl_us_dry	US dry barrel	plain	defined	none	-	US Code title 15, section 234 (standard barrel for fruits, vegetables and other dry commodities: a barrel of a capacity of 7056 cubic inches); NBS Miscellaneous Publication M121 (1936), section 4 Capacity
 
 ## length
-hand	hand	Hand	plain	defined	none	-	NBS Miscellaneous Publication M121 (1936), section 1 Length (1 hand = 4 inches)
 fathom_us_survey	fathom_us_survey	US survey fathom	plain	defined	none	-	NIST SP 811 (2008), Appendix B (fathom, based on U.S. survey foot, 1.828 804 E+00 m); NIST Handbook 44 (2024), Appendix C (1 fathom = 6 feet)
 cable_us_survey	cable_us_survey	US survey cable length	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 cable's length = 720 feet = 120 fathoms)
 
@@ -313,4 +332,17 @@ tsp	tsp_us	-	US (4.92892159375 mL) and metric (5 mL) teaspoons differ
 a	yr_julian, yr_common, ar	-	a is the year (annum) and, in NIST SP 811, the are (100 m^2); the year is 365, 365.25 or 365.2425 days depending on the definition
 month	-	month_30, month_julian	a month has 28 to 31 days; there is no fixed length, so a month is never guessed (30 d and the mean Julian month of 30.4375 d are planned)
 mo	-	month_30, month_julian	same as month
-cwt	cwt_short, cwt_long	-	US (short) hundredweight is 100 lb and the British (long) hundredweight is 112 lb
+chain	chain_int, chain_us_survey	-	international chain (66 ft = 20.1168 m) and US survey chain (about 2 ppm longer) differ
+link	link_int, link_us_survey	-	international Gunter's link (0.66 ft) and US survey link differ by about 2 ppm; a link is also a hyperlink
+rod	rod_int, rod_us_survey	-	international rod (16.5 ft = 5.0292 m) and US survey rod differ by about 2 ppm
+furlong	furlong_int, furlong_us_survey	-	international furlong (660 ft) and US survey furlong differ by about 2 ppm
+league	league_int	-	statute league (3 mi) and nautical leagues (3 nmi) differ
+fathom	fathom_ft, fathom_nmi, fathom_us_survey	-	6 ft (1.8288 m, used by the British Admiralty) and 1/1000 nautical mile (1.852 m) differ by about 1 percent
+cable	cable_int, cable_us_survey	-	international cable (185.2 m), UK Admiralty cable (608 ft) and US cable (720 ft) differ
+gill	gill_imp, gill_us	-	imperial gill (142.0653125 mL) and US gill (118.29411825 mL) differ
+peck	peck_imp, pk_us	-	imperial peck (2 imperial gallons) and US dry peck differ
+bushel	bushel_imp, bu_us	-	imperial bushel (8 imperial gallons) and US dry bushel differ
+minim	minim_imp, minim_us	-	imperial minim (1/9600 imperial pint) and US minim (1/7680 US liquid pint) differ
+dram	dram_av, dram_ap, fl_dr_us	-	avoirdupois dram (1/16 oz), apothecaries' dram (60 grains) and the fluid drams differ
+cwt	cwt_long, cwt_short	-	long hundredweight (112 lb) and short hundredweight (100 lb) differ
+quarter	quarter_mass_imp, quarter_vol_imp	-	imperial quarter is 28 lb as a mass and 64 imperial gallons as a volume; the US quarter is 25 lb or a quarter of a dollar or a year

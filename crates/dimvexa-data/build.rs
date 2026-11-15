@@ -115,9 +115,8 @@ fn unit_def(t: &toml_lite::Table) -> Res<String> {
         "plain" => "Kind::Plain",
         "absolute_temperature" => "Kind::AbsoluteTemperature",
         "temperature_difference" => "Kind::TemperatureDifference",
-        "gauge_pressure" => "Kind::GaugePressure",
-        "normal_volume" => "Kind::NormalVolume",
-        "standard_volume" => "Kind::StandardVolume",
+        "angle" => "Kind::Angle",
+        "cycle" => "Kind::Cycle",
         other => return Err(ctx(format!("unknown kind '{other}'"))),
     };
     let shape = match t.str("shape").map_err(ctx)? {
@@ -143,7 +142,7 @@ fn unit_def(t: &toml_lite::Table) -> Res<String> {
         s,
         "    UnitDef {{ id: {}, symbol: {}, name: {}, aliases: &[{}], dim: [{}], kind: {kind}, shape: {shape}, \
          factor: {factor}, factor_exp: {factor_exp}, offset: {offset}, exactness: {exactness}, prefixes: {prefixes}, \
-         namespace: {}, source: {}, note: {}, conditions: {} }},",
+         namespace: {}, source: {}, note: {} }},",
         lit(symbol),
         lit(t.opt_str("symbol").map_err(ctx)?.unwrap_or(symbol)),
         lit(t.str("name").map_err(ctx)?),
@@ -152,7 +151,6 @@ fn unit_def(t: &toml_lite::Table) -> Res<String> {
         lit(t.str("namespace").map_err(ctx)?),
         lit(t.str("source").map_err(ctx)?),
         lit(t.str("note").map_err(ctx)?),
-        lit(t.opt_str("conditions").map_err(ctx)?.unwrap_or("")),
     );
     Ok(s)
 }
