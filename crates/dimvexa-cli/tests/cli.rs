@@ -1863,6 +1863,45 @@ fn units_show_their_status() {
     assert!(legacy >= 12, "{legacy}");
 }
 
+/// ADR-026: a config unit has a status too; it defaults to current and shows in `configs`.
+#[test]
+fn config_units_show_their_status() {
+    let cfg = config_file(
+        "status.toml",
+        "[[unit]]\nid = \"oldchain\"\nbase = \"m\"\nfactor = \"20\"\nexactness = \"defined\"\nstatus = \"legacy\"\nsource = \"s\"\nnote = \"legacy: kept for old plans\"\n\n[[unit]]\nid = \"newchain\"\nbase = \"m\"\nfactor = \"21\"\nexactness = \"defined\"\nsource = \"s\"\n",
+    );
+    let r = dimvexa(&["configs", &cfg, "--json"]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    let v = json::parse(&r.stdout).unwrap();
+    let units = v.get("config").unwrap().get("units").unwrap().as_array();
+    let status = |i: usize| units[i].get("status").unwrap().as_str().to_string();
+    assert_eq!(
+        (status(0).as_str(), status(1).as_str()),
+        ("legacy", "current")
+    );
+    let text = dimvexa(&["configs", &cfg]).stdout;
+    assert!(text.contains("exactness, status, source"));
+    let r = dimvexa(&["units", "oldchain", "--config", &cfg]);
+    assert!(
+        r.stdout
+            .lines()
+            .any(|l| l.trim_end() == "  status        legacy")
+    );
+    // a legacy unit still converts
+    assert_eq!(
+        dimvexa(&["convert", "1", "oldchain", "m", "--config", &cfg]).stdout,
+        "20 m\n"
+    );
+    // without a reason it is refused
+    let bad = config_file(
+        "status_bad.toml",
+        "[[unit]]\nid = \"x\"\nbase = \"m\"\nfactor = \"2\"\nexactness = \"defined\"\nstatus = \"legacy\"\nsource = \"s\"\n",
+    );
+    let r = dimvexa(&["convert", "1", "x", "m", "--config", &bad]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.contains("must say why"), "{}", r.stderr);
+}
+
 /// `docs/known-limitations.md` lists every limitation these tests pin, and each pinned entry
 /// has a test named after it somewhere in the workspace.
 #[test]

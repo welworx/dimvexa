@@ -25,7 +25,7 @@ skill: adding a field stays within the current schema).
 3. `dimvexa units` prints a `status` column after `exactness`; `dimvexa units NAME` prints a
    `status` line. `dimvexa units --json` and `dimvexa units NAME --json` gain the field `status`
    (`current` or `legacy`) in `dimvexa.units/5` (`docs/schemas/dimvexa.units-5.schema.json`).
-   A prefixed unit, a config unit and a name a config maps are `current`. Python `unit_info`
+   A prefixed unit and a name a config maps are `current`; a config unit has the status it states. Python `unit_info`
    returns `status`.
 4. A legacy unit converts exactly like any other. The flag is information, not a refusal: no
    warning is printed when one is used.
@@ -40,5 +40,7 @@ skill: adding a field stays within the current schema).
 * Public API: `UnitDef` has a new field, so a struct literal of it no longer compiles (0.x,
   allowed; CHANGELOG `Changed`). A consumer of the text list sees one more column.
 * The JSON gains a field within `dimvexa.units/5`; no new schema file.
-* A config `[[unit]]` has no `status`: a unit you define is current. Added later if it is needed.
+* A config `[[unit]]` takes the same optional `status` (`ConfigUnit::status`, the key `status`),
+  with the same rule on the note. `dimvexa configs NAME` prints a `status` column in the units
+  table and `--json` a `status` field in each unit (`dimvexa.configs/3`, an added field).
 * No test of a conversion changes.

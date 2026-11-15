@@ -51,7 +51,7 @@
 
 use dimvexa_core::{
     ConstantDef, Conversion, Dim, Error, Exactness, Kind, PrefixMode, Ratio, Registry, Result,
-    Unit, UnitExpr, is_valid_symbol,
+    Status, Unit, UnitExpr, is_valid_symbol,
 };
 
 /// A parsed config file: its origin, a content hash and its `[map]`, `[[unit]]` and
@@ -101,6 +101,8 @@ pub struct ConfigUnit {
     pub offset: Ratio,
     /// Whether the definition is exact by definition or a measurement.
     pub exactness: Exactness,
+    /// Current (the default) or legacy (ADR-026); a legacy unit's note says why.
+    pub status: Status,
     /// Which SI and binary prefixes the symbol accepts.
     pub prefixes: PrefixMode,
     /// Where the definition comes from.
@@ -345,6 +347,7 @@ impl TableKind {
                 "factor",
                 "offset",
                 "exactness",
+                "status",
                 "source",
                 "prefixes",
                 "note",
@@ -546,6 +549,20 @@ fn finish_unit(
             ));
         }
     };
+    let status = match p.get("status").filter(|v| !v.is_empty()) {
+        None => Status::Current,
+        Some(name) => Status::from_name(name)
+            .ok_or_else(|| format!("status '{name}' must be 'current' or 'legacy'"))?,
+    };
+    if status == Status::Legacy
+        && !p
+            .get("note")
+            .is_some_and(|n| n.to_lowercase().contains("legacy"))
+    {
+        return Err(
+            "a legacy unit's note must say why it is legacy (use the word 'legacy')".to_string(),
+        );
+    }
     let source = p.need("source")?;
     let prefixes = match p.get("prefixes").filter(|v| !v.is_empty()) {
         None => PrefixMode::None,
@@ -563,6 +580,7 @@ fn finish_unit(
         factor,
         offset,
         exactness,
+        status,
         prefixes,
         source,
         note: p.get("note").unwrap_or_default().to_string(),
@@ -1205,6 +1223,7 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
         unit = unit.with_name(name);
     }
     let unit = unit
+        .with_status(u.status)
         .with_prefixes(u.prefixes)
         .with_provenance(base.exactness().combine(u.exactness), &u.source, &note)
         .with_namespace("user");
@@ -1745,6 +1764,52 @@ mod tests {
     }
 
     const BARREL: &str = "[[unit]]\nid = \"bbl_oil\"\nbase = \"gal_us\"\nfactor = \"42\"\nexactness = \"defined\"\nsource = \"NIST SP 811 (2008), Appendix B\"\n";
+
+    #[test]
+    fn a_unit_has_a_status_and_a_legacy_one_says_why() {
+        use dimvexa_core::Status;
+        let u = Config::parse(BARREL, "o").unwrap().units()[0].clone();
+        assert_eq!(u.status, Status::Current);
+        let current = BARREL.replace("source", "status = \"current\"\nsource");
+        assert_eq!(
+            Config::parse(&current, "o").unwrap().units()[0].status,
+            Status::Current
+        );
+        let legacy = BARREL.replace(
+            "source",
+            "status = \"legacy\"\nnote = \"legacy: replaced in 2023\"\nsource",
+        );
+        let cfg = Config::parse(&legacy, "o").unwrap();
+        assert_eq!(cfg.units()[0].status, Status::Legacy);
+        // the unit in the registry has the status
+        let mut reg = Registry::new();
+        reg.register(
+            Unit::linear(
+                "gal_us",
+                Dim::new([0, 3, 0, 0, 0, 0, 0]),
+                Ratio::new(473_176_473, 125_000_000_000).unwrap(),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        apply(&mut reg, &[cfg]).unwrap();
+        assert_eq!(reg.get("bbl_oil").unwrap().status(), Status::Legacy);
+        // a legacy unit without a reason, and an unknown status, are refused
+        let bare = BARREL.replace("source", "status = \"legacy\"\nsource");
+        assert!(
+            Config::parse(&bare, "o")
+                .unwrap_err()
+                .to_string()
+                .contains("must say why")
+        );
+        let bad = BARREL.replace("source", "status = \"old\"\nsource");
+        assert!(
+            Config::parse(&bad, "o")
+                .unwrap_err()
+                .to_string()
+                .contains("must be 'current' or 'legacy'")
+        );
+    }
 
     #[test]
     fn a_unit_may_have_a_printed_symbol_and_a_name() {

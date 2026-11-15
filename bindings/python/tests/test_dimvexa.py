@@ -85,7 +85,8 @@ def test_unit_table() -> None:
     assert info["symbol"] == "m"
     assert info["status"] == "current"
     legacy = dimvexa.unit_info("chain_us_survey")
-    assert legacy is not None and legacy["status"] == "legacy"  # ADR-026
+    assert legacy is not None  # ADR-026
+    assert legacy["status"] == "legacy"
     assert dimvexa.unit_info("nope") is None
 
 

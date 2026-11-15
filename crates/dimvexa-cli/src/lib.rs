@@ -2264,12 +2264,12 @@ fn config_detail_text(c: &Config) -> String {
     }
     if !c.units().is_empty() {
         s.push_str(
-            "\n## units\n# columns: id, symbol, name, base, factor, offset, exactness, source\n",
+            "\n## units\n# columns: id, symbol, name, base, factor, offset, exactness, status, source\n",
         );
         for u in c.units() {
             let _ = writeln!(
                 s,
-                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
                 cell(&u.id),
                 cell(u.symbol.as_deref().unwrap_or("-")),
                 cell(u.name.as_deref().unwrap_or("-")),
@@ -2277,6 +2277,7 @@ fn config_detail_text(c: &Config) -> String {
                 u.factor.to_fraction_string(),
                 u.offset.to_fraction_string(),
                 u.exactness.name(),
+                u.status.name(),
                 cell(&u.source)
             );
         }
@@ -2321,7 +2322,7 @@ fn config_detail_json(c: &Config) -> String {
         .iter()
         .map(|u| {
             format!(
-                "{{\"id\":{},\"symbol\":{},\"name\":{},\"base\":{},\"factor\":{},\"offset\":{},\"exactness\":{},\"source\":{},\"line\":{}}}",
+                "{{\"id\":{},\"symbol\":{},\"name\":{},\"base\":{},\"factor\":{},\"offset\":{},\"exactness\":{},\"status\":{},\"source\":{},\"line\":{}}}",
                 json_string(&u.id),
                 u.symbol.as_deref().map_or_else(|| "null".to_string(), json_string),
                 u.name.as_deref().map_or_else(|| "null".to_string(), json_string),
@@ -2329,6 +2330,7 @@ fn config_detail_json(c: &Config) -> String {
                 json_string(&u.factor.to_fraction_string()),
                 json_string(&u.offset.to_fraction_string()),
                 json_string(u.exactness.name()),
+                json_string(u.status.name()),
                 json_string(&u.source),
                 u.line
             )

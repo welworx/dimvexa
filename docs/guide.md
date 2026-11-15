@@ -393,6 +393,9 @@ Rules for your units:
 - A unit may carry an `offset` of its own (ADR-022), see the next example. It needs a plain
   base and `prefixes = "none"`, and it cannot be part of a compound unit.
 - If the base is `measured`, so is the new unit, whatever you state.
+- A unit may say `status = "legacy"` (ADR-026) for a retired or superseded unit you keep for old data;
+  its `note` must then say why (the word `legacy`). `current` is the default. It is shown by
+  `dimvexa units` and `dimvexa configs`, and it never refuses a conversion.
 - `dimvexa units` marks them (`[yours: file:line]`) and the JSON has an `origin` for each.
 
 ### Example: gauge pressure with your own ambient pressure

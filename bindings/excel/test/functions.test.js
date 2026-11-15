@@ -135,7 +135,7 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
   assert.strictEqual(await associated.CONVERT(1, "ton", "kg", undefined, "metric-trade"), 1000);
   assert.strictEqual(await associated.CONVERT(1, "ton", "kg", "", "us-customary, water"), 907.18474);
   assert.deepStrictEqual(await associated.CONVERTRANGE([[1, 2]], "ton", "kg", "", "us-customary"), [[907.18474, 1814.36948]]);
-  await assert.rejects(async () => associated.CONVERT(1, "ton", "kg", "", "nope"), /no shipped config named 'nope'.*us, imperial/);
+  await assert.rejects(async () => associated.CONVERT(1, "ton", "kg", "", "nope"), /no shipped config named 'nope'.*us-customary, us-survey, imperial/);
   await assert.rejects(async () => associated.CONVERT(1, "ton", "kg", "", "./us.toml"), /a file path cannot be used/);
   assert.deepStrictEqual(
     (await associated.CONVERTRANGE([[1], [2]], "L", "kg", "1000kg/m3")).flat().map((x) => +x.toFixed(9)),
