@@ -572,8 +572,8 @@ fn units_lists_every_table_entry_by_group() {
     let n = dimvexa_data::registry().unwrap().len();
     let r = dimvexa(&["units"]);
     assert_eq!(r.code, 0);
-    // Unit rows have eight tab-separated columns; the ambiguous rows have four.
-    let rows = r.stdout.lines().filter(|l| l.split('\t').count() == 8);
+    // Unit rows have nine tab-separated columns; the ambiguous rows have four.
+    let rows = r.stdout.lines().filter(|l| l.split('\t').count() == 9);
     assert_eq!(rows.count(), n);
     assert!(r.stdout.lines().any(|l| l == "## volume"));
     assert!(r.stdout.lines().any(|l| l.starts_with("psi\t")));
@@ -612,7 +612,7 @@ fn units_groups_lists_only_the_groups() {
     let r = dimvexa(&["units", "--groups"]);
     assert_eq!(r.code, 0);
     snapshot("units_groups.txt", &r.stdout);
-    assert!(r.stdout.lines().any(|l| l == "volume\t20"));
+    assert!(r.stdout.lines().any(|l| l == "volume\t32"));
     assert!(!r.stdout.contains("psi\t"));
     let v = json::parse(&dimvexa(&["units", "--groups", "--json"]).stdout).unwrap();
     json::check_units_schema(&v);
@@ -1340,11 +1340,11 @@ fn guide_shipped_configs_are_real() {
     let readme = guide();
     let section = readme_section(&readme, "## Names and densities: `--config`");
     for args in [
-        &["convert", "1", "ton", "kg", "--config", "us"][..],
+        &["convert", "1", "ton", "kg", "--config", "us-customary"][..],
         &["convert", "1", "ton", "kg", "--config", "imperial"],
         &["convert", "1", "mt", "kg", "--config", "metric-trade"],
         &["convert", "1", "yr", "d", "--config", "year-julian"],
-        &["convert", "1", "oz", "g", "--config", "us"],
+        &["convert", "1", "oz", "g", "--config", "us-customary"],
     ] {
         let r = dimvexa_at_root(args);
         let output = if r.code == 0 { r.stdout } else { r.stderr };
@@ -1523,8 +1523,8 @@ fn units_shows_which_units_are_yours() {
     // The group table counts it too.
     let g = dimvexa_at_root(&["units", "--groups", "--config", OIL_CFG]);
     let base = dimvexa(&["units", "--groups"]);
-    assert!(g.stdout.lines().any(|l| l == "volume\t21"));
-    assert!(base.stdout.lines().any(|l| l == "volume\t20"));
+    assert!(g.stdout.lines().any(|l| l == "volume\t33"));
+    assert!(base.stdout.lines().any(|l| l == "volume\t32"));
 
     let v =
         json::parse(&dimvexa_at_root(&["units", "--json", "--config", OIL_CFG]).stdout).unwrap();
@@ -1783,6 +1783,125 @@ fn a_usage_error_follows_the_command_word_not_an_option_value() {
     assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/3");
 }
 
+/// KL-28: US customary units that need a primary source are not shipped.
+#[test]
+fn known_limitation_kl_28_us_customary_units_without_a_source_are_unknown() {
+    for unit in ["hogshead", "bbl_us_liquid", "ton_force_short", "pottle"] {
+        let r = dimvexa(&["convert", "1", unit, "L"]);
+        assert_eq!(
+            r.code, 1,
+            "KL-28 fixed? then {unit} ships: update the entry"
+        );
+    }
+}
+
+/// KL-29: no printer's point or pica (two different points exist).
+#[test]
+fn known_limitation_kl_29_points_and_picas_are_unknown() {
+    for unit in ["pica", "point_dtp"] {
+        let r = dimvexa(&["convert", "1", unit, "mm"]);
+        assert_eq!(
+            r.code, 1,
+            "KL-29 fixed? then {unit} ships: update the entry"
+        );
+    }
+}
+
+/// KL-30: no US survey league.
+#[test]
+fn known_limitation_kl_30_us_survey_league_is_unknown() {
+    let r = dimvexa(&["convert", "1", "league_us_survey", "m"]);
+    assert_eq!(
+        r.code, 1,
+        "KL-30 fixed? then the survey league ships: update the entry"
+    );
+}
+
+/// ADR-026: a unit has a status; the units built on the US survey foot are legacy.
+#[test]
+fn units_show_their_status() {
+    let status = |id: &str| {
+        let r = dimvexa(&["units", id, "--json"]);
+        assert_eq!(r.code, 0, "{id}");
+        json::parse(&r.stdout)
+            .unwrap()
+            .get("unit")
+            .unwrap()
+            .get("status")
+            .unwrap()
+            .as_str()
+            .to_string()
+    };
+    assert_eq!(status("m"), "current");
+    assert_eq!(status("ft"), "current");
+    for id in [
+        "ft_us_survey",
+        "mi_us_survey",
+        "acre_us_survey",
+        "chain_us_survey",
+    ] {
+        assert_eq!(status(id), "legacy", "{id}");
+    }
+    // a prefixed unit is current
+    assert_eq!(status("km"), "current");
+    let text = dimvexa(&["units", "ft_us_survey"]).stdout;
+    assert!(
+        text.lines()
+            .any(|l| l.trim_end() == "  status        legacy")
+    );
+    // the list has a status column, and every row has a status
+    let list = dimvexa(&["units"]).stdout;
+    assert!(list.contains("exactness, status, prefixes"));
+    let json = json::parse(&dimvexa(&["units", "--json"]).stdout).unwrap();
+    let legacy = json
+        .get("units")
+        .unwrap()
+        .as_array()
+        .iter()
+        .filter(|u| u.get("status").unwrap().as_str() == "legacy")
+        .count();
+    assert!(legacy >= 12, "{legacy}");
+}
+
+/// ADR-026: a config unit has a status too; it defaults to current and shows in `configs`.
+#[test]
+fn config_units_show_their_status() {
+    let cfg = config_file(
+        "status.toml",
+        "[[unit]]\nid = \"oldchain\"\nbase = \"m\"\nfactor = \"20\"\nexactness = \"defined\"\nstatus = \"legacy\"\nsource = \"s\"\nnote = \"legacy: kept for old plans\"\n\n[[unit]]\nid = \"newchain\"\nbase = \"m\"\nfactor = \"21\"\nexactness = \"defined\"\nsource = \"s\"\n",
+    );
+    let r = dimvexa(&["configs", &cfg, "--json"]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    let v = json::parse(&r.stdout).unwrap();
+    let units = v.get("config").unwrap().get("units").unwrap().as_array();
+    let status = |i: usize| units[i].get("status").unwrap().as_str().to_string();
+    assert_eq!(
+        (status(0).as_str(), status(1).as_str()),
+        ("legacy", "current")
+    );
+    let text = dimvexa(&["configs", &cfg]).stdout;
+    assert!(text.contains("exactness, status, source"));
+    let r = dimvexa(&["units", "oldchain", "--config", &cfg]);
+    assert!(
+        r.stdout
+            .lines()
+            .any(|l| l.trim_end() == "  status        legacy")
+    );
+    // a legacy unit still converts
+    assert_eq!(
+        dimvexa(&["convert", "1", "oldchain", "m", "--config", &cfg]).stdout,
+        "20 m\n"
+    );
+    // without a reason it is refused
+    let bad = config_file(
+        "status_bad.toml",
+        "[[unit]]\nid = \"x\"\nbase = \"m\"\nfactor = \"2\"\nexactness = \"defined\"\nstatus = \"legacy\"\nsource = \"s\"\n",
+    );
+    let r = dimvexa(&["convert", "1", "x", "m", "--config", &bad]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.contains("must say why"), "{}", r.stderr);
+}
+
 /// `docs/known-limitations.md` lists every limitation these tests pin, and each pinned entry
 /// has a test named after it somewhere in the workspace.
 #[test]
@@ -1810,7 +1929,9 @@ fn known_limitations_document_lists_the_pinned_entries() {
 }
 
 /// The entries of `docs/known-limitations.md` that a test pins.
-const PINNED_LIMITATIONS: [u32; 15] = [1, 4, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18, 24, 25];
+const PINNED_LIMITATIONS: [u32; 18] = [
+    1, 4, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18, 24, 25, 28, 29, 30,
+];
 
 /// Real outputs validate against the schema files in `docs/schemas/`, not only against the
 /// hand-written checks in `support/json.rs`.
@@ -1909,11 +2030,19 @@ fn outputs_validate_against_the_schema_files() {
         ),
         (
             &convert,
-            vec!["convert", "1", "ton", "kg", "--json", "--config", "us"],
+            vec![
+                "convert",
+                "1",
+                "ton",
+                "kg",
+                "--json",
+                "--config",
+                "us-customary",
+            ],
         ),
         (&units, vec!["units", "--json", "--config", "imperial"]),
         (&configs, vec!["configs", "--json"]),
-        (&configs, vec!["configs", "us", "--json"]),
+        (&configs, vec!["configs", "us-customary", "--json"]),
         (&configs, vec!["configs", "water", "--json"]),
         (&configs, vec!["configs", OIL_CFG, "--json"]),
         (&configs, vec!["configs", "nope", "--json"]),
@@ -2281,21 +2410,36 @@ fn a_value_with_a_bad_constant_or_operator_is_loud() {
 #[test]
 fn config_takes_a_shipped_name_or_a_path() {
     // A bare name is a shipped config; the result records it as bundled:NAME with a hash.
-    let r = dimvexa(&["convert", "1", "ton", "kg", "--config", "us", "--json"]);
+    let r = dimvexa(&[
+        "convert",
+        "1",
+        "ton",
+        "kg",
+        "--config",
+        "us-customary",
+        "--json",
+    ]);
     assert_eq!(r.code, 0, "{}", r.stderr);
     let v = json::parse(&r.stdout).unwrap();
     let cfg = &v.get("config").unwrap().as_array()[0];
-    assert_eq!(cfg.get("file").unwrap().as_str(), "bundled:us");
+    assert_eq!(cfg.get("file").unwrap().as_str(), "bundled:us-customary");
     assert!(cfg.get("hash").unwrap().as_str().starts_with("fnv1a64:"));
     // Left to right, later wins: imperial after us gives the long ton.
     let r = dimvexa(&[
-        "convert", "1", "ton", "kg", "--config", "us", "--config", "imperial",
+        "convert",
+        "1",
+        "ton",
+        "kg",
+        "--config",
+        "us-customary",
+        "--config",
+        "imperial",
     ]);
     assert_eq!(r.stdout, "1016.0469088 kg\n");
     // A bare word is never a file, even when a file of that name exists: ./name is the file.
     let dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("bare_name");
     std::fs::create_dir_all(&dir).unwrap();
-    std::fs::write(dir.join("us"), "[map]\nton = \"tonne\"\n").unwrap();
+    std::fs::write(dir.join("us-customary"), "[map]\nton = \"tonne\"\n").unwrap();
     let run = |spec: &str| {
         let out = Command::new(env!("CARGO_BIN_EXE_dimvexa"))
             .args(["convert", "1", "ton", "kg", "--config", spec])
@@ -2304,14 +2448,19 @@ fn config_takes_a_shipped_name_or_a_path() {
             .unwrap();
         String::from_utf8(out.stdout).unwrap()
     };
-    assert_eq!(run("us"), "907.18474 kg\n", "the shipped one, not the file");
-    assert_eq!(run("./us"), "1000 kg\n", "the file");
+    assert_eq!(
+        run("us-customary"),
+        "907.18474 kg\n",
+        "the shipped one, not the file"
+    );
+    assert_eq!(run("./us-customary"), "1000 kg\n", "the file");
     // An unknown name lists the shipped ones and exits 2 (a usage error).
     let r = dimvexa(&["convert", "1", "ton", "kg", "--config", "uss"]);
     assert_eq!(r.code, 2);
     assert!(r.stderr.contains("no config named 'uss'"), "{}", r.stderr);
     assert!(
-        r.stderr.contains("us, imperial, metric-trade"),
+        r.stderr
+            .contains("us-customary, us-survey, imperial, metric-trade"),
         "{}",
         r.stderr
     );
@@ -2322,9 +2471,9 @@ fn config_takes_a_shipped_name_or_a_path() {
 #[test]
 fn the_shipped_configs_resolve_their_names() {
     for (cfg, args, want) in [
-        ("us", ["1", "gal", "L"], "3.785411784 L\n"),
+        ("us-customary", ["1", "gal", "L"], "3.785411784 L\n"),
         ("imperial", ["1", "gal", "L"], "4.54609 L\n"),
-        ("us", ["1", "mile", "km"], "1.609344 km\n"),
+        ("us-customary", ["1", "mile", "km"], "1.609344 km\n"),
         ("metric-trade", ["1", "mt", "kg"], "1000 kg\n"),
         ("year-julian", ["1", "yr", "d"], "365.25 d\n"),
         ("year-civil", ["1", "year", "d"], "365 d\n"),
@@ -2338,7 +2487,7 @@ fn the_shipped_configs_resolve_their_names() {
         );
     }
     // oz is refused in both: a mass or a volume in each country.
-    for cfg in ["us", "imperial"] {
+    for cfg in ["us-customary", "imperial"] {
         let r = dimvexa(&["convert", "1", "oz", "g", "--config", cfg]);
         assert_eq!(r.code, 1);
         assert!(
@@ -2458,7 +2607,7 @@ fn a_density_is_a_name_or_the_callers_own_number() {
 #[test]
 fn a_removed_option_is_an_unknown_option() {
     for old in ["--profile", "--bridge", "--density"] {
-        let r = dimvexa(&["convert", "1", "ton", "kg", old, "us"]);
+        let r = dimvexa(&["convert", "1", "ton", "kg", old, "us-customary"]);
         assert_eq!(r.code, 2, "{old}");
         assert!(
             r.stderr.contains(&format!("unknown option '{old}'")),
@@ -2473,7 +2622,7 @@ fn configs_lists_and_shows_what_is_included() {
     let r = dimvexa(&["configs"]);
     assert_eq!(r.code, 0);
     snapshot("configs.txt", &stable(&r.stdout));
-    let r = dimvexa(&["configs", "us"]);
+    let r = dimvexa(&["configs", "us-customary"]);
     assert_eq!(r.code, 0);
     snapshot("configs_us.txt", &stable(&r.stdout));
     assert!(r.stdout.contains("ton\tton_short"));
@@ -2499,7 +2648,7 @@ fn configs_lists_and_shows_what_is_included() {
     assert!(r.stderr.contains("no config named 'nope'"), "{}", r.stderr);
     assert_eq!(dimvexa(&["configs", "a", "b"]).code, 2);
     assert_eq!(dimvexa(&["configs", "--exact"]).code, 2);
-    assert_eq!(dimvexa(&["configs", "--config", "us"]).code, 2);
+    assert_eq!(dimvexa(&["configs", "--config", "us-customary"]).code, 2);
     // JSON validates and carries the sources.
     let r = dimvexa(&["configs", "water", "--json"]);
     let v = json::parse(&r.stdout).unwrap();
@@ -2551,16 +2700,37 @@ fn a_user_file_overrides_a_shipped_density_and_a_shipped_name() {
     );
     // The same file twice replaces itself without a warning.
     let r = dimvexa(&[
-        "convert", "1", "ton", "kg", "--config", "us", "--config", "us",
+        "convert",
+        "1",
+        "ton",
+        "kg",
+        "--config",
+        "us-customary",
+        "--config",
+        "us-customary",
     ]);
     assert!(!r.stderr.contains("warning"), "{}", r.stderr);
     let r = dimvexa(&[
-        "convert", "1", "ton", "kg", "--config", "us", "--config", &cfg,
+        "convert",
+        "1",
+        "ton",
+        "kg",
+        "--config",
+        "us-customary",
+        "--config",
+        &cfg,
     ]);
     assert_eq!(r.stdout, "1000 kg\n");
     // the other way round the shipped one wins
     let r = dimvexa(&[
-        "convert", "1", "ton", "kg", "--config", &cfg, "--config", "us",
+        "convert",
+        "1",
+        "ton",
+        "kg",
+        "--config",
+        &cfg,
+        "--config",
+        "us-customary",
     ]);
     assert_eq!(r.stdout, "907.18474 kg\n");
     let r = dimvexa(&["configs", ".toml"]);
@@ -2574,11 +2744,11 @@ fn a_user_file_overrides_a_shipped_density_and_a_shipped_name() {
 
 #[test]
 fn units_lists_the_names_and_densities_of_a_shipped_config() {
-    let r = dimvexa(&["units", "--config", "us", "--config", "water"]);
+    let r = dimvexa(&["units", "--config", "us-customary", "--config", "water"]);
     assert_eq!(r.code, 0);
     assert!(r.stdout.contains("## config mappings"));
     assert!(
-        r.stdout.contains("\nton\tton_short\tbundled:us:"),
+        r.stdout.contains("\nton\tton_short\tbundled:us-customary:"),
         "{}",
         r.stdout
     );
@@ -2594,7 +2764,7 @@ fn update_command_line_is_checked_before_any_network_use() {
         &["update", "now"][..],
         &["update", "--json"],
         &["update", "--exact"],
-        &["update", "--config", "us"],
+        &["update", "--config", "us-customary"],
         &["update", "--const", "1kg/m3"],
         &["update", "--bogus"],
     ] {

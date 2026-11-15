@@ -16,7 +16,7 @@ The library is standalone: it has no dependency on any consumer project and noth
 
 1. **Exact by default.** Every factor is a rational, which may carry a power of ten and a power of pi next to it (ADR-018, so `deg` is exactly `1/180 pi`). Each definition records whether it is exact by definition or measured.
 2. **Fast at runtime.** Parse and compose once. A pre-parsed conversion is one multiply-add, with no allocation.
-3. **No silent ambiguity.** `ton`, `oz`, `pt`, bare `ppm` and bare `gal` are errors unless a config resolves them (`--config us`, ADR-014).
+3. **No silent ambiguity.** `ton`, `oz`, `pt`, bare `ppm` and bare `gal` are errors unless a config resolves them (`--config us-customary`, ADR-014).
 4. **Kinds, not just dimensions.** Absolute vs delta temperature, angle vs cycle (ADR-020), mass vs mole fraction are distinct.
 5. **Context is explicit.** Conversions that need density, molar mass or an equation of state are refused unless the caller supplies the context.
 6. **Data-driven.** Units and scales are data. Extending the library should not require writing Rust.
@@ -176,7 +176,7 @@ dimvexa/
 1. Final set of conversion shapes and their exact inverses.
 2. Error-bound guarantee for the fast path (≤ 1 ulp or other).
 3. Default behaviour of angle (dimensionless) vs UCUM.
-4. How configs resolve ambiguous symbols (decided in ADR-009 and ADR-014: `--config NAME_OR_PATH`; shipped: `us`, `imperial`, `metric-trade`, `year-julian`, `year-civil`, `water`).
+4. How configs resolve ambiguous symbols (decided in ADR-009 and ADR-014: `--config NAME_OR_PATH`; shipped: `us-customary`, `us-survey`, `imperial`, `metric-trade`, `year-julian`, `year-civil`, `water`).
 5. Whether `i128` rationals suffice, or big rationals are needed at load time.
 6. Licence and the policy for data derived from external tables (GPL sources are excluded).
 7. Name and namespace availability.

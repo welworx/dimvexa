@@ -5,6 +5,7 @@ psi
   dimension     kg m^-1 s^-2
   quantity kind plain
   exactness     defined
+  status        current
   prefixes      none
   namespace     std
   factor to SI  8896443230521/1290320000

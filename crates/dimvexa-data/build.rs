@@ -129,6 +129,11 @@ fn unit_def(t: &toml_lite::Table) -> Res<String> {
         "measured" => "Exactness::Measured",
         other => return Err(ctx(format!("unknown exactness '{other}'"))),
     };
+    let status = match t.opt_str("status").map_err(ctx)?.unwrap_or("current") {
+        "current" => "Status::Current",
+        "legacy" => "Status::Legacy",
+        other => return Err(ctx(format!("unknown status '{other}'"))),
+    };
     let prefixes = match t.str("prefixes").map_err(ctx)? {
         "none" => "PrefixMode::None",
         "si" => "PrefixMode::Si",
@@ -141,7 +146,7 @@ fn unit_def(t: &toml_lite::Table) -> Res<String> {
     let _ = writeln!(
         s,
         "    UnitDef {{ id: {}, symbol: {}, name: {}, aliases: &[{}], dim: [{}], kind: {kind}, shape: {shape}, \
-         factor: {factor}, factor_exp: {factor_exp}, offset: {offset}, exactness: {exactness}, prefixes: {prefixes}, \
+         factor: {factor}, factor_exp: {factor_exp}, offset: {offset}, exactness: {exactness}, status: {status}, prefixes: {prefixes}, \
          namespace: {}, source: {}, note: {} }},",
         lit(symbol),
         lit(t.opt_str("symbol").map_err(ctx)?.unwrap_or(symbol)),

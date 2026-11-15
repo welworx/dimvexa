@@ -13,11 +13,12 @@ such as a gauge reading with your ambient pressure. See also: dimvexa constants
 Examples:
   dimvexa configs
   dimvexa configs water
-  dimvexa configs us --json
+  dimvexa configs us-customary --json
 
 Forms:
-  configs          the configs that ship with dimvexa (us, imperial,
-                   metric-trade, year-julian, year-civil, water)
+  configs          the configs that ship with dimvexa (us-customary,
+                   us-survey, imperial, metric-trade, year-julian,
+                   year-civil, water)
   configs NAME     its names, units, and constants with their conditions and
                    sources
   configs PATH     the same for your own file (./mine.toml, or a name with a /

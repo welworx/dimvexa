@@ -6,7 +6,7 @@ use core::fmt;
 use crate::dim::Dim;
 use crate::error::{Error, Result};
 use crate::expr::{Expr, is_valid_symbol};
-use crate::kind::{Exactness, Kind, Shape};
+use crate::kind::{Exactness, Kind, Shape, Status};
 use crate::prefix::PrefixMode;
 use crate::ratio::Ratio;
 
@@ -40,6 +40,8 @@ pub struct UnitDef {
     pub offset: (i128, i128),
     /// Defined or measured.
     pub exactness: Exactness,
+    /// Current or legacy (ADR-026).
+    pub status: Status,
     /// Accepted prefixes.
     pub prefixes: PrefixMode,
     /// Namespace, `si` or `std` for the core table.
@@ -77,6 +79,7 @@ pub struct Unit {
     factor: Ratio,
     offset: Ratio,
     exactness: Exactness,
+    status: Status,
     prefixes: PrefixMode,
     namespace: String,
     source: String,
@@ -142,6 +145,7 @@ impl Unit {
             factor,
             offset,
             exactness: Exactness::Defined,
+            status: Status::Current,
             prefixes: PrefixMode::None,
             namespace: "std".to_string(),
             source: String::new(),
@@ -189,6 +193,7 @@ impl Unit {
         }
         unit.name = def.name.to_string();
         unit.exactness = def.exactness;
+        unit.status = def.status;
         unit.prefixes = def.prefixes;
         unit.namespace = def.namespace.to_string();
         unit.source = def.source.to_string();
@@ -257,6 +262,13 @@ impl Unit {
         self
     }
 
+    /// Marks the unit current or legacy (ADR-026).
+    #[must_use]
+    pub const fn with_status(mut self, status: Status) -> Self {
+        self.status = status;
+        self
+    }
+
     /// Sets the namespace.
     #[must_use]
     pub fn with_namespace(mut self, namespace: &str) -> Self {
@@ -321,6 +333,12 @@ impl Unit {
     #[must_use]
     pub const fn exactness(&self) -> Exactness {
         self.exactness
+    }
+
+    /// Current or legacy (ADR-026).
+    #[must_use]
+    pub const fn status(&self) -> Status {
+        self.status
     }
 
     /// Accepted prefixes.
@@ -714,6 +732,7 @@ mod tests {
             factor_exp: (0, 0),
             offset: (0, 1),
             exactness: Exactness::Defined,
+            status: Status::Current,
             prefixes: PrefixMode::Si,
             namespace: "std",
             source: "test",

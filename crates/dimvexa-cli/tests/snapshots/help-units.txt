@@ -16,8 +16,9 @@ Forms:
                    refused
   units --groups   only the groups (length, mass, volume, ...) with their sizes
   units GROUP      one group
-  units UNIT       one unit: id, symbol, name, factor, exactness, sources; a
-                   prefixed unit (km) is named from its parts
+  units UNIT       one unit: id, symbol, name, factor, exactness, status
+                   (current or legacy), sources; a prefixed unit (km) is
+                   named from its parts
 
 Options:
   --json           machine-readable output (schema dimvexa.units/5)

@@ -1,9 +1,20 @@
-bundled:us (hash fnv1a64:<hash>)
+bundled:us-customary (hash fnv1a64:<hash>)
 
 ## names (what they mean once the config is loaded)
 # columns: name, unit
 ton	ton_short
 mile	mi
+chain	chain_int
+link	link_int
+rod	rod_int
+furlong	furlong_int
+fathom	fathom_ft
+cable	cable_ft
 gal	gal_us
 pt	pt_us
 qt	qt_us
+gill	gill_us
+peck	pk_us
+bushel	bu_us
+minim	minim_us
+cwt	cwt_short

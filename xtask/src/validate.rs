@@ -234,6 +234,20 @@ pub fn run(root: &Path) -> Result<Report, String> {
             )),
             Err(_) => err(format!("{at}: missing 'exactness'")),
         }
+        match t.str("status") {
+            Ok("current") | Err(_) => {}
+            Ok("legacy") => {
+                if !t
+                    .str("note")
+                    .is_ok_and(|n| n.to_lowercase().contains("legacy"))
+                {
+                    err(format!(
+                        "{at}: a legacy unit's note must say why it is legacy (use the word 'legacy')"
+                    ));
+                }
+            }
+            Ok(other) => err(format!("{at}: status '{other}' must be current or legacy")),
+        }
         let kind = t.str("kind").ok().and_then(Kind::from_name);
         if kind.is_none() {
             err(format!("{at}: missing or unknown 'kind'"));
@@ -738,6 +752,29 @@ mod tests {
             t.replacen("dim = [1, -1, -2, 0, 0, 0, 0]\n", "", 1)
         });
         assert!(has(&e, "missing 'dim'"), "{e:?}");
+    }
+
+    #[test]
+    fn detects_a_bad_status_and_a_legacy_unit_without_a_reason() {
+        let e = errors_after("sta", "units/common.toml", |t| {
+            t.replacen(
+                "exactness = \"defined\"\n",
+                "exactness = \"defined\"\nstatus = \"retired\"\n",
+                1,
+            )
+        });
+        assert!(
+            has(&e, "status 'retired' must be current or legacy"),
+            "{e:?}"
+        );
+        let e = errors_after("leg", "units/common.toml", |t| {
+            t.replacen(
+                "exactness = \"defined\"\n",
+                "exactness = \"defined\"\nstatus = \"legacy\"\n",
+                1,
+            )
+        });
+        assert!(has(&e, "must say why it is legacy"), "{e:?}");
     }
 
     #[test]

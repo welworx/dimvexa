@@ -118,6 +118,7 @@
                   "base",
                   "factor",
                   "exactness",
+                  "status",
                   "source",
                   "line"
                 ],
@@ -155,6 +156,12 @@
                     "enum": [
                       "defined",
                       "measured"
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "current",
+                      "legacy"
                     ]
                   },
                   "source": {

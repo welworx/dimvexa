@@ -18,7 +18,7 @@
 )]
 
 use dimvexa_core::{
-    AmbiguousDef, ConstantDef, Error, Exactness, Kind, PrefixMode, Registry, Shape, UnitDef,
+    AmbiguousDef, ConstantDef, Error, Exactness, Kind, PrefixMode, Registry, Shape, Status, UnitDef,
 };
 
 // The ohm sign U+2126 alias is intentionally not NFC-normalised (it is a distinct code point users paste).
@@ -29,7 +29,7 @@ use dimvexa_core::{
     missing_docs
 )]
 mod generated {
-    use super::{AmbiguousDef, ConstantDef, Exactness, Kind, PrefixMode, Shape, UnitDef};
+    use super::{AmbiguousDef, ConstantDef, Exactness, Kind, PrefixMode, Shape, Status, UnitDef};
     include!(concat!(env!("OUT_DIR"), "/units_generated.rs"));
 }
 

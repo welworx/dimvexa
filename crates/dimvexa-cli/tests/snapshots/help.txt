@@ -16,7 +16,7 @@ Examples:
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 4pi rad deg
   dimvexa convert 100 degC degF --json
-  dimvexa convert 1 ton kg --config us
+  dimvexa convert 1 ton kg --config us-customary
   dimvexa convert 1 L kg --config water --const water_25C
   dimvexa convert 1 L kg --const 998.2067kg/m3
   dimvexa units volume
@@ -57,10 +57,10 @@ Options:
   --config NAME_OR_PATH
                    (beta) apply a config; repeatable, later ones win and a
                    warning names what they replace. A shipped one is named
-                   (us, imperial, metric-trade, year-julian, year-civil,
-                   water); a file has a path (./mine.toml, or anything with
-                   a / or ending in .toml). Without --config the names stay
-                   strict.
+                   (us-customary, us-survey, imperial, metric-trade,
+                   year-julian, year-civil, water); a file has a path
+                   (./mine.toml, or anything with a / or ending in .toml).
+                   Without --config the names stay strict.
                    See docs/adr/014-one-config-mechanism.md
   --const NAME_OR_VALUE
                    density for mass <-> volume: the name of a constant of a

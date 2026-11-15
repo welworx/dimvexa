@@ -70,6 +70,7 @@
               "dimension",
               "quantity_kind",
               "exactness",
+              "status",
               "prefixes",
               "namespace",
               "source",
@@ -121,6 +122,12 @@
                 "enum": [
                   "defined",
                   "measured"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "current",
+                  "legacy"
                 ]
               },
               "prefixes": {
@@ -369,6 +376,7 @@
             "dimension",
             "quantity_kind",
             "exactness",
+            "status",
             "prefixes",
             "namespace",
             "factor",
@@ -481,6 +489,12 @@
               "enum": [
                 "defined",
                 "measured"
+              ]
+            },
+            "status": {
+              "enum": [
+                "current",
+                "legacy"
               ]
             },
             "prefixes": {

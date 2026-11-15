@@ -1,16 +1,16 @@
 # columns: group, units
-length	23
-mass	15
+length	31
+mass	20
 time	7
 electric_current	1
 temperature	8
 amount_of_substance	2
 luminous_intensity	2
 frequency	2
-force	4
-pressure	6
+force	7
+pressure	12
 energy	8
-power	3
+power	4
 electric_charge	1
 voltage	1
 resistance	1
@@ -19,8 +19,8 @@ conductance	1
 magnetic_flux	1
 magnetic_flux_density	1
 inductance	1
-volume	20
-area	6
+volume	32
+area	8
 absorbed_dose	2
 illuminance	1
 catalytic_activity	1

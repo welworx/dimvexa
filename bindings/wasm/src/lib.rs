@@ -66,7 +66,7 @@ fn invalid(symbol: &str, message: String) -> JsValue {
     })
 }
 
-/// Applies shipped configs by name (`"us"`, `"us,water"`; commas or spaces) and then your own
+/// Applies shipped configs by name (`"us-customary"`, `"us-customary,water"`; commas or spaces) and then your own
 /// config files given as TOML text, to a copy of the registry. A file path cannot be read from a
 /// worksheet or a browser, so the caller reads the file and passes its text. Later configs win
 /// (ADR-009). No config is the plain strict table. The result is cached, so a replacement
@@ -204,7 +204,7 @@ impl DimvexaConversion {
 
     /// Like the constructor, with the options of a worksheet: `density` is your own number such
     /// as `"998.2067kg/m3"` or the name of a constant of a density unit (empty for none),
-    /// `config` is a shipped config name or a list such as `"us"` or `"us,water"` (empty for
+    /// `config` is a shipped config name or a list such as `"us-customary"` or `"us-customary,water"` (empty for
     /// none), and `configTexts` are your own config files as TOML text, applied after the
     /// shipped ones. The density is used only when the plain conversion needs one.
     ///
@@ -281,7 +281,7 @@ pub fn convert(value: f64, from: &str, to: &str) -> Result<f64, JsValue> {
 }
 
 /// One-shot fast-path conversion with the options of a worksheet: `convertWith(1, "L", "kg",
-/// "998.2067kg/m3", "", [])`, `convertWith(1, "ton", "kg", "", "us", [])` or `convertWith(1, "L",
+/// "998.2067kg/m3", "", [])`, `convertWith(1, "ton", "kg", "", "us-customary", [])` or `convertWith(1, "L",
 /// "kg", "water_25C", "water", [])`. The last argument is your own config files as TOML text.
 /// See `DimvexaConversion.withOptions`.
 ///

@@ -24,7 +24,7 @@ All functions live in the `DIMVEXA` namespace. Excel ignores letter case, so
 =DIMVEXA.CONVERT(B2,C2,D2)                         units and value from cells
 =DIMVEXA.CONVERTRANGE(A1:B3,"km","m")              converts the whole range in one call
 =DIMVEXA.CONVERT(1,"ton","kg")                     error: ton is ambiguous
-=DIMVEXA.CONVERT(1,"ton","kg",,"us")               907.18474 (the config us picks the short ton)
+=DIMVEXA.CONVERT(1,"ton","kg",,"us-customary")               907.18474 (the config us-customary picks the short ton)
 =DIMVEXA.CONVERT(1,"L","kg","998.2067kg/m3")       0.9982067 (your own density)
 =DIMVEXA.CONVERT(1,"L","kg","water_25C","water")  0.99704702 (a density from a loaded config)
 ```
@@ -39,14 +39,14 @@ All functions live in the `DIMVEXA` namespace. Excel ignores letter case, so
   checked even when the conversion does not need it, so a typo is never ignored. A density is never
   assumed and never computed.
 * **`config`** (optional): a shipped config that resolves names that are otherwise refused as
-  ambiguous (ADR-006, ADR-014): `us`, `imperial`, `metric-trade`, `year-julian`, `year-civil`, `water`.
-  Several can be combined: `"us,water"`. A file path cannot be used from a worksheet.
+  ambiguous (ADR-006, ADR-014): `us-customary`, `us-survey`, `imperial`, `metric-trade`, `year-julian`, `year-civil`, `water`.
+  Several can be combined: `"us-customary,water"`. A file path cannot be used from a worksheet.
 * **Ranges (`DIMVEXA.CONVERTRANGE`):** a blank cell, or one with only spaces, stays blank in the
   result and is never read as 0. A cell that is not a number (text, TRUE, an error) makes the
   whole result an error that names the position, for example `dimvexa invalid_number: row 1,
   column 2 of the range is not a number`. An unknown unit is reported before any cell is looked at.
 * Leave an optional argument empty or out. To give `config` without a density, keep the comma:
-  `,,"us"`.
+  `,,"us-customary"`.
 
 ### Errors
 

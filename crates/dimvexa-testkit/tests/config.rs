@@ -549,7 +549,7 @@ fn every_bundled_config_applies_on_its_own_and_all_together() {
 
 #[test]
 fn us_and_gb_resolve_the_regional_names() {
-    let us = bundled_registry(&["us"]);
+    let us = bundled_registry(&["us-customary"]);
     assert_eq!(
         factor(&us, "ton", "kg"),
         factor(&us, "ton_short", "kg"),
@@ -578,8 +578,54 @@ fn us_and_gb_resolve_the_regional_names() {
         );
     }
     // later wins: us then imperial gives the British ton
-    let both = bundled_registry(&["us", "imperial"]);
+    let both = bundled_registry(&["us-customary", "imperial"]);
     assert_eq!(factor(&both, "ton", "kg"), factor(&both, "ton_long", "kg"));
+}
+
+#[test]
+fn us_customary_maps_the_active_names_and_us_survey_the_legacy_ones() {
+    let us = bundled_registry(&["us-customary"]);
+    for (bare, id, to) in [
+        ("chain", "chain_int", "m"),
+        ("link", "link_int", "m"),
+        ("rod", "rod_int", "m"),
+        ("furlong", "furlong_int", "m"),
+        ("gill", "gill_us", "m3"),
+        ("peck", "pk_us", "m3"),
+        ("bushel", "bu_us", "m3"),
+        ("minim", "minim_us", "m3"),
+        ("cwt", "cwt_short", "kg"),
+    ] {
+        assert_eq!(factor(&us, bare, to), factor(&us, id, to), "{bare}");
+    }
+    // fathom is 6 ft and cable is 720 ft in US usage (Handbook 44)
+    assert_eq!(factor(&us, "fathom", "m"), factor(&us, "fathom_ft", "m"));
+    assert_eq!(factor(&us, "cable", "m"), factor(&us, "cable_ft", "m"));
+    assert_ne!(factor(&us, "cable", "m"), factor(&us, "cable_int", "m"));
+    let survey = bundled_registry(&["us-survey"]);
+    for (bare, id) in [
+        ("mile", "mi_us_survey"),
+        ("chain", "chain_us_survey"),
+        ("link", "link_us_survey"),
+        ("rod", "rod_us_survey"),
+        ("furlong", "furlong_us_survey"),
+        ("fathom", "fathom_us_survey"),
+        ("cable", "cable_us_survey"),
+    ] {
+        assert_eq!(
+            factor(&survey, bare, "m"),
+            factor(&survey, id, "m"),
+            "{bare}"
+        );
+    }
+    // the two differ by about 2 ppm, so the choice is visible
+    assert_ne!(factor(&us, "chain", "m"), factor(&survey, "chain", "m"));
+    // later wins: us-customary then us-survey gives the survey chain
+    let both = bundled_registry(&["us-customary", "us-survey"]);
+    assert_eq!(
+        factor(&both, "chain", "m"),
+        factor(&both, "chain_us_survey", "m")
+    );
 }
 
 #[test]

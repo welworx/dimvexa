@@ -69,7 +69,7 @@ pub use conversion::Conversion;
 pub use dim::Dim;
 pub use error::{Error, Result};
 pub use expr::{Expr, MAX_DEPTH, MAX_INPUT_CHARS, is_symbol_char, is_valid_symbol};
-pub use kind::{Exactness, Kind, Shape};
+pub use kind::{Exactness, Kind, Shape, Status};
 pub use prefix::{BINARY_PREFIXES, Prefix, PrefixFamily, PrefixMode, SI_PREFIXES, all_prefixes};
 pub use quantity::Quantity;
 pub use ratio::Ratio;
