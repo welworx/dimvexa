@@ -96,8 +96,8 @@ difference between scales (`delta_degF` to `delta_K`) is conversion and stays.
   * `us`: `ton` = `ton_short`, `mile` = `mi`, `gal` = `gal_us`, `pt` = `pt_us`, `qt` = `qt_us`.
   * `imperial`: `ton` = `ton_long`, `mile` = `mi`, `gal` = `gal_imp`, `pt` = `pt_imp`, `qt` = `qt_imp`, plus the imperial
     names that only have an international or imperial variant (`chain`, `link`, `rod`, `furlong`,
-    `league`, `fathom`, `cable`, `gill`, `peck`, `bushel`, `minim`, `dram`, `cwt`). `quarter` is not
-    mapped: it is a mass or a volume. The config was called `gb` before it was renamed.
+    `league`, `cable`, `gill`, `peck`, `bushel`, `minim`, `dram`, `cwt`). `quarter` and `fathom` are not
+    mapped: a quarter is a mass or a volume, a fathom is 6 ft or 1/1000 nautical mile. The config was called `gb` before it was renamed.
   * `metric-trade`: `mt` = `tonne`, `ton` = `tonne`.
   * `year-julian`: `yr`, `year` = `yr_julian`. `year-civil`: `yr`, `year` = `yr_common`.
   * `oz` is not mapped by `us` or `imperial`: it is a mass (`oz_av`, `oz_troy`) or a volume

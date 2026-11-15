@@ -19,7 +19,7 @@ scf	scf	Standard cubic foot	standard_volume	defined	none	-	NIST SP 811 (2008), A
 gill_imp	gill_imp	Imperial gill	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); gill = 1/4 pint = 5 fl oz
 peck_imp	peck_imp	Imperial peck	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); peck = 2 gallons
 bushel_imp	bushel_imp	Imperial bushel	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); bushel = 8 gallons
-qtr_vol_imp	qtr_vol_imp	Imperial quarter (volume)	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); quarter = 64 gallons
+quarter_vol_imp	quarter_vol_imp	Imperial quarter (volume)	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); quarter = 64 gallons
 minim_imp	minim_imp	Imperial minim	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); minim = 1/9600 pint (British apothecaries' measure)
 scruple_fl_imp	scruple_fl_imp	Fluid scruple	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid scruple = 20 minims = 1/480 pint
 drachm_fl_imp	drachm_fl_imp	Fluid drachm	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid drachm = 3 fluid scruples = 1/160 pint
@@ -37,4 +37,4 @@ gill	gill_imp	-	imperial gill (142.0653125 mL) and US gill (118.29411825 mL) dif
 peck	peck_imp	-	imperial peck (2 imperial gallons) and US dry peck differ
 bushel	bushel_imp	-	imperial bushel (8 imperial gallons) and US dry bushel differ
 minim	minim_imp	-	imperial minim (1/9600 imperial pint) and US minim (1/7680 US liquid pint) differ
-quarter	qtr_mass_imp, qtr_vol_imp	-	imperial quarter is 28 lb as a mass and 64 imperial gallons as a volume; the US quarter is 25 lb or a quarter of a dollar or a year
+quarter	quarter_mass_imp, quarter_vol_imp	-	imperial quarter is 28 lb as a mass and 64 imperial gallons as a volume; the US quarter is 25 lb or a quarter of a dollar or a year

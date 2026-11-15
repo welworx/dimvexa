@@ -237,7 +237,8 @@ rod_int	rod_int	Rod (pole, perch)	plain	defined	none	-	Imperial length relations
 chain_int	chain_int	Chain (Gunter's)	plain	defined	none	-	Imperial length relations: 1 chain = 22 yd = 66 ft (international foot, 1959 agreement)
 furlong_int	furlong_int	Furlong	plain	defined	none	-	Imperial length relations: 1 furlong = 220 yd = 660 ft (international foot, 1959 agreement)
 league_int	league_int	League	plain	defined	none	-	Imperial length relations: 1 league = 3 mi (international mile = 5280 ft, 1959 agreement)
-fathom_int	fathom_int	Fathom	plain	defined	none	-	Imperial length relations: 1 fathom = 6 ft (international foot, 1959 agreement)
+fathom_ft	fathom_ft	Fathom (6 ft)	plain	defined	none	-	Imperial length relations: 1 fathom = 6 ft (international foot, 1959 agreement)
+fathom_nmi	fathom_nmi	Fathom (1/1000 nautical mile)	plain	defined	none	-	International nautical mile = 1852 m (International Hydrographic Conference 1929); fathom = 1/1000 nautical mile
 cable_int	cable_int	Cable (international)	plain	defined	none	-	International nautical mile = 1852 m (International Hydrographic Conference 1929); cable = 1/10 nautical mile
 
 ## area
@@ -248,7 +249,7 @@ rood	rood	Rood	plain	defined	none	-	Imperial area relations: 1 rood = 1210 yd^2 
 gill_imp	gill_imp	Imperial gill	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); gill = 1/4 pint = 5 fl oz
 peck_imp	peck_imp	Imperial peck	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); peck = 2 gallons
 bushel_imp	bushel_imp	Imperial bushel	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); bushel = 8 gallons
-qtr_vol_imp	qtr_vol_imp	Imperial quarter (volume)	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); quarter = 64 gallons
+quarter_vol_imp	quarter_vol_imp	Imperial quarter (volume)	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); quarter = 64 gallons
 minim_imp	minim_imp	Imperial minim	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); minim = 1/9600 pint (British apothecaries' measure)
 scruple_fl_imp	scruple_fl_imp	Fluid scruple	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid scruple = 20 minims = 1/480 pint
 drachm_fl_imp	drachm_fl_imp	Fluid drachm	plain	defined	none	-	UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.54609 dm^3); fluid drachm = 3 fluid scruples = 1/160 pint
@@ -256,7 +257,7 @@ drachm_fl_imp	drachm_fl_imp	Fluid drachm	plain	defined	none	-	UK Weights and Mea
 ## mass
 dram_av	dram_av	Avoirdupois dram	plain	defined	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; dram = 1/16 oz = 1/256 lb
 stone	stone	Stone	plain	defined	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; stone = 14 lb
-qtr_mass_imp	qtr_mass_imp	Imperial quarter (mass)	plain	defined	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; quarter = 28 lb = 2 stone
+quarter_mass_imp	quarter_mass_imp	Imperial quarter (mass)	plain	defined	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; quarter = 28 lb = 2 stone
 cwt_long	cwt_long	Long hundredweight	plain	defined	none	-	International yard and pound agreement (1959): 1 lb = 0.45359237 kg; hundredweight = 112 lb = 8 stone
 slug	slug	Slug	plain	defined	none	-	NIST SP 811 (2008), Appendix B (slug); defined as the mass accelerated 1 ft/s^2 by 1 lbf
 
@@ -289,7 +290,7 @@ link	link_int	-	international Gunter's link (0.66 ft) and US survey link differ 
 rod	rod_int	-	international rod (16.5 ft = 5.0292 m) and US survey rod differ by about 2 ppm
 furlong	furlong_int	-	international furlong (660 ft) and US survey furlong differ by about 2 ppm
 league	league_int	-	statute league (3 mi) and nautical leagues (3 nmi) differ
-fathom	fathom_int	-	6 ft (1.8288 m) in the international foot; the US survey foot and the 1/1000 nautical mile fathom differ slightly
+fathom	fathom_ft, fathom_nmi	-	6 ft (1.8288 m, used by the British Admiralty) and 1/1000 nautical mile (1.852 m) differ by about 1 percent
 cable	cable_int	-	international cable (185.2 m), UK Admiralty cable (608 ft) and US cable (720 ft) differ
 gill	gill_imp	-	imperial gill (142.0653125 mL) and US gill (118.29411825 mL) differ
 peck	peck_imp	-	imperial peck (2 imperial gallons) and US dry peck differ
@@ -297,4 +298,4 @@ bushel	bushel_imp	-	imperial bushel (8 imperial gallons) and US dry bushel diffe
 minim	minim_imp	-	imperial minim (1/9600 imperial pint) and US minim (1/7680 US liquid pint) differ
 dram	dram_av	-	avoirdupois dram (1/16 oz), apothecaries' dram (60 grains) and the fluid drams differ
 cwt	cwt_long	-	long hundredweight (112 lb) and short hundredweight (100 lb) differ
-quarter	qtr_mass_imp, qtr_vol_imp	-	imperial quarter is 28 lb as a mass and 64 imperial gallons as a volume; the US quarter is 25 lb or a quarter of a dollar or a year
+quarter	quarter_mass_imp, quarter_vol_imp	-	imperial quarter is 28 lb as a mass and 64 imperial gallons as a volume; the US quarter is 25 lb or a quarter of a dollar or a year

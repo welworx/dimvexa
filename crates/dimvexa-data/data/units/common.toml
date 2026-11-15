@@ -1079,8 +1079,8 @@ source = "Imperial length relations: 1 league = 3 mi (international mile = 5280 
 note = "league = 3 mi = 15 840 ft = 4828.032 m"
 
 [[unit]]
-id = "fathom_int"
-name = "Fathom"
+id = "fathom_ft"
+name = "Fathom (6 ft)"
 aliases = []
 dim = [0, 1, 0, 0, 0, 0, 0]
 kind = "plain"
@@ -1091,7 +1091,22 @@ exactness = "defined"
 prefixes = "none"
 namespace = "std"
 source = "Imperial length relations: 1 fathom = 6 ft (international foot, 1959 agreement)"
-note = "fathom = 6 ft = 1.8288 m"
+note = "fathom = 6 ft = 1.8288 m; the British Admiralty used this value in practice; fathom_nmi is 1/1000 nautical mile"
+
+[[unit]]
+id = "fathom_nmi"
+name = "Fathom (1/1000 nautical mile)"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "463/250"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "International nautical mile = 1852 m (International Hydrographic Conference 1929); fathom = 1/1000 nautical mile"
+note = "fathom = nmi/1000 = 1.852 m (about 6.0761 ft); 100 of them make one cable_int"
 
 [[unit]]
 id = "cable_int"
@@ -1184,7 +1199,7 @@ source = "UK Weights and Measures Act 1985, Schedule 1, Part VI (gallon = 4.5460
 note = "imperial bushel = 8 gal_imp = 36.36872 L"
 
 [[unit]]
-id = "qtr_vol_imp"
+id = "quarter_vol_imp"
 name = "Imperial quarter (volume)"
 aliases = []
 dim = [0, 3, 0, 0, 0, 0, 0]
@@ -1274,7 +1289,7 @@ source = "International yard and pound agreement (1959): 1 lb = 0.45359237 kg; s
 note = "stone = 14 lb = 6.35029318 kg"
 
 [[unit]]
-id = "qtr_mass_imp"
+id = "quarter_mass_imp"
 name = "Imperial quarter (mass)"
 aliases = []
 dim = [1, 0, 0, 0, 0, 0, 0]

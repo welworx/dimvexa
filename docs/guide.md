@@ -37,8 +37,8 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 
 | Group | Unit ids |
 |---|---|
-| length | `m`, `au`, `angstrom`, `in`, `ft`, `yd`, `mi`, `nmi`, `ft_us_survey`, `mi_us_survey`, `ly`, `twip`, `thou`, `barleycorn`, `hand`, `link_int`, `rod_int`, `chain_int`, `furlong_int`, `league_int`, `fathom_int`, `cable_int` |
-| mass | `g`, `tonne`, `Da`, `lb`, `oz_av`, `oz_troy`, `ton_short`, `ton_long`, `grain`, `carat`, `dram_av`, `stone`, `qtr_mass_imp`, `cwt_long`, `slug` |
+| length | `m`, `au`, `angstrom`, `in`, `ft`, `yd`, `mi`, `nmi`, `ft_us_survey`, `mi_us_survey`, `ly`, `twip`, `thou`, `barleycorn`, `hand`, `link_int`, `rod_int`, `chain_int`, `furlong_int`, `league_int`, `fathom_ft`, `fathom_nmi`, `cable_int` |
+| mass | `g`, `tonne`, `Da`, `lb`, `oz_av`, `oz_troy`, `ton_short`, `ton_long`, `grain`, `carat`, `dram_av`, `stone`, `quarter_mass_imp`, `cwt_long`, `slug` |
 | time | `s`, `min`, `h`, `d`, `week`, `yr_common`, `yr_julian` |
 | electric_current | `A` |
 | temperature | `K`, `degC`, `delta_K`, `delta_degC`, `degF`, `degR`, `delta_degF`, `delta_degR` |
@@ -57,7 +57,7 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | magnetic_flux | `Wb` |
 | magnetic_flux_density | `T` |
 | inductance | `H` |
-| volume | `m3`, `dm3`, `cm3`, `mm3`, `km3`, `in3`, `ft3`, `yd3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp`, `bbl`, `Nm3`, `scf`, `gill_imp`, `peck_imp`, `bushel_imp`, `qtr_vol_imp`, `minim_imp`, `scruple_fl_imp`, `drachm_fl_imp` |
+| volume | `m3`, `dm3`, `cm3`, `mm3`, `km3`, `in3`, `ft3`, `yd3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp`, `bbl`, `Nm3`, `scf`, `gill_imp`, `peck_imp`, `bushel_imp`, `quarter_vol_imp`, `minim_imp`, `scruple_fl_imp`, `drachm_fl_imp` |
 | area | `m2`, `dm2`, `cm2`, `mm2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `ar`, `ha`, `acre_int`, `acre_us_survey`, `perch_sq`, `rood` |
 | absorbed_dose | `Gy`, `Sv` |
 | illuminance | `lx` |

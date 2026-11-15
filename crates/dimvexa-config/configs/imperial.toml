@@ -4,7 +4,8 @@
 #   dimvexa convert 1 gal L --config imperial
 #
 # `oz` is not mapped: it is a mass (oz_av, oz_troy) or a volume (fl_oz_imp) in the UK as well.
-# `quarter` is not mapped: it is a mass (qtr_mass_imp) or a volume (qtr_vol_imp).
+# `quarter` is not mapped: it is a mass (quarter_mass_imp) or a volume (quarter_vol_imp).
+# `fathom` is not mapped: 6 ft (fathom_ft) or 1/1000 nautical mile (fathom_nmi).
 
 [map]
 ton = "ton_long"
@@ -17,7 +18,6 @@ link = "link_int"
 rod = "rod_int"
 furlong = "furlong_int"
 league = "league_int"
-fathom = "fathom_int"
 cable = "cable_int"
 gill = "gill_imp"
 peck = "peck_imp"

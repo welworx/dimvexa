@@ -166,9 +166,9 @@ note = "statute league (3 mi) and nautical leagues (3 nmi) differ"
 
 [[ambiguous]]
 symbol = "fathom"
-candidates = ["fathom_int"]
+candidates = ["fathom_ft", "fathom_nmi"]
 planned = []
-note = "6 ft (1.8288 m) in the international foot; the US survey foot and the 1/1000 nautical mile fathom differ slightly"
+note = "6 ft (1.8288 m, used by the British Admiralty) and 1/1000 nautical mile (1.852 m) differ by about 1 percent"
 
 [[ambiguous]]
 symbol = "cable"
@@ -214,6 +214,6 @@ note = "long hundredweight (112 lb) and short hundredweight (100 lb) differ"
 
 [[ambiguous]]
 symbol = "quarter"
-candidates = ["qtr_mass_imp", "qtr_vol_imp"]
+candidates = ["quarter_mass_imp", "quarter_vol_imp"]
 planned = []
 note = "imperial quarter is 28 lb as a mass and 64 imperial gallons as a volume; the US quarter is 25 lb or a quarter of a dollar or a year"
