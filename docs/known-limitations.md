@@ -60,18 +60,20 @@ against the paper's Table 1; there is no `water_20C` yet for the same reason.
 
 The Wikipedia article "United States customary units" lists more units than Dimvexa ships. The
 article is not an allowed source (`add-unit`), so each of these waits for a primary source. Until
-then they fail loudly with `unknown_unit`. Checked and not found: NIST SP 811 (2008), Handbook 44
-(2024, Appendix C), Handbook 130 (2024), NBS Miscellaneous Publication M121 (1936), Circular 593
-(1958), SP 447 and SP 1038 (2006). Handbook 130 supplies the board foot and cord; M121 and Circular 593 the dry
-barrel (7056 in^3, the 1912 and 1915 Standard Barrel Acts); M121 the hand; SP 811 and Handbook 44
-the survey fathom and cable's length; SP 1038 the ton of refrigeration (12 000 Btu_IT/h). Not yet read: the
-Federal Register notice on the survey foot, the statutes themselves, and NIST Handbook 133.
+then they fail loudly with `unknown_unit`. Sources read: NIST SP 811 (2008), SP 1038 (2006),
+Handbook 44 (2024, Appendix C), Handbook 130 (2024), NBS Miscellaneous Publication M121 (1936),
+Circular 593 (1958), SP 447, 15 U.S.C. 234, 26 U.S.C. 5051, 27 CFR 25.11 and 43 U.S.C. 751.
+What they gave: board foot and cord (HB 130), dry barrel (15 U.S.C. 234), hand (M121), survey
+fathom and cable's length (SP 811, HB 44), ton of refrigeration (SP 1038), the conventional
+mercury and water column units (SP 811, ISO 80000-4), the beer barrel (27 CFR 25.11) and the
+nominal section and township (43 U.S.C. 751). Not yet read: the Federal Register notice on the
+survey foot and ISO 80000-4 itself (SP 811 note 12 is used).
 
 | ID | Limitation | When you see it | Why it is not fixed yet | Idea for the fix |
 |---|---|---|---|---|
-| KL-26 | No US liquid barrel (31.5 gal), hogshead, beer and whiskey barrel (31 and 40 gal), dry gallon, cranberry barrel, ton-force, survey township, drop, grain of water, jig and pottle. Also no quad, R-value, circular mil, leather ounce, alcohol proof or langley. SP 1038 gives the circular mil only as a value (0.000 506 708 mm^2, which is pi/4 mil^2), and the langley as 1 cal/cm^2 without saying which calorie. | `convert 1 hogshead L` is `unknown_unit`. | NIST SP 447 says the volume of a barrel varies with the commodity and with State law, so there is no single value to ship. The section (1 square mile) is in SP 447 and the township (36 sections) is marked approximate there. The others are in none of the sources above. | Find a statute or a standard for each (the beer barrel may be 26 U.S.C. 5051, the cranberry barrel may be 5826 in^3 in M121 but its OCR is unreadable: read the PDF), then add it with `add-unit`. A barrel needs an explicit id per commodity. |
+| KL-26 | No US liquid barrel (31.5 gal), hogshead, whiskey barrel (40 gal), dry gallon, cranberry barrel, ton-force, drop, grain of water, jig and pottle. Also no quad, R-value, circular mil, leather ounce, alcohol proof or langley. | `convert 1 hogshead L` is `unknown_unit`. | NIST SP 447 says the volume of a barrel varies with the commodity and with State law, and 27 CFR parts 4, 5, 19, 24 and 25 do not define a 31.5 gal barrel or a hogshead. 15 U.S.C. 234 gives the cranberry barrel only by dimensions, not a capacity. A quad is 10^15 Btu (EIA) but the Btu is not named. SP 1038 gives the circular mil only as a value (0.000 506 708 mm^2, which is pi/4 mil^2) and the langley as 1 cal/cm^2 without saying which calorie. Proof is a ratio (100 proof = 50 percent alcohol by volume, 27 CFR part 5) and Dimvexa has no percent unit. | Find a statute or a standard for each, then add it with `add-unit`. A quad needs the Btu named (`Btu_IT`?). The circular mil needs a source that defines it and a factor with pi (ADR-018). |
 | KL-27 | No printer's point, pica or twip, no rack unit. The article uses the desktop-publishing point of 1/72 in; SP 811 lists the older printer's point of 0.013 837 in and SP 1038 prints 0.351 46 mm for the point and 4.217 5 mm for the pica, both rounded to five digits (so the pica is not exactly 12 points); the OCR of M121 is unreadable at that entry. | `convert 1 pica mm` is `unknown_unit`. | Two different points exist, so a bare name would be a guess (rule 4). | Ship both as explicit ids (`point_dtp`, `point_printers`) with a standard for each, and list the bare `point` and `pica` in `ambiguous.toml`. |
-| KL-28 | No bare league, fathom or cable, no survey league, no inch of mercury (only `fathom_us_survey` and `cable_us_survey` ship). | `convert 1 fathom m` is `unknown_unit`. | Handbook 44 gives the fathom as 6 ft and SP 811 as 6 survey feet, which differ since the survey foot was retired; a league has no definition in the sources above; an inch of mercury depends on the mercury density and temperature convention (SP 1038 prints 3.386 38 kPa at 32 degF, rounded). | Decide the foot per unit (`fathom` as 6 international feet, with a source), find a definition of the league, and pick one inHg convention such as the conventional mmHg density. |
+| KL-28 | No bare league, fathom or cable, no survey league (only `fathom_us_survey` and `cable_us_survey` ship). | `convert 1 fathom m` is `unknown_unit`. | Handbook 44 gives the fathom as 6 ft and SP 811 as 6 survey feet, which differ since the survey foot was retired; a league has no definition in the sources above. | Decide the foot per unit (`fathom` as 6 international feet, with a source) and find a definition of the league. |
 
 ## Open checks: citations written from memory (TODO, verify before relying on them)
 

@@ -612,7 +612,7 @@ fn units_groups_lists_only_the_groups() {
     let r = dimvexa(&["units", "--groups"]);
     assert_eq!(r.code, 0);
     snapshot("units_groups.txt", &r.stdout);
-    assert!(r.stdout.lines().any(|l| l == "volume\t26"));
+    assert!(r.stdout.lines().any(|l| l == "volume\t27"));
     assert!(!r.stdout.contains("psi\t"));
     let v = json::parse(&dimvexa(&["units", "--groups", "--json"]).stdout).unwrap();
     json::check_units_schema(&v);
@@ -1479,8 +1479,8 @@ fn units_shows_which_units_are_yours() {
     // The group table counts it too.
     let g = dimvexa_at_root(&["units", "--groups", "--config", OIL_CFG]);
     let base = dimvexa(&["units", "--groups"]);
-    assert!(g.stdout.lines().any(|l| l == "volume\t27"));
-    assert!(base.stdout.lines().any(|l| l == "volume\t26"));
+    assert!(g.stdout.lines().any(|l| l == "volume\t28"));
+    assert!(base.stdout.lines().any(|l| l == "volume\t27"));
 
     let v =
         json::parse(&dimvexa_at_root(&["units", "--json", "--config", OIL_CFG]).stdout).unwrap();
@@ -1763,15 +1763,10 @@ fn known_limitation_kl_27_points_and_picas_are_unknown() {
     }
 }
 
-/// KL-28: no league, fathom, cable or inch of mercury.
+/// KL-28: no bare league, fathom or cable.
 #[test]
-fn known_limitation_kl_28_league_fathom_cable_inhg_are_unknown() {
-    for (unit, to) in [
-        ("league", "m"),
-        ("fathom", "m"),
-        ("cable", "m"),
-        ("inHg", "Pa"),
-    ] {
+fn known_limitation_kl_28_league_fathom_cable_are_unknown() {
+    for (unit, to) in [("league", "m"), ("fathom", "m"), ("cable", "m")] {
         let r = dimvexa(&["convert", "1", unit, to]);
         assert_eq!(
             r.code, 1,

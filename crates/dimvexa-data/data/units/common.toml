@@ -1345,7 +1345,7 @@ offset = "0/1"
 exactness = "defined"
 prefixes = "none"
 namespace = "std"
-source = "NBS Miscellaneous Publication M121 (1936), section 4 Capacity (barrel for fruits, vegetables and other dry commodities, 7056 cubic inches, as fixed by the standard barrel act, 15 U.S.C. ch. 6)"
+source = "US Code title 15, section 234 (standard barrel for fruits, vegetables and other dry commodities: a barrel of a capacity of 7056 cubic inches); NBS Miscellaneous Publication M121 (1936), section 4 Capacity"
 note = "dry barrel = 7056 in^3 = 115.627123584 L (about 105 dry quarts, M121 rounds it); the bare word bbl is the 42 gal petroleum barrel; cranberry and liquid barrels are not included"
 
 [[unit]]
@@ -1407,3 +1407,138 @@ prefixes = "none"
 namespace = "std"
 source = "NIST SP 1038 (2006), section 5.2.13 Power (ton, refrigeration, 12 000 Btu/h) with note 31 (the Btu is the International Table Btu)"
 note = "ton of refrigeration = 12 000 Btu_IT/h = 3516.8528420667 W; the US ton of refrigeration only, not a mass ton"
+
+[[unit]]
+id = "inHg"
+name = "Inch of mercury (conventional)"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "3386388640341/1000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B.8 (inch of mercury, conventional); ISO 80000-4 conventional mercury density via SP 811 note 12"
+note = "inch of mercury = length * 13595.1 kg/m^3 * 9.80665 m/s^2 (conventional, like mmHg)"
+
+[[unit]]
+id = "cmHg"
+name = "Centimeter of mercury (conventional)"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "26664477483/20000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B.8 (centimeter of mercury, conventional); ISO 80000-4 conventional mercury density via SP 811 note 12"
+note = "centimeter of mercury = length * 13595.1 kg/m^3 * 9.80665 m/s^2 (conventional, like mmHg)"
+
+[[unit]]
+id = "ftHg"
+name = "Foot of mercury (conventional)"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "10159165921023/250000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B.8 (foot of mercury, conventional); ISO 80000-4 conventional mercury density via SP 811 note 12"
+note = "foot of mercury = length * 13595.1 kg/m^3 * 9.80665 m/s^2 (conventional, like mmHg)"
+
+[[unit]]
+id = "cmWC"
+name = "Centimeter of water (conventional)"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "196133/2000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B.8 (centimeter of water, conventional); ISO 80000-4 conventional water density via SP 811 note 12"
+note = "centimeter of water = length * 1000 kg/m^3 * 9.80665 m/s^2 (conventional, like mmHg)"
+
+[[unit]]
+id = "inWC"
+name = "Inch of water (conventional)"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "24908891/100000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B.8 (inch of water, conventional); ISO 80000-4 conventional water density via SP 811 note 12"
+note = "inch of water = length * 1000 kg/m^3 * 9.80665 m/s^2 (conventional, like mmHg)"
+
+[[unit]]
+id = "ftWC"
+name = "Foot of water (conventional)"
+aliases = []
+dim = [1, -1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "74726673/25000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B.8 (foot of water, conventional); ISO 80000-4 conventional water density via SP 811 note 12"
+note = "foot of water = length * 1000 kg/m^3 * 9.80665 m/s^2 (conventional, like mmHg)"
+
+[[unit]]
+id = "bbl_beer_us"
+name = "US beer barrel"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "14668470663/125000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "US Code title 26, section 5051(a)(1)(B) (a barrel of beer, not more than 31 gallons, for the excise tax)"
+note = "beer barrel = 31 gal_us = 117.34777 L, the tax barrel (27 CFR 25.11); the 42 gal petroleum barrel is bbl and the 31.5 gal liquid barrel is not included"
+
+[[unit]]
+id = "section_us_survey"
+name = "US survey section"
+aliases = []
+dim = [0, 2, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "40144896000000/15499969"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "43 U.S.C. 751 (townships of six miles square, subdivided into sections of one mile square, as nearly as may be 640 acres)"
+note = "nominal public land survey section = 1 survey mile square = 640 survey acres; real sections vary"
+
+[[unit]]
+id = "township_us_survey"
+name = "US survey township"
+aliases = []
+dim = [0, 2, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "1445216256000000/15499969"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "43 U.S.C. 751 (townships of six miles square, 36 sections)"
+note = "nominal public land survey township = 6 survey miles square = 36 sections; real townships vary"

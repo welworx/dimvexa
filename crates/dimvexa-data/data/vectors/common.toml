@@ -817,3 +817,75 @@ to = "kW"
 expect = "3.516853"
 rel_tol = "1e-6"
 source = "NIST SP 1038 (2006), section 5.2.13, printed factor 3.516 853 kW (rounded to seven digits); hand derivation: 12000 * 1.055 055 852 62 kJ / 3600 s = 3.51685284 kW"
+
+[[vector]]
+unit = "inHg"
+value = "1"
+from = "inHg"
+to = "mmHg"
+expect = "25.4"
+source = "Hand derivation: 1 in = 25.4 mm at the same conventional density; SP 811 prints 3.386 389 kPa"
+
+[[vector]]
+unit = "cmHg"
+value = "1"
+from = "cmHg"
+to = "mmHg"
+expect = "10"
+source = "Hand derivation: 1 cm = 10 mm at the same conventional density"
+
+[[vector]]
+unit = "ftHg"
+value = "1"
+from = "ftHg"
+to = "inHg"
+expect = "12"
+source = "Hand derivation: 1 ft = 12 in at the same conventional density"
+
+[[vector]]
+unit = "cmWC"
+value = "1"
+from = "cmWC"
+to = "Pa"
+expect = "98.0665"
+source = "Hand derivation: 0.01 m * 1000 kg/m^3 * 9.80665 m/s^2 = 98.0665 Pa"
+
+[[vector]]
+unit = "inWC"
+value = "1"
+from = "inWC"
+to = "Pa"
+expect = "249.08891"
+source = "Hand derivation: 0.0254 m * 1000 kg/m^3 * 9.80665 m/s^2 = 249.08891 Pa"
+
+[[vector]]
+unit = "ftWC"
+value = "1"
+from = "ftWC"
+to = "inWC"
+expect = "12"
+source = "Hand derivation: 1 ft = 12 in at the same conventional density"
+
+[[vector]]
+unit = "bbl_beer_us"
+value = "1"
+from = "bbl_beer_us"
+to = "gal_us"
+expect = "31"
+source = "Hand derivation: 31 gallons by definition, 27 CFR 25.11 (barrel, a quantity equal to 31 U.S. gallons)"
+
+[[vector]]
+unit = "section_us_survey"
+value = "1"
+from = "section_us_survey"
+to = "acre_us_survey"
+expect = "640"
+source = "Hand derivation: NIST Handbook 44 (2024), Appendix C, 1 square mile = 640 acres"
+
+[[vector]]
+unit = "township_us_survey"
+value = "1"
+from = "township_us_survey"
+to = "section_us_survey"
+expect = "36"
+source = "Hand derivation: 6 mi * 6 mi = 36 mi^2, 36 sections of 1 mi^2"

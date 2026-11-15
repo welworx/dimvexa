@@ -46,7 +46,7 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | luminous_intensity | `cd`, `lm` |
 | frequency | `Hz`, `Bq` |
 | force | `N`, `lbf`, `dyn`, `kgf`, `ozf`, `kip`, `pdl` |
-| pressure | `Pa`, `bar`, `atm`, `psi`, `mmHg`, `torr`, `psig`, `barg`, `Pag` |
+| pressure | `Pa`, `bar`, `atm`, `psi`, `mmHg`, `torr`, `psig`, `barg`, `Pag`, `inHg`, `cmHg`, `ftHg`, `cmWC`, `inWC`, `ftWC` |
 | energy | `J`, `Wh`, `eV`, `cal_th`, `cal_IT`, `Btu_IT`, `Btu_th`, `erg` |
 | power | `W`, `hp_mech`, `hp_metric`, `ton_refrigeration` |
 | electric_charge | `C` |
@@ -57,8 +57,8 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | magnetic_flux | `Wb` |
 | magnetic_flux_density | `T` |
 | inductance | `H` |
-| volume | `m3`, `dm3`, `cm3`, `mm3`, `km3`, `in3`, `ft3`, `yd3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp`, `bbl`, `Nm3`, `scf`, `minim_us`, `fl_dr_us`, `gill_us`, `bu_us`, `pk_us`, `qt_us_dry`, `pt_us_dry`, `acre_ft_us_survey`, `cord`, `board_ft`, `bbl_us_dry` |
-| area | `m2`, `dm2`, `cm2`, `mm2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `ar`, `ha`, `acre_int`, `acre_us_survey` |
+| volume | `m3`, `dm3`, `cm3`, `mm3`, `km3`, `in3`, `ft3`, `yd3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp`, `bbl`, `Nm3`, `scf`, `minim_us`, `fl_dr_us`, `gill_us`, `bu_us`, `pk_us`, `qt_us_dry`, `pt_us_dry`, `acre_ft_us_survey`, `cord`, `board_ft`, `bbl_us_dry`, `bbl_beer_us` |
+| area | `m2`, `dm2`, `cm2`, `mm2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `ar`, `ha`, `acre_int`, `acre_us_survey`, `section_us_survey`, `township_us_survey` |
 | absorbed_dose | `Gy`, `Sv` |
 | illuminance | `lx` |
 | catalytic_activity | `kat` |

@@ -264,7 +264,7 @@ slug	slug	Slug	plain	defined	none	-	NIST SP 811 (2008), Appendix B (slug = 1.459
 
 ## volume
 board_ft	board_ft	Board foot	plain	defined	none	-	NIST Handbook 130 (2024), Uniform Regulation for the Method of Sale of Commodities, section 2.12.1.1 (board foot, 144 in^3)
-bbl_us_dry	bbl_us_dry	US dry barrel	plain	defined	none	-	NBS Miscellaneous Publication M121 (1936), section 4 Capacity (barrel for fruits, vegetables and other dry commodities, 7056 cubic inches, as fixed by the standard barrel act, 15 U.S.C. ch. 6)
+bbl_us_dry	bbl_us_dry	US dry barrel	plain	defined	none	-	US Code title 15, section 234 (standard barrel for fruits, vegetables and other dry commodities: a barrel of a capacity of 7056 cubic inches); NBS Miscellaneous Publication M121 (1936), section 4 Capacity
 
 ## length
 hand	hand	Hand	plain	defined	none	-	NBS Miscellaneous Publication M121 (1936), section 1 Length (1 hand = 4 inches)
@@ -273,6 +273,21 @@ cable_us_survey	cable_us_survey	US survey cable length	plain	defined	none	-	NIST
 
 ## power
 ton_refrigeration	ton_refrigeration	Ton of refrigeration	plain	defined	none	-	NIST SP 1038 (2006), section 5.2.13 Power (ton, refrigeration, 12 000 Btu/h) with note 31 (the Btu is the International Table Btu)
+
+## pressure
+inHg	inHg	Inch of mercury (conventional)	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (inch of mercury, conventional); ISO 80000-4 conventional mercury density via SP 811 note 12
+cmHg	cmHg	Centimeter of mercury (conventional)	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (centimeter of mercury, conventional); ISO 80000-4 conventional mercury density via SP 811 note 12
+ftHg	ftHg	Foot of mercury (conventional)	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (foot of mercury, conventional); ISO 80000-4 conventional mercury density via SP 811 note 12
+cmWC	cmWC	Centimeter of water (conventional)	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (centimeter of water, conventional); ISO 80000-4 conventional water density via SP 811 note 12
+inWC	inWC	Inch of water (conventional)	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (inch of water, conventional); ISO 80000-4 conventional water density via SP 811 note 12
+ftWC	ftWC	Foot of water (conventional)	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (foot of water, conventional); ISO 80000-4 conventional water density via SP 811 note 12
+
+## volume
+bbl_beer_us	bbl_beer_us	US beer barrel	plain	defined	none	-	US Code title 26, section 5051(a)(1)(B) (a barrel of beer, not more than 31 gallons, for the excise tax)
+
+## area
+section_us_survey	section_us_survey	US survey section	plain	defined	none	-	43 U.S.C. 751 (townships of six miles square, subdivided into sections of one mile square, as nearly as may be 640 acres)
+township_us_survey	township_us_survey	US survey township	plain	defined	none	-	43 U.S.C. 751 (townships of six miles square, 36 sections)
 
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note
