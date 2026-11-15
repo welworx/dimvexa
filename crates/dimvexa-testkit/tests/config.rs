@@ -583,6 +583,55 @@ fn us_and_gb_resolve_the_regional_names() {
 }
 
 #[test]
+fn us_customary_maps_the_active_names_and_us_survey_the_legacy_ones() {
+    let us = bundled_registry(&["us-customary"]);
+    for (bare, id, to) in [
+        ("chain", "chain_int", "m"),
+        ("link", "link_int", "m"),
+        ("rod", "rod_int", "m"),
+        ("furlong", "furlong_int", "m"),
+        ("gill", "gill_us", "m3"),
+        ("peck", "pk_us", "m3"),
+        ("bushel", "bu_us", "m3"),
+        ("minim", "minim_us", "m3"),
+        ("cwt", "cwt_short", "kg"),
+    ] {
+        assert_eq!(factor(&us, bare, to), factor(&us, id, to), "{bare}");
+    }
+    // fathom and cable stay refused: the US and other definitions differ
+    for name in ["fathom", "cable"] {
+        assert_eq!(
+            us.conversion(name, "m").unwrap_err().code(),
+            "ambiguous_symbol"
+        );
+    }
+    let survey = bundled_registry(&["us-survey"]);
+    for (bare, id) in [
+        ("mile", "mi_us_survey"),
+        ("chain", "chain_us_survey"),
+        ("link", "link_us_survey"),
+        ("rod", "rod_us_survey"),
+        ("furlong", "furlong_us_survey"),
+        ("fathom", "fathom_us_survey"),
+        ("cable", "cable_us_survey"),
+    ] {
+        assert_eq!(
+            factor(&survey, bare, "m"),
+            factor(&survey, id, "m"),
+            "{bare}"
+        );
+    }
+    // the two differ by about 2 ppm, so the choice is visible
+    assert_ne!(factor(&us, "chain", "m"), factor(&survey, "chain", "m"));
+    // later wins: us-customary then us-survey gives the survey chain
+    let both = bundled_registry(&["us-customary", "us-survey"]);
+    assert_eq!(
+        factor(&both, "chain", "m"),
+        factor(&both, "chain_us_survey", "m")
+    );
+}
+
+#[test]
 fn metric_trade_and_the_year_configs_resolve_their_names() {
     let mt = bundled_registry(&["metric-trade"]);
     assert_eq!(factor(&mt, "mt", "kg"), Ratio::from_int(1000));

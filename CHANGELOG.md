@@ -8,7 +8,8 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 ## [Unreleased]
 ### Changed
 
-- **Breaking:** the shipped config `us` is now `us-customary` (the name of the system, "United States customary units"), like `gb` became `imperial`: `--config us-customary`, `configs=["us-customary"]`, `bundled:us-customary`. `us` is no longer accepted. It also maps the bare names `gill`, `peck`, `bushel`, `minim` and `cwt` to the US units.
+- **Breaking:** the shipped config `us` is now `us-customary` (the name of the system, "United States customary units"), like `gb` became `imperial`: `--config us-customary`, `configs=["us-customary"]`, `bundled:us-customary`. `us` is no longer accepted. It also maps the bare names `gill`, `peck`, `bushel`, `minim` and `cwt` to the US units, and `mile`, `chain`, `link`, `rod` and `furlong` to the international units (the US survey foot was retired on 2023-01-01).
+- New shipped config `us-survey`: the bare `mile`, `chain`, `link`, `rod`, `furlong`, `fathom` and `cable` as the legacy US survey units, for land records from before 2023. The survey units' notes now say "legacy".
 
 ### Added
 

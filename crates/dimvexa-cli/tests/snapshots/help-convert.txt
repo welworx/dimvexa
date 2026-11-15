@@ -29,9 +29,10 @@ Options:
   --config NAME_OR_PATH
                    (beta) apply a config; repeatable, later ones win and a
                    warning names what they replace. A shipped one is named
-                   (us, imperial, metric-trade, year-julian, year-civil,
-                   water); a file has a path (./mine.toml, or anything with
-                   a / or ending in .toml). See: dimvexa configs --help
+                   (us-customary, us-survey, imperial, metric-trade,
+                   year-julian, year-civil, water); a file has a path
+                   (./mine.toml, or anything with a / or ending in .toml).
+                   See: dimvexa configs --help
   --const NAME_OR_VALUE
                    density for mass <-> volume: the name of a constant of a
                    density unit (--config water --const water_25C) or your own

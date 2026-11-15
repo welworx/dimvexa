@@ -176,7 +176,7 @@ dimvexa/
 1. Final set of conversion shapes and their exact inverses.
 2. Error-bound guarantee for the fast path (≤ 1 ulp or other).
 3. Default behaviour of angle (dimensionless) vs UCUM.
-4. How configs resolve ambiguous symbols (decided in ADR-009 and ADR-014: `--config NAME_OR_PATH`; shipped: `us`, `imperial`, `metric-trade`, `year-julian`, `year-civil`, `water`).
+4. How configs resolve ambiguous symbols (decided in ADR-009 and ADR-014: `--config NAME_OR_PATH`; shipped: `us-customary`, `us-survey`, `imperial`, `metric-trade`, `year-julian`, `year-civil`, `water`).
 5. Whether `i128` rationals suffice, or big rationals are needed at load time.
 6. Licence and the policy for data derived from external tables (GPL sources are excluded).
 7. Name and namespace availability.

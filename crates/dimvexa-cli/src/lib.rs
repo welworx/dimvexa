@@ -104,10 +104,10 @@ Options:
   --config NAME_OR_PATH
                    (beta) apply a config; repeatable, later ones win and a
                    warning names what they replace. A shipped one is named
-                   (us, imperial, metric-trade, year-julian, year-civil,
-                   water); a file has a path (./mine.toml, or anything with
-                   a / or ending in .toml). Without --config the names stay
-                   strict.
+                   (us-customary, us-survey, imperial, metric-trade,
+                   year-julian, year-civil, water); a file has a path
+                   (./mine.toml, or anything with a / or ending in .toml).
+                   Without --config the names stay strict.
                    See docs/adr/014-one-config-mechanism.md
   --const NAME_OR_VALUE
                    density for mass <-> volume: the name of a constant of a
@@ -158,9 +158,10 @@ Options:
   --config NAME_OR_PATH
                    (beta) apply a config; repeatable, later ones win and a
                    warning names what they replace. A shipped one is named
-                   (us, imperial, metric-trade, year-julian, year-civil,
-                   water); a file has a path (./mine.toml, or anything with
-                   a / or ending in .toml). See: dimvexa configs --help
+                   (us-customary, us-survey, imperial, metric-trade,
+                   year-julian, year-civil, water); a file has a path
+                   (./mine.toml, or anything with a / or ending in .toml).
+                   See: dimvexa configs --help
   --const NAME_OR_VALUE
                    density for mass <-> volume: the name of a constant of a
                    density unit (--config water --const water_25C) or your own
@@ -224,8 +225,9 @@ Examples:
   dimvexa configs us-customary --json
 
 Forms:
-  configs          the configs that ship with dimvexa (us, imperial,
-                   metric-trade, year-julian, year-civil, water)
+  configs          the configs that ship with dimvexa (us-customary,
+                   us-survey, imperial, metric-trade, year-julian,
+                   year-civil, water)
   configs NAME     its names, units, and constants with their conditions and
                    sources
   configs PATH     the same for your own file (./mine.toml, or a name with a /

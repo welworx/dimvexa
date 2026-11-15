@@ -4,6 +4,10 @@ bundled:us-customary (hash fnv1a64:<hash>)
 # columns: name, unit
 ton	ton_short
 mile	mi
+chain	chain_int
+link	link_int
+rod	rod_int
+furlong	furlong_int
 gal	gal_us
 pt	pt_us
 qt	qt_us

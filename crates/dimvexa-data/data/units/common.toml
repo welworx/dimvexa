@@ -301,7 +301,7 @@ exactness = "defined"
 prefixes = "none"
 namespace = "std"
 source = "NIST SP 811 (2008), Appendix B (mile, U.S. statute)"
-note = "US statute mile = 5280 US survey feet"
+note = "US statute mile = 5280 US survey feet; legacy: built on the US survey foot, which NIST and NOAA retired on 2023-01-01 (kept for land records)"
 
 [[unit]]
 id = "lb"
@@ -605,7 +605,7 @@ exactness = "defined"
 prefixes = "none"
 namespace = "std"
 source = "NIST SP 811 (2008), Appendix B (acre, based on U.S. survey foot); NIST SP 811 (2008), Appendix B.6"
-note = "acre = 43 560 ft_us_survey^2 (about 4046.8726 m^2)"
+note = "acre = 43 560 ft_us_survey^2 (about 4046.8726 m^2); legacy: built on the US survey foot, which NIST and NOAA retired on 2023-01-01 (kept for land records)"
 
 [[unit]]
 id = "kn"
@@ -1280,7 +1280,7 @@ exactness = "defined"
 prefixes = "none"
 namespace = "std"
 source = "NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 link = 0.66 ft)"
-note = "link = 33/50 survey foot = 7.92 in (survey)"
+note = "link = 33/50 survey foot = 7.92 in (survey); legacy: built on the US survey foot, which NIST and NOAA retired on 2023-01-01 (kept for land records)"
 
 [[unit]]
 id = "rod_us_survey"
@@ -1295,7 +1295,7 @@ exactness = "defined"
 prefixes = "none"
 namespace = "std"
 source = "NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 rod = 16.5 ft = 25 links); NIST SP 811 (2008), Appendix B (rod, based on U.S. survey foot)"
-note = "rod (pole, perch) = 16.5 survey feet"
+note = "rod (pole, perch) = 16.5 survey feet; legacy: built on the US survey foot, which NIST and NOAA retired on 2023-01-01 (kept for land records)"
 
 [[unit]]
 id = "chain_us_survey"
@@ -1310,7 +1310,7 @@ exactness = "defined"
 prefixes = "none"
 namespace = "std"
 source = "NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 chain = 66 ft); NIST SP 811 (2008), Appendix B (chain, based on U.S. survey foot)"
-note = "Gunter's chain = 66 survey feet = 100 links"
+note = "Gunter's chain = 66 survey feet = 100 links; legacy: built on the US survey foot, which NIST and NOAA retired on 2023-01-01 (kept for land records)"
 
 [[unit]]
 id = "furlong_us_survey"
@@ -1325,7 +1325,7 @@ exactness = "defined"
 prefixes = "none"
 namespace = "std"
 source = "NIST Handbook 44 (2024), Appendix C (Units of Length: 1 furlong = 660 ft = 10 chains)"
-note = "furlong = 10 chains = 660 survey feet"
+note = "furlong = 10 chains = 660 survey feet; legacy: built on the US survey foot, which NIST and NOAA retired on 2023-01-01 (kept for land records)"
 
 [[unit]]
 id = "minim_us"

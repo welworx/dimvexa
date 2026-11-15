@@ -2374,7 +2374,8 @@ fn config_takes_a_shipped_name_or_a_path() {
     assert_eq!(r.code, 2);
     assert!(r.stderr.contains("no config named 'uss'"), "{}", r.stderr);
     assert!(
-        r.stderr.contains("us-customary, imperial, metric-trade"),
+        r.stderr
+            .contains("us-customary, us-survey, imperial, metric-trade"),
         "{}",
         r.stderr
     );

@@ -994,6 +994,10 @@ pub const BUNDLED: &[Bundled] = &[
         text: include_str!("../configs/us-customary.toml"),
     },
     Bundled {
+        name: "us-survey",
+        text: include_str!("../configs/us-survey.toml"),
+    },
+    Bundled {
         name: "imperial",
         text: include_str!("../configs/imperial.toml"),
     },

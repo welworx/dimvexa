@@ -178,7 +178,7 @@ Dimvexa refuses ambiguous names such as `ton` and `mt`, and it never guesses. Wi
 units and constants. One option, two kinds of value (ADR-014,
 [`docs/adr/014-one-config-mechanism.md`](adr/014-one-config-mechanism.md)):
 
-- a **name** (`us`, `imperial`, `metric-trade`, `year-julian`, `year-civil`, `water`) loads a config
+- a **name** (`us-customary`, `us-survey`, `imperial`, `metric-trade`, `year-julian`, `year-civil`, `water`) loads a config
   that ships with dimvexa;
 - a **path** (anything with a `/` or `\`, or ending in `.toml`) loads your own file. A file called `us`
   in the current directory is written `./us`.
@@ -194,6 +194,18 @@ $ dimvexa convert 1 yr d --config year-julian
 365.25 d
 $ dimvexa convert 1 oz g --config us-customary
 error[ambiguous_symbol]: 'oz' is ambiguous: use oz_av or oz_troy or fl_oz_us or fl_oz_imp, or load a config that resolves it
+```
+
+**Historic units.** NIST and NOAA retired the US survey foot on 1 January 2023, so `us-customary`
+maps the bare `mile`, `chain`, `link`, `rod` and `furlong` to the international units. The survey
+ones are kept for land records from before 2023: always by id (`chain_us_survey`, `mi_us_survey`,
+`acre_us_survey`, ...), and as bare names with `--config us-survey`. Their notes say "legacy".
+
+```console
+$ dimvexa convert 1 chain m --config us-customary
+20.1168 m
+$ dimvexa convert 1 chain m --config us-survey
+20.116840233680467 m
 ```
 
 `dimvexa configs` lists the shipped configs and `dimvexa configs us-customary` shows exactly what one

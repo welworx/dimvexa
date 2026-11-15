@@ -1,0 +1,18 @@
+# Legacy United States survey names, for land records and survey data from before 2023.
+#
+#   dimvexa convert 1 chain m --config us-survey
+#   dimvexa convert 1 mile km --config us-survey
+#
+# Since 1 January 2023 NIST and NOAA retire the US survey foot (1200/3937 m, about 2 ppm longer than
+# the international foot) and the units built on it. `us-customary` maps these names to the
+# international units; use this config instead of it (not together with it) to get the survey ones.
+# The survey units are always available by their ids (`chain_us_survey`, `mi_us_survey`, ...).
+
+[map]
+mile = "mi_us_survey"
+chain = "chain_us_survey"
+link = "link_us_survey"
+rod = "rod_us_survey"
+furlong = "furlong_us_survey"
+fathom = "fathom_us_survey"
+cable = "cable_us_survey"

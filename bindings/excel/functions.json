@@ -11,7 +11,7 @@
         { "name": "from", "description": "Unit to convert from, for example km/h.", "type": "string", "dimensionality": "scalar" },
         { "name": "to", "description": "Unit to convert to, for example m/s.", "type": "string", "dimensionality": "scalar" },
         { "name": "density", "description": "Optional, only for mass to volume (or back): your own density, for example 998.2067kg/m3, or the name of a density in a loaded config such as water_25C (needs config water). Ignored when no density is needed. Nothing is assumed when it is left out.", "type": "string", "dimensionality": "scalar", "optional": true },
-        { "name": "config", "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us (ton, mile, gal), imperial, metric-trade, year-julian, year-civil, or water for its densities. Several: us-customary,water.", "type": "string", "dimensionality": "scalar", "optional": true }
+        { "name": "config", "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us-customary (ton, mile, gal), us-survey, imperial, metric-trade, year-julian, year-civil, or water for its densities. Several: us-customary,water.", "type": "string", "dimensionality": "scalar", "optional": true }
       ]
     },
     {
@@ -24,7 +24,7 @@
         { "name": "from", "description": "Unit to convert from, for example rad.", "type": "string", "dimensionality": "scalar" },
         { "name": "to", "description": "Unit to convert to, for example deg.", "type": "string", "dimensionality": "scalar" },
         { "name": "density", "description": "Optional, only for mass to volume (or back): your own density, for example 998.2067kg/m3, or the name of a density in a loaded config such as water_25C (needs config water). Ignored when no density is needed. Nothing is assumed when it is left out.", "type": "string", "dimensionality": "scalar", "optional": true },
-        { "name": "config", "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us (ton, mile, gal), imperial, metric-trade, year-julian, year-civil, or water for its densities. Several: us-customary,water.", "type": "string", "dimensionality": "scalar", "optional": true }
+        { "name": "config", "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us-customary (ton, mile, gal), us-survey, imperial, metric-trade, year-julian, year-civil, or water for its densities. Several: us-customary,water.", "type": "string", "dimensionality": "scalar", "optional": true }
       ]
     },
     {
@@ -37,7 +37,7 @@
         { "name": "from", "description": "Unit to convert from, for example km/h.", "type": "string", "dimensionality": "scalar" },
         { "name": "to", "description": "Unit to convert to, for example m/s.", "type": "string", "dimensionality": "scalar" },
         { "name": "density", "description": "Optional, only for mass to volume (or back): your own density, for example 998.2067kg/m3, or the name of a density in a loaded config such as water_25C (needs config water). Ignored when no density is needed. Nothing is assumed when it is left out.", "type": "string", "dimensionality": "scalar", "optional": true },
-        { "name": "config", "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us (ton, mile, gal), imperial, metric-trade, year-julian, year-civil, or water for its densities. Several: us-customary,water.", "type": "string", "dimensionality": "scalar", "optional": true }
+        { "name": "config", "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us-customary (ton, mile, gal), us-survey, imperial, metric-trade, year-julian, year-civil, or water for its densities. Several: us-customary,water.", "type": "string", "dimensionality": "scalar", "optional": true }
       ]
     },
     {
