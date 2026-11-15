@@ -22,6 +22,8 @@ cargo xtask ci                 # the one command: fmt, clippy -D warnings, msrv 
                                # Rust 1.85), tests, doc tests, docs, data validation, package
                                # check, pool_pump example
 cargo xtask ci fmt clippy      # only some stages (see: cargo xtask ci --list)
+typos && taplo fmt --check     # spelling and TOML format of the whole tree: the CI job `typos and
+                               # TOML format`; not part of `cargo xtask ci`, so run it yourself
 cargo test --workspace         # quick loop
 cargo xtask check-docs         # docs, skills, ADRs, workflows and manifests stay consistent
 cargo xtask validate-data      # after touching the unit tables
@@ -93,7 +95,10 @@ when the command cannot run here, and then the report names the command and the 
    error code or output, `benchmarks` for numbers.
 5. The tools the pre-commit hook skips (gitleaks, typos, taplo) are installed when the network
    allows it, so the hook really scans (`go install` / `cargo install`, see the hook's message).
-   Do not accept "NOT scanned" when you can install the tool.
+   Do not accept "NOT scanned" when you can install the tool. The hook checks only the staged
+   files and skips a missing tool silently enough to miss it, so also run `typos` and
+   `taplo fmt --check` over the whole tree and say in the report that both exited 0. Deleting the
+   last entry of a `.toml` table leaves a trailing blank line that `taplo` rejects and CI fails on.
 
 The network may be available even where an older note says it is not (`fuzz/`, `extras/`):
 try the command (`cargo fetch`, `cargo install`) before you report something as impossible.
