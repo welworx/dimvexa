@@ -491,7 +491,7 @@ fn colour_handles_non_ascii_config_text() {
     let file = dir.join("ü.toml");
     std::fs::write(
         &file,
-        "[[unit]]\nsymbol = \"wä\"\nbase = \"m\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"Quelle — 25 °C --é --«x»\"\n",
+        "[[unit]]\nid = \"wä\"\nbase = \"m\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"Quelle — 25 °C --é --«x»\"\n",
     )
     .unwrap();
     let path = file.to_str().unwrap();
@@ -1563,7 +1563,7 @@ fn a_config_unit_that_takes_an_existing_name_is_refused() {
         ("ton.toml", "ton", "kg"),
     ] {
         let text = format!(
-            "[[unit]]\nsymbol = \"{symbol}\"\nbase = \"{base}\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"s\"\n"
+            "[[unit]]\nid = \"{symbol}\"\nbase = \"{base}\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"s\"\n"
         );
         let path = config_file(name, &text);
         let r = dimvexa(&["convert", "1", "m", "km", "--config", &path]);
@@ -1823,7 +1823,7 @@ fn outputs_validate_against_the_schema_files() {
     let (convert, units, configs, constants) = (
         schema("dimvexa.convert-3.schema.json"),
         schema("dimvexa.units-5.schema.json"),
-        schema("dimvexa.configs-2.schema.json"),
+        schema("dimvexa.configs-3.schema.json"),
         schema("dimvexa.constants-1.schema.json"),
     );
     let cfg = config_file("schema_check.toml", TRADE);
@@ -1981,7 +1981,7 @@ fn known_limitation_kl_16_prefixed_ambiguity_candidates_are_not_all_valid() {
 fn known_limitation_kl_17_a_unit_named_like_a_group_is_shadowed_by_the_group() {
     let cfg = config_file(
         "kl17.toml",
-        "[[unit]]\nsymbol = \"volume\"\nbase = \"L\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"s\"\n",
+        "[[unit]]\nid = \"volume\"\nbase = \"L\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"s\"\n",
     );
     let r = dimvexa(&["units", "volume", "--config", &cfg]);
     assert_eq!(r.code, 0);
@@ -2488,7 +2488,7 @@ fn configs_lists_and_shows_what_is_included() {
     // A path shows your own file, validated like any config.
     let r = dimvexa(&["configs", OIL_CFG_PATH_FROM_ROOT]);
     assert_eq!(r.code, 0, "{}", r.stderr);
-    assert!(r.stdout.contains("## units") && r.stdout.contains("bbl_oil\tgal_us\t42"));
+    assert!(r.stdout.contains("## units") && r.stdout.contains("bbl_oil\t-\t-\tgal_us\t42"));
     // Errors: unknown name (usage), several arguments, options that do not apply.
     let r = dimvexa(&["configs", "nope"]);
     assert_eq!(r.code, 2);
@@ -2499,7 +2499,7 @@ fn configs_lists_and_shows_what_is_included() {
     // JSON validates and carries the sources.
     let r = dimvexa(&["configs", "water", "--json"]);
     let v = json::parse(&r.stdout).unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.configs/2");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.configs/3");
     let d = v
         .get("config")
         .unwrap()
@@ -2626,7 +2626,7 @@ fn update_command_line_is_checked_before_any_network_use() {
 fn a_config_offset_converts_a_gauge_reading_with_your_own_ambient_pressure() {
     let cfg = config_file(
         "site_ambient.toml",
-        "[[unit]]\nsymbol = \"barg_site\"\nbase = \"bar\"\nfactor = \"1\"\n\
+        "[[unit]]\nid = \"barg_site\"\nbase = \"bar\"\nfactor = \"1\"\n\
          offset = \"1.01325\"\nexactness = \"defined\"\nsource = \"my site\"\n",
     );
     assert_eq!(
@@ -2679,7 +2679,7 @@ fn gas_volumes_at_reference_conditions_are_not_implemented() {
     // A name of your own in a config is still yours.
     let cfg = config_file(
         "own_scf.toml",
-        "[[unit]]\nsymbol = \"scf\"\nbase = \"ft3\"\nfactor = \"1\"\n\
+        "[[unit]]\nid = \"scf\"\nbase = \"ft3\"\nfactor = \"1\"\n\
          exactness = \"defined\"\nsource = \"test\"\n",
     );
     let r = dimvexa(&["convert", "1", "scf", "ft3", "--config", &cfg]);

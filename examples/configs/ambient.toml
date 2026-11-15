@@ -13,7 +13,9 @@
 # used in a compound unit such as barg_site/s.
 
 [[unit]]
-symbol = "barg_site"
+id = "barg_site"
+symbol = "bar_g"
+name = "Gauge pressure in bar at the site ambient pressure"
 base = "bar"
 factor = "1"
 offset = "1.01325"

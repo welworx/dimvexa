@@ -13,7 +13,8 @@
 //!
 //! A config has three kinds of entries. `[map]` points a name at an existing unit, for example
 //! `mt = "tonne"`, and carries no factor. `[[unit]]` defines a **unit** as an exact multiple of
-//! an existing one, with a source, and optionally an exact `offset` (the value of its zero point
+//! an existing one, with an `id` (what you type), a source, an optional printed `symbol` and full
+//! `name` (ADR-025), and optionally an exact `offset` (the value of its zero point
 //! in the base unit, ADR-022) for an affine scale of your own, such as a gauge reading with your
 //! ambient pressure. Neither can redefine an existing symbol, alias or prefixed form.
 //!
@@ -78,12 +79,18 @@ pub struct Config {
 
 /// A unit the caller defines in a `[[unit]]` table: an exact multiple of an existing unit.
 ///
-/// `1 symbol = factor * base`. The dimension and kind come from the base, so they cannot be
-/// mistyped; `source` is mandatory like for the shipped tables.
+/// `1 id = factor * base`. The dimension and kind come from the base, so they cannot be
+/// mistyped; `source` is mandatory like for the shipped tables. Like a shipped unit it has an
+/// `id` (what you type), an optional printed `symbol` and an optional full `name` (ADR-025).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConfigUnit {
-    /// The new symbol, for example `bbl_oil`.
-    pub symbol: String,
+    /// The new id, the name you type, for example `bbl_oil`.
+    pub id: String,
+    /// The symbol to print when it differs from the id (`Ω` for `ohm_x`). It is also accepted
+    /// as an alias, so what is printed reads back; `None` prints the id.
+    pub symbol: Option<String>,
+    /// The full name (`Oil barrel`); `None` reads as the id.
+    pub name: Option<String>,
     /// The unit expression it is a multiple of, for example `gal_us`.
     pub base: String,
     /// How many `base` it is, exact and positive.
@@ -331,7 +338,9 @@ impl TableKind {
                 "note",
             ],
             Self::Unit => &[
+                "id",
                 "symbol",
+                "name",
                 "base",
                 "factor",
                 "offset",
@@ -489,10 +498,31 @@ fn finish_unit(
     units: &mut Vec<ConfigUnit>,
     origin: &str,
 ) -> core::result::Result<(), String> {
-    let symbol = p.need("symbol")?;
-    if !is_valid_symbol(&symbol) {
-        return Err(format!("'{symbol}' is not a well-formed unit symbol"));
+    let id = match p.get("id").filter(|v| !v.is_empty()) {
+        Some(id) => id.to_string(),
+        None if p.get("symbol").is_some() => {
+            return Err(
+                "missing 'id': since ADR-025 `symbol` is the printed symbol and `id` is \
+                        the name you type; rename your `symbol` key to `id`"
+                    .to_string(),
+            );
+        }
+        None => return Err("missing or empty 'id'".to_string()),
+    };
+    if !is_valid_symbol(&id) {
+        return Err(format!("'{id}' is not a well-formed unit symbol"));
     }
+    let symbol = match p.get("symbol").filter(|v| !v.is_empty()) {
+        Some(s) if !is_valid_symbol(s) => {
+            return Err(format!("symbol '{s}' is not a well-formed unit symbol"));
+        }
+        Some(s) if s != id => Some(s.to_string()),
+        _ => None,
+    };
+    let name = p
+        .get("name")
+        .filter(|v| !v.trim().is_empty())
+        .map(str::to_string);
     let base = p.need("base")?;
     let text = p.need("factor")?;
     let factor: Ratio = text
@@ -522,11 +552,13 @@ fn finish_unit(
         Some(name) => PrefixMode::from_name(name)
             .ok_or_else(|| format!("prefixes '{name}' must be 'none', 'si' or 'si_binary'"))?,
     };
-    if units.iter().any(|u| u.symbol == symbol) {
-        return Err(format!("'{symbol}' is defined twice"));
+    if units.iter().any(|u| u.id == id) {
+        return Err(format!("'{id}' is defined twice"));
     }
     units.push(ConfigUnit {
+        id,
         symbol,
+        name,
         base,
         factor,
         offset,
@@ -1083,22 +1115,23 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
             &u.origin,
             u.line,
             Error::InvalidDefinition {
-                symbol: u.symbol.clone(),
+                symbol: u.id.clone(),
                 message,
             },
         )
     };
-    if !reg.name_is_free(&u.symbol) {
-        return Err(bad(format!(
-            "'{}' already means a unit and cannot be redefined",
-            u.symbol
-        )));
-    }
-    if let Some(clash) = reg.prefix_clash(&u.symbol, u.prefixes) {
-        return Err(bad(format!(
-            "'{}' would hide '{clash}', which already means something else",
-            u.symbol
-        )));
+    // The id and the printed symbol (an alias) must both be free, and must not hide a prefixed form.
+    for name in std::iter::once(&u.id).chain(u.symbol.as_ref()) {
+        if !reg.name_is_free(name) {
+            return Err(bad(format!(
+                "'{name}' already means a unit and cannot be redefined"
+            )));
+        }
+        if let Some(clash) = reg.prefix_clash(name, u.prefixes) {
+            return Err(bad(format!(
+                "'{name}' would hide '{clash}', which already means something else"
+            )));
+        }
     }
     let base = reg.parse(&u.base).map_err(|e| {
         bad(format!(
@@ -1144,11 +1177,11 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
     // The base's own citation stays attached, so the chain of sources is not cut.
     let base_sources = base.sources().join("; ");
     let mut note = if u.note.is_empty() && u.offset.is_zero() {
-        format!("user unit: 1 {} = {} {}", u.symbol, u.factor, u.base)
+        format!("user unit: 1 {} = {} {}", u.id, u.factor, u.base)
     } else if u.note.is_empty() {
         format!(
             "user unit: x {} = {} * x + {} {}",
-            u.symbol, u.factor, u.offset, u.base
+            u.id, u.factor, u.offset, u.base
         )
     } else {
         u.note.clone()
@@ -1156,8 +1189,18 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
     if !base_sources.is_empty() {
         note = format!("{note} (base {}: {base_sources})", u.base);
     }
-    let unit = Unit::new(&u.symbol, base.dim(), base.kind(), factor, offset)
-        .map_err(|e| at(&u.origin, u.line, e))?
+    let wrap = |e| at(&u.origin, u.line, e);
+    let mut unit = Unit::new(&u.id, base.dim(), base.kind(), factor, offset).map_err(wrap)?;
+    if let Some(symbol) = &u.symbol {
+        unit = unit
+            .with_aliases(&[symbol.as_str()])
+            .and_then(|x| x.with_symbol(symbol))
+            .map_err(wrap)?;
+    }
+    if let Some(name) = &u.name {
+        unit = unit.with_name(name);
+    }
+    let unit = unit
         .with_prefixes(u.prefixes)
         .with_provenance(base.exactness().combine(u.exactness), &u.source, &note)
         .with_namespace("user");
@@ -1191,7 +1234,7 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
 /// reg.register(Unit::linear("kg", Dim::KG, Ratio::ONE)?)?;
 /// reg.register(Unit::linear("t", Dim::KG, Ratio::from_int(1000))?)?;
 /// let cfg = Config::parse(
-///     "[[unit]]\nsymbol = \"sack\"\nbase = \"kg\"\nfactor = \"50\"\nexactness = \"defined\"\n\
+///     "[[unit]]\nid = \"sack\"\nbase = \"kg\"\nfactor = \"50\"\nexactness = \"defined\"\n\
 ///      source = \"my supplier\"\n[map]\nmetric_ton = \"t\"\n",
 ///     "my.toml",
 /// )?;
@@ -1205,7 +1248,7 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
 pub fn apply(reg: &mut Registry, configs: &[Config]) -> Result<Applied> {
     let mut units: Vec<ConfigUnit> = Vec::new();
     for u in configs.iter().flat_map(Config::units) {
-        upsert(&mut units, u.clone(), |e| e.symbol == u.symbol);
+        upsert(&mut units, u.clone(), |e| e.id == u.id);
     }
     let mut mappings: Vec<Mapping> = Vec::new();
     for m in configs.iter().flat_map(Config::mappings) {
@@ -1467,7 +1510,7 @@ fn replacements(configs: &[Config]) -> Vec<String> {
             note("name", &m.name, &m.origin, m.line);
         }
         for u in config.units() {
-            note("unit", &u.symbol, &u.origin, u.line);
+            note("unit", &u.id, &u.origin, u.line);
         }
         for c in config.constants() {
             note("constant", &c.id, &c.origin, c.line);
@@ -1697,13 +1740,33 @@ mod tests {
         assert_eq!(effective[0].origin, "b.toml");
     }
 
-    const BARREL: &str = "[[unit]]\nsymbol = \"bbl_oil\"\nbase = \"gal_us\"\nfactor = \"42\"\nexactness = \"defined\"\nsource = \"NIST SP 811 (2008), Appendix B\"\n";
+    const BARREL: &str = "[[unit]]\nid = \"bbl_oil\"\nbase = \"gal_us\"\nfactor = \"42\"\nexactness = \"defined\"\nsource = \"NIST SP 811 (2008), Appendix B\"\n";
+
+    #[test]
+    fn a_unit_may_have_a_printed_symbol_and_a_name() {
+        // ADR-025: `id` is typed, `symbol` is printed (only kept when it differs), `name` is full.
+        let full = BARREL.replace("source", "symbol = \"bo\"\nname = \"Oil barrel\"\nsource");
+        let u = Config::parse(&full, "o").unwrap().units()[0].clone();
+        assert_eq!(u.symbol.as_deref(), Some("bo"));
+        assert_eq!(u.name.as_deref(), Some("Oil barrel"));
+        let same = BARREL.replace("source", "symbol = \"bbl_oil\"\nsource");
+        assert_eq!(Config::parse(&same, "o").unwrap().units()[0].symbol, None);
+        let u = Config::parse(BARREL, "o").unwrap().units()[0].clone();
+        assert_eq!((u.symbol, u.name), (None, None));
+        // The old key: `symbol` alone is refused with the way out.
+        let old = BARREL.replace("id = ", "symbol = ");
+        let msg = Config::parse(&old, "o").unwrap_err().to_string();
+        assert!(msg.contains("rename your `symbol` key to `id`"), "{msg}");
+        let bad = BARREL.replace("source", "symbol = \"b o\"\nsource");
+        let msg = Config::parse(&bad, "o").unwrap_err().to_string();
+        assert!(msg.contains("symbol 'b o' is not a well-formed"), "{msg}");
+    }
 
     #[test]
     fn parses_a_unit_with_its_base_factor_and_source() {
         let cfg = Config::parse(&format!("[map]\nmt = \"tonne\"\n\n{BARREL}"), "o.toml").unwrap();
         let u = &cfg.units()[0];
-        assert_eq!((u.symbol.as_str(), u.base.as_str()), ("bbl_oil", "gal_us"));
+        assert_eq!((u.id.as_str(), u.base.as_str()), ("bbl_oil", "gal_us"));
         assert_eq!(u.factor, Ratio::from_int(42));
         assert_eq!(u.exactness, Exactness::Defined);
         assert_eq!(u.prefixes, PrefixMode::None);
@@ -1728,7 +1791,7 @@ mod tests {
                 .collect::<Vec<_>>()
                 .join("\n")
         };
-        for key in ["symbol", "base", "factor", "exactness", "source"] {
+        for key in ["id", "base", "factor", "exactness", "source"] {
             let msg = Config::parse(&without(key), "o.toml")
                 .unwrap_err()
                 .to_string();
@@ -1761,7 +1824,7 @@ mod tests {
                 "unknown unit key 'colour'",
             ),
             (format!("{BARREL}{BARREL}"), "defined twice"),
-            (format!("{BARREL}symbol = \"x\"\n"), "given twice"),
+            (format!("{BARREL}id = \"x\"\n"), "given twice"),
         ] {
             let msg = Config::parse(&text, "o.toml").unwrap_err().to_string();
             assert!(msg.contains(needle), "{needle}: {msg}");

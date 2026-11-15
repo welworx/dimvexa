@@ -36,7 +36,7 @@ fn probe_names() -> Vec<String> {
 
 fn unit(symbol: &str, base: &str, prefixes: &str) -> String {
     format!(
-        "[[unit]]\nsymbol = \"{symbol}\"\nbase = \"{base}\"\nfactor = \"3\"\nexactness = \"defined\"\n\
+        "[[unit]]\nid = \"{symbol}\"\nbase = \"{base}\"\nfactor = \"3\"\nexactness = \"defined\"\n\
          prefixes = \"{prefixes}\"\nsource = \"s\"\n"
     )
 }

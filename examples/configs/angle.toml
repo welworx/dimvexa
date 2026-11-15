@@ -14,7 +14,7 @@
 # That is why dimvexa ships neither `turn` nor `rev` nor `rpm`.
 
 [[unit]]
-symbol = "pirad"
+id = "pirad"
 base = "deg"
 factor = "180"
 exactness = "defined"
@@ -23,7 +23,7 @@ source = "BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (180 degrees = pi rad
 note = "pi radian: 180 deg, exact because the degree is exactly pi/180 rad"
 
 [[unit]]
-symbol = "turn"
+id = "turn"
 base = "deg"
 factor = "360"
 exactness = "defined"

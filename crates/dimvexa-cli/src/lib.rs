@@ -16,7 +16,7 @@
 //!
 //! Exit codes: `0` success, `1` conversion refused or invalid input, `2` usage error.
 //! With `--json`, errors are printed to stdout as JSON (schema `dimvexa.convert/3`, see
-//! `docs/schemas/`; `units --json` uses `dimvexa.units/5`, `configs --json` `dimvexa.configs/2`, `constants --json` `dimvexa.constants/1`) and the exit code stays non-zero. The error `code` is one of the
+//! `docs/schemas/`; `units --json` uses `dimvexa.units/5`, `configs --json` `dimvexa.configs/3`, `constants --json` `dimvexa.constants/1`) and the exit code stays non-zero. The error `code` is one of the
 //! library's stable codes ([`dimvexa::Error::ALL_CODES`]) or `usage`.
 #![forbid(unsafe_code)]
 #![doc(
@@ -96,7 +96,7 @@ Options:
                    or a power of ten when the value has one
                    (1/2 pi = 1.5707963267948966)
   --json           machine-readable output (schemas dimvexa.convert/3,
-                   dimvexa.units/5, dimvexa.configs/2,
+                   dimvexa.units/5, dimvexa.configs/3,
                    dimvexa.constants/1)
   --pretty         --json, indented for reading (same fields, same order)
   --color WHEN     auto (default: a terminal, unless NO_COLOR is set), always
@@ -231,7 +231,7 @@ Forms:
                    or ending in .toml)
 
 Options:
-  --json           machine-readable output (schema dimvexa.configs/2)
+  --json           machine-readable output (schema dimvexa.configs/3)
   --pretty         --json, indented for reading
   --color WHEN     auto, always or never (see: dimvexa --help)
 
@@ -1206,11 +1206,14 @@ fn f64_text(x: f64) -> String {
     }
 }
 
-/// The JSON schema id of a command: `dimvexa.convert/3`, `dimvexa.units/5`, `dimvexa.configs/2`, `dimvexa.constants/1`.
+/// The JSON schema id of a command: `dimvexa.convert/3`, `dimvexa.units/5`, `dimvexa.configs/3`, `dimvexa.constants/1`.
 fn schema_id(command: &str) -> String {
+    // One arm per command: `cargo xtask check-docs` reads the versions from these arms, so the
+    // equal bodies of `configs` and the default (`convert`) stay separate.
+    #[allow(clippy::match_same_arms)]
     let version = match command {
-        "configs" => 2,
         "constants" => 1,
+        "configs" => 3,
         "units" => 5,
         _ => 3,
     };
@@ -1608,9 +1611,9 @@ fn select_ambiguous(
         .collect()
 }
 
-/// The config unit that defines `symbol`, if the unit comes from a `--config` file.
-fn user_unit<'a>(user: &'a [ConfigUnit], symbol: &str) -> Option<&'a ConfigUnit> {
-    user.iter().find(|u| u.symbol == symbol)
+/// The config unit that defines `id`, if the unit comes from a `--config` file.
+fn user_unit<'a>(user: &'a [ConfigUnit], id: &str) -> Option<&'a ConfigUnit> {
+    user.iter().find(|u| u.id == id)
 }
 
 /// JSON for where a unit was defined: `{"file":..,"line":..}` or `null`.
@@ -2248,12 +2251,16 @@ fn config_detail_text(c: &Config) -> String {
         }
     }
     if !c.units().is_empty() {
-        s.push_str("\n## units\n# columns: symbol, base, factor, offset, exactness, source\n");
+        s.push_str(
+            "\n## units\n# columns: id, symbol, name, base, factor, offset, exactness, source\n",
+        );
         for u in c.units() {
             let _ = writeln!(
                 s,
-                "{}\t{}\t{}\t{}\t{}\t{}",
-                cell(&u.symbol),
+                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                cell(&u.id),
+                cell(u.symbol.as_deref().unwrap_or("-")),
+                cell(u.name.as_deref().unwrap_or("-")),
                 cell(&u.base),
                 u.factor.to_fraction_string(),
                 u.offset.to_fraction_string(),
@@ -2302,8 +2309,10 @@ fn config_detail_json(c: &Config) -> String {
         .iter()
         .map(|u| {
             format!(
-                "{{\"symbol\":{},\"base\":{},\"factor\":{},\"offset\":{},\"exactness\":{},\"source\":{},\"line\":{}}}",
-                json_string(&u.symbol),
+                "{{\"id\":{},\"symbol\":{},\"name\":{},\"base\":{},\"factor\":{},\"offset\":{},\"exactness\":{},\"source\":{},\"line\":{}}}",
+                json_string(&u.id),
+                u.symbol.as_deref().map_or_else(|| "null".to_string(), json_string),
+                u.name.as_deref().map_or_else(|| "null".to_string(), json_string),
                 json_string(&u.base),
                 json_string(&u.factor.to_fraction_string()),
                 json_string(&u.offset.to_fraction_string()),

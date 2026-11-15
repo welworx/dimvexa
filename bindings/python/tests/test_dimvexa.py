@@ -139,7 +139,7 @@ def test_a_config_cannot_redefine_a_builtin_constant() -> None:
     assert err.value.code == "invalid_definition"
     assert "cannot be redefined" in str(err.value)
     # A unit defined by another loaded config is fine; an unknown unit is a loud error.
-    unit = '[[unit]]\nsymbol = "blob"\nbase = "g"\nfactor = "7"\nexactness = "defined"\nsource = "s"\n'
+    unit = '[[unit]]\nid = "blob"\nbase = "g"\nfactor = "7"\nexactness = "defined"\nsource = "s"\n'
     const = WATER_TEXT.replace("g/cm3", "blob/m3")
     assert dimvexa.constants(config_texts=[unit, const])[-1]["unit"] == "blob/m3"
     with pytest.raises(dimvexa.DimvexaError):
@@ -160,7 +160,7 @@ def test_config_files_must_be_regular_files_and_an_empty_density_is_none(tmp_pat
 
 
 UNIT_TEXT = (
-    '[[unit]]\nsymbol = "blob"\nbase = "g"\nfactor = "7"\nexactness = "defined"\nsource = "s"\n'
+    '[[unit]]\nid = "blob"\nbase = "g"\nfactor = "7"\nexactness = "defined"\nsource = "s"\n'
 )
 
 

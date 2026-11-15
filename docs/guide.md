@@ -333,7 +333,7 @@ base and cannot be mistyped. It needs a factor, whether the definition is `defin
 ```toml
 # examples/configs/oil.toml
 [[unit]]
-symbol = "bbl_oil"
+id = "bbl_oil"
 base = "gal_us"
 factor = "42"
 exactness = "defined"
@@ -371,6 +371,9 @@ Rules for your units:
   A new name with prefixes may not hide a prefixed form that already means something
   (`pallet` with SI prefixes next to an existing `kpallet`).
 - The base must be linear: no temperature points and no units with an offset.
+- A `[[unit]]` has an `id` (the name you type), an optional `symbol` (printed by `dimvexa units`
+  and also accepted when typed) and an optional full `name`, like a shipped unit (ADR-025). Before
+  that the key `symbol` was the id: rename it to `id`, an old file is refused with that hint.
 - A unit may carry an `offset` of its own (ADR-022), see the next example. It needs a plain
   base and `prefixes = "none"`, and it cannot be part of a compound unit.
 - If the base is `measured`, so is the new unit, whatever you state.
@@ -400,7 +403,9 @@ cannot be part of a compound unit.
 # used in a compound unit such as barg_site/s.
 
 [[unit]]
-symbol = "barg_site"
+id = "barg_site"
+symbol = "bar_g"
+name = "Gauge pressure in bar at the site ambient pressure"
 base = "bar"
 factor = "1"
 offset = "1.01325"

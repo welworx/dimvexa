@@ -10,7 +10,7 @@ use dimvexa_config::{Config, apply};
 
 fn unit(symbol: &str, base: &str, factor: &str, extra: &str) -> String {
     format!(
-        "[[unit]]\nsymbol = \"{symbol}\"\nbase = \"{base}\"\nfactor = \"{factor}\"\n\
+        "[[unit]]\nid = \"{symbol}\"\nbase = \"{base}\"\nfactor = \"{factor}\"\n\
          exactness = \"defined\"\nsource = \"test\"\n{extra}"
     )
 }

@@ -24,7 +24,7 @@ Forms:
                    or ending in .toml)
 
 Options:
-  --json           machine-readable output (schema dimvexa.configs/2)
+  --json           machine-readable output (schema dimvexa.configs/3)
   --pretty         --json, indented for reading
   --color WHEN     auto, always or never (see: dimvexa --help)
 

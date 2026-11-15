@@ -194,12 +194,12 @@ fn a_density_does_nothing_for_anything_but_a_density() {
     assert!(!dimvexa_config::Density::density_needed(kg.dim(), kg.dim()));
 }
 
-const BARREL: &str = "[[unit]]\nsymbol = \"bbl_oil\"\nbase = \"gal_us\"\nfactor = \"42\"\n\
+const BARREL: &str = "[[unit]]\nid = \"bbl_oil\"\nbase = \"gal_us\"\nfactor = \"42\"\n\
 exactness = \"defined\"\nprefixes = \"si\"\nsource = \"NIST SP 811 (2008), Appendix B\"\n";
 
 fn unit_text(symbol: &str, base: &str, factor: &str, extra: &str) -> String {
     format!(
-        "[[unit]]\nsymbol = \"{symbol}\"\nbase = \"{base}\"\nfactor = \"{factor}\"\n\
+        "[[unit]]\nid = \"{symbol}\"\nbase = \"{base}\"\nfactor = \"{factor}\"\n\
          exactness = \"defined\"\nsource = \"test\"\n{extra}"
     )
 }
@@ -430,7 +430,7 @@ fn overriding_a_unit_keeps_the_units_that_build_on_it_working() {
         Ratio::from_int(15),
         "ub follows the new uu"
     );
-    let order: Vec<&str> = applied.units.iter().map(|u| u.symbol.as_str()).collect();
+    let order: Vec<&str> = applied.units.iter().map(|u| u.id.as_str()).collect();
     assert_eq!(order, ["uu", "ub"], "an override keeps its position");
     assert_eq!(applied.units[0].origin, "B.toml");
 }
@@ -715,7 +715,7 @@ fn load_builds_the_constants_and_densities_in_one_place() {
     let pi = cfg(&WATER.replace("water_20C", "pi"), "pi.toml");
     assert!(dimvexa_config::load(reg.clone(), &[pi], builtin).is_err());
     let unit = cfg(
-        "[[unit]]\nsymbol = \"blob\"\nbase = \"g\"\nfactor = \"7\"\nexactness = \"defined\"\nsource = \"s\"\n",
+        "[[unit]]\nid = \"blob\"\nbase = \"g\"\nfactor = \"7\"\nexactness = \"defined\"\nsource = \"s\"\n",
         "u.toml",
     );
     let c = cfg(&WATER.replace("kg/m3", "blob/m3"), "c.toml");
@@ -743,7 +743,7 @@ fn a_config_that_replaces_an_entry_of_an_earlier_one_gets_a_warning() {
     assert_eq!(twice.warnings, Vec::<String>::new());
 }
 
-const SITE: &str = "[[unit]]\nsymbol = \"barg_site\"\nbase = \"bar\"\nfactor = \"1\"\n\
+const SITE: &str = "[[unit]]\nid = \"barg_site\"\nbase = \"bar\"\nfactor = \"1\"\n\
                     offset = \"1.01325\"\nexactness = \"defined\"\nsource = \"my site\"\n";
 
 /// ADR-022: a config unit may have an offset, so a user can write a gauge reading with their own
@@ -769,7 +769,7 @@ fn a_config_unit_with_an_offset_is_an_exact_affine_scale() {
 fn an_offset_is_refused_where_it_would_be_wrong() {
     let site = |extra: &str, base: &str| {
         format!(
-            "[[unit]]\nsymbol = \"x_site\"\nbase = \"{base}\"\nfactor = \"1\"\noffset = \"1\"\n\
+            "[[unit]]\nid = \"x_site\"\nbase = \"{base}\"\nfactor = \"1\"\noffset = \"1\"\n\
              exactness = \"defined\"\nsource = \"test\"\n{extra}"
         )
     };
@@ -798,4 +798,37 @@ fn an_offset_is_refused_where_it_would_be_wrong() {
     // The built-in gauge names are not implemented (ADR-023); the user's own scale is.
     let err = reg.conversion("barg", "barg_site").unwrap_err();
     assert!(err.to_string().contains("not implemented"), "{err}");
+}
+
+/// ADR-025: a config unit has an `id` (typed), an optional printed `symbol` (also accepted when
+/// typed) and an optional full `name`, like a shipped unit.
+#[test]
+fn a_config_unit_may_have_a_printed_symbol_and_a_name() {
+    let reg = with(
+        "[[unit]]\nid = \"ohm_x\"\nsymbol = \"\u{3a9}_x\"\nname = \"Test ohm\"\nbase = \"ohm\"\n\
+         factor = \"1\"\nexactness = \"defined\"\nsource = \"test\"\n\
+         [[unit]]\nid = \"plain_x\"\nbase = \"ohm\"\nfactor = \"2\"\nexactness = \"defined\"\n\
+         source = \"test\"\n",
+    );
+    let u = reg.get("ohm_x").unwrap();
+    assert_eq!(
+        (u.id(), u.symbol(), u.name()),
+        ("ohm_x", "\u{3a9}_x", "Test ohm")
+    );
+    // What is printed reads back: the symbol is an alias.
+    assert_eq!(factor(&reg, "\u{3a9}_x", "ohm"), Ratio::ONE);
+    // Without them the unit prints and reads as its id.
+    let p = reg.get("plain_x").unwrap();
+    assert_eq!(
+        (p.id(), p.symbol(), p.name()),
+        ("plain_x", "plain_x", "plain_x")
+    );
+    // The symbol must be free like the id: it cannot take the name of an existing unit.
+    let mut reg = registry().unwrap();
+    let text = "[[unit]]\nid = \"ohm_y\"\nsymbol = \"m\"\nbase = \"ohm\"\nfactor = \"1\"\n\
+                exactness = \"defined\"\nsource = \"test\"\n";
+    let err = apply(&mut reg, &[cfg(text, "test.toml")])
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("'m' already means a unit"), "{err}");
 }
