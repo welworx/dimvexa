@@ -33,7 +33,7 @@ Each unit has a `Kind` on top of its dimension.
 | Kind family | Members | Rules |
 |---|---|---|
 | Temperature | `AbsTemperature`, `TempDifference` | abs − abs = diff; abs + diff = abs; abs + abs is an error. Temperature inside compound units (kJ/(kg·K)) is always the difference kind |
-| Pressure | `AbsPressure`, `GaugePressure`, `PressureDifference` | gauge → absolute needs an explicit reference pressure (default 101325 Pa, overridable) |
+| Pressure | `GaugePressure` (`psig`, `barg`, `Pag`); `Pa`, `bar` and `psi` are plain | a plain pressure unit does not say whether it is absolute or a difference. A gauge unit is measured from the ambient pressure and never converts to a plain one; the caller states the ambient pressure with a config unit that has an `offset` (ADR-022). There are no `AbsPressure` or `PressureDifference` kinds and no default ambient pressure |
 | Composition | `MassFraction`, `MoleFraction`, `VolumeFraction`, concentrations | not convertible to each other without composition data. Bare `ppm` is rejected; use `ppmw`, `ppmv`, `ppmmol` |
 | Angle and cycle | `Angle`, `Cycle` | angle stays dimensionless (ADR-007). `rad/s` and `Hz` do not convert (they differ by 2 pi per cycle, ADR-020); each converts to a plain `1/s` |
 

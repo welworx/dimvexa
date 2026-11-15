@@ -21,6 +21,8 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Added
 
+- Config units may have an `offset` (ADR-022): `[[unit]]` takes an optional exact `offset`, the value of the unit's zero point in its `base` unit, so `value in base = factor * x + offset`. It gives a gauge reading with your own ambient pressure (`examples/configs/ambient.toml`: `2 barg_site` is `3.01325 bar`) or any other affine scale of your own. The base must be plain, prefixes must be `none`, and the unit cannot be part of a compound unit. `ConfigUnit` has a new public field `offset`; `dimvexa configs` shows an `offset` column and `dimvexa.configs/2` an `offset` field per unit (additive). `Unit::new` now accepts an offset on a plain unit, not only on an absolute temperature. The refusal between a gauge and a plain pressure now says that it needs the ambient pressure and points to this.
+
 - `cargo xtask bench-impact --guard` and a pre-commit step: a commit that stages a hot-path file is blocked until `bench-impact` has run for the current hot-path files; commits that touch only docs, skills, workflows or other crates are not affected.
 - Tests: `ratio_model` (equality, order and integrality against an independent `i128` model) and `roundtrip` (A to B to A is the identity in exact arithmetic and stays within 3 ulp, linear, or 8 ulp of the larger operand, affine, on the fast path).
 

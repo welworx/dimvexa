@@ -39,7 +39,7 @@ Fixing one: remove or change the pinning test, update the entry (or delete it), 
 | ID | Limitation | When you see it | Why it is not fixed yet | Idea for the fix |
 |---|---|---|---|---|
 | KL-22 | A unit tied to a reference state (`psig`, `barg`, `Pag`) converts only within its own reference (ADR-013): `psig` to `barg` works, `psig` to `bar` is refused with `refused`. Gas volumes at stated reference conditions (`Nm3`, `Sm3`, `scf` and their multiples such as `MMscf/d`) are not implemented (ADR-021): the error says why and that the step belongs in an engineering tool. | `convert 1 psig bar`, `convert 1 Nm3 m3`. | Relating a standard or normal volume to an actual one assumes a gas model, which ADR-001 keeps out of the library for good. | None planned; the ADR-021 decision would have to be reversed. |
-| KL-23 | Gauge to absolute pressure is refused (`psig` to `bar`, `Pa` to `barg`). Assuming 101.325 kPa would silently be wrong at any real site. | `convert 5 psig bar`. | This is missing data (the ambient pressure), not a gas model. | Let the caller supply the ambient pressure (ADR-013 item 4); a relaxed mode that assumes it needs its own ADR.
+| KL-23 | Gauge to absolute pressure is refused (`psig` to `bar`, `Pa` to `barg`). Assuming 101.325 kPa would silently be wrong at any real site. | `convert 5 psig bar`. | This is missing data (the ambient pressure), not a gas model. | Mitigated by ADR-022: a config unit with an `offset` is a gauge reading with your own ambient pressure (`examples/configs/ambient.toml`), so the caller supplies it. There is still no built-in default; one would need its own ADR.
 
 ## Numbers with powers of ten and pi (ADR-018)
 

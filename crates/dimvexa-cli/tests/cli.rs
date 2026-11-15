@@ -1356,6 +1356,50 @@ fn guide_shipped_configs_are_real() {
     }
 }
 
+/// The guide's ambient-pressure example (ADR-022): the TOML is the example file, and the commands
+/// are real.
+#[test]
+fn guide_ambient_example_is_real() {
+    let readme = guide();
+    let section = readme_section(
+        &readme,
+        "### Example: gauge pressure with your own ambient pressure",
+    );
+    let shown = section
+        .split("```toml\n")
+        .nth(1)
+        .and_then(|b| b.split("```").next())
+        .unwrap();
+    let file = std::fs::read_to_string(repo_root().join("examples/configs/ambient.toml")).unwrap();
+    assert_eq!(shown, file);
+    for args in [
+        &[
+            "convert",
+            "2",
+            "barg_site",
+            "bar",
+            "--config",
+            "examples/configs/ambient.toml",
+        ][..],
+        &[
+            "convert",
+            "3.01325",
+            "bar",
+            "barg_site",
+            "--config",
+            "examples/configs/ambient.toml",
+        ],
+    ] {
+        let r = dimvexa_at_root(args);
+        assert_eq!(r.code, 0, "{}", r.stderr);
+        let expected = format!("$ dimvexa {}\n{}", args.join(" "), r.stdout);
+        assert!(
+            section.contains(&expected),
+            "guide does not show:\n{expected}"
+        );
+    }
+}
+
 /// The guide's water example: the TOML is the example file, and every command is real.
 #[test]
 fn guide_water_example_is_real() {
@@ -2574,6 +2618,42 @@ fn update_command_line_is_checked_before_any_network_use() {
     }
     let r = dimvexa(&["--help"]);
     assert!(r.stdout.contains("dimvexa update [--check] [-y]"));
+}
+
+/// ADR-022: a config unit with an `offset` is an affine scale of your own, here a gauge reading
+/// with the user's own ambient pressure, and it shows in `configs`.
+#[test]
+fn a_config_offset_converts_a_gauge_reading_with_your_own_ambient_pressure() {
+    let cfg = config_file(
+        "site_ambient.toml",
+        "[[unit]]\nsymbol = \"barg_site\"\nbase = \"bar\"\nfactor = \"1\"\n\
+         offset = \"1.01325\"\nexactness = \"defined\"\nsource = \"my site\"\n",
+    );
+    assert_eq!(
+        dimvexa(&["convert", "2", "barg_site", "bar", "--config", &cfg]).stdout,
+        "3.01325 bar\n"
+    );
+    assert_eq!(
+        dimvexa(&["convert", "3.01325", "bar", "barg_site", "--config", &cfg]).stdout,
+        "2 barg_site\n"
+    );
+    // The built-in gauge units do not know your ambient pressure.
+    let r = dimvexa(&["convert", "1", "barg", "bar", "--config", &cfg]);
+    assert_eq!(r.code, 1, "{}", r.stderr);
+    let list = dimvexa(&["configs", &cfg]);
+    assert_eq!(list.code, 0, "{}", list.stderr);
+    assert!(
+        list.stdout.contains("factor, offset, exactness"),
+        "{}",
+        list.stdout
+    );
+    assert!(list.stdout.contains("4053/4000"), "{}", list.stdout);
+    let j = dimvexa(&["configs", &cfg, "--json"]);
+    assert!(
+        j.stdout.contains("\"offset\":\"4053/4000\""),
+        "{}",
+        j.stdout
+    );
 }
 
 /// ADR-021: a gas volume at stated reference conditions (`Nm3`, `scf`, ...) is not implemented. The

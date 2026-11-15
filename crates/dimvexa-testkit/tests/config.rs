@@ -824,3 +824,63 @@ fn a_config_that_replaces_an_entry_of_an_earlier_one_gets_a_warning() {
     let twice = dimvexa_config::load(reg, &[a.clone(), a], builtin).unwrap();
     assert_eq!(twice.warnings, Vec::<String>::new());
 }
+
+const SITE: &str = "[[unit]]\nsymbol = \"barg_site\"\nbase = \"bar\"\nfactor = \"1\"\n\
+                    offset = \"1.01325\"\nexactness = \"defined\"\nsource = \"my site\"\n";
+
+/// ADR-022: a config unit may have an offset, so a user can write a gauge reading with their own
+/// ambient pressure. `base value = factor * x + offset`, exact, in both directions.
+#[test]
+fn a_config_unit_with_an_offset_is_an_exact_affine_scale() {
+    let reg = with(SITE);
+    let to_bar = reg.conversion("barg_site", "bar").unwrap();
+    assert_eq!(to_bar.factor(), Ratio::ONE);
+    assert_eq!(to_bar.offset(), "1.01325".parse().unwrap());
+    let back = reg.conversion("bar", "barg_site").unwrap();
+    assert_eq!(back.offset(), "-1.01325".parse().unwrap());
+    // 2 barg_site is 3.01325 bar, and in Pa the offset is scaled by the base factor.
+    let to_pa = reg.conversion("barg_site", "Pa").unwrap();
+    assert_eq!(to_pa.factor(), Ratio::from_int(100_000));
+    assert_eq!(to_pa.offset(), Ratio::from_int(101_325));
+    // A scale of your own is an ordinary unit of the group for the rest.
+    assert_eq!(reg.get("barg_site").unwrap().namespace(), "user");
+}
+
+/// ADR-022: what an offset may not do. Each case is refused when the config is applied.
+#[test]
+fn an_offset_is_refused_where_it_would_be_wrong() {
+    let site = |extra: &str, base: &str| {
+        format!(
+            "[[unit]]\nsymbol = \"x_site\"\nbase = \"{base}\"\nfactor = \"1\"\noffset = \"1\"\n\
+             exactness = \"defined\"\nsource = \"test\"\n{extra}"
+        )
+    };
+    for (text, want) in [
+        (site("", "psig"), "only a plain unit can take an offset"),
+        (site("", "deg"), "only a plain unit can take an offset"),
+        (site("", "Hz"), "only a plain unit can take an offset"),
+        (site("", "K"), "temperature point"),
+        (site("prefixes = \"si\"\n", "bar"), "cannot take prefixes"),
+        (site("", "delta_K"), "only a plain unit can take an offset"),
+    ] {
+        let mut reg = registry().unwrap();
+        let err = apply(&mut reg, &[cfg(&text, "test.toml")])
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains(want), "{want}: {err}");
+    }
+    // A pi in the offset is not a plain fraction.
+    let pi = SITE.replace("\"1.01325\"", "\"pi\"");
+    assert!(Config::parse(&pi, "test.toml").is_err());
+    // A unit with an offset cannot be part of a compound unit, like a temperature scale.
+    let reg = with(SITE);
+    assert_eq!(
+        reg.conversion("barg_site/s", "bar/s").unwrap_err().code(),
+        "refused"
+    );
+    // The built-in gauge units stay gauge: they do not convert to the user's scale.
+    assert_eq!(
+        reg.conversion("barg", "barg_site").unwrap_err().code(),
+        "refused"
+    );
+}

@@ -111,7 +111,8 @@ impl Unit {
     /// # Errors
     ///
     /// [`Error::InvalidDefinition`] for a malformed symbol, a non-positive factor, or an
-    /// offset on a unit that is not a temperature.
+    /// offset on a unit that is neither an absolute temperature nor of the plain kind (a user
+    /// scale, ADR-022).
     pub fn new(symbol: &str, dim: Dim, kind: Kind, factor: Ratio, offset: Ratio) -> Result<Self> {
         let bad = |message: &str| Error::InvalidDefinition {
             symbol: symbol.to_string(),
@@ -125,8 +126,10 @@ impl Unit {
         if factor.signum() <= 0 {
             return Err(bad("factor must be positive"));
         }
-        if !offset.is_zero() && kind != Kind::AbsoluteTemperature {
-            return Err(bad("only absolute temperature units may have an offset"));
+        if !offset.is_zero() && !matches!(kind, Kind::AbsoluteTemperature | Kind::Plain) {
+            return Err(bad(
+                "only an absolute temperature or a plain unit may have an offset",
+            ));
         }
         if offset.has_exponents() {
             return Err(bad(
@@ -593,14 +596,20 @@ impl UnitExpr {
                 let advice = suggestions.first().map_or_else(
                     || {
                         String::from(
-                            "use a difference unit (delta_...) for a temperature difference",
+                            "a unit with an offset (a temperature scale or a scale of your own) \
+                             has no difference form here; convert it to a linear unit first",
                         )
                     },
                     |d| format!("use the difference unit {d} for a temperature difference"),
                 );
+                let what = if suggestions.is_empty() {
+                    "has an offset"
+                } else {
+                    "has an offset (temperature scale)"
+                };
                 return Err(Error::Refused {
                     reason: format!(
-                        "'{}' has an offset (temperature scale) and cannot be part of a compound unit; {advice}",
+                        "'{}' {what} and cannot be part of a compound unit; {advice}",
                         u.expr
                     ),
                     suggestions,
@@ -754,7 +763,9 @@ mod tests {
         assert!(Unit::linear("m2", Dim::M, Ratio::ONE).is_err());
         assert!(Unit::linear("m", Dim::M, Ratio::ZERO).is_err());
         assert!(Unit::linear("m", Dim::M, Ratio::from_int(-1)).is_err());
-        assert!(Unit::new("x", Dim::M, Kind::Plain, Ratio::ONE, Ratio::ONE).is_err());
+        assert!(Unit::new("x", Dim::M, Kind::GaugePressure, Ratio::ONE, Ratio::ONE).is_err());
+        // A plain unit may have an offset (a user scale, ADR-022).
+        assert!(Unit::new("x", Dim::M, Kind::Plain, Ratio::ONE, Ratio::ONE).is_ok());
         assert!(
             Unit::linear("m", Dim::M, Ratio::ONE)
                 .unwrap()

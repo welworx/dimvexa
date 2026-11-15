@@ -13,8 +13,9 @@
 //!
 //! A config has three kinds of entries. `[map]` points a name at an existing unit, for example
 //! `mt = "tonne"`, and carries no factor. `[[unit]]` defines a **unit** as an exact multiple of
-//! an existing one, with a source. Neither can redefine an existing symbol, alias or prefixed
-//! form.
+//! an existing one, with a source, and optionally an exact `offset` (the value of its zero point
+//! in the base unit, ADR-022) for an affine scale of your own, such as a gauge reading with your
+//! ambient pressure. Neither can redefine an existing symbol, alias or prefixed form.
 //!
 //! A config can also hold **constants** (ADR-018): named, exact, cited numbers the caller
 //! supplies. A constant has an `id` (what you select), a full `name`, a `unit` (which gives its dimension), an `exactness`, mandatory
@@ -87,6 +88,10 @@ pub struct ConfigUnit {
     pub base: String,
     /// How many `base` it is, exact and positive.
     pub factor: Ratio,
+    /// The `base` value of the unit's zero point, exact and signed, zero for a plain multiple
+    /// (ADR-022): `value in base = factor * x + offset`. A non-zero offset makes an affine
+    /// scale of your own, for example a gauge reading with your ambient pressure.
+    pub offset: Ratio,
     /// Whether the definition is exact by definition or a measurement.
     pub exactness: Exactness,
     /// Which SI and binary prefixes the symbol accepts.
@@ -329,6 +334,7 @@ impl TableKind {
                 "symbol",
                 "base",
                 "factor",
+                "offset",
                 "exactness",
                 "source",
                 "prefixes",
@@ -495,6 +501,12 @@ fn finish_unit(
     if factor.num() <= 0 {
         return Err("factor must be positive".to_string());
     }
+    let offset: Ratio = match p.get("offset").filter(|v| !v.is_empty()) {
+        None => Ratio::ZERO,
+        Some(text) => text
+            .parse()
+            .map_err(|e| number_problem("offset", text, &e))?,
+    };
     let exactness = match p.need("exactness")?.as_str() {
         "defined" => Exactness::Defined,
         "measured" => Exactness::Measured,
@@ -517,6 +529,7 @@ fn finish_unit(
         symbol,
         base,
         factor,
+        offset,
         exactness,
         prefixes,
         source,
@@ -1118,21 +1131,51 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
             base.reference_power()
         )));
     }
+    if !u.offset.is_zero() {
+        if base.kind() != Kind::Plain {
+            return Err(bad(format!(
+                "base '{}' is of kind {}; only a plain unit can take an offset (a gauge, angle \
+                 or cycle unit cannot be shifted: use the plain unit it is measured in)",
+                u.base,
+                base.kind()
+            )));
+        }
+        if u.prefixes != PrefixMode::None {
+            return Err(bad(
+                "a unit with an offset cannot take prefixes; use prefixes = \"none\"".to_string(),
+            ));
+        }
+        if u.offset.has_exponents() {
+            return Err(bad(
+                "an offset must be a plain fraction or decimal (no power of ten or pi)".to_string(),
+            ));
+        }
+    }
     let factor = base
         .factor()
         .checked_mul(u.factor)
         .map_err(|e| bad(format!("{e}")))?;
+    // `base value = factor * x + offset`, so the offset to SI is the offset times the base's factor.
+    let offset = base
+        .factor()
+        .checked_mul(u.offset)
+        .map_err(|e| bad(format!("{e}")))?;
     // The base's own citation stays attached, so the chain of sources is not cut.
     let base_sources = base.sources().join("; ");
-    let mut note = if u.note.is_empty() {
+    let mut note = if u.note.is_empty() && u.offset.is_zero() {
         format!("user unit: 1 {} = {} {}", u.symbol, u.factor, u.base)
+    } else if u.note.is_empty() {
+        format!(
+            "user unit: x {} = {} * x + {} {}",
+            u.symbol, u.factor, u.offset, u.base
+        )
     } else {
         u.note.clone()
     };
     if !base_sources.is_empty() {
         note = format!("{note} (base {}: {base_sources})", u.base);
     }
-    let unit = Unit::new(&u.symbol, base.dim(), base.kind(), factor, Ratio::ZERO)
+    let unit = Unit::new(&u.symbol, base.dim(), base.kind(), factor, offset)
         .map_err(|e| at(&u.origin, u.line, e))?
         .with_prefixes(u.prefixes)
         .with_provenance(base.exactness().combine(u.exactness), &u.source, &note)

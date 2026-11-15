@@ -213,7 +213,9 @@ Usage:
 A config adds names, units and constants to the strict default tables; apply one
 to a conversion with --config. A density (a constant of a density unit, the
 mass <-> volume number) comes only from a config or your own number; use it
-with --const. See also: dimvexa constants --help.
+with --const. A config unit may have an offset: an affine scale of your own,
+such as a gauge reading with your ambient pressure. See also: dimvexa constants
+--help.
 
 Examples:
   dimvexa configs
@@ -2254,14 +2256,15 @@ fn config_detail_text(c: &Config) -> String {
         }
     }
     if !c.units().is_empty() {
-        s.push_str("\n## units\n# columns: symbol, base, factor, exactness, source\n");
+        s.push_str("\n## units\n# columns: symbol, base, factor, offset, exactness, source\n");
         for u in c.units() {
             let _ = writeln!(
                 s,
-                "{}\t{}\t{}\t{}\t{}",
+                "{}\t{}\t{}\t{}\t{}\t{}",
                 cell(&u.symbol),
                 cell(&u.base),
                 u.factor.to_fraction_string(),
+                u.offset.to_fraction_string(),
                 u.exactness.name(),
                 cell(&u.source)
             );
@@ -2307,10 +2310,11 @@ fn config_detail_json(c: &Config) -> String {
         .iter()
         .map(|u| {
             format!(
-                "{{\"symbol\":{},\"base\":{},\"factor\":{},\"exactness\":{},\"source\":{},\"line\":{}}}",
+                "{{\"symbol\":{},\"base\":{},\"factor\":{},\"offset\":{},\"exactness\":{},\"source\":{},\"line\":{}}}",
                 json_string(&u.symbol),
                 json_string(&u.base),
                 json_string(&u.factor.to_fraction_string()),
+                json_string(&u.offset.to_fraction_string()),
                 json_string(u.exactness.name()),
                 json_string(&u.source),
                 u.line

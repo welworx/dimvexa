@@ -186,14 +186,14 @@ impl Conversion {
             && (from.kind().is_reference() || to.kind().is_reference())
         {
             // ADR-013: a unit tied to a reference state converts only within that reference.
-            // Going elsewhere needs data (ambient pressure, temperature, a gas model) that the
-            // library does not guess.
+            // Going elsewhere needs the ambient pressure, which the library does not guess; a
+            // config unit with an offset (ADR-022) is how the caller states it.
             return Err(Error::Refused {
                 reason: format!(
                     "'{from}' ({}) and '{to}' ({}) differ in their reference state or its power; \
-                     the conversion needs data the library does not guess (the ambient \
-                     pressure, or the temperature, pressure and gas properties); convert \
-                     within one reference, or apply your own factor",
+                     a gauge reading needs the ambient pressure, which the library does not \
+                     guess; convert within one reference, or define your own unit with an \
+                     offset in a config (ADR-022, examples/configs/ambient.toml)",
                     from.kind(),
                     to.kind()
                 ),

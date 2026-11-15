@@ -371,8 +371,50 @@ Rules for your units:
   A new name with prefixes may not hide a prefixed form that already means something
   (`pallet` with SI prefixes next to an existing `kpallet`).
 - The base must be linear: no temperature points and no units with an offset.
+- A unit may carry an `offset` of its own (ADR-022), see the next example. It needs a plain
+  base and `prefixes = "none"`, and it cannot be part of a compound unit.
 - If the base is `measured`, so is the new unit, whatever you state.
 - `dimvexa units` marks them (`[yours: file:line]`) and the JSON has an `origin` for each.
+
+### Example: gauge pressure with your own ambient pressure
+
+A gauge reading is measured from the ambient pressure, which changes with altitude and weather,
+so `psig`, `barg` and `Pag` never convert to absolute units (`bar`, `psi`, `Pa`). If you know
+your ambient pressure, say so with a unit that has an `offset` (ADR-022): the value in the
+`base` unit is `factor * x + offset`. The unit needs a plain base and `prefixes = "none"`, and it
+cannot be part of a compound unit.
+
+```toml
+# A gauge reading with YOUR ambient pressure. dimvexa never assumes one: ambient pressure
+# varies with altitude and weather, so the built-in gauge units (psig, barg, Pag) do not convert
+# to absolute units. A unit with an `offset` does, with the number you state (ADR-022).
+#
+#   absolute (bar) = 1 * gauge + 1.01325        the 1013.25 mbar of the standard atmosphere
+#
+#   dimvexa convert 2 barg_site bar --config examples/configs/ambient.toml
+#   dimvexa convert 3.01325 bar barg_site --config examples/configs/ambient.toml
+#
+# `offset` is the value of the unit's zero point in the `base` unit. It needs a plain base (bar,
+# psi, Pa: not a gauge, angle or temperature unit) and prefixes = "none", and the unit cannot be
+# used in a compound unit such as barg_site/s.
+
+[[unit]]
+symbol = "barg_site"
+base = "bar"
+factor = "1"
+offset = "1.01325"
+exactness = "defined"
+prefixes = "none"
+source = "ISO 2533:1975 (standard atmosphere, 101 325 Pa); replace it with the ambient pressure of your site"
+note = "gauge pressure in bar at an ambient pressure of 1.01325 bar"
+```
+
+```console
+$ dimvexa convert 2 barg_site bar --config examples/configs/ambient.toml
+3.01325 bar
+$ dimvexa convert 3.01325 bar barg_site --config examples/configs/ambient.toml
+2 barg_site
+```
 
 ## Angles and pi
 
