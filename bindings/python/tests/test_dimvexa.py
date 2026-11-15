@@ -83,7 +83,6 @@ def test_unit_table() -> None:
     info = dimvexa.unit_info("m")
     assert info is not None
     assert info["symbol"] == "m"
-    assert info["conditions"] is None
     assert dimvexa.unit_info("nope") is None
 
 

@@ -46,12 +46,6 @@ impl Kind {
         matches!(self, Self::Angle | Self::Cycle)
     }
 
-    /// True for a kind whose signed power is tracked through compound units: an angular one.
-    #[must_use]
-    pub const fn tracks_power(self) -> bool {
-        self.is_angular()
-    }
-
     /// The stable lower-case name used in data files and JSON output.
     #[must_use]
     pub const fn name(self) -> &'static str {

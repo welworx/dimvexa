@@ -161,7 +161,7 @@ Read the matching skill in `skills/<name>/SKILL.md` (`.claude/skills` is a symli
   passes locally but fails in CI (a different toolchain, OS or lock state) means the local
   gate is missing something: add it to `cargo xtask ci` or the hook, not only a fix.
 * Keep error codes stable (`Error::ALL_CODES`); adding a field to the JSON schema is allowed
-  within the current schema version (`dimvexa.convert/3`, `dimvexa.units/4`, `dimvexa.configs/2`, `dimvexa.constants/1`);
+  within the current schema version (`dimvexa.convert/3`, `dimvexa.units/5`, `dimvexa.configs/2`, `dimvexa.constants/1`);
   removing or renaming one needs a new version (ADR-014 did that for `/2`).
 * The CLI help is part of the interface. A new or changed command, option, config, JSON schema,
   exit code or error behaviour updates, in the same change: the overview (`HELP`) and the page

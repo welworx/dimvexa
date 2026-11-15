@@ -627,7 +627,7 @@ fn units_shows_the_details_of_one_unit() {
     snapshot("units_psi.txt", &r.stdout);
     let v = json::parse(&dimvexa(&["units", "psi", "--json"]).stdout).unwrap();
     let u = v.get("unit").unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/5");
     assert_eq!(u.get("id").unwrap().as_str(), "psi");
     assert_eq!(u.get("group").unwrap().as_str(), "pressure");
     assert_eq!(
@@ -658,7 +658,7 @@ fn units_unknown_and_ambiguous_names_are_loud_errors() {
         let r = dimvexa(&["units", name, "--json"]);
         assert_eq!(r.code, 1, "{name}");
         let v = json::parse(&r.stdout).unwrap();
-        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
+        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/5");
         assert!(!v.get("ok").unwrap().as_bool());
         assert_eq!(v.get("error").unwrap().get("code").unwrap().as_str(), code);
         assert!(
@@ -689,7 +689,7 @@ fn units_misuse_is_a_usage_error_in_the_units_schema() {
         let r = dimvexa(&a);
         assert_eq!(r.code, 2, "{args:?}");
         let v = json::parse(&r.stdout).unwrap();
-        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
+        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/5");
         assert!(!v.get("ok").unwrap().as_bool());
         assert_eq!(
             v.get("error").unwrap().get("code").unwrap().as_str(),
@@ -1004,7 +1004,7 @@ fn a_config_can_never_redefine_an_existing_symbol() {
         "invalid_definition"
     );
     let v = json::parse(&dimvexa(&["units", "--json", "--config", &cfg]).stdout).unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/5");
     // Unknown targets, unknown sections and bad syntax are errors too.
     for (name, text, needle) in [
         (
@@ -1048,7 +1048,7 @@ fn config_usage_errors_exit_2() {
     let v =
         json::parse(&dimvexa(&["units", "--json", "--config", "/nonexistent/dimvexa.toml"]).stdout)
             .unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/5");
     assert_eq!(
         v.get("error").unwrap().get("code").unwrap().as_str(),
         "usage"
@@ -1822,7 +1822,7 @@ fn outputs_validate_against_the_schema_files() {
     };
     let (convert, units, configs, constants) = (
         schema("dimvexa.convert-3.schema.json"),
-        schema("dimvexa.units-4.schema.json"),
+        schema("dimvexa.units-5.schema.json"),
         schema("dimvexa.configs-2.schema.json"),
         schema("dimvexa.constants-1.schema.json"),
     );
