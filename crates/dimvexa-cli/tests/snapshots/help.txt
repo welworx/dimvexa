@@ -49,7 +49,7 @@ Options:
                    or a power of ten when the value has one
                    (1/2 pi = 1.5707963267948966)
   --json           machine-readable output (schemas dimvexa.convert/3,
-                   dimvexa.units/4, dimvexa.configs/2,
+                   dimvexa.units/5, dimvexa.configs/3,
                    dimvexa.constants/1)
   --pretty         --json, indented for reading (same fields, same order)
   --color WHEN     auto (default: a terminal, unless NO_COLOR is set), always

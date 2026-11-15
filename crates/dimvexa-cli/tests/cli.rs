@@ -491,7 +491,7 @@ fn colour_handles_non_ascii_config_text() {
     let file = dir.join("ü.toml");
     std::fs::write(
         &file,
-        "[[unit]]\nsymbol = \"wä\"\nbase = \"m\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"Quelle — 25 °C --é --«x»\"\n",
+        "[[unit]]\nid = \"wä\"\nbase = \"m\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"Quelle — 25 °C --é --«x»\"\n",
     )
     .unwrap();
     let path = file.to_str().unwrap();
@@ -612,7 +612,7 @@ fn units_groups_lists_only_the_groups() {
     let r = dimvexa(&["units", "--groups"]);
     assert_eq!(r.code, 0);
     snapshot("units_groups.txt", &r.stdout);
-    assert!(r.stdout.lines().any(|l| l == "volume\t15"));
+    assert!(r.stdout.lines().any(|l| l == "volume\t13"));
     assert!(!r.stdout.contains("psi\t"));
     let v = json::parse(&dimvexa(&["units", "--groups", "--json"]).stdout).unwrap();
     json::check_units_schema(&v);
@@ -627,7 +627,7 @@ fn units_shows_the_details_of_one_unit() {
     snapshot("units_psi.txt", &r.stdout);
     let v = json::parse(&dimvexa(&["units", "psi", "--json"]).stdout).unwrap();
     let u = v.get("unit").unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/5");
     assert_eq!(u.get("id").unwrap().as_str(), "psi");
     assert_eq!(u.get("group").unwrap().as_str(), "pressure");
     assert_eq!(
@@ -658,7 +658,7 @@ fn units_unknown_and_ambiguous_names_are_loud_errors() {
         let r = dimvexa(&["units", name, "--json"]);
         assert_eq!(r.code, 1, "{name}");
         let v = json::parse(&r.stdout).unwrap();
-        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
+        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/5");
         assert!(!v.get("ok").unwrap().as_bool());
         assert_eq!(v.get("error").unwrap().get("code").unwrap().as_str(), code);
         assert!(
@@ -689,7 +689,7 @@ fn units_misuse_is_a_usage_error_in_the_units_schema() {
         let r = dimvexa(&a);
         assert_eq!(r.code, 2, "{args:?}");
         let v = json::parse(&r.stdout).unwrap();
-        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
+        assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/5");
         assert!(!v.get("ok").unwrap().as_bool());
         assert_eq!(
             v.get("error").unwrap().get("code").unwrap().as_str(),
@@ -1004,7 +1004,7 @@ fn a_config_can_never_redefine_an_existing_symbol() {
         "invalid_definition"
     );
     let v = json::parse(&dimvexa(&["units", "--json", "--config", &cfg]).stdout).unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/5");
     // Unknown targets, unknown sections and bad syntax are errors too.
     for (name, text, needle) in [
         (
@@ -1048,7 +1048,7 @@ fn config_usage_errors_exit_2() {
     let v =
         json::parse(&dimvexa(&["units", "--json", "--config", "/nonexistent/dimvexa.toml"]).stdout)
             .unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/4");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.units/5");
     assert_eq!(
         v.get("error").unwrap().get("code").unwrap().as_str(),
         "usage"
@@ -1356,6 +1356,50 @@ fn guide_shipped_configs_are_real() {
     }
 }
 
+/// The guide's ambient-pressure example (ADR-022): the TOML is the example file, and the commands
+/// are real.
+#[test]
+fn guide_ambient_example_is_real() {
+    let readme = guide();
+    let section = readme_section(
+        &readme,
+        "### Example: gauge pressure with your own ambient pressure",
+    );
+    let shown = section
+        .split("```toml\n")
+        .nth(1)
+        .and_then(|b| b.split("```").next())
+        .unwrap();
+    let file = std::fs::read_to_string(repo_root().join("examples/configs/ambient.toml")).unwrap();
+    assert_eq!(shown, file);
+    for args in [
+        &[
+            "convert",
+            "2",
+            "barg_site",
+            "bar",
+            "--config",
+            "examples/configs/ambient.toml",
+        ][..],
+        &[
+            "convert",
+            "3.01325",
+            "bar",
+            "barg_site",
+            "--config",
+            "examples/configs/ambient.toml",
+        ],
+    ] {
+        let r = dimvexa_at_root(args);
+        assert_eq!(r.code, 0, "{}", r.stderr);
+        let expected = format!("$ dimvexa {}\n{}", args.join(" "), r.stdout);
+        assert!(
+            section.contains(&expected),
+            "guide does not show:\n{expected}"
+        );
+    }
+}
+
 /// The guide's water example: the TOML is the example file, and every command is real.
 #[test]
 fn guide_water_example_is_real() {
@@ -1479,8 +1523,8 @@ fn units_shows_which_units_are_yours() {
     // The group table counts it too.
     let g = dimvexa_at_root(&["units", "--groups", "--config", OIL_CFG]);
     let base = dimvexa(&["units", "--groups"]);
-    assert!(g.stdout.lines().any(|l| l == "volume\t16"));
-    assert!(base.stdout.lines().any(|l| l == "volume\t15"));
+    assert!(g.stdout.lines().any(|l| l == "volume\t14"));
+    assert!(base.stdout.lines().any(|l| l == "volume\t13"));
 
     let v =
         json::parse(&dimvexa_at_root(&["units", "--json", "--config", OIL_CFG]).stdout).unwrap();
@@ -1519,7 +1563,7 @@ fn a_config_unit_that_takes_an_existing_name_is_refused() {
         ("ton.toml", "ton", "kg"),
     ] {
         let text = format!(
-            "[[unit]]\nsymbol = \"{symbol}\"\nbase = \"{base}\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"s\"\n"
+            "[[unit]]\nid = \"{symbol}\"\nbase = \"{base}\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"s\"\n"
         );
         let path = config_file(name, &text);
         let r = dimvexa(&["convert", "1", "m", "km", "--config", &path]);
@@ -1778,8 +1822,8 @@ fn outputs_validate_against_the_schema_files() {
     };
     let (convert, units, configs, constants) = (
         schema("dimvexa.convert-3.schema.json"),
-        schema("dimvexa.units-4.schema.json"),
-        schema("dimvexa.configs-2.schema.json"),
+        schema("dimvexa.units-5.schema.json"),
+        schema("dimvexa.configs-3.schema.json"),
         schema("dimvexa.constants-1.schema.json"),
     );
     let cfg = config_file("schema_check.toml", TRADE);
@@ -1937,7 +1981,7 @@ fn known_limitation_kl_16_prefixed_ambiguity_candidates_are_not_all_valid() {
 fn known_limitation_kl_17_a_unit_named_like_a_group_is_shadowed_by_the_group() {
     let cfg = config_file(
         "kl17.toml",
-        "[[unit]]\nsymbol = \"volume\"\nbase = \"L\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"s\"\n",
+        "[[unit]]\nid = \"volume\"\nbase = \"L\"\nfactor = \"2\"\nexactness = \"defined\"\nsource = \"s\"\n",
     );
     let r = dimvexa(&["units", "volume", "--config", &cfg]);
     assert_eq!(r.code, 0);
@@ -2120,10 +2164,29 @@ fn guide_angle_examples_are_real() {
     );
 }
 
-/// KL-21: angle is dimensionless.
+/// ADR-020 (KL-21 fixed): an angle per time and a cycle rate are different kinds, so
+/// `rad/s` and `Hz` do not convert; each still converts to a plain `1/s`.
 #[test]
-fn known_limitation_kl_21_dimensionless_angle() {
-    assert_eq!(dimvexa(&["convert", "1", "rad/s", "Hz"]).stdout, "1 Hz\n");
+fn an_angle_rate_and_a_cycle_rate_do_not_convert() {
+    for (from, to) in [("rad/s", "Hz"), ("Hz", "rad/s"), ("deg/s", "kHz")] {
+        let r = dimvexa(&["convert", "1", from, to]);
+        assert_eq!(r.code, 1, "{from} -> {to}: {}", r.stderr);
+        assert!(r.stderr.contains("kind_mismatch"), "{}", r.stderr);
+        assert!(r.stderr.contains("2 pi"), "{}", r.stderr);
+    }
+    // Same kind, and angular or cycle to a plain unit, still convert.
+    for (from, to, want) in [
+        ("rad/s", "1/s", "1 1/s\n"),
+        ("Hz", "1/s", "1 1/s\n"),
+        ("Hz", "Bq", "1 Bq\n"),
+        ("kHz", "Hz", "1000 Hz\n"),
+    ] {
+        assert_eq!(
+            dimvexa(&["convert", "1", from, to]).stdout,
+            want,
+            "{from} -> {to}"
+        );
+    }
 }
 
 /// ADR-018 step 3 (KL-20 fixed): pi and operators in a value, exact.
@@ -2425,7 +2488,7 @@ fn configs_lists_and_shows_what_is_included() {
     // A path shows your own file, validated like any config.
     let r = dimvexa(&["configs", OIL_CFG_PATH_FROM_ROOT]);
     assert_eq!(r.code, 0, "{}", r.stderr);
-    assert!(r.stdout.contains("## units") && r.stdout.contains("bbl_oil\tgal_us\t42"));
+    assert!(r.stdout.contains("## units") && r.stdout.contains("bbl_oil\t-\t-\tgal_us\t42"));
     // Errors: unknown name (usage), several arguments, options that do not apply.
     let r = dimvexa(&["configs", "nope"]);
     assert_eq!(r.code, 2);
@@ -2436,7 +2499,7 @@ fn configs_lists_and_shows_what_is_included() {
     // JSON validates and carries the sources.
     let r = dimvexa(&["configs", "water", "--json"]);
     let v = json::parse(&r.stdout).unwrap();
-    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.configs/2");
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.configs/3");
     let d = v
         .get("config")
         .unwrap()
@@ -2557,62 +2620,82 @@ fn update_command_line_is_checked_before_any_network_use() {
     assert!(r.stdout.contains("dimvexa update [--check] [-y]"));
 }
 
-/// ADR-013: a density describes an actual volume, so it never turns a normal or standard
-/// volume into a mass (or back).
+/// ADR-022: a config unit with an `offset` is an affine scale of your own, here a gauge reading
+/// with the user's own ambient pressure, and it shows in `configs`.
 #[test]
-fn density_does_not_apply_to_reference_state_volumes() {
-    for args in [
-        ["convert", "1", "Nm3", "kg", "--const", "1.2kg/m3"],
-        ["convert", "1", "kg", "scf", "--const", "1.2kg/m3"],
-    ] {
-        let r = dimvexa(&args);
-        assert_ne!(r.code, 0, "{args:?}");
-        assert!(
-            r.stderr.contains("error[refused]"),
-            "{args:?}: {}",
-            r.stderr
-        );
-    }
-    // An ordinary volume still works with the same density.
-    let r = dimvexa(&["convert", "1", "m3", "kg", "--const", "1.2kg/m3"]);
+fn a_config_offset_converts_a_gauge_reading_with_your_own_ambient_pressure() {
+    let cfg = config_file(
+        "site_ambient.toml",
+        "[[unit]]\nid = \"barg_site\"\nbase = \"bar\"\nfactor = \"1\"\n\
+         offset = \"1.01325\"\nexactness = \"defined\"\nsource = \"my site\"\n",
+    );
+    assert_eq!(
+        dimvexa(&["convert", "2", "barg_site", "bar", "--config", &cfg]).stdout,
+        "3.01325 bar\n"
+    );
+    assert_eq!(
+        dimvexa(&["convert", "3.01325", "bar", "barg_site", "--config", &cfg]).stdout,
+        "2 barg_site\n"
+    );
+    // The built-in gauge names are not implemented (ADR-023).
+    let r = dimvexa(&["convert", "1", "barg", "bar", "--config", &cfg]);
+    assert_eq!(r.code, 1, "{}", r.stderr);
+    assert!(r.stderr.contains("is not implemented"), "{}", r.stderr);
+    let list = dimvexa(&["configs", &cfg]);
+    assert_eq!(list.code, 0, "{}", list.stderr);
+    assert!(
+        list.stdout.contains("factor, offset, exactness"),
+        "{}",
+        list.stdout
+    );
+    assert!(list.stdout.contains("4053/4000"), "{}", list.stdout);
+    let j = dimvexa(&["configs", &cfg, "--json"]);
+    assert!(
+        j.stdout.contains("\"offset\":\"4053/4000\""),
+        "{}",
+        j.stdout
+    );
+}
+
+/// ADR-020: an angle and a cycle cannot be mixed in one expression, and an angle cancels itself.
+#[test]
+fn an_angle_and_a_cycle_do_not_mix_in_one_expression() {
+    let r = dimvexa(&["convert", "1", "rad.Hz", "1/s"]);
+    assert_eq!(r.code, 1, "{}", r.stderr);
+    assert!(r.stderr.contains("error[refused]"), "{}", r.stderr);
+    assert!(r.stderr.contains("different angular kind"), "{}", r.stderr);
+    // The same angle cancels to a plain number, so it converts to `1`.
+    let r = dimvexa(&["convert", "1", "deg/rad", "1"]);
     assert_eq!(r.code, 0, "{}", r.stderr);
 }
 
-/// ADR-013: `units NAME` shows the reference state of a user unit built on `scf`.
+/// ADR-021: a gas volume at stated reference conditions (`Nm3`, `scf`, ...) is not implemented. The
+/// error says why and that the step belongs in an engineering tool; it is not "unknown unit".
 #[test]
-fn units_shows_the_conditions_of_a_user_unit_built_on_a_reference_unit() {
+fn gas_volumes_at_reference_conditions_are_not_implemented() {
+    for (from, to) in [
+        ("Nm3", "m3"),
+        ("Nm^3/h", "m3/h"),
+        ("Nm\u{b3}", "m3"),
+        ("scf", "ft3"),
+        ("MMscf/d", "m3/d"),
+        ("m3", "Sm3"),
+    ] {
+        let r = dimvexa(&["convert", "1", from, to]);
+        assert_eq!(r.code, 1, "{from} -> {to}: {}", r.stderr);
+        assert!(r.stderr.contains("error[refused]"), "{}", r.stderr);
+        assert!(r.stderr.contains("is not implemented"), "{}", r.stderr);
+        assert!(r.stderr.contains("equation of state"), "{}", r.stderr);
+        assert!(r.stderr.contains("engineering tool"), "{}", r.stderr);
+    }
+    // A name of your own in a config is still yours.
     let cfg = config_file(
-        "mmscf.toml",
-        "[[unit]]\nsymbol = \"MMscf\"\nbase = \"scf\"\nfactor = \"1000000\"\n\
+        "own_scf.toml",
+        "[[unit]]\nid = \"scf\"\nbase = \"ft3\"\nfactor = \"1\"\n\
          exactness = \"defined\"\nsource = \"test\"\n",
     );
-    let r = dimvexa(&["units", "MMscf", "--config", &cfg]);
+    let r = dimvexa(&["convert", "1", "scf", "ft3", "--config", &cfg]);
     assert_eq!(r.code, 0, "{}", r.stderr);
-    assert!(
-        r.stdout.contains("quantity kind standard_volume"),
-        "{}",
-        r.stdout
-    );
-    assert!(
-        r.stdout
-            .lines()
-            .any(|l| l.trim_start().starts_with("conditions") && l.contains("14.696 psia")),
-        "{}",
-        r.stdout
-    );
-    let j = dimvexa(&["units", "MMscf", "--json", "--config", &cfg]);
-    let v = json::parse(&j.stdout).unwrap();
-    json::check_units_schema(&v);
-    assert!(j.stdout.contains("\"conditions\":\"60 °F"), "{}", j.stdout);
-    // The conversion itself still works within the reference and is refused across it.
-    assert_eq!(
-        dimvexa(&["convert", "1", "MMscf", "scf", "--config", &cfg]).stdout,
-        "1000000 scf\n"
-    );
-    assert_eq!(
-        dimvexa(&["convert", "1", "MMscf", "m3", "--config", &cfg]).code,
-        1
-    );
 }
 
 /// A single prefixed unit is named from its prefix and its table unit (ADR-017); a compound is not.

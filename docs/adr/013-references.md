@@ -1,6 +1,6 @@
 # ADR-013: Reference states are named, exact and part of the unit
 
-Status: Accepted by the owner on 2026-11-10 with the recommendations below; `bbl` (not part of this ADR) shipped in the same change
+Status: Accepted by the owner on 2026-11-10 with the recommendations below; `bbl` (not part of this ADR) shipped in the same change. Amended by [ADR-021](021-drop-gas-volumes.md): `Nm3`, `scf` and the normal and standard volume kinds were removed; the gauge-pressure units followed in [ADR-023](023-drop-gauge-pressure.md), so no reference unit ships, and [ADR-024](024-drop-unit-conditions.md) removed the unit `conditions` field.
 
 ## Context
 

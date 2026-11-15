@@ -82,10 +82,10 @@ pub fn is_symbol_char(c: char) -> bool {
     c.is_alphabetic() || c == '_' || c == '\u{b0}'
 }
 
-/// True for a superscript digit (`²`, `³`, ...). It may end the symbol of a reference unit
-/// (`Nm³`, ADR-013), never start a symbol.
-#[must_use]
-pub const fn is_superscript_digit(c: char) -> bool {
+/// True for a superscript digit (`²`, `³`, ...). The lexer keeps one attached to a name, so
+/// `Nm³` reaches the registry as one name (and is reported as not implemented, ADR-021) and
+/// not as a parse error. No unit symbol contains one.
+const fn is_superscript_digit(c: char) -> bool {
     matches!(
         c,
         '\u{b2}' | '\u{b3}' | '\u{b9}' | '\u{2070}' | '\u{2074}'..='\u{2079}'
@@ -96,19 +96,6 @@ pub const fn is_superscript_digit(c: char) -> bool {
 #[must_use]
 pub fn is_valid_symbol(s: &str) -> bool {
     !s.is_empty() && s.chars().all(is_symbol_char)
-}
-
-/// True if `s` is a well-formed symbol for a unit of kind `kind`.
-///
-/// A unit tied to a reference state may end in digits (`Nm3`, ADR-013), because that is how it is written in practice;
-/// every other symbol is letters only, so `m2` always means `m^2`.
-#[must_use]
-pub fn is_valid_symbol_for(s: &str, kind: crate::kind::Kind) -> bool {
-    if is_valid_symbol(s) {
-        return true;
-    }
-    let base = s.trim_end_matches(|c: char| c.is_ascii_digit() || is_superscript_digit(c));
-    kind.is_reference() && base.len() < s.len() && is_valid_symbol(base)
 }
 
 struct Parser<'a> {
@@ -381,10 +368,7 @@ impl fmt::Display for Expr {
                 r.fmt_operand(f, matches!(**r, Self::Mul(..) | Self::Div(..)))
             }
             Self::Pow(b, n) => {
-                // A symbol that ends in a digit (`Nm3`) is parenthesised so `(Nm3)^2` reads back.
-                let digit_symbol =
-                    matches!(&**b, Self::Unit(s) if s.ends_with(|c: char| c.is_ascii_digit()));
-                b.fmt_operand(f, digit_symbol || !matches!(**b, Self::Unit(_) | Self::One))?;
+                b.fmt_operand(f, !matches!(**b, Self::Unit(_) | Self::One))?;
                 write!(f, "^{n}")
             }
         }

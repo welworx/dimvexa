@@ -284,7 +284,9 @@ fn parsing_and_applying_config_files_never_panics() {
         // The raw text as a file, and the text as the value of each key of a complete entry.
         let mut files = vec![text.clone()];
         let fields = [
+            "id",
             "symbol",
+            "name",
             "base",
             "factor",
             "exactness",
@@ -298,7 +300,7 @@ fn parsing_and_applying_config_files_never_panics() {
                     quoted(&text)
                 } else {
                     match key {
-                        "symbol" => "\"hx\"".to_string(),
+                        "id" => "\"hx\"".to_string(),
                         "base" => "\"m\"".to_string(),
                         "factor" => "\"3\"".to_string(),
                         "exactness" => "\"defined\"".to_string(),

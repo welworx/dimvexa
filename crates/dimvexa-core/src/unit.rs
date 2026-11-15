@@ -5,7 +5,7 @@ use core::fmt;
 
 use crate::dim::Dim;
 use crate::error::{Error, Result};
-use crate::expr::{Expr, is_valid_symbol_for};
+use crate::expr::{Expr, is_valid_symbol};
 use crate::kind::{Exactness, Kind, Shape};
 use crate::prefix::PrefixMode;
 use crate::ratio::Ratio;
@@ -48,9 +48,6 @@ pub struct UnitDef {
     pub source: &'static str,
     /// Free-text note (derivation, caveats).
     pub note: &'static str,
-    /// The reference state the unit is defined at (ADR-013), for example
-    /// `273.15 K, 101 325 Pa`. Empty for a unit without one; required for a reference kind.
-    pub conditions: &'static str,
 }
 
 /// A bare symbol that is deliberately rejected, with the explicit symbols to use instead.
@@ -84,7 +81,6 @@ pub struct Unit {
     namespace: String,
     source: String,
     note: String,
-    conditions: String,
 }
 
 impl Unit {
@@ -111,13 +107,14 @@ impl Unit {
     /// # Errors
     ///
     /// [`Error::InvalidDefinition`] for a malformed symbol, a non-positive factor, or an
-    /// offset on a unit that is not a temperature.
+    /// offset on a unit that is neither an absolute temperature nor of the plain kind (a user
+    /// scale, ADR-022).
     pub fn new(symbol: &str, dim: Dim, kind: Kind, factor: Ratio, offset: Ratio) -> Result<Self> {
         let bad = |message: &str| Error::InvalidDefinition {
             symbol: symbol.to_string(),
             message: message.to_string(),
         };
-        if !is_valid_symbol_for(symbol, kind) {
+        if !is_valid_symbol(symbol) {
             return Err(bad(
                 "symbol must be non-empty and contain only letters, '_' or the degree sign",
             ));
@@ -125,8 +122,10 @@ impl Unit {
         if factor.signum() <= 0 {
             return Err(bad("factor must be positive"));
         }
-        if !offset.is_zero() && kind != Kind::AbsoluteTemperature {
-            return Err(bad("only absolute temperature units may have an offset"));
+        if !offset.is_zero() && !matches!(kind, Kind::AbsoluteTemperature | Kind::Plain) {
+            return Err(bad(
+                "only an absolute temperature or a plain unit may have an offset",
+            ));
         }
         if offset.has_exponents() {
             return Err(bad(
@@ -147,7 +146,6 @@ impl Unit {
             namespace: "std".to_string(),
             source: String::new(),
             note: String::new(),
-            conditions: String::new(),
         })
     }
 
@@ -175,15 +173,12 @@ impl Unit {
             return Err(bad("affine units cannot take prefixes"));
         }
         for alias in def.aliases {
-            if !is_valid_symbol_for(alias, def.kind) {
+            if !is_valid_symbol(alias) {
                 return Err(bad(
                     "alias contains characters that cannot appear in a symbol",
                 ));
             }
             unit.aliases.push((*alias).to_string());
-        }
-        if def.kind.is_reference() && def.conditions.trim().is_empty() {
-            return Err(bad("a unit with a reference state needs its conditions"));
         }
         if def.symbol != def.id && !def.aliases.contains(&def.symbol) {
             return Err(bad("the symbol must be the id or one of the aliases"));
@@ -198,7 +193,6 @@ impl Unit {
         unit.namespace = def.namespace.to_string();
         unit.source = def.source.to_string();
         unit.note = def.note.to_string();
-        unit.conditions = def.conditions.to_string();
         Ok(unit)
     }
 
@@ -234,7 +228,7 @@ impl Unit {
     /// [`Error::InvalidDefinition`] if an alias is not a well-formed symbol.
     pub fn with_aliases(mut self, aliases: &[&str]) -> Result<Self> {
         for a in aliases {
-            if !is_valid_symbol_for(a, self.kind) {
+            if !is_valid_symbol(a) {
                 return Err(Error::InvalidDefinition {
                     symbol: self.id,
                     message: format!("alias '{a}' is not a well-formed symbol"),
@@ -260,13 +254,6 @@ impl Unit {
         self.exactness = exactness;
         self.source = source.to_string();
         self.note = note.to_string();
-        self
-    }
-
-    /// Sets the reference state text (ADR-013), for a unit that is defined from a reference unit.
-    #[must_use]
-    pub fn with_conditions(mut self, conditions: &str) -> Self {
-        self.conditions = conditions.to_string();
         self
     }
 
@@ -366,13 +353,6 @@ impl Unit {
     pub fn note(&self) -> &str {
         &self.note
     }
-
-    /// The reference state the unit is defined at (`273.15 K, 101 325 Pa` for `Nm3`), or an
-    /// empty string for a unit without one (ADR-013).
-    #[must_use]
-    pub fn conditions(&self) -> &str {
-        &self.conditions
-    }
 }
 
 /// A resolved unit expression such as `km/h` or `kW.h`: dimension, kind and the exact
@@ -385,10 +365,8 @@ pub struct UnitExpr {
     expr: Expr,
     dim: Dim,
     kind: Kind,
-    /// Signed power of the reference state: 1 for `Nm3`, -1 for `1/Nm3`, 0 without one.
-    ref_exp: i32,
-    /// The reference state text of the unit that carries the reference (ADR-013), empty without.
-    conditions: String,
+    /// Signed power of the angular kind: 1 for `rad`, -1 for `1/rad`, 0 without one.
+    kind_exp: i32,
     factor: Ratio,
     offset: Ratio,
     exactness: Exactness,
@@ -406,8 +384,7 @@ impl UnitExpr {
             expr: Expr::One,
             dim: Dim::NONE,
             kind: Kind::Plain,
-            ref_exp: 0,
-            conditions: String::new(),
+            kind_exp: 0,
             factor: Ratio::ONE,
             offset: Ratio::ZERO,
             exactness: Exactness::Defined,
@@ -429,38 +406,12 @@ impl UnitExpr {
             expr,
             dim,
             kind,
-            ref_exp: if kind.is_reference() { 1 } else { 0 },
-            conditions: String::new(),
+            kind_exp: if kind.is_angular() { 1 } else { 0 },
             factor,
             offset,
             exactness,
             sources,
             difference: None,
-        }
-    }
-
-    pub(crate) fn with_conditions(mut self, conditions: &str) -> Self {
-        if self.kind.is_reference() {
-            self.conditions = conditions.to_string();
-        }
-        self
-    }
-
-    /// The reference state of the unit that gives this expression its reference kind
-    /// (`273.15 K (0 °C), 101 325 Pa` for `Nm3/h`), or an empty string without one.
-    #[must_use]
-    pub fn conditions(&self) -> &str {
-        &self.conditions
-    }
-
-    /// The conditions of whichever operand carries the reference, if the result has one.
-    fn composed_conditions(&self, other: &Self, kind: Kind) -> String {
-        if !kind.is_reference() {
-            String::new()
-        } else if self.kind.is_reference() {
-            self.conditions.clone()
-        } else {
-            other.conditions.clone()
         }
     }
 
@@ -504,13 +455,6 @@ impl UnitExpr {
         self.kind
     }
 
-    /// The signed power of the reference state (ADR-013): 1 for `Nm3` or `Nm3/h`, -1 for `h/Nm3`,
-    /// 0 for a unit without a reference. Two units convert only when kind and power agree.
-    #[must_use]
-    pub const fn reference_power(&self) -> i32 {
-        self.ref_exp
-    }
-
     /// Exact factor to the coherent SI unit.
     #[must_use]
     pub const fn factor(&self) -> Ratio {
@@ -545,32 +489,31 @@ impl UnitExpr {
         &self.sources
     }
 
-    /// Kind and reference power of a product (`sign` 1) or quotient (`sign` -1). A reference
-    /// survives (`Nm3/h` is still a normal volume per time) and its power is tracked, so
-    /// `Nm3/m3` and `m3/Nm3` differ; the same reference cancels; two different references in
-    /// one expression are refused.
-    fn composed_reference(&self, other: &Self, sign: i32) -> Result<(Kind, i32)> {
+    /// Kind and power of a product (`sign` 1) or quotient (`sign` -1). An angular kind survives
+    /// (`rad/s` is still an angle per time) and its power is tracked, so `rad/rad` is plain;
+    /// two different angular kinds in one expression are refused.
+    fn composed_kind(&self, other: &Self, sign: i32) -> Result<(Kind, i32)> {
         let overflow = || Error::Overflow {
-            operation: "reference power",
+            operation: "kind power",
         };
-        let other_exp = other.ref_exp.checked_mul(sign).ok_or_else(overflow)?;
-        match (self.kind.is_reference(), other.kind.is_reference()) {
+        let other_exp = other.kind_exp.checked_mul(sign).ok_or_else(overflow)?;
+        match (self.kind.is_angular(), other.kind.is_angular()) {
             (true, true) if self.kind != other.kind => Err(Error::Refused {
                 reason: format!(
-                    "'{}' ({}) and '{}' ({}) each carry a different reference state and cannot be combined",
+                    "'{}' ({}) and '{}' ({}) each carry a different angular kind (angle and cycle) and cannot be combined",
                     self.expr, self.kind, other.expr, other.kind
                 ),
                 suggestions: Vec::new(),
             }),
             (true, true) => {
-                let exp = self.ref_exp.checked_add(other_exp).ok_or_else(overflow)?;
+                let exp = self.kind_exp.checked_add(other_exp).ok_or_else(overflow)?;
                 Ok(if exp == 0 {
                     (Kind::Plain, 0)
                 } else {
                     (self.kind, exp)
                 })
             }
-            (true, false) => Ok((self.kind, self.ref_exp)),
+            (true, false) => Ok((self.kind, self.kind_exp)),
             (false, true) => Ok((other.kind, other_exp)),
             (false, false) => Ok((Kind::Plain, 0)),
         }
@@ -593,14 +536,20 @@ impl UnitExpr {
                 let advice = suggestions.first().map_or_else(
                     || {
                         String::from(
-                            "use a difference unit (delta_...) for a temperature difference",
+                            "a unit with an offset (a temperature scale or a scale of your own) \
+                             has no difference form here; convert it to a linear unit first",
                         )
                     },
                     |d| format!("use the difference unit {d} for a temperature difference"),
                 );
+                let what = if suggestions.is_empty() {
+                    "has an offset"
+                } else {
+                    "has an offset (temperature scale)"
+                };
                 return Err(Error::Refused {
                     reason: format!(
-                        "'{}' has an offset (temperature scale) and cannot be part of a compound unit; {advice}",
+                        "'{}' {what} and cannot be part of a compound unit; {advice}",
                         u.expr
                     ),
                     suggestions,
@@ -624,14 +573,12 @@ impl UnitExpr {
             return Ok(self.clone());
         }
         self.refuse_affine(rhs)?;
-        let (kind, ref_exp) = self.composed_reference(rhs, 1)?;
-        let conditions = self.composed_conditions(rhs, kind);
+        let (kind, kind_exp) = self.composed_kind(rhs, 1)?;
         Ok(Self {
             expr: Expr::Mul(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_add(rhs.dim)?,
             kind,
-            ref_exp,
-            conditions,
+            kind_exp,
             factor: self.factor.checked_mul(rhs.factor)?,
             offset: Ratio::ZERO,
             exactness: self.exactness.combine(rhs.exactness),
@@ -650,14 +597,12 @@ impl UnitExpr {
             return Ok(self.clone());
         }
         self.refuse_affine(rhs)?;
-        let (kind, ref_exp) = self.composed_reference(rhs, -1)?;
-        let conditions = self.composed_conditions(rhs, kind);
+        let (kind, kind_exp) = self.composed_kind(rhs, -1)?;
         Ok(Self {
             expr: Expr::Div(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_sub(rhs.dim)?,
             kind,
-            ref_exp,
-            conditions,
+            kind_exp,
             factor: self.factor.checked_div(rhs.factor)?,
             offset: Ratio::ZERO,
             exactness: self.exactness.combine(rhs.exactness),
@@ -678,26 +623,16 @@ impl UnitExpr {
             return Ok(self.clone());
         }
         self.refuse_affine(&Self::unity())?;
-        let ref_exp = self.ref_exp.checked_mul(exp).ok_or(Error::Overflow {
-            operation: "reference power",
+        let kind_exp = self.kind_exp.checked_mul(exp).ok_or(Error::Overflow {
+            operation: "kind power",
         })?;
-        // A power of 0 cancels the reference: `(scf)^0` is the plain number 1, not a
-        // dimensionless standard volume that would let an actual volume pass as `scf`.
-        let keeps_reference = self.kind.is_reference() && ref_exp != 0;
+        // A power of 0 cancels the kind: `(rad)^0` is the plain number 1.
+        let keeps_kind = self.kind.is_angular() && kind_exp != 0;
         Ok(Self {
             expr: Expr::Pow(Box::new(self.expr.clone()), exp),
             dim: self.dim.checked_scale(exp)?,
-            kind: if keeps_reference {
-                self.kind
-            } else {
-                Kind::Plain
-            },
-            ref_exp,
-            conditions: if keeps_reference {
-                self.conditions.clone()
-            } else {
-                String::new()
-            },
+            kind: if keeps_kind { self.kind } else { Kind::Plain },
+            kind_exp,
             factor: self.factor.checked_pow(exp)?,
             offset: Ratio::ZERO,
             exactness: self.exactness,
@@ -754,7 +689,9 @@ mod tests {
         assert!(Unit::linear("m2", Dim::M, Ratio::ONE).is_err());
         assert!(Unit::linear("m", Dim::M, Ratio::ZERO).is_err());
         assert!(Unit::linear("m", Dim::M, Ratio::from_int(-1)).is_err());
-        assert!(Unit::new("x", Dim::M, Kind::Plain, Ratio::ONE, Ratio::ONE).is_err());
+        assert!(Unit::new("x", Dim::M, Kind::Angle, Ratio::ONE, Ratio::ONE).is_err());
+        // A plain unit may have an offset (a user scale, ADR-022).
+        assert!(Unit::new("x", Dim::M, Kind::Plain, Ratio::ONE, Ratio::ONE).is_ok());
         assert!(
             Unit::linear("m", Dim::M, Ratio::ONE)
                 .unwrap()
@@ -781,7 +718,6 @@ mod tests {
             namespace: "std",
             source: "test",
             note: "",
-            conditions: "",
         };
         assert_eq!(
             Unit::from_def(&d).unwrap().factor(),

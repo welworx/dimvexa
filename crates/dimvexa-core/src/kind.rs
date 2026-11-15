@@ -29,25 +29,21 @@ pub enum Kind {
     AbsoluteTemperature,
     /// An interval between two temperatures (`delta_K`, `delta_degC`, ...).
     TemperatureDifference,
-    /// A pressure read relative to the (unspecified) ambient pressure: `psig`, `barg`, `Pag`
-    /// (ADR-013). It converts only to another gauge unit.
-    GaugePressure,
-    /// A gas volume at the normal state of DIN 1343 (273.15 K, 101 325 Pa): `Nm3` (ADR-013).
-    NormalVolume,
-    /// A gas volume at 60 degF and 14.696 psia: `scf` (ADR-013).
-    StandardVolume,
+    /// A plane angle (`rad`, `deg`, `arcmin`, ...). Angle stays dimensionless (ADR-007), but it
+    /// does not convert to a cycle count (ADR-020): `rad/s` and `Hz` differ by a factor 2 pi.
+    Angle,
+    /// A count of cycles (`Hz`). It converts to `1/s` and `Bq`, but not to an angle per time
+    /// (ADR-020).
+    Cycle,
 }
 
 impl Kind {
-    /// True for a kind that is tied to a stated reference state (ADR-013). Such a unit
-    /// converts only to a unit of the same kind, and the kind survives in compound units
-    /// (`Nm3/h` keeps the reference of `Nm3`).
+    /// True for [`Kind::Angle`] and [`Kind::Cycle`] (ADR-020). Their power is tracked through
+    /// compound units, so `rad/s` is an angle per time and `rad/rad` is
+    /// plain, but a unit of this kind still converts to a plain one (`deg` to `1`, `Hz` to `1/s`).
     #[must_use]
-    pub const fn is_reference(self) -> bool {
-        matches!(
-            self,
-            Self::GaugePressure | Self::NormalVolume | Self::StandardVolume
-        )
+    pub const fn is_angular(self) -> bool {
+        matches!(self, Self::Angle | Self::Cycle)
     }
 
     /// The stable lower-case name used in data files and JSON output.
@@ -57,9 +53,8 @@ impl Kind {
             Self::Plain => "plain",
             Self::AbsoluteTemperature => "absolute_temperature",
             Self::TemperatureDifference => "temperature_difference",
-            Self::GaugePressure => "gauge_pressure",
-            Self::NormalVolume => "normal_volume",
-            Self::StandardVolume => "standard_volume",
+            Self::Angle => "angle",
+            Self::Cycle => "cycle",
         }
     }
 
@@ -70,9 +65,8 @@ impl Kind {
             "plain" => Some(Self::Plain),
             "absolute_temperature" => Some(Self::AbsoluteTemperature),
             "temperature_difference" => Some(Self::TemperatureDifference),
-            "gauge_pressure" => Some(Self::GaugePressure),
-            "normal_volume" => Some(Self::NormalVolume),
-            "standard_volume" => Some(Self::StandardVolume),
+            "angle" => Some(Self::Angle),
+            "cycle" => Some(Self::Cycle),
             _ => None,
         }
     }
@@ -174,13 +168,12 @@ impl fmt::Display for Exactness {
 mod tests {
     use super::*;
 
-    const ALL: [Kind; 6] = [
+    const ALL: [Kind; 5] = [
         Kind::Plain,
         Kind::AbsoluteTemperature,
         Kind::TemperatureDifference,
-        Kind::GaugePressure,
-        Kind::NormalVolume,
-        Kind::StandardVolume,
+        Kind::Angle,
+        Kind::Cycle,
     ];
 
     #[test]
