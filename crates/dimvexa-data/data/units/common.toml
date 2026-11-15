@@ -1091,7 +1091,7 @@ exactness = "defined"
 prefixes = "none"
 namespace = "std"
 source = "Imperial length relations: 1 fathom = 6 ft (international foot, 1959 agreement)"
-note = "fathom = 6 ft = 1.8288 m; the British Admiralty used this value in practice; fathom_nmi is 1/1000 nautical mile"
+note = "fathom = 6 ft = 1.8288 m; the British Admiralty used this value in practice (while the fathom was nominally 1/1000 of the then 6080 ft Admiralty mile); fathom_nmi is 1/1000 of the international nautical mile; the bare word fathom is ambiguous and rejected"
 
 [[unit]]
 id = "fathom_nmi"
@@ -1106,7 +1106,7 @@ exactness = "defined"
 prefixes = "none"
 namespace = "std"
 source = "International nautical mile = 1852 m (International Hydrographic Conference 1929); fathom = 1/1000 nautical mile"
-note = "fathom = nmi/1000 = 1.852 m (about 6.0761 ft); 100 of them make one cable_int"
+note = "fathom = nmi/1000 = 1.852 m (about 6.0761 ft); 100 of them make one cable_int; the bare word fathom is ambiguous and rejected; the pre-1970 Admiralty mile (6080 ft) is not shipped"
 
 [[unit]]
 id = "cable_int"
