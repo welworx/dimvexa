@@ -3,4 +3,4 @@
 # longer matches the files; `cargo xtask update-data-hash` bumps the version and rewrites it.
 [[data]]
 version = 23
-hash = "fnv1a64:4cd58c47803003fc"
+hash = "fnv1a64:6aa07252315fc654"
