@@ -6,6 +6,8 @@ All notable changes are documented here. The format follows
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
 ## [Unreleased]
+
+## [0.8.0] - 2026-11-15
 ### Fixed
 
 - `Ratio::checked_eq` no longer overflows: it compares values in 256 bits, so `1 * 10^100` and `2 * 10^100` are decided (`false`) and `10^-300` equals `10 * 10^-301`. It used to fold powers of ten into `i128` and fail with `overflow`.
