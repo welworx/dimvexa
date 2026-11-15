@@ -6,14 +6,17 @@ All notable changes are documented here. The format follows
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
 ## [Unreleased]
+
+## [0.9.0] - 2026-11-15
 ### Changed
 
-- The shipped config `gb` is now called `imperial` (`--config imperial`). It also maps the bare imperial names `chain`, `link`, `rod`, `furlong`, `league`, `cable`, `gill`, `peck`, `bushel`, `minim`, `dram` and `cwt`.
+- **Breaking:** the shipped config `gb` is now called `imperial` (`--config imperial`); `--config gb` is an unknown config and no alias is kept. It also maps the bare imperial names `chain`, `link`, `rod`, `furlong`, `league`, `cable`, `gill`, `peck`, `bushel`, `minim`, `dram` and `cwt`.
 
 ### Added
 
 - Imperial units: `twip`, `thou`, `barleycorn`, `hand`, `link_int`, `rod_int`, `chain_int`, `furlong_int`, `league_int`, `fathom_ft`, `fathom_nmi`, `cable_int`, `perch_sq`, `rood`, `gill_imp`, `peck_imp`, `bushel_imp`, `quarter_vol_imp`, `minim_imp`, `scruple_fl_imp`, `drachm_fl_imp`, `dram_av`, `stone`, `quarter_mass_imp`, `cwt_long` and `slug`, each with a golden vector. The bare names that are ambiguous (`chain`, `dram`, `cwt`, `quarter`, ...) are refused with candidates.
 
+## [0.8.0] - 2026-11-15
 ### Fixed
 
 - `Ratio::checked_eq` no longer overflows: it compares values in 256 bits, so `1 * 10^100` and `2 * 10^100` are decided (`false`) and `10^-300` equals `10 * 10^-301`. It used to fold powers of ten into `i128` and fail with `overflow`.
@@ -22,9 +25,18 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Changed
 
+- **Breaking:** unused public items are removed from `dimvexa-core`: `TAGLINE`, `Registry::ambiguous_candidates` (the CLI reads `dimvexa::AMBIGUOUS`) and `Conversion::offset_f64` (the apply path uses the shift). The refusal of an angle and a cycle in one expression now says so ("different angular kind") instead of naming a reference state. The base-dimension constants `Dim::A`, `Dim::MOL` and `Dim::CD` stay.
+- **Breaking (ADR-025):** a config `[[unit]]` has an `id` (what you type), an optional printed `symbol` and an optional full `name`, like a shipped unit. The old key `symbol` was the id: rename it to `id` (a unit without `id` is refused with that hint). The printed `symbol` is also accepted when typed. `dimvexa configs NAME --json` is now `dimvexa.configs/3` (`units[].symbol` renamed to `id`; `symbol` and `name` added; `-2` stays) and the text listing has the columns id, symbol, name. `ConfigUnit::symbol` is renamed to `id`, and `symbol` and `name` are new public fields. The example configs use `id`.
+- **Breaking (ADR-024):** the `conditions` of a unit is removed (it was empty for every unit since ADR-023). `dimvexa units NAME --json` is now `dimvexa.units/5` without the `conditions` field (`docs/schemas/dimvexa.units-5.schema.json`; `-4` stays), the text output loses its `conditions` line, and the Python `unit_info` no longer returns `conditions`. In `dimvexa-core`, `Unit::conditions`, `Unit::with_conditions`, `UnitDef::conditions`, `UnitExpr::conditions`, `UnitExpr::reference_power` and `Kind::tracks_power` are removed. The `conditions` of a constant (ADR-018) is unchanged.
+- **Breaking (ADR-023):** the gauge-pressure units `psig`, `barg` and `Pag` (and prefixed forms such as `kPag`) are removed, with the quantity kind `gauge_pressure`. A gauge reading is measured from an ambient pressure that varies with altitude and weather, so dimvexa cannot turn it into an absolute pressure without a number only the caller knows. The names now fail with `refused` and a message that says they are not implemented, why, and that a config unit with an `offset` (ADR-022, `examples/configs/ambient.toml`) is the way to state your own ambient pressure. The reference-state checks (ADR-013) that only these units used are removed with them: `Kind::is_reference` is gone and a config no longer checks a base for a reference power. `quantity_kind` in `dimvexa.convert/3` and `dimvexa.units/4` loses `gauge_pressure`. KL-22 is rewritten and KL-23 closed. Data version 23.
+- **Breaking (ADR-021):** with `Nm3` gone, a unit symbol may no longer end in a digit (it was allowed for reference units only). The public `is_valid_symbol_for` and `is_superscript_digit` are removed from `dimvexa-core`; use `is_valid_symbol`. A config unit symbol that ended in a digit is now refused.
+- **Breaking (ADR-021):** the gas volumes at stated reference conditions are removed: `Nm3` (`Nm³`) and `scf`, with the quantity kinds `normal_volume` and `standard_volume`. Relating such a volume to an actual one needs an equation of state or a gas model, which ADR-001 keeps out of the library for good. `Nm3`, `Sm3`, `scf` and multiples such as `MMscf/d` now fail with `refused` and a message that says they are not implemented, why, and that the step belongs in an engineering tool (it was `refused` across references and `unknown_unit` for `Sm3`). Gauge pressure (`psig`, `barg`, `Pag`) is unchanged. The `quantity_kind` enums of `dimvexa.convert/3` and `dimvexa.units/4` lose both values. Data version 22.
+- **Breaking (ADR-020):** `rad/s` and `Hz` no longer convert into each other. `Hz` has the new quantity kind `cycle` and `rad`, `deg`, `arcmin`, `arcsec` and `grad` (and every unit built on them, including a config's `turn`) the kind `angle`; a conversion between the two kinds fails with `kind_mismatch` instead of returning the wrong number (`1 rad/s` was `1 Hz`; a frequency is `w / 2 pi`). Angle is still dimensionless: `deg` converts to `1`, `rad/s` to `1/s` and `deg/s`, `Hz` to `1/s`, `Bq` and `kHz`. The JSON `quantity_kind` field can now read `angle` or `cycle` (the enums of `dimvexa.convert/3` and `dimvexa.units/4` list them). Data version 21. KL-21 is closed.
 - **Breaking (ADR-019, Proposed):** a sum, difference or ordering of two values with different exponents (`1 + pi`), a decimal expansion of a value with pi, and an exact offset with unlike powers of ten return the new error code `unrepresentable` (`Error::Unrepresentable`) instead of `overflow`. `overflow` now means only a number that does not fit its integers or an `f64`. The CLI never produces the new code; `dimvexa.convert/3` lists it.
 
 ### Added
+
+- Config units may have an `offset` (ADR-022): `[[unit]]` takes an optional exact `offset`, the value of the unit's zero point in its `base` unit, so `value in base = factor * x + offset`. It gives a gauge reading with your own ambient pressure (`examples/configs/ambient.toml`: `2 barg_site` is `3.01325 bar`) or any other affine scale of your own. The base must be plain, prefixes must be `none`, and the unit cannot be part of a compound unit. `ConfigUnit` has a new public field `offset`; `dimvexa configs` shows an `offset` column and `dimvexa.configs/2` an `offset` field per unit (additive). `Unit::new` now accepts an offset on a plain unit, not only on an absolute temperature. The refusal between a gauge and a plain pressure now says that it needs the ambient pressure and points to this.
 
 - `cargo xtask bench-impact --guard` and a pre-commit step: a commit that stages a hot-path file is blocked until `bench-impact` has run for the current hot-path files; commits that touch only docs, skills, workflows or other crates are not affected.
 - Tests: `ratio_model` (equality, order and integrality against an independent `i128` model) and `roundtrip` (A to B to A is the identity in exact arithmetic and stays within 3 ulp, linear, or 8 ulp of the larger operand, affine, on the fast path).

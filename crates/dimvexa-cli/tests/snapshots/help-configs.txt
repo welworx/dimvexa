@@ -6,7 +6,9 @@ Usage:
 A config adds names, units and constants to the strict default tables; apply one
 to a conversion with --config. A density (a constant of a density unit, the
 mass <-> volume number) comes only from a config or your own number; use it
-with --const. See also: dimvexa constants --help.
+with --const. A config unit may have an offset: an affine scale of your own,
+such as a gauge reading with your ambient pressure. See also: dimvexa constants
+--help.
 
 Examples:
   dimvexa configs
@@ -22,7 +24,7 @@ Forms:
                    or ending in .toml)
 
 Options:
-  --json           machine-readable output (schema dimvexa.configs/2)
+  --json           machine-readable output (schema dimvexa.configs/3)
   --pretty         --json, indented for reading
   --color WHEN     auto, always or never (see: dimvexa --help)
 

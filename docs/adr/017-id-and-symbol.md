@@ -1,7 +1,7 @@
 # ADR-017: a unit has an `id`, a `symbol` and a `name`
 
 Status: Accepted (owner decision in conversation, 2026-11-11; breaking change accepted while the
-project is early)
+project is early). The config `[[unit]]` follows this model since [ADR-025](025-config-unit-id-symbol-name.md).
 
 ## Context
 

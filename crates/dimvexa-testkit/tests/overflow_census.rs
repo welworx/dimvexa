@@ -80,7 +80,7 @@ fn census() {
                             .max(bits(e.factor().num()))
                             .max(bits(e.factor().den()));
                     }
-                    // Two reference states in one expression are refused by design (ADR-013).
+                    // An angle and a cycle in one expression (`rad.Hz`) are refused by design (ADR-020).
                     Err(e) if e.code() == "refused" => {}
                     Err(_) => comp_over += 1,
                 }
@@ -94,7 +94,7 @@ fn census() {
         for b in &linear {
             let ab = match a.mul(b) {
                 Ok(ab) => ab,
-                // Two reference states in one expression are refused by design (ADR-013).
+                // An angle and a cycle in one expression (`rad.Hz`) are refused by design (ADR-020).
                 Err(e) if e.code() == "refused" => continue,
                 Err(_) => {
                     tri_over += u64::try_from(linear.len()).unwrap();

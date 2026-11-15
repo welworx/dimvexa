@@ -22,7 +22,7 @@ mol	mol	Mole	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2
 cd	cd	Candela	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)
 
 ## frequency
-Hz	Hz	Hertz	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+Hz	Hz	Hertz	cycle	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## force
 N	N	Newton	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
@@ -104,10 +104,10 @@ lx	lx	Lux	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (t
 kat	kat	Katal	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
 
 ## angle
-rad	rad	Radian	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
-deg	°	Degree of arc	plain	defined	none	°	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (degree = (pi/180) rad)
-arcmin	arcmin	Arcminute	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcminute = (1/60) degree)
-arcsec	arcsec	Arcsecond	plain	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcsecond = (1/60) arcminute)
+rad	rad	Radian	angle	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4 (the 22 SI units with special names and symbols)
+deg	°	Degree of arc	angle	defined	none	°	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (degree = (pi/180) rad)
+arcmin	arcmin	Arcminute	angle	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcminute = (1/60) degree)
+arcsec	arcsec	Arcsecond	angle	defined	none	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (arcsecond = (1/60) arcminute)
 
 ## energy
 eV	eV	Electronvolt	plain	defined	si	-	BIPM SI Brochure, 9th ed. (2019), ch. 4, Table 8 (1 eV = 1.602 176 634 x 10^-19 J, exact since the elementary charge e is fixed, ch. 2, Table 1)
@@ -207,7 +207,7 @@ dyn	dyn	Dyne	plain	defined	none	-	NIST SP 811 (2008), Appendix B (dyne)
 kgf	kgf	Kilogram-force	plain	defined	none	-	NIST SP 811 (2008), Appendix B (kilogram-force)
 
 ## angle
-grad	grad	Gradian	plain	defined	none	gon	NIST SP 811 (2008), Appendix B (grade); ISO 80000-3:2019 (gon)
+grad	grad	Gradian	angle	defined	none	gon	NIST SP 811 (2008), Appendix B (grade); ISO 80000-3:2019 (gon)
 
 ## dynamic_viscosity
 P	P	Poise	plain	defined	si	poise	NIST SP 811 (2008), Appendix B.8 (poise = 1.0 E-01 Pa s)
@@ -217,15 +217,6 @@ St	St	Stokes	plain	defined	si	stokes	NIST SP 811 (2008), Appendix B.8 (stokes = 
 
 ## volume
 bbl	bbl	Oil barrel	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)
-
-## pressure
-psig	psig	Pound-force per square inch gauge	gauge_pressure	defined	none	-	NIST SP 811 (2008), Appendix B (pound-force per square inch); gauge pressure is measured from the ambient pressure (ADR-013)
-barg	barg	Bar gauge	gauge_pressure	defined	none	-	NIST SP 811 (2008), Appendix B (bar = 100 kPa); gauge pressure is measured from the ambient pressure (ADR-013)
-Pag	Pag	Pascal gauge	gauge_pressure	defined	si	-	BIPM SI Brochure (2019), Table 4 (pascal); gauge pressure is measured from the ambient pressure (ADR-013)
-
-## volume
-Nm3	Nm³	Normal cubic metre	normal_volume	defined	none	Nm³	DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa
-scf	scf	Standard cubic foot	standard_volume	defined	none	-	NIST SP 811 (2008), Appendix B (foot, so the cubic foot is 0.3048^3 m^3); reference state 60 degF and 14.696 psia per GPA Standard 2145 (edition not checked)
 
 ## length
 twip	twip	Twip	plain	defined	none	-	Imperial typographic unit: 1 twip = 1/20 point = 1/1440 in (international inch, International yard and pound agreement 1959)

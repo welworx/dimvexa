@@ -46,7 +46,7 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | luminous_intensity | `cd`, `lm` |
 | frequency | `Hz`, `Bq` |
 | force | `N`, `lbf`, `dyn`, `kgf` |
-| pressure | `Pa`, `bar`, `atm`, `psi`, `mmHg`, `torr`, `psig`, `barg`, `Pag` |
+| pressure | `Pa`, `bar`, `atm`, `psi`, `mmHg`, `torr` |
 | energy | `J`, `Wh`, `eV`, `cal_th`, `cal_IT`, `Btu_IT`, `Btu_th`, `erg` |
 | power | `W`, `hp_mech`, `hp_metric` |
 | electric_charge | `C` |
@@ -57,7 +57,7 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | magnetic_flux | `Wb` |
 | magnetic_flux_density | `T` |
 | inductance | `H` |
-| volume | `m3`, `dm3`, `cm3`, `mm3`, `km3`, `in3`, `ft3`, `yd3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp`, `bbl`, `Nm3`, `scf`, `gill_imp`, `peck_imp`, `bushel_imp`, `quarter_vol_imp`, `minim_imp`, `scruple_fl_imp`, `drachm_fl_imp` |
+| volume | `m3`, `dm3`, `cm3`, `mm3`, `km3`, `in3`, `ft3`, `yd3`, `L`, `gal_us`, `gal_imp`, `pt_us`, `pt_imp`, `fl_oz_us`, `cup_us`, `qt_us`, `tbsp_us`, `tsp_us`, `fl_oz_imp`, `qt_imp`, `bbl`, `gill_imp`, `peck_imp`, `bushel_imp`, `quarter_vol_imp`, `minim_imp`, `scruple_fl_imp`, `drachm_fl_imp` |
 | area | `m2`, `dm2`, `cm2`, `mm2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `ar`, `ha`, `acre_int`, `acre_us_survey`, `perch_sq`, `rood` |
 | absorbed_dose | `Gy`, `Sv` |
 | illuminance | `lx` |
@@ -333,7 +333,7 @@ base and cannot be mistyped. It needs a factor, whether the definition is `defin
 ```toml
 # examples/configs/oil.toml
 [[unit]]
-symbol = "bbl_oil"
+id = "bbl_oil"
 base = "gal_us"
 factor = "42"
 exactness = "defined"
@@ -371,8 +371,56 @@ Rules for your units:
   A new name with prefixes may not hide a prefixed form that already means something
   (`pallet` with SI prefixes next to an existing `kpallet`).
 - The base must be linear: no temperature points and no units with an offset.
+- A `[[unit]]` has an `id` (the name you type), an optional `symbol` (printed by `dimvexa units`
+  and also accepted when typed) and an optional full `name`, like a shipped unit (ADR-025). Before
+  that the key `symbol` was the id: rename it to `id`, an old file is refused with that hint.
+- A unit may carry an `offset` of its own (ADR-022), see the next example. It needs a plain
+  base and `prefixes = "none"`, and it cannot be part of a compound unit.
 - If the base is `measured`, so is the new unit, whatever you state.
 - `dimvexa units` marks them (`[yours: file:line]`) and the JSON has an `origin` for each.
+
+### Example: gauge pressure with your own ambient pressure
+
+A gauge reading is measured from the ambient pressure, which changes with altitude and weather,
+so dimvexa ships no gauge units: `psig`, `barg` and `Pag` are refused as not implemented
+(ADR-023). If you know your ambient pressure, say so with a unit that has an `offset` (ADR-022): the value in the
+`base` unit is `factor * x + offset`. The unit needs a plain base and `prefixes = "none"`, and it
+cannot be part of a compound unit.
+
+```toml
+# A gauge reading with YOUR ambient pressure. dimvexa never assumes one: ambient pressure
+# varies with altitude and weather, so it ships no gauge units (psig, barg, Pag are not
+# implemented, ADR-023). A unit with an `offset` does the job, with the number you state
+# (ADR-022).
+#
+#   absolute (bar) = 1 * gauge + 1.01325        the 1013.25 mbar of the standard atmosphere
+#
+#   dimvexa convert 2 barg_site bar --config examples/configs/ambient.toml
+#   dimvexa convert 3.01325 bar barg_site --config examples/configs/ambient.toml
+#
+# `offset` is the value of the unit's zero point in the `base` unit. It needs a plain base (bar,
+# psi, Pa: not an angle, cycle or temperature unit) and prefixes = "none", and the unit cannot be
+# used in a compound unit such as barg_site/s.
+
+[[unit]]
+id = "barg_site"
+symbol = "bar_g"
+name = "Gauge pressure in bar at the site ambient pressure"
+base = "bar"
+factor = "1"
+offset = "1.01325"
+exactness = "defined"
+prefixes = "none"
+source = "ISO 2533:1975 (standard atmosphere, 101 325 Pa); replace it with the ambient pressure of your site"
+note = "gauge pressure in bar at an ambient pressure of 1.01325 bar"
+```
+
+```console
+$ dimvexa convert 2 barg_site bar --config examples/configs/ambient.toml
+3.01325 bar
+$ dimvexa convert 3.01325 bar barg_site --config examples/configs/ambient.toml
+2 barg_site
+```
 
 ## Angles and pi
 
@@ -427,12 +475,14 @@ What to know:
    6.283185307179586 rad
    ```
 
-4. **Angle is dimensionless** (ADR-007), so `rad/s` and `Hz` are the same dimension and
-   `1 rad/s` converts to `1 Hz`, and `1 deg` converts to a plain number (`dimvexa convert 1 deg 1`
-   gives 0.017453292519943295). Dimvexa does not know that a hertz counts cycles and a radian
-   per second counts radians. Because of this there is no `rev`, `turn` or `rpm`: `1 turn/s`
-   would convert to `6.28 Hz`, which is wrong for a frequency. The example config defines `turn`
-   with that caveat, on your own responsibility.
+4. **Angle is dimensionless** (ADR-007), so `1 deg` converts to a plain number (`dimvexa convert
+   1 deg 1` gives 0.017453292519943295). It is still a kind of its own (ADR-020): a radian per
+   second counts radians and a hertz counts cycles, which differ by 2 pi (f = w / 2 pi), so
+   `dimvexa convert 1 rad/s Hz` is refused with `kind_mismatch` and so is `Hz` to `rad/s`.
+   Both still convert to a plain `1/s` and to units of their own kind (`rad/s` to `deg/s`, `kHz`
+   to `Hz`); to go from one to the other, convert to `1/s` and apply 2 pi yourself. There is no
+   `rev`, `turn` or `rpm` in the tables; the example config defines `turn` on `deg`, so it is an
+   angle and `turn/s` to `Hz` is refused too.
 5. **Missing:** `sr` (steradian), the parsec and angular `mil`.
 
 The number type is described in [`docs/adr/018-constants-and-exact-pi.md`](adr/018-constants-and-exact-pi.md);

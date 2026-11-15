@@ -68,7 +68,6 @@ pub struct Conversion {
     factor: Ratio,
     offset: Ratio,
     factor_f64: f64,
-    offset_f64: f64,
     shift_f64: f64,
     shift_lo_f64: f64,
     /// The factor as one unreduced fraction with its power of ten multiplied in, used by the
@@ -134,7 +133,6 @@ impl Conversion {
             factor,
             offset,
             factor_f64: factor.to_f64()?,
-            offset_f64: offset.to_f64()?,
             shift_f64,
             shift_lo_f64,
             fold: Self::fold_factor(factor, offset),
@@ -182,25 +180,19 @@ impl Conversion {
                 to: to.dim(),
             });
         }
-        if (from.kind() != to.kind() || from.reference_power() != to.reference_power())
-            && (from.kind().is_reference() || to.kind().is_reference())
-        {
-            // ADR-013: a unit tied to a reference state converts only within that reference.
-            // Going elsewhere needs data (ambient pressure, temperature, a gas model) that the
-            // library does not guess.
-            return Err(Error::Refused {
-                reason: format!(
-                    "'{from}' ({}) and '{to}' ({}) differ in their reference state or its power; \
-                     the conversion needs data the library does not guess (the ambient \
-                     pressure, or the temperature, pressure and gas properties); convert \
-                     within one reference, or apply your own factor",
-                    from.kind(),
-                    to.kind()
-                ),
+        if from.kind().is_angular() && to.kind().is_angular() && from.kind() != to.kind() {
+            // ADR-020: an angle per time and a cycle rate (`rad/s` and `Hz`) have the same
+            // dimension but differ by 2 pi per cycle. Which one the caller means is not for the
+            // library to guess; an angle or a cycle still converts to a plain number.
+            return Err(Error::KindMismatch {
+                from: from.kind(),
+                to: to.kind(),
+                operation: "conversion",
                 suggestions: Vec::new(),
             });
         }
-        if from.kind() != to.kind() {
+        // An angular unit converts to a plain one (`deg` to `1`, `rad/s` to `1/s`).
+        if from.kind() != to.kind() && !from.kind().is_angular() && !to.kind().is_angular() {
             // A point and an interval cannot be converted into each other. Recommend the
             // delta unit of whichever side is the temperature point.
             let mut suggestions: Vec<String> = Vec::new();
@@ -249,12 +241,6 @@ impl Conversion {
     #[must_use]
     pub const fn factor_f64(&self) -> f64 {
         self.factor_f64
-    }
-
-    /// The offset `b` rounded to `f64`.
-    #[must_use]
-    pub const fn offset_f64(&self) -> f64 {
-        self.offset_f64
     }
 
     /// The inverse conversion `x = (y - b) / a`.

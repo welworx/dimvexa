@@ -32,14 +32,14 @@ Fixing one: remove or change the pinning test, update the entry (or delete it), 
 | KL-18 | `--` (end of options) is not supported (exit 2), and an unknown short option such as `-x` is read as a value (`invalid_number`, exit 1, not a usage error). | A value that starts with `-`. Negative numbers like `-40` work. | Rare. | A small option grammar. |
 | KL-19 | (fixed by ADR-018, step 1) The angle units (`deg`, `arcmin`, `arcsec`, `grad`) used to store pi as the fraction 245850922/78256779 and were marked `measured`; they now carry pi as a symbol (`deg` is `1/180 pi`), are `defined`, and `--exact` shows `pi`. | Nothing any more. | Fixed. | Pinned by `angle_units_are_exact_with_pi_kept_symbolic`. |
 | KL-20 | (fixed by ADR-018, step 3) A value could only be a plain number, so `2*pi`, `2pi` and `pi/2` were `invalid_number`. A value may now contain `pi`, `* / ^` and parentheses, and stays exact. Still refused: a constant that has a unit (`2*h_P`, `refused`) and any addition. | Nothing for `pi`; a value with `h_P`, `e`, `k_B` or `N_A` is refused. | Fixed for dimensionless constants. | Pinned by `a_value_may_contain_pi_and_operators`. A constant with a unit in a value would have to multiply its unit into FROM; not done.
-| KL-21 | Angle is dimensionless, so `rad/s` and `Hz` convert 1:1, and a unit such as `turn` would give `1 turn/s = 6.28 Hz`. Because of that `rev`, `turn` and `rpm` are not shipped. | `convert 1 rad/s Hz`. | ADR-007. | A separate cycle/angle distinction, decided by the owner. |
+| KL-21 | (fixed by ADR-020) Angle is dimensionless, so `rad/s` and `Hz` used to convert 1:1, which is wrong for a frequency (f = w / 2 pi). `Hz` is now the kind `cycle` and the angle units the kind `angle`; the conversion between them is refused (`kind_mismatch`). Still open: `rev`, `turn` and `rpm` are not shipped, and `rad/s` to `Hz` has no built-in 2 pi path. | `convert 1 rad/s Hz` (refused). | Fixed by refusal, not by a factor. | Pinned by `an_angle_rate_and_a_cycle_rate_do_not_convert`. A context option that applies 2 pi, and `rev`/`turn`/`rpm` as units. |
 
-## Gauge pressure and standard volumes (ADR-013)
+## Gauge pressure and gas volumes (ADR-021, ADR-023)
 
 | ID | Limitation | When you see it | Why it is not fixed yet | Idea for the fix |
 |---|---|---|---|---|
-| KL-22 | A unit tied to a reference state (`Nm3`, `scf`, `psig`, `barg`) converts only within its own reference (ADR-013): `Nm3/h` to `Nm3/min` works, but `Nm3` to `m3`, `Nm3` to `scf` and `scf` to `ft3` are refused with `refused`. Only one reference per family ships (normal 0 degC, standard 60 degF and 14.696 psia); `Sm3` (15 degC), the 20 degC normal volume and 14.73 psia are not available. | `convert 1 Nm3 m3`, `convert 1 Nm3 scf`. | The ratio between two states assumes an ideal gas, which ADR-001 keeps out of the core. A second reference per family needs a reference table (ADR-013). | A cross-reference ratio belongs in a separate crate with its model named, its assumption and error bound stated, and its own ADR. Extra references come by unit request.
-| KL-23 | Gauge to absolute pressure is refused (`psig` to `bar`, `Pa` to `barg`). Assuming 101.325 kPa would silently be wrong at any real site. | `convert 5 psig bar`. | This is missing data (the ambient pressure), not a gas model. | Let the caller supply the ambient pressure (ADR-013 item 4); a relaxed mode that assumes it needs its own ADR.
+| KL-22 | Gas volumes at stated reference conditions (`Nm3`, `Sm3`, `scf`, `MMscf/d`, ...) and gauge pressures (`psig`, `barg`, `Pag` and prefixed forms such as `kPag`) are not implemented: they fail with `refused` and a message saying why (ADR-021, ADR-023). | `convert 1 Nm3 m3`, `convert 1 psig psi`. | A gas volume needs an equation of state or gas model, which ADR-001 keeps out for good. A gauge reading needs the ambient pressure, which only the caller knows. | For a gauge, define your own unit with an `offset` in a config (ADR-022, `examples/configs/ambient.toml`). A gas volume has no replacement here; do that step in an engineering tool. |
+| KL-23 | (closed by ADR-023) Gauge to absolute pressure used to be refused between the shipped `psig`/`barg`/`Pag` and plain units. The gauge units are gone; the caller states the ambient pressure with a config unit that has an `offset` (ADR-022). | `convert 5 psig bar` (not implemented), `examples/configs/ambient.toml`. | No built-in default ambient pressure: any default would be wrong at most real sites. | None planned. |
 
 ## Numbers with powers of ten and pi (ADR-018)
 
@@ -67,17 +67,13 @@ against the paper's Table 1; there is no `water_20C` yet for the same reason.
 
 These units ship with a source that was written from memory of the document, not checked against
 its text. The factors were recomputed exactly (and the review of 2026-11-10 recomputed them
-again), so the open question is the wording and the edition of the citation, and for `scf` the
-pressure base itself. Each item is done when someone has the document open, confirms or corrects
+again), so the open question is the wording and the edition of the citation. Each item is done when someone has the document open, confirms or corrects
 the `source` and `note` in `crates/dimvexa-data/data/units/common.toml` and the matching vector in
 `data/vectors/common.toml`, runs `cargo xtask update-data-hash`, and deletes the row here.
 
 | Unit | Claim to verify | Where it is cited | What to look at |
 |---|---|---|---|
-| `scf` | 60 degF and 14.696 psia as the reference state | `source` and `conditions` of `scf` | GPA Standard 2145 (find the edition, and the table that states the base conditions); the review doubted a link to API MPMS 14.3, which is usually quoted with 14.73 psia, so that citation was removed. If the standard gives another base, change `conditions` and the note, not only the source. |
-| `Nm3` | normal condition 273.15 K and 101 325 Pa | `source` and `conditions` of `Nm3` | DIN 1343 (the year 1990 is cited); the standard is paywalled. Check the year and that "normal condition" is the term it uses. |
 | `bbl` | 42 US gallons per petroleum barrel, 1.589 873 E-01 m^3 | `source` of `bbl` and its vector | NIST SP 811 (2008), Appendix B.8, entry "barrel [for petroleum, 42 gallons (U.S.)]"; confirm the exact wording and the printed value. |
-| `psig`, `barg`, `Pag` | gauge pressure is measured from the ambient pressure | `source` of the three units | NIST SP 811 gives `psi` and `bar` only; look for a standard that defines gauge pressure (for example ISO 80000-4 or ISO 80000-1) and cite it, or keep the current wording as a statement of the definition. |
 
 Not shipped, so nothing to check yet: the US liquid barrel (31.5 gal, said to be in NIST
 Handbook 44) and the US dry barrel (7 056 in^3). Check them when they are added.

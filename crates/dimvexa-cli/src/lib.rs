@@ -16,7 +16,7 @@
 //!
 //! Exit codes: `0` success, `1` conversion refused or invalid input, `2` usage error.
 //! With `--json`, errors are printed to stdout as JSON (schema `dimvexa.convert/3`, see
-//! `docs/schemas/`; `units --json` uses `dimvexa.units/4`, `configs --json` `dimvexa.configs/2`, `constants --json` `dimvexa.constants/1`) and the exit code stays non-zero. The error `code` is one of the
+//! `docs/schemas/`; `units --json` uses `dimvexa.units/5`, `configs --json` `dimvexa.configs/3`, `constants --json` `dimvexa.constants/1`) and the exit code stays non-zero. The error `code` is one of the
 //! library's stable codes ([`dimvexa::Error::ALL_CODES`]) or `usage`.
 #![forbid(unsafe_code)]
 #![doc(
@@ -96,7 +96,7 @@ Options:
                    or a power of ten when the value has one
                    (1/2 pi = 1.5707963267948966)
   --json           machine-readable output (schemas dimvexa.convert/3,
-                   dimvexa.units/4, dimvexa.configs/2,
+                   dimvexa.units/5, dimvexa.configs/3,
                    dimvexa.constants/1)
   --pretty         --json, indented for reading (same fields, same order)
   --color WHEN     auto (default: a terminal, unless NO_COLOR is set), always
@@ -194,7 +194,7 @@ Forms:
                    prefixed unit (km) is named from its parts
 
 Options:
-  --json           machine-readable output (schema dimvexa.units/4)
+  --json           machine-readable output (schema dimvexa.units/5)
   --pretty         --json, indented for reading
   --config NAME_OR_PATH
                    include the units and names of a config; repeatable (a
@@ -214,7 +214,9 @@ Usage:
 A config adds names, units and constants to the strict default tables; apply one
 to a conversion with --config. A density (a constant of a density unit, the
 mass <-> volume number) comes only from a config or your own number; use it
-with --const. See also: dimvexa constants --help.
+with --const. A config unit may have an offset: an affine scale of your own,
+such as a gauge reading with your ambient pressure. See also: dimvexa constants
+--help.
 
 Examples:
   dimvexa configs
@@ -230,7 +232,7 @@ Forms:
                    or ending in .toml)
 
 Options:
-  --json           machine-readable output (schema dimvexa.configs/2)
+  --json           machine-readable output (schema dimvexa.configs/3)
   --pretty         --json, indented for reading
   --color WHEN     auto, always or never (see: dimvexa --help)
 
@@ -1205,12 +1207,15 @@ fn f64_text(x: f64) -> String {
     }
 }
 
-/// The JSON schema id of a command: `dimvexa.convert/3`, `dimvexa.units/4`, `dimvexa.configs/2`, `dimvexa.constants/1`.
+/// The JSON schema id of a command: `dimvexa.convert/3`, `dimvexa.units/5`, `dimvexa.configs/3`, `dimvexa.constants/1`.
 fn schema_id(command: &str) -> String {
+    // One arm per command: `cargo xtask check-docs` reads the versions from these arms, so the
+    // equal bodies of `configs` and the default (`convert`) stay separate.
+    #[allow(clippy::match_same_arms)]
     let version = match command {
-        "configs" => 2,
         "constants" => 1,
-        "units" => 4,
+        "configs" => 3,
+        "units" => 5,
         _ => 3,
     };
     format!("{}.{command}/{version}", dimvexa::PROJECT_NAME)
@@ -1607,9 +1612,9 @@ fn select_ambiguous(
         .collect()
 }
 
-/// The config unit that defines `symbol`, if the unit comes from a `--config` file.
-fn user_unit<'a>(user: &'a [ConfigUnit], symbol: &str) -> Option<&'a ConfigUnit> {
-    user.iter().find(|u| u.symbol == symbol)
+/// The config unit that defines `id`, if the unit comes from a `--config` file.
+fn user_unit<'a>(user: &'a [ConfigUnit], id: &str) -> Option<&'a ConfigUnit> {
+    user.iter().find(|u| u.id == id)
 }
 
 /// JSON for where a unit was defined: `{"file":..,"line":..}` or `null`.
@@ -1878,8 +1883,6 @@ struct Detail {
     offset: String,
     sources: Vec<String>,
     note: Option<String>,
-    /// Reference state of the unit (ADR-013), only for a table unit that has one.
-    conditions: Option<String>,
     /// `(file, line)` of the config that defines the unit, if it is a user unit.
     origin: Option<(String, usize)>,
     /// `(file, line)` of the config `[map]` entry that makes the queried name mean this unit.
@@ -1911,7 +1914,6 @@ fn unit_detail(
             offset: u.offset().to_fraction_string(),
             sources: vec![u.source().to_string()],
             note: Some(u.note().to_string()),
-            conditions: Some(u.conditions().to_string()).filter(|c| !c.is_empty()),
             origin: user_unit(user, u.id()).map(|c| (c.origin.clone(), c.line)),
             mapping: mappings
                 .iter()
@@ -1955,7 +1957,6 @@ fn unit_detail(
         offset: e.offset().to_fraction_string(),
         sources: e.sources().to_vec(),
         note: None,
-        conditions: None,
         origin: None,
         mapping: None,
     })
@@ -2000,9 +2001,6 @@ fn detail_text(d: &Detail) -> String {
     }
     line("factor to SI", d.factor.clone());
     line("offset to SI", d.offset.clone());
-    if let Some(c) = &d.conditions {
-        line("conditions", c.clone());
-    }
     for src in &d.sources {
         line("source", src.clone());
     }
@@ -2037,7 +2035,7 @@ fn detail_json(d: &Detail, warnings: &[String]) -> String {
     let opt = |v: Option<&str>| v.map_or_else(|| "null".to_string(), json_string);
     let dims: Vec<String> = d.dim.exponents().iter().map(ToString::to_string).collect();
     format!(
-        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"id\":{},\"symbol\":{},\"name\":{},\"prefix\":{},\"base\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"conditions\":{},\"note\":{},\"origin\":{},\"mapping\":{}}},\"warnings\":{}}}",
+        "{{\"schema\":{},\"ok\":true,\"data_version\":{},\"unit\":{{\"id\":{},\"symbol\":{},\"name\":{},\"prefix\":{},\"base\":{},\"group\":{},\"aliases\":[{}],\"dimension\":[{}],\"quantity_kind\":{},\"exactness\":{},\"prefixes\":{},\"namespace\":{},\"factor\":{},\"offset\":{},\"sources\":[{}],\"note\":{},\"origin\":{},\"mapping\":{}}},\"warnings\":{}}}",
         json_string(&schema_id("units")),
         json_string(&dimvexa::data_version()),
         json_string(&d.id),
@@ -2071,7 +2069,6 @@ fn detail_json(d: &Detail, warnings: &[String]) -> String {
         json_string(&d.factor),
         json_string(&d.offset),
         list(&d.sources),
-        opt(d.conditions.as_deref()),
         opt(d.note.as_deref()),
         d.origin.as_ref().map_or_else(
             || "null".to_string(),
@@ -2255,14 +2252,19 @@ fn config_detail_text(c: &Config) -> String {
         }
     }
     if !c.units().is_empty() {
-        s.push_str("\n## units\n# columns: symbol, base, factor, exactness, source\n");
+        s.push_str(
+            "\n## units\n# columns: id, symbol, name, base, factor, offset, exactness, source\n",
+        );
         for u in c.units() {
             let _ = writeln!(
                 s,
-                "{}\t{}\t{}\t{}\t{}",
-                cell(&u.symbol),
+                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                cell(&u.id),
+                cell(u.symbol.as_deref().unwrap_or("-")),
+                cell(u.name.as_deref().unwrap_or("-")),
                 cell(&u.base),
                 u.factor.to_fraction_string(),
+                u.offset.to_fraction_string(),
                 u.exactness.name(),
                 cell(&u.source)
             );
@@ -2308,10 +2310,13 @@ fn config_detail_json(c: &Config) -> String {
         .iter()
         .map(|u| {
             format!(
-                "{{\"symbol\":{},\"base\":{},\"factor\":{},\"exactness\":{},\"source\":{},\"line\":{}}}",
-                json_string(&u.symbol),
+                "{{\"id\":{},\"symbol\":{},\"name\":{},\"base\":{},\"factor\":{},\"offset\":{},\"exactness\":{},\"source\":{},\"line\":{}}}",
+                json_string(&u.id),
+                u.symbol.as_deref().map_or_else(|| "null".to_string(), json_string),
+                u.name.as_deref().map_or_else(|| "null".to_string(), json_string),
                 json_string(&u.base),
                 json_string(&u.factor.to_fraction_string()),
+                json_string(&u.offset.to_fraction_string()),
                 json_string(u.exactness.name()),
                 json_string(&u.source),
                 u.line
@@ -2762,7 +2767,7 @@ mod tests {
         assert!(out.lines().any(|l| l.starts_with("ton\t")));
         let (code, out, _) = run_str(&["units", "--groups"]);
         assert_eq!(code, 0);
-        assert!(out.lines().any(|l| l == "volume\t22"));
+        assert!(out.lines().any(|l| l == "volume\t20"));
         let (code, out, _) = run_str(&["units", "psi"]);
         assert_eq!(code, 0);
         assert!(out.contains("group         pressure"));
@@ -2772,7 +2777,7 @@ mod tests {
         assert!(out.contains("\ngal\t"), "ambiguous gal belongs to volume");
         let (code, out, _) = run_str(&["units", "--json"]);
         assert_eq!(code, 0);
-        assert!(out.contains("\"schema\":\"dimvexa.units/4\""));
+        assert!(out.contains("\"schema\":\"dimvexa.units/5\""));
         assert_eq!(run_str(&["units", "--exact"]).0, 2);
         assert_eq!(run_str(&["units", "nope"]).0, 1);
         assert_eq!(run_str(&["units", "--groups", "psi"]).0, 2);

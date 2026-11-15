@@ -10,8 +10,9 @@ ran, nothing else (rule 6). Commands to start: `git diff --stat BASE...`, `cargo
 
 ## Checklist, in the order that finds the most
 
-1. **Gate.** `cargo xtask ci` exits 0 (look at the exit status, not a pipe) and every check run
-   of the pull request is green (`pull_request_read` `get_check_runs`). A check that passes
+1. **Gate.** `cargo xtask ci` exits 0 (look at the exit status, not a pipe), `typos` and
+   `taplo fmt --check` exit 0 over the whole tree (CI job `typos and TOML format`; they are not
+   part of `cargo xtask ci`) and every check run of the pull request is green (`pull_request_read` `get_check_runs`). A check that passes
    locally and fails in CI means the local gate is missing something: ask for it in `xtask`.
 2. **Library code (rule 1, `panic-free` skill).** No `unwrap`, `expect`, `panic!`, indexing,
    lossy `as`, unchecked arithmetic or `unsafe` outside tests; no new `#[allow]` without a comment;

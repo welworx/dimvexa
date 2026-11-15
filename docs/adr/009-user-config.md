@@ -107,7 +107,7 @@ Open sub-decisions (recommended default first; not implemented before the owner 
   its namespace is `user`, and `prefixes` defaults to `none`.
 * **OPEN 3: bridge kinds.** `density` is confirmed and implemented (value in kg/m^3, mass to
   volume and back, also per time). `molar_mass` is not needed for now. `ratio` between two
-  named standard-volume units (for example `Nm3` to `Sm3`) is the caller's own number for the
+  named standard-volume units (for example `Nm3` to `Sm3`, not implemented since ADR-021) is the caller's own number for the
   ratio, never computed from temperature and pressure, and comes later.
 * **OPEN 4: parser.** The workspace has no dependencies (ADR-003). The shipped reader
   (`toml_lite`) lives inside the data crate and cannot be reached from core when the crates are
