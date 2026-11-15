@@ -17,7 +17,7 @@ The library is standalone: it has no dependency on any consumer project and noth
 1. **Exact by default.** Every factor is a rational, which may carry a power of ten and a power of pi next to it (ADR-018, so `deg` is exactly `1/180 pi`). Each definition records whether it is exact by definition or measured.
 2. **Fast at runtime.** Parse and compose once. A pre-parsed conversion is one multiply-add, with no allocation.
 3. **No silent ambiguity.** `ton`, `oz`, `pt`, bare `ppm` and bare `gal` are errors unless a config resolves them (`--config us`, ADR-014).
-4. **Kinds, not just dimensions.** Absolute vs delta temperature, gauge vs absolute pressure, mass vs mole fraction are distinct.
+4. **Kinds, not just dimensions.** Absolute vs delta temperature, angle vs cycle (ADR-020), mass vs mole fraction are distinct.
 5. **Context is explicit.** Conversions that need density, molar mass or an equation of state are refused unless the caller supplies the context.
 6. **Data-driven.** Units and scales are data. Extending the library should not require writing Rust.
 7. **Provenance.** Each unit carries its source and a note, so disputed values can be traced.
@@ -25,7 +25,7 @@ The library is standalone: it has no dependency on any consumer project and noth
 ## 3. Core model
 
 ### 3.1 Dimension vector
-`[i8; 7]` over (kg, m, s, A, K, mol, cd). The base is kg, not UCUM's gram. Angle is dimensionless by default (so Hz and rad/s stay compatible); this is a deliberate divergence from UCUM and must be documented.
+`[i8; 7]` over (kg, m, s, A, K, mol, cd). The base is kg, not UCUM's gram. Angle is dimensionless by default; this is a deliberate divergence from UCUM and must be documented. It is still a kind of its own, so `rad/s` and `Hz` do not convert (they differ by 2 pi per cycle, ADR-020).
 
 ### 3.2 Quantity kinds
 Each unit has a `Kind` on top of its dimension.
@@ -43,7 +43,7 @@ A small closed set. Each shape has an exact inverse.
 | Shape | Examples |
 |---|---|
 | Linear | m, bar, lb, BTU |
-| Affine | °C, °F, °Ré, gauge pressure |
+| Affine | °C, °F, °Ré, and a user scale with an `offset` such as a gauge reading (ADR-022) |
 | Logarithmic | dB, Np, pH, magnitudes |
 | Reciprocal | mpg ↔ L/100 km |
 | Formula scale | API gravity, Baumé, Brix, Twaddell, wire gauges |
@@ -64,7 +64,7 @@ Factors are composed symbolically as rationals while parsing a compound unit, th
 
 Units are data (TOML, with a JSON export). Fields:
 
-`symbol`, `aliases`, `dim`, `kind`, `shape`, `factor`, `offset`, `exactness` (defined / measured), `reference_state`, `namespace`, `source`, `note`.
+`id`, `symbol`, `name`, `aliases`, `dim`, `kind`, `shape`, `factor`, `offset`, `exactness` (defined / measured), `prefixes`, `namespace`, `source`, `note` (ADR-017).
 
 - Compiled into a perfect-hash map at load time.
 - Core namespace: `si:` and `std:`. Plugins register their own (`acme:bbl_oil`) and cannot shadow core symbols.

@@ -39,7 +39,7 @@ pub enum Kind {
 
 impl Kind {
     /// True for [`Kind::Angle`] and [`Kind::Cycle`] (ADR-020). Their power is tracked through
-    /// compound units like a reference's, so `rad/s` is an angle per time and `rad/rad` is
+    /// compound units, so `rad/s` is an angle per time and `rad/rad` is
     /// plain, but a unit of this kind still converts to a plain one (`deg` to `1`, `Hz` to `1/s`).
     #[must_use]
     pub const fn is_angular(self) -> bool {

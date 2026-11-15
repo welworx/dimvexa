@@ -79,6 +79,3 @@ pub use unit::{AmbiguousDef, Unit, UnitDef, UnitExpr};
 /// The project name. Everything user-visible that carries the name (JSON schema ids, CLI
 /// banner) derives from this constant, so a rename is a single search-and-replace.
 pub const PROJECT_NAME: &str = "dimvexa";
-
-/// The tagline used in READMEs and crate descriptions.
-pub const TAGLINE: &str = "Exact factors. Loud failures. Zero guessing.";

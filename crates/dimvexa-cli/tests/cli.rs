@@ -2657,6 +2657,18 @@ fn a_config_offset_converts_a_gauge_reading_with_your_own_ambient_pressure() {
     );
 }
 
+/// ADR-020: an angle and a cycle cannot be mixed in one expression, and an angle cancels itself.
+#[test]
+fn an_angle_and_a_cycle_do_not_mix_in_one_expression() {
+    let r = dimvexa(&["convert", "1", "rad.Hz", "1/s"]);
+    assert_eq!(r.code, 1, "{}", r.stderr);
+    assert!(r.stderr.contains("error[refused]"), "{}", r.stderr);
+    assert!(r.stderr.contains("different angular kind"), "{}", r.stderr);
+    // The same angle cancels to a plain number, so it converts to `1`.
+    let r = dimvexa(&["convert", "1", "deg/rad", "1"]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+}
+
 /// ADR-021: a gas volume at stated reference conditions (`Nm3`, `scf`, ...) is not implemented. The
 /// error says why and that the step belongs in an engineering tool; it is not "unknown unit".
 #[test]

@@ -68,7 +68,6 @@ pub struct Conversion {
     factor: Ratio,
     offset: Ratio,
     factor_f64: f64,
-    offset_f64: f64,
     shift_f64: f64,
     shift_lo_f64: f64,
     /// The factor as one unreduced fraction with its power of ten multiplied in, used by the
@@ -134,7 +133,6 @@ impl Conversion {
             factor,
             offset,
             factor_f64: factor.to_f64()?,
-            offset_f64: offset.to_f64()?,
             shift_f64,
             shift_lo_f64,
             fold: Self::fold_factor(factor, offset),
@@ -243,12 +241,6 @@ impl Conversion {
     #[must_use]
     pub const fn factor_f64(&self) -> f64 {
         self.factor_f64
-    }
-
-    /// The offset `b` rounded to `f64`.
-    #[must_use]
-    pub const fn offset_f64(&self) -> f64 {
-        self.offset_f64
     }
 
     /// The inverse conversion `x = (y - b) / a`.

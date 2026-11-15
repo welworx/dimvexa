@@ -334,12 +334,6 @@ impl Registry {
         self.by_symbol.get(symbol).and_then(|&i| self.units.get(i))
     }
 
-    /// Candidates for a declared-ambiguous bare symbol.
-    #[must_use]
-    pub fn ambiguous_candidates(&self, symbol: &str) -> Option<&[String]> {
-        self.ambiguous.get(symbol).map(Vec::as_slice)
-    }
-
     fn unit_expr(&self, text: &str, unit: &Unit, prefix: Option<Prefix>) -> Result<UnitExpr> {
         let (factor, mut sources) = match prefix {
             Some(p) => (

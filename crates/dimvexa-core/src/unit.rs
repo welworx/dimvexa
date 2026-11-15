@@ -492,7 +492,7 @@ impl UnitExpr {
     /// Kind and power of a product (`sign` 1) or quotient (`sign` -1). An angular kind survives
     /// (`rad/s` is still an angle per time) and its power is tracked, so `rad/rad` is plain;
     /// two different angular kinds in one expression are refused.
-    fn composed_reference(&self, other: &Self, sign: i32) -> Result<(Kind, i32)> {
+    fn composed_kind(&self, other: &Self, sign: i32) -> Result<(Kind, i32)> {
         let overflow = || Error::Overflow {
             operation: "kind power",
         };
@@ -500,7 +500,7 @@ impl UnitExpr {
         match (self.kind.is_angular(), other.kind.is_angular()) {
             (true, true) if self.kind != other.kind => Err(Error::Refused {
                 reason: format!(
-                    "'{}' ({}) and '{}' ({}) each carry a different reference state or angular kind and cannot be combined",
+                    "'{}' ({}) and '{}' ({}) each carry a different angular kind (angle and cycle) and cannot be combined",
                     self.expr, self.kind, other.expr, other.kind
                 ),
                 suggestions: Vec::new(),
@@ -573,7 +573,7 @@ impl UnitExpr {
             return Ok(self.clone());
         }
         self.refuse_affine(rhs)?;
-        let (kind, kind_exp) = self.composed_reference(rhs, 1)?;
+        let (kind, kind_exp) = self.composed_kind(rhs, 1)?;
         Ok(Self {
             expr: Expr::Mul(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_add(rhs.dim)?,
@@ -597,7 +597,7 @@ impl UnitExpr {
             return Ok(self.clone());
         }
         self.refuse_affine(rhs)?;
-        let (kind, kind_exp) = self.composed_reference(rhs, -1)?;
+        let (kind, kind_exp) = self.composed_kind(rhs, -1)?;
         Ok(Self {
             expr: Expr::Div(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_sub(rhs.dim)?,

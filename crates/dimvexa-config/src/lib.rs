@@ -1148,8 +1148,8 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
     if !u.offset.is_zero() {
         if base.kind() != Kind::Plain {
             return Err(bad(format!(
-                "base '{}' is of kind {}; only a plain unit can take an offset (a gauge, angle \
-                 or cycle unit cannot be shifted: use the plain unit it is measured in)",
+                "base '{}' is of kind {}; only a plain unit can take an offset (an angle, cycle or temperature-difference \
+                 unit cannot be shifted: use the plain unit it is measured in)",
                 u.base,
                 base.kind()
             )));

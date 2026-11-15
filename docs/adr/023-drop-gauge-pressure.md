@@ -28,14 +28,14 @@ Amends [ADR-013](013-references.md). Follows [ADR-021](021-drop-gas-volumes.md) 
    the `conditions` requirement for a reference unit in the data validation. The power tracking
    of ADR-020 (angle and cycle) stays.
 4. `quantity_kind` loses `gauge_pressure` in `dimvexa.convert/3` and `dimvexa.units/4`. The
-   `conditions` field stays (it is empty for every shipped unit); removing it would need new
-   schema versions and is a separate decision.
+   `conditions` field stays for now (it is empty for every shipped unit). Superseded by
+   [ADR-024](024-drop-unit-conditions.md), which removes it.
 
 ## Consequences
 
 * Breaking for a caller who used the gauge units. Allowed while the crate is 0.x. Data version 23.
 * No shipped unit has a reference state any more. ADR-013 is historical.
-* `UnitExpr::reference_power` and `conditions` keep their names for now; a later cleanup can
-  rename the first and drop the second with the next schema version.
+* `UnitExpr::reference_power` and `conditions` keep their names for now. Superseded by
+  ADR-024, which removes both.
 * The cross-library benchmark corpus under `benchmarks/` may still list gauge cases. It is a
   separate workspace and is not changed here.
