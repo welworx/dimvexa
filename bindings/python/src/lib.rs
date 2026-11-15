@@ -43,7 +43,7 @@ fn registry() -> PyResult<&'static Registry> {
     }
 }
 
-/// Reads one config: a shipped name (`"us"`) or a file path (`"./mine.toml"`), as `--config` in
+/// Reads one config: a shipped name (`"us-customary"`) or a file path (`"./mine.toml"`), as `--config` in
 /// the CLI.
 fn read_config(spec: &str) -> PyResult<dimvexa_config::Config> {
     let bad = |message: String| {

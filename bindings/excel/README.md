@@ -41,7 +41,7 @@ The npm tools are development aids only; nothing here is a dependency of the lib
 * Both conversion functions take two optional arguments after `to`: `density` and `config`
   (ADR-014). Empty cells or an omitted argument mean none.
   * `config` names a shipped config (`us`, `gb`, `metric-trade`, `year-julian`, `year-civil`,
-    `water`; several as `us,water`). `=DIMVEXA.CONVERT(1,"ton","kg",,"us")` is 907.18474; without
+    `water`; several as `us-customary,water`). `=DIMVEXA.CONVERT(1,"ton","kg",,"us-customary")` is 907.18474; without
     the config `ton` is refused as ambiguous. File paths cannot be used from a worksheet.
   * `density` is only used when the plain conversion needs one (mass to volume or back): your
     own number, `=DIMVEXA.CONVERT(1,"L","kg","998.2067kg/m3")`, or the name of a density in a

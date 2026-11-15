@@ -549,7 +549,7 @@ fn every_bundled_config_applies_on_its_own_and_all_together() {
 
 #[test]
 fn us_and_gb_resolve_the_regional_names() {
-    let us = bundled_registry(&["us"]);
+    let us = bundled_registry(&["us-customary"]);
     assert_eq!(
         factor(&us, "ton", "kg"),
         factor(&us, "ton_short", "kg"),
@@ -572,7 +572,7 @@ fn us_and_gb_resolve_the_regional_names() {
         );
     }
     // later wins: us then gb gives the British ton
-    let both = bundled_registry(&["us", "gb"]);
+    let both = bundled_registry(&["us-customary", "gb"]);
     assert_eq!(factor(&both, "ton", "kg"), factor(&both, "ton_long", "kg"));
 }
 

@@ -10,7 +10,7 @@
 abc						
 3						
 						
-			=DIMVEXA.CONVERTRANGE(A1:A3,"ton","kg",,"us")			spills D13:D15 = 907.18474 / 2721.55422 / 453.59237
+			=DIMVEXA.CONVERTRANGE(A1:A3,"ton","kg",,"us-customary")			spills D13:D15 = 907.18474 / 2721.55422 / 453.59237
 						
 						
 						

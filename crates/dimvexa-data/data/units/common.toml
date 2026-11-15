@@ -942,3 +942,378 @@ namespace = "std"
 source = "NIST SP 811 (2008), Appendix B (foot, so the cubic foot is 0.3048^3 m^3); reference state 60 degF and 14.696 psia per GPA Standard 2145 (edition not checked)"
 note = "standard cubic foot = ft^3 of gas at 60 degF and 14.696 psia (ADR-013). Some contracts use 14.73 psia; that is not this unit. Converts only within its own reference (scf/min to scf/h); to m3, ft3 or Nm3 it is refused (ADR-001)"
 conditions = "60 °F (288.706 K, rounded), 14.696 psia"
+
+[[unit]]
+id = "mil"
+name = "Mil"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "127/5000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (mil = 0.001 in)"
+note = "mil = in/1000 = 25.4 um; the bare word mil also means milliradian or a thousandth in other trades, so use this explicit id"
+
+[[unit]]
+id = "link_us_survey"
+name = "US survey link"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "792/3937"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 link = 0.66 ft)"
+note = "link = 33/50 survey foot = 7.92 in (survey)"
+
+[[unit]]
+id = "rod_us_survey"
+name = "US survey rod"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "19800/3937"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 rod = 16.5 ft = 25 links); NIST SP 811 (2008), Appendix B (rod, based on U.S. survey foot)"
+note = "rod (pole, perch) = 16.5 survey feet"
+
+[[unit]]
+id = "chain_us_survey"
+name = "US survey chain"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "79200/3937"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 chain = 66 ft); NIST SP 811 (2008), Appendix B (chain, based on U.S. survey foot)"
+note = "Gunter's chain = 66 survey feet = 100 links"
+
+[[unit]]
+id = "furlong_us_survey"
+name = "US survey furlong"
+aliases = []
+dim = [0, 1, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "792000/3937"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Units of Length: 1 furlong = 660 ft = 10 chains)"
+note = "furlong = 10 chains = 660 survey feet"
+
+[[unit]]
+id = "minim_us"
+name = "US minim"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "157725491/2560000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)"
+note = "US minim = fl_oz_us/480 = gal_us/61440"
+
+[[unit]]
+id = "fl_dr_us"
+name = "US fluid dram"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "473176473/128000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)"
+note = "US fluid dram = fl_oz_us/8 = 60 minims"
+
+[[unit]]
+id = "gill_us"
+name = "US gill"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "473176473/4000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (gill, U.S.); NIST Handbook 44 (2024), Appendix C (Units of Liquid Volume: 4 gills = 1 pint)"
+note = "US gill = pt_us/4 = 4 fl_oz_us"
+
+[[unit]]
+id = "bu_us"
+name = "US bushel"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "220244188543/6250000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 1 bushel = 2150.42 cubic inches); NIST SP 811 (2008), Appendix B (bushel, U.S. = 3.523 907 E-02 m^3)"
+note = "US (Winchester) bushel = 2150.42 in^3 = 35.23907016688 L"
+
+[[unit]]
+id = "pk_us"
+name = "US peck"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "220244188543/25000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 4 pecks = 1 bushel); NIST SP 811 (2008), Appendix B (peck, U.S. = 8.809 768 E-03 m^3)"
+note = "peck = bu_us/4"
+
+[[unit]]
+id = "qt_us_dry"
+name = "US dry quart"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "220244188543/200000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 8 quarts = 1 peck); NIST SP 811 (2008), Appendix B (quart, U.S. dry = 1.101 221 E-03 m^3)"
+note = "US dry quart = bu_us/32 = 67.200625 in^3; not the liquid quart"
+
+[[unit]]
+id = "pt_us_dry"
+name = "US dry pint"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "220244188543/400000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 2 pints = 1 quart); NIST SP 811 (2008), Appendix B (pint, U.S. dry = 5.506 105 E-04 m^3)"
+note = "US dry pint = bu_us/64 = 33.6003125 in^3; not the liquid pint"
+
+[[unit]]
+id = "acre_ft_us_survey"
+name = "US survey acre-foot"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "75271680000000/61023377953"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (acre-foot, based on U.S. survey foot)"
+note = "acre-foot = acre_us_survey * ft_us_survey = 43 560 survey ft^3"
+
+[[unit]]
+id = "cord"
+name = "Cord"
+aliases = []
+dim = [0, 3, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "884901456/244140625"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (cord = 128 ft^3)"
+note = "cord = 4 ft x 4 ft x 8 ft = 128 ft^3 = 3.6245563637760 m^3"
+
+[[unit]]
+id = "dram_av"
+name = "Avoirdupois dram"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "45359237/25600000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Avoirdupois Units of Mass: 27 11/32 grains = 1 dram, 16 drams = 1 ounce)"
+note = "dram = oz_av/16 = 1.7718451953125 g"
+
+[[unit]]
+id = "cwt_short"
+name = "Short hundredweight"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "45359237/1000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (hundredweight, short = 100 lb); NIST Handbook 44 (2024), Appendix C (Avoirdupois Units of Mass)"
+note = "US hundredweight = 100 lb = 45.359237 kg; bare cwt is ambiguous"
+
+[[unit]]
+id = "cwt_long"
+name = "Long hundredweight"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "317514659/6250000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (hundredweight, long = 112 lb); NIST Handbook 44 (2024), Appendix C (gross or long hundredweight)"
+note = "British hundredweight = 112 lb = 50.80234544 kg; bare cwt is ambiguous"
+
+[[unit]]
+id = "dwt"
+name = "Pennyweight"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "19439673/12500000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Troy Units of Mass: 24 grains = 1 pennyweight); NIST SP 811 (2008), Appendix B (pennyweight = 1.555 174 E-03 kg)"
+note = "troy pennyweight = 24 grain = 1.55517384 g"
+
+[[unit]]
+id = "lb_troy"
+name = "Troy pound"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "58319019/156250000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Troy Units of Mass: 12 ounces troy = 1 pound troy = 5760 grains)"
+note = "troy pound = 12 oz_troy = 5760 grain = 373.2417216 g"
+
+[[unit]]
+id = "scruple_ap"
+name = "Apothecaries' scruple"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "6479891/5000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Apothecaries Units of Mass: 20 grains = 1 scruple)"
+note = "apothecaries' scruple = 20 grain = 1.2959782 g"
+
+[[unit]]
+id = "dram_ap"
+name = "Apothecaries' dram"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "19439673/5000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST Handbook 44 (2024), Appendix C (Apothecaries Units of Mass: 3 scruples = 1 dram apothecaries)"
+note = "apothecaries' dram = 60 grain = 3.8879346 g"
+
+[[unit]]
+id = "ozf"
+name = "Ounce-force"
+aliases = []
+dim = [1, 1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "8896443230521/32000000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (ounce (avoirdupois)-force = 2.780 139 E-01 N); 1/16 lbf"
+note = "ozf = lbf/16"
+
+[[unit]]
+id = "kip"
+name = "Kip"
+aliases = []
+dim = [1, 1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "8896443230521/2000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (kip, 1 kip = 1000 lbf = 4.448 222 E+03 N)"
+note = "kip = 1000 lbf = 4448.2216152605 N"
+
+[[unit]]
+id = "pdl"
+name = "Poundal"
+aliases = []
+dim = [1, 1, -2, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "17281869297/125000000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (poundal = 1.382 550 E-01 N)"
+note = "poundal = 1 lb * 1 ft/s^2 = 0.138254954376 N"
+
+[[unit]]
+id = "slug"
+name = "Slug"
+aliases = []
+dim = [1, 0, 0, 0, 0, 0, 0]
+kind = "plain"
+shape = "linear"
+factor = "8896443230521/609600000000"
+offset = "0/1"
+exactness = "defined"
+prefixes = "none"
+namespace = "std"
+source = "NIST SP 811 (2008), Appendix B (slug = 1.459 390 E+01 kg)"
+note = "slug = lbf/(ft/s^2) = 14.59390293720... kg"

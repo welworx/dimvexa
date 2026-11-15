@@ -927,11 +927,11 @@ fn density_direction(from: Dim, to: Dim) -> Option<Direction> {
 ///
 /// ```
 /// use dimvexa_config::{bundled, is_path};
-/// let us = bundled("us").expect("shipped");
+/// let us = bundled("us-customary").expect("shipped");
 /// let cfg = us.config()?;
-/// assert_eq!(cfg.origin(), "bundled:us");
+/// assert_eq!(cfg.origin(), "bundled:us-customary");
 /// assert!(cfg.mappings().iter().any(|m| m.name == "ton" && m.target == "ton_short"));
-/// assert!(!is_path("us") && is_path("./us") && is_path("mine.toml"));
+/// assert!(!is_path("us-customary") && is_path("./us") && is_path("mine.toml"));
 /// # Ok::<(), dimvexa_core::Error>(())
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -957,8 +957,8 @@ impl Bundled {
 /// The configs that ship with dimvexa, in listing order.
 pub const BUNDLED: &[Bundled] = &[
     Bundled {
-        name: "us",
-        text: include_str!("../configs/us.toml"),
+        name: "us-customary",
+        text: include_str!("../configs/us-customary.toml"),
     },
     Bundled {
         name: "gb",
@@ -1006,7 +1006,7 @@ pub fn bundled(name: &str) -> Option<&'static Bundled> {
 /// ```
 /// use dimvexa_config::is_path;
 /// assert!(is_path("./us") && is_path("mine.toml") && is_path("dir/mine") && is_path(".toml"));
-/// assert!(!is_path("us") && !is_path("metric-trade"));
+/// assert!(!is_path("us-customary") && !is_path("metric-trade"));
 /// ```
 #[must_use]
 pub fn is_path(spec: &str) -> bool {

@@ -19,7 +19,7 @@ const code = (f) => {
 };
 
 // shipped configs and densities
-assert.strictEqual(d.convertWith(1, "ton", "kg", "", "us", []), 907.18474);
+assert.strictEqual(d.convertWith(1, "ton", "kg", "", "us-customary", []), 907.18474);
 assert.strictEqual(d.convertWith(1, "L", "kg", "998.2067kg/m3", "", []), 0.9982067);
 assert.strictEqual(d.convertWith(1, "L", "kg", "water_25C", "water", []), 0.99704702);
 assert.strictEqual(d.convertWith(1, "L", "mL", "998kg/m3", "", []), 1000);
@@ -75,7 +75,7 @@ assert.strictEqual(code(() => d.convertExact("2*h_P", "rad", "deg")), "refused")
 assert.strictEqual(code(() => d.convertExact("tau", "rad", "deg")), "invalid_number");
 
 assert.strictEqual(d.convertExactWith("4pi", "rad", "deg", "", "", []), 720);
-assert.strictEqual(d.convertExactWith("1", "ton", "kg", "", "us", []), 907.18474);
+assert.strictEqual(d.convertExactWith("1", "ton", "kg", "", "us-customary", []), 907.18474);
 assert.strictEqual(code(() => d.convertExactWith("pi", "degC", "degF", "", "", [])), "refused");
 assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", [])), "ambiguous_expression");
 

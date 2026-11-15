@@ -72,5 +72,8 @@ the `source` and `note` in `crates/dimvexa-data/data/units/common.toml` and the 
 | `bbl` | 42 US gallons per petroleum barrel, 1.589 873 E-01 m^3 | `source` of `bbl` and its vector | NIST SP 811 (2008), Appendix B.8, entry "barrel [for petroleum, 42 gallons (U.S.)]"; confirm the exact wording and the printed value. |
 | `psig`, `barg`, `Pag` | gauge pressure is measured from the ambient pressure | `source` of the three units | NIST SP 811 gives `psi` and `bar` only; look for a standard that defines gauge pressure (for example ISO 80000-4 or ISO 80000-1) and cite it, or keep the current wording as a statement of the definition. |
 
-Not shipped, so nothing to check yet: the US liquid barrel (31.5 gal, said to be in NIST
-Handbook 44) and the US dry barrel (7 056 in^3). Check them when they are added.
+Not shipped, so nothing to check yet: the US liquid barrel (31.5 gal), the US dry barrel (7 056 in^3),
+the US dry gallon, the board foot, ton-force, the survey section and township. Neither NIST SP 811
+(2008) nor Handbook 44 (2024) defines them; find a primary source first. The printer's point and
+pica, twip and fathom (SP 811 gives the fathom on the survey foot, Handbook 44 as 6 ft) are not
+shipped either.

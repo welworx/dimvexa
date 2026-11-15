@@ -84,7 +84,7 @@ Ambiguous names can be resolved on purpose with a config, and mass to volume nee
 you state:
 
 ```console
-$ dimvexa convert 1 ton kg --config us
+$ dimvexa convert 1 ton kg --config us-customary
 907.18474 kg
 $ dimvexa convert 1 L kg --const 998.2067kg/m3
 0.9982067 kg

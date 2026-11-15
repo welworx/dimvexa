@@ -227,6 +227,41 @@ Pag	Pag	Pascal gauge	gauge_pressure	defined	si	-	BIPM SI Brochure (2019), Table 
 Nm3	Nm³	Normal cubic metre	normal_volume	defined	none	Nm³	DIN 1343 (1990), normal condition: 273.15 K and 101 325 Pa
 scf	scf	Standard cubic foot	standard_volume	defined	none	-	NIST SP 811 (2008), Appendix B (foot, so the cubic foot is 0.3048^3 m^3); reference state 60 degF and 14.696 psia per GPA Standard 2145 (edition not checked)
 
+## length
+mil	mil	Mil	plain	defined	none	-	NIST SP 811 (2008), Appendix B (mil = 0.001 in)
+link_us_survey	link_us_survey	US survey link	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 link = 0.66 ft)
+rod_us_survey	rod_us_survey	US survey rod	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 rod = 16.5 ft = 25 links); NIST SP 811 (2008), Appendix B (rod, based on U.S. survey foot)
+chain_us_survey	chain_us_survey	US survey chain	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Gunter's or Surveyors Chain Units: 1 chain = 66 ft); NIST SP 811 (2008), Appendix B (chain, based on U.S. survey foot)
+furlong_us_survey	furlong_us_survey	US survey furlong	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Length: 1 furlong = 660 ft = 10 chains)
+
+## volume
+minim_us	minim_us	US minim	plain	defined	none	-	NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)
+fl_dr_us	fl_dr_us	US fluid dram	plain	defined	none	-	NIST SP 811 (2008), Appendix B (Apothecaries Units of Liquid Volume: 60 minims = 1 fluid dram, 8 fluid drams = 1 fluid ounce)
+gill_us	gill_us	US gill	plain	defined	none	-	NIST SP 811 (2008), Appendix B (gill, U.S.); NIST Handbook 44 (2024), Appendix C (Units of Liquid Volume: 4 gills = 1 pint)
+bu_us	bu_us	US bushel	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 1 bushel = 2150.42 cubic inches); NIST SP 811 (2008), Appendix B (bushel, U.S. = 3.523 907 E-02 m^3)
+pk_us	pk_us	US peck	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 4 pecks = 1 bushel); NIST SP 811 (2008), Appendix B (peck, U.S. = 8.809 768 E-03 m^3)
+qt_us_dry	qt_us_dry	US dry quart	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 8 quarts = 1 peck); NIST SP 811 (2008), Appendix B (quart, U.S. dry = 1.101 221 E-03 m^3)
+pt_us_dry	pt_us_dry	US dry pint	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Units of Dry Volume: 2 pints = 1 quart); NIST SP 811 (2008), Appendix B (pint, U.S. dry = 5.506 105 E-04 m^3)
+acre_ft_us_survey	acre_ft_us_survey	US survey acre-foot	plain	defined	none	-	NIST SP 811 (2008), Appendix B (acre-foot, based on U.S. survey foot)
+cord	cord	Cord	plain	defined	none	-	NIST SP 811 (2008), Appendix B (cord = 128 ft^3)
+
+## mass
+dram_av	dram_av	Avoirdupois dram	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Avoirdupois Units of Mass: 27 11/32 grains = 1 dram, 16 drams = 1 ounce)
+cwt_short	cwt_short	Short hundredweight	plain	defined	none	-	NIST SP 811 (2008), Appendix B (hundredweight, short = 100 lb); NIST Handbook 44 (2024), Appendix C (Avoirdupois Units of Mass)
+cwt_long	cwt_long	Long hundredweight	plain	defined	none	-	NIST SP 811 (2008), Appendix B (hundredweight, long = 112 lb); NIST Handbook 44 (2024), Appendix C (gross or long hundredweight)
+dwt	dwt	Pennyweight	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Troy Units of Mass: 24 grains = 1 pennyweight); NIST SP 811 (2008), Appendix B (pennyweight = 1.555 174 E-03 kg)
+lb_troy	lb_troy	Troy pound	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Troy Units of Mass: 12 ounces troy = 1 pound troy = 5760 grains)
+scruple_ap	scruple_ap	Apothecaries' scruple	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Apothecaries Units of Mass: 20 grains = 1 scruple)
+dram_ap	dram_ap	Apothecaries' dram	plain	defined	none	-	NIST Handbook 44 (2024), Appendix C (Apothecaries Units of Mass: 3 scruples = 1 dram apothecaries)
+
+## force
+ozf	ozf	Ounce-force	plain	defined	none	-	NIST SP 811 (2008), Appendix B (ounce (avoirdupois)-force = 2.780 139 E-01 N); 1/16 lbf
+kip	kip	Kip	plain	defined	none	-	NIST SP 811 (2008), Appendix B (kip, 1 kip = 1000 lbf = 4.448 222 E+03 N)
+pdl	pdl	Poundal	plain	defined	none	-	NIST SP 811 (2008), Appendix B (poundal = 1.382 550 E-01 N)
+
+## mass
+slug	slug	Slug	plain	defined	none	-	NIST SP 811 (2008), Appendix B (slug = 1.459 390 E+01 kg)
+
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note
 ton	ton_short, ton_long, tonne	-	short ton (2000 lb), long ton (2240 lb) and metric tonne (1000 kg) are all called ton
@@ -251,3 +286,4 @@ tsp	tsp_us	-	US (4.92892159375 mL) and metric (5 mL) teaspoons differ
 a	yr_julian, yr_common, ar	-	a is the year (annum) and, in NIST SP 811, the are (100 m^2); the year is 365, 365.25 or 365.2425 days depending on the definition
 month	-	month_30, month_julian	a month has 28 to 31 days; there is no fixed length, so a month is never guessed (30 d and the mean Julian month of 30.4375 d are planned)
 mo	-	month_30, month_julian	same as month
+cwt	cwt_short, cwt_long	-	US (short) hundredweight is 100 lb and the British (long) hundredweight is 112 lb

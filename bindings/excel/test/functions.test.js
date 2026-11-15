@@ -41,7 +41,7 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
   assert.strictEqual(await associated.CONVERTEXACT(6.62607015e-34, "J", "J"), 6.62607015e-34);
   assert.strictEqual(await associated.CONVERTEXACT(0.1, "m", "mm"), 100);
   assert.strictEqual(await associated.CONVERTEXACT("98.6", "degF", "degC"), 37);
-  assert.strictEqual(await associated.CONVERTEXACT(1, "ton", "kg", "", "us"), 907.18474);
+  assert.strictEqual(await associated.CONVERTEXACT(1, "ton", "kg", "", "us-customary"), 907.18474);
   for (const [v, code] of [["1/2pi", "ambiguous_expression"], ["2*h_P", "refused"],
     ["tau", "invalid_number"], ["", "invalid_number"], [undefined, "invalid_number"]]) {
     await assert.rejects(async () => associated.CONVERTEXACT(v, "rad", "deg"), (e) => {
@@ -130,11 +130,11 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
 
   // Configs (ADR-014): a shipped config resolves an otherwise ambiguous name.
   await assert.rejects(async () => associated.CONVERT(1, "ton", "kg"), /ambiguous/);
-  assert.strictEqual(await associated.CONVERT(1, "ton", "kg", "", "us"), 907.18474);
+  assert.strictEqual(await associated.CONVERT(1, "ton", "kg", "", "us-customary"), 907.18474);
   assert.strictEqual(await associated.CONVERT(1, "ton", "kg", null, "gb"), 1016.0469088);
   assert.strictEqual(await associated.CONVERT(1, "ton", "kg", undefined, "metric-trade"), 1000);
-  assert.strictEqual(await associated.CONVERT(1, "ton", "kg", "", "us, water"), 907.18474);
-  assert.deepStrictEqual(await associated.CONVERTRANGE([[1, 2]], "ton", "kg", "", "us"), [[907.18474, 1814.36948]]);
+  assert.strictEqual(await associated.CONVERT(1, "ton", "kg", "", "us-customary, water"), 907.18474);
+  assert.deepStrictEqual(await associated.CONVERTRANGE([[1, 2]], "ton", "kg", "", "us-customary"), [[907.18474, 1814.36948]]);
   await assert.rejects(async () => associated.CONVERT(1, "ton", "kg", "", "nope"), /no shipped config named 'nope'.*us, gb/);
   await assert.rejects(async () => associated.CONVERT(1, "ton", "kg", "", "./us.toml"), /a file path cannot be used/);
   assert.deepStrictEqual(

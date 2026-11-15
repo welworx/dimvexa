@@ -568,3 +568,203 @@ from = "scf/min"
 to = "scf/h"
 expect = "60"
 source = "BIPM SI Brochure (2019), Table 8 (1 h = 60 min); the standard cubic foot keeps its reference state"
+
+[[vector]]
+unit = "mil"
+value = "1000"
+from = "mil"
+to = "in"
+expect = "1"
+source = "Hand derivation: 1000 mil = 1000 * 0.001 in = 1 in"
+
+[[vector]]
+unit = "link_us_survey"
+value = "100"
+from = "link_us_survey"
+to = "chain_us_survey"
+expect = "1"
+source = "Hand derivation: Handbook 44 App. C, 1 chain = 100 links"
+
+[[vector]]
+unit = "rod_us_survey"
+value = "4"
+from = "rod_us_survey"
+to = "chain_us_survey"
+expect = "1"
+source = "Hand derivation: Handbook 44 App. C, 4 rods = 1 chain"
+
+[[vector]]
+unit = "chain_us_survey"
+value = "1"
+from = "chain_us_survey"
+to = "ft_us_survey"
+expect = "66"
+source = "Hand derivation: Handbook 44 App. C, 1 chain = 66 ft"
+
+[[vector]]
+unit = "furlong_us_survey"
+value = "8"
+from = "furlong_us_survey"
+to = "mi_us_survey"
+expect = "1"
+source = "Hand derivation: 8 furlong = 8*660 ft = 5280 ft = 1 survey mile"
+
+[[vector]]
+unit = "minim_us"
+value = "480"
+from = "minim_us"
+to = "fl_oz_us"
+expect = "1"
+source = "Hand derivation: Handbook 44 App. C, 1 fl oz = 8 fl dr = 480 minims"
+
+[[vector]]
+unit = "fl_dr_us"
+value = "8"
+from = "fl_dr_us"
+to = "fl_oz_us"
+expect = "1"
+source = "Hand derivation: 8 fluid drams = 1 fluid ounce"
+
+[[vector]]
+unit = "gill_us"
+value = "4"
+from = "gill_us"
+to = "pt_us"
+expect = "1"
+source = "Hand derivation: 4 gills = 1 pint"
+
+[[vector]]
+unit = "bu_us"
+value = "1"
+from = "bu_us"
+to = "in^3"
+expect = "2150.42"
+source = "Hand derivation: Handbook 44 App. C, 2150.42 cubic inches"
+
+[[vector]]
+unit = "pk_us"
+value = "4"
+from = "pk_us"
+to = "bu_us"
+expect = "1"
+source = "Hand derivation: 4 pecks = 1 bushel"
+
+[[vector]]
+unit = "qt_us_dry"
+value = "32"
+from = "qt_us_dry"
+to = "bu_us"
+expect = "1"
+source = "Hand derivation: 32 dry quarts = 1 bushel"
+
+[[vector]]
+unit = "pt_us_dry"
+value = "1"
+from = "pt_us_dry"
+to = "in^3"
+expect = "33.6003125"
+source = "Hand derivation: 2150.42 / 64 = 33.6003125 in^3 (Handbook 44 App. C)"
+
+[[vector]]
+unit = "acre_ft_us_survey"
+value = "1"
+from = "acre_ft_us_survey"
+to = "ft_us_survey^3"
+expect = "43560"
+source = "Hand derivation: 43 560 ft^2 * 1 ft"
+
+[[vector]]
+unit = "cord"
+value = "1"
+from = "cord"
+to = "ft^3"
+expect = "128"
+source = "Hand derivation: 4*4*8 = 128 cubic feet"
+
+[[vector]]
+unit = "dram_av"
+value = "16"
+from = "dram_av"
+to = "oz_av"
+expect = "1"
+source = "Hand derivation: 16 drams = 1 ounce"
+
+[[vector]]
+unit = "cwt_short"
+value = "20"
+from = "cwt_short"
+to = "ton_short"
+expect = "1"
+source = "Hand derivation: 20 short cwt = 2000 lb = 1 short ton"
+
+[[vector]]
+unit = "cwt_long"
+value = "20"
+from = "cwt_long"
+to = "ton_long"
+expect = "1"
+source = "Hand derivation: 20 long cwt = 2240 lb = 1 long ton"
+
+[[vector]]
+unit = "dwt"
+value = "20"
+from = "dwt"
+to = "oz_troy"
+expect = "1"
+source = "Hand derivation: 20 pennyweights = 1 troy ounce = 480 grains; 20*24 = 480"
+
+[[vector]]
+unit = "lb_troy"
+value = "1"
+from = "lb_troy"
+to = "grain"
+expect = "5760"
+source = "Hand derivation: troy pound = 5760 grains (NIST Handbook 44 App. C)"
+
+[[vector]]
+unit = "scruple_ap"
+value = "1"
+from = "scruple_ap"
+to = "grain"
+expect = "20"
+source = "Hand derivation: 1 scruple = 20 grains"
+
+[[vector]]
+unit = "dram_ap"
+value = "1"
+from = "dram_ap"
+to = "grain"
+expect = "60"
+source = "Hand derivation: 1 apothecaries' dram = 60 grains"
+
+[[vector]]
+unit = "ozf"
+value = "16"
+from = "ozf"
+to = "lbf"
+expect = "1"
+source = "Hand derivation: 16 ozf = 1 lbf"
+
+[[vector]]
+unit = "kip"
+value = "1"
+from = "kip"
+to = "lbf"
+expect = "1000"
+source = "Hand derivation: 1000 lbf by definition"
+
+[[vector]]
+unit = "pdl"
+value = "1"
+from = "pdl"
+to = "N"
+expect = "0.138254954376"
+source = "Hand derivation: 0.45359237 * 0.3048 = 0.138254954376"
+
+[[vector]]
+unit = "slug"
+value = "1"
+from = "slug"
+to = "kg"
+expect = "8896443230521/609600000000"
+source = "Hand derivation: 0.45359237 kg * 9.80665 / 0.3048 as an exact fraction"

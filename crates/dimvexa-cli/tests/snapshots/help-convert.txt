@@ -16,7 +16,7 @@ Examples:
   dimvexa convert 4pi rad deg
   dimvexa convert pi/2 rad deg --exact
   dimvexa convert 100 degC degF --json
-  dimvexa convert 1 ton kg --config us
+  dimvexa convert 1 ton kg --config us-customary
   dimvexa convert 1 L kg --config water --const water_25C
   dimvexa convert 1 L kg --const 998.2067kg/m3
 

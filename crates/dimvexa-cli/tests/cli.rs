@@ -612,7 +612,7 @@ fn units_groups_lists_only_the_groups() {
     let r = dimvexa(&["units", "--groups"]);
     assert_eq!(r.code, 0);
     snapshot("units_groups.txt", &r.stdout);
-    assert!(r.stdout.lines().any(|l| l == "volume\t15"));
+    assert!(r.stdout.lines().any(|l| l == "volume\t24"));
     assert!(!r.stdout.contains("psi\t"));
     let v = json::parse(&dimvexa(&["units", "--groups", "--json"]).stdout).unwrap();
     json::check_units_schema(&v);
@@ -1340,11 +1340,11 @@ fn guide_shipped_configs_are_real() {
     let readme = guide();
     let section = readme_section(&readme, "## Names and densities: `--config`");
     for args in [
-        &["convert", "1", "ton", "kg", "--config", "us"][..],
+        &["convert", "1", "ton", "kg", "--config", "us-customary"][..],
         &["convert", "1", "ton", "kg", "--config", "gb"],
         &["convert", "1", "mt", "kg", "--config", "metric-trade"],
         &["convert", "1", "yr", "d", "--config", "year-julian"],
-        &["convert", "1", "oz", "g", "--config", "us"],
+        &["convert", "1", "oz", "g", "--config", "us-customary"],
     ] {
         let r = dimvexa_at_root(args);
         let output = if r.code == 0 { r.stdout } else { r.stderr };
@@ -1479,8 +1479,8 @@ fn units_shows_which_units_are_yours() {
     // The group table counts it too.
     let g = dimvexa_at_root(&["units", "--groups", "--config", OIL_CFG]);
     let base = dimvexa(&["units", "--groups"]);
-    assert!(g.stdout.lines().any(|l| l == "volume\t16"));
-    assert!(base.stdout.lines().any(|l| l == "volume\t15"));
+    assert!(g.stdout.lines().any(|l| l == "volume\t25"));
+    assert!(base.stdout.lines().any(|l| l == "volume\t24"));
 
     let v =
         json::parse(&dimvexa_at_root(&["units", "--json", "--config", OIL_CFG]).stdout).unwrap();
@@ -1865,11 +1865,19 @@ fn outputs_validate_against_the_schema_files() {
         ),
         (
             &convert,
-            vec!["convert", "1", "ton", "kg", "--json", "--config", "us"],
+            vec![
+                "convert",
+                "1",
+                "ton",
+                "kg",
+                "--json",
+                "--config",
+                "us-customary",
+            ],
         ),
         (&units, vec!["units", "--json", "--config", "gb"]),
         (&configs, vec!["configs", "--json"]),
-        (&configs, vec!["configs", "us", "--json"]),
+        (&configs, vec!["configs", "us-customary", "--json"]),
         (&configs, vec!["configs", "water", "--json"]),
         (&configs, vec!["configs", OIL_CFG, "--json"]),
         (&configs, vec!["configs", "nope", "--json"]),
@@ -2218,21 +2226,36 @@ fn a_value_with_a_bad_constant_or_operator_is_loud() {
 #[test]
 fn config_takes_a_shipped_name_or_a_path() {
     // A bare name is a shipped config; the result records it as bundled:NAME with a hash.
-    let r = dimvexa(&["convert", "1", "ton", "kg", "--config", "us", "--json"]);
+    let r = dimvexa(&[
+        "convert",
+        "1",
+        "ton",
+        "kg",
+        "--config",
+        "us-customary",
+        "--json",
+    ]);
     assert_eq!(r.code, 0, "{}", r.stderr);
     let v = json::parse(&r.stdout).unwrap();
     let cfg = &v.get("config").unwrap().as_array()[0];
-    assert_eq!(cfg.get("file").unwrap().as_str(), "bundled:us");
+    assert_eq!(cfg.get("file").unwrap().as_str(), "bundled:us-customary");
     assert!(cfg.get("hash").unwrap().as_str().starts_with("fnv1a64:"));
     // Left to right, later wins: gb after us gives the long ton.
     let r = dimvexa(&[
-        "convert", "1", "ton", "kg", "--config", "us", "--config", "gb",
+        "convert",
+        "1",
+        "ton",
+        "kg",
+        "--config",
+        "us-customary",
+        "--config",
+        "gb",
     ]);
     assert_eq!(r.stdout, "1016.0469088 kg\n");
     // A bare word is never a file, even when a file of that name exists: ./name is the file.
     let dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("bare_name");
     std::fs::create_dir_all(&dir).unwrap();
-    std::fs::write(dir.join("us"), "[map]\nton = \"tonne\"\n").unwrap();
+    std::fs::write(dir.join("us-customary"), "[map]\nton = \"tonne\"\n").unwrap();
     let run = |spec: &str| {
         let out = Command::new(env!("CARGO_BIN_EXE_dimvexa"))
             .args(["convert", "1", "ton", "kg", "--config", spec])
@@ -2241,13 +2264,21 @@ fn config_takes_a_shipped_name_or_a_path() {
             .unwrap();
         String::from_utf8(out.stdout).unwrap()
     };
-    assert_eq!(run("us"), "907.18474 kg\n", "the shipped one, not the file");
-    assert_eq!(run("./us"), "1000 kg\n", "the file");
+    assert_eq!(
+        run("us-customary"),
+        "907.18474 kg\n",
+        "the shipped one, not the file"
+    );
+    assert_eq!(run("./us-customary"), "1000 kg\n", "the file");
     // An unknown name lists the shipped ones and exits 2 (a usage error).
     let r = dimvexa(&["convert", "1", "ton", "kg", "--config", "uss"]);
     assert_eq!(r.code, 2);
     assert!(r.stderr.contains("no config named 'uss'"), "{}", r.stderr);
-    assert!(r.stderr.contains("us, gb, metric-trade"), "{}", r.stderr);
+    assert!(
+        r.stderr.contains("us-customary, gb, metric-trade"),
+        "{}",
+        r.stderr
+    );
     // Without any config the strict names stay refused.
     assert_eq!(dimvexa(&["convert", "1", "ton", "kg"]).code, 1);
 }
@@ -2255,9 +2286,9 @@ fn config_takes_a_shipped_name_or_a_path() {
 #[test]
 fn the_shipped_configs_resolve_their_names() {
     for (cfg, args, want) in [
-        ("us", ["1", "gal", "L"], "3.785411784 L\n"),
+        ("us-customary", ["1", "gal", "L"], "3.785411784 L\n"),
         ("gb", ["1", "gal", "L"], "4.54609 L\n"),
-        ("us", ["1", "mile", "km"], "1.609344 km\n"),
+        ("us-customary", ["1", "mile", "km"], "1.609344 km\n"),
         ("metric-trade", ["1", "mt", "kg"], "1000 kg\n"),
         ("year-julian", ["1", "yr", "d"], "365.25 d\n"),
         ("year-civil", ["1", "year", "d"], "365 d\n"),
@@ -2271,7 +2302,7 @@ fn the_shipped_configs_resolve_their_names() {
         );
     }
     // oz is refused in both: a mass or a volume in each country.
-    for cfg in ["us", "gb"] {
+    for cfg in ["us-customary", "gb"] {
         let r = dimvexa(&["convert", "1", "oz", "g", "--config", cfg]);
         assert_eq!(r.code, 1);
         assert!(
@@ -2391,7 +2422,7 @@ fn a_density_is_a_name_or_the_callers_own_number() {
 #[test]
 fn a_removed_option_is_an_unknown_option() {
     for old in ["--profile", "--bridge", "--density"] {
-        let r = dimvexa(&["convert", "1", "ton", "kg", old, "us"]);
+        let r = dimvexa(&["convert", "1", "ton", "kg", old, "us-customary"]);
         assert_eq!(r.code, 2, "{old}");
         assert!(
             r.stderr.contains(&format!("unknown option '{old}'")),
@@ -2406,9 +2437,9 @@ fn configs_lists_and_shows_what_is_included() {
     let r = dimvexa(&["configs"]);
     assert_eq!(r.code, 0);
     snapshot("configs.txt", &stable(&r.stdout));
-    let r = dimvexa(&["configs", "us"]);
+    let r = dimvexa(&["configs", "us-customary"]);
     assert_eq!(r.code, 0);
-    snapshot("configs_us.txt", &stable(&r.stdout));
+    snapshot("configs_us_customary.txt", &stable(&r.stdout));
     assert!(r.stdout.contains("ton\tton_short"));
     assert!(
         !r.stdout.contains("## densities"),
@@ -2432,7 +2463,7 @@ fn configs_lists_and_shows_what_is_included() {
     assert!(r.stderr.contains("no config named 'nope'"), "{}", r.stderr);
     assert_eq!(dimvexa(&["configs", "a", "b"]).code, 2);
     assert_eq!(dimvexa(&["configs", "--exact"]).code, 2);
-    assert_eq!(dimvexa(&["configs", "--config", "us"]).code, 2);
+    assert_eq!(dimvexa(&["configs", "--config", "us-customary"]).code, 2);
     // JSON validates and carries the sources.
     let r = dimvexa(&["configs", "water", "--json"]);
     let v = json::parse(&r.stdout).unwrap();
@@ -2484,16 +2515,37 @@ fn a_user_file_overrides_a_shipped_density_and_a_shipped_name() {
     );
     // The same file twice replaces itself without a warning.
     let r = dimvexa(&[
-        "convert", "1", "ton", "kg", "--config", "us", "--config", "us",
+        "convert",
+        "1",
+        "ton",
+        "kg",
+        "--config",
+        "us-customary",
+        "--config",
+        "us-customary",
     ]);
     assert!(!r.stderr.contains("warning"), "{}", r.stderr);
     let r = dimvexa(&[
-        "convert", "1", "ton", "kg", "--config", "us", "--config", &cfg,
+        "convert",
+        "1",
+        "ton",
+        "kg",
+        "--config",
+        "us-customary",
+        "--config",
+        &cfg,
     ]);
     assert_eq!(r.stdout, "1000 kg\n");
     // the other way round the shipped one wins
     let r = dimvexa(&[
-        "convert", "1", "ton", "kg", "--config", &cfg, "--config", "us",
+        "convert",
+        "1",
+        "ton",
+        "kg",
+        "--config",
+        &cfg,
+        "--config",
+        "us-customary",
     ]);
     assert_eq!(r.stdout, "907.18474 kg\n");
     let r = dimvexa(&["configs", ".toml"]);
@@ -2507,11 +2559,11 @@ fn a_user_file_overrides_a_shipped_density_and_a_shipped_name() {
 
 #[test]
 fn units_lists_the_names_and_densities_of_a_shipped_config() {
-    let r = dimvexa(&["units", "--config", "us", "--config", "water"]);
+    let r = dimvexa(&["units", "--config", "us-customary", "--config", "water"]);
     assert_eq!(r.code, 0);
     assert!(r.stdout.contains("## config mappings"));
     assert!(
-        r.stdout.contains("\nton\tton_short\tbundled:us:"),
+        r.stdout.contains("\nton\tton_short\tbundled:us-customary:"),
         "{}",
         r.stdout
     );
@@ -2527,7 +2579,7 @@ fn update_command_line_is_checked_before_any_network_use() {
         &["update", "now"][..],
         &["update", "--json"],
         &["update", "--exact"],
-        &["update", "--config", "us"],
+        &["update", "--config", "us-customary"],
         &["update", "--const", "1kg/m3"],
         &["update", "--bogus"],
     ] {

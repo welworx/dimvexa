@@ -133,3 +133,9 @@ symbol = "mo"
 candidates = []
 planned = ["month_30", "month_julian"]
 note = "same as month"
+
+[[ambiguous]]
+symbol = "cwt"
+candidates = ["cwt_short", "cwt_long"]
+planned = []
+note = "US (short) hundredweight is 100 lb and the British (long) hundredweight is 112 lb"

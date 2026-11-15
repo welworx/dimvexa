@@ -23,12 +23,12 @@ Formula	Expected	Note
 =DIMVEXA.CONVERT(1;2;"m")	error: dimvexa parse_error:	a number is not a unit
 =DIMVEXA.CONVERT(1E+308;"km";"mm")	error: dimvexa overflow: the result is too large for a number	shows #NUM!
 # Configs (fifth argument; empty fourth argument)		
-=DIMVEXA.CONVERT(1;"ton";"kg";;"us")	907,18474	
+=DIMVEXA.CONVERT(1;"ton";"kg";;"us-customary")	907,18474	
 =DIMVEXA.CONVERT(1;"ton";"kg";;"gb")	1016,0469088	
 =DIMVEXA.CONVERT(1;"ton";"kg";;"metric-trade")	1000	
 =DIMVEXA.CONVERT(1;"yr";"d";;"year-julian")	365,25	
 =DIMVEXA.CONVERT(1;"yr";"d";;"year-civil")	365	
-=DIMVEXA.CONVERT(1;"ton";"kg";;"us,water")	907,18474	several configs
+=DIMVEXA.CONVERT(1;"ton";"kg";;"us-customary,water")	907,18474	several configs
 =DIMVEXA.CONVERT(1;"ton";"kg";;"nope")	error: no shipped config named nope	lists the shipped names
 # Density (fourth argument)		
 =DIMVEXA.CONVERT(1;"L";"kg";"998.2067kg/m3")	0,9982067	
@@ -45,4 +45,4 @@ Formula	Expected	Note
 =DIMVEXA.CONVERTEXACT("1/(2*pi)";"rad";"deg")	9,118906527810399	
 =DIMVEXA.CONVERTEXACT("1/2pi";"rad";"deg")	error: ambiguous_expression	write pi/2 or 1/(2*pi)
 =DIMVEXA.CONVERTEXACT("pi";"degC";"degF")	error: refused	a multiple of pi plus an offset is not exact
-=DIMVEXA.CONVERTEXACT(1;"ton";"kg";;"us")	907,18474	
+=DIMVEXA.CONVERTEXACT(1;"ton";"kg";;"us-customary")	907,18474	

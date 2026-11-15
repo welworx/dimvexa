@@ -11,7 +11,7 @@ with --const. See also: dimvexa constants --help.
 Examples:
   dimvexa configs
   dimvexa configs water
-  dimvexa configs us --json
+  dimvexa configs us-customary --json
 
 Forms:
   configs          the configs that ship with dimvexa (us, gb, metric-trade,

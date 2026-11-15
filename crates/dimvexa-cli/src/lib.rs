@@ -63,7 +63,7 @@ Examples:
   dimvexa convert 1 psi Pa --exact
   dimvexa convert 4pi rad deg
   dimvexa convert 100 degC degF --json
-  dimvexa convert 1 ton kg --config us
+  dimvexa convert 1 ton kg --config us-customary
   dimvexa convert 1 L kg --config water --const water_25C
   dimvexa convert 1 L kg --const 998.2067kg/m3
   dimvexa units volume
@@ -144,7 +144,7 @@ Examples:
   dimvexa convert 4pi rad deg
   dimvexa convert pi/2 rad deg --exact
   dimvexa convert 100 degC degF --json
-  dimvexa convert 1 ton kg --config us
+  dimvexa convert 1 ton kg --config us-customary
   dimvexa convert 1 L kg --config water --const water_25C
   dimvexa convert 1 L kg --const 998.2067kg/m3
 
@@ -218,7 +218,7 @@ with --const. See also: dimvexa constants --help.
 Examples:
   dimvexa configs
   dimvexa configs water
-  dimvexa configs us --json
+  dimvexa configs us-customary --json
 
 Forms:
   configs          the configs that ship with dimvexa (us, gb, metric-trade,
@@ -2761,7 +2761,7 @@ mod tests {
         assert!(out.lines().any(|l| l.starts_with("ton\t")));
         let (code, out, _) = run_str(&["units", "--groups"]);
         assert_eq!(code, 0);
-        assert!(out.lines().any(|l| l == "volume\t15"));
+        assert!(out.lines().any(|l| l == "volume\t24"));
         let (code, out, _) = run_str(&["units", "psi"]);
         assert_eq!(code, 0);
         assert!(out.contains("group         pressure"));

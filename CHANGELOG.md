@@ -14,10 +14,12 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ### Changed
 
+- **Breaking:** the shipped config `us` is now `us-customary` (the name of the system, "United States customary units"): `--config us-customary`, `configs=["us-customary"]`, `bundled:us-customary`. `us` is no longer accepted. It also maps `cwt` to `cwt_short`; `gb` maps `cwt` to `cwt_long`.
 - **Breaking (ADR-019, Proposed):** a sum, difference or ordering of two values with different exponents (`1 + pi`), a decimal expansion of a value with pi, and an exact offset with unlike powers of ten return the new error code `unrepresentable` (`Error::Unrepresentable`) instead of `overflow`. `overflow` now means only a number that does not fit its integers or an `f64`. The CLI never produces the new code; `dimvexa.convert/3` lists it.
 
 ### Added
 
+- US customary units, each with a NIST SP 811 or Handbook 44 source and a golden vector: `mil`, survey `link_us_survey`, `rod_us_survey`, `chain_us_survey`, `furlong_us_survey`; `minim_us`, `fl_dr_us`, `gill_us`, dry `pt_us_dry`, `qt_us_dry`, `pk_us`, `bu_us`, `acre_ft_us_survey`, `cord`; `dram_av`, `cwt_short`, `cwt_long`, `dwt`, `lb_troy`, `scruple_ap`, `dram_ap`, `slug`; `ozf`, `kip`, `pdl`. The bare name `cwt` is ambiguous.
 - `cargo xtask bench-impact --guard` and a pre-commit step: a commit that stages a hot-path file is blocked until `bench-impact` has run for the current hot-path files; commits that touch only docs, skills, workflows or other crates are not affected.
 - Tests: `ratio_model` (equality, order and integrality against an independent `i128` model) and `roundtrip` (A to B to A is the identity in exact arithmetic and stays within 3 ulp, linear, or 8 ulp of the larger operand, affine, on the fast path).
 

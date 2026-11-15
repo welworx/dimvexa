@@ -119,7 +119,7 @@ WATER_TEXT = (
 
 def test_density_and_configs_like_the_cli() -> None:
     # A shipped config resolves an ambiguous name; a density is used only when it is needed.
-    assert dimvexa.convert(1.0, "ton", "kg", configs=["us"]) == 907.18474
+    assert dimvexa.convert(1.0, "ton", "kg", configs=["us-customary"]) == 907.18474
     assert dimvexa.convert(1.0, "L", "kg", density="998.2067kg/m3") == 0.9982067
     assert dimvexa.convert(1.0, "L", "kg", density="water_25C", configs=["water"]) == 0.99704702
     assert dimvexa.convert(1.0, "L", "kg", config_texts=[WATER_TEXT], density="rho") == 0.9982067
@@ -179,7 +179,7 @@ UNIT_TEXT = (
 
 
 def test_quantity_takes_configs_and_density() -> None:
-    q = dimvexa.quantity("2 ton", configs=["us"]).to("kg")
+    q = dimvexa.quantity("2 ton", configs=["us-customary"]).to("kg")
     assert q.to_float() == 1814.36948
     # A density turns volume into mass exactly, and only when asked for.
     v = dimvexa.quantity("1 L", density="998.2067kg/m3")
@@ -203,7 +203,7 @@ def test_units_and_unit_info_list_config_units() -> None:
     assert info["factor"] == "7/1000" and info["defined_in"] == "config-text-1:1"
     assert dimvexa.unit_info("blob") is None
     assert dimvexa.unit_info("m")["defined_in"] is None  # type: ignore[index]
-    assert dimvexa.unit_info("m", configs=["us"])["defined_in"] is None  # type: ignore[index]
+    assert dimvexa.unit_info("m", configs=["us-customary"])["defined_in"] is None  # type: ignore[index]
     # A name a config maps resolves to its unit.
     assert dimvexa.unit_info("mt", config_texts=['[map]\nmt = "tonne"\n']) is not None
 
@@ -223,7 +223,7 @@ def test_a_string_value_may_contain_pi_and_stays_exact() -> None:
     q = dimvexa.quantity("pi/2 rad")
     assert q.value == "1/2 pi"
     assert q.to("deg").to_float() == 90.0
-    assert dimvexa.quantity("4 pi rad", configs=["us"]).to("deg").to_float() == 720.0
+    assert dimvexa.quantity("4 pi rad", configs=["us-customary"]).to("deg").to_float() == 720.0
     assert dimvexa.quantity("2.5 km").to("m").to_float() == 2500.0
 
 
