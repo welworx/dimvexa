@@ -182,24 +182,6 @@ impl Conversion {
                 to: to.dim(),
             });
         }
-        if (from.kind() != to.kind() || from.reference_power() != to.reference_power())
-            && (from.kind().is_reference() || to.kind().is_reference())
-        {
-            // ADR-013: a unit tied to a reference state converts only within that reference.
-            // Going elsewhere needs the ambient pressure, which the library does not guess; a
-            // config unit with an offset (ADR-022) is how the caller states it.
-            return Err(Error::Refused {
-                reason: format!(
-                    "'{from}' ({}) and '{to}' ({}) differ in their reference state or its power; \
-                     a gauge reading needs the ambient pressure, which the library does not \
-                     guess; convert within one reference, or define your own unit with an \
-                     offset in a config (ADR-022, examples/configs/ambient.toml)",
-                    from.kind(),
-                    to.kind()
-                ),
-                suggestions: Vec::new(),
-            });
-        }
         if from.kind().is_angular() && to.kind().is_angular() && from.kind() != to.kind() {
             // ADR-020: an angle per time and a cycle rate (`rad/s` and `Hz`) have the same
             // dimension but differ by 2 pi per cycle. Which one the caller means is not for the

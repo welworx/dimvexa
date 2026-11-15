@@ -29,9 +29,6 @@ pub enum Kind {
     AbsoluteTemperature,
     /// An interval between two temperatures (`delta_K`, `delta_degC`, ...).
     TemperatureDifference,
-    /// A pressure read relative to the (unspecified) ambient pressure: `psig`, `barg`, `Pag`
-    /// (ADR-013). It converts only to another gauge unit.
-    GaugePressure,
     /// A plane angle (`rad`, `deg`, `arcmin`, ...). Angle stays dimensionless (ADR-007), but it
     /// does not convert to a cycle count (ADR-020): `rad/s` and `Hz` differ by a factor 2 pi.
     Angle,
@@ -41,14 +38,6 @@ pub enum Kind {
 }
 
 impl Kind {
-    /// True for a kind that is tied to a stated reference state (ADR-013). Such a unit
-    /// converts only to a unit of the same kind, and the kind survives in compound units
-    /// (`psig/h` keeps the reference of `psig`).
-    #[must_use]
-    pub const fn is_reference(self) -> bool {
-        matches!(self, Self::GaugePressure)
-    }
-
     /// True for [`Kind::Angle`] and [`Kind::Cycle`] (ADR-020). Their power is tracked through
     /// compound units like a reference's, so `rad/s` is an angle per time and `rad/rad` is
     /// plain, but a unit of this kind still converts to a plain one (`deg` to `1`, `Hz` to `1/s`).
@@ -57,11 +46,10 @@ impl Kind {
         matches!(self, Self::Angle | Self::Cycle)
     }
 
-    /// True for a kind whose signed power is tracked through compound units: a reference kind
-    /// or an angular one.
+    /// True for a kind whose signed power is tracked through compound units: an angular one.
     #[must_use]
     pub const fn tracks_power(self) -> bool {
-        self.is_reference() || self.is_angular()
+        self.is_angular()
     }
 
     /// The stable lower-case name used in data files and JSON output.
@@ -71,7 +59,6 @@ impl Kind {
             Self::Plain => "plain",
             Self::AbsoluteTemperature => "absolute_temperature",
             Self::TemperatureDifference => "temperature_difference",
-            Self::GaugePressure => "gauge_pressure",
             Self::Angle => "angle",
             Self::Cycle => "cycle",
         }
@@ -84,7 +71,6 @@ impl Kind {
             "plain" => Some(Self::Plain),
             "absolute_temperature" => Some(Self::AbsoluteTemperature),
             "temperature_difference" => Some(Self::TemperatureDifference),
-            "gauge_pressure" => Some(Self::GaugePressure),
             "angle" => Some(Self::Angle),
             "cycle" => Some(Self::Cycle),
             _ => None,
@@ -188,11 +174,10 @@ impl fmt::Display for Exactness {
 mod tests {
     use super::*;
 
-    const ALL: [Kind; 6] = [
+    const ALL: [Kind; 5] = [
         Kind::Plain,
         Kind::AbsoluteTemperature,
         Kind::TemperatureDifference,
-        Kind::GaugePressure,
         Kind::Angle,
         Kind::Cycle,
     ];

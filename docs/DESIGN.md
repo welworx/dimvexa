@@ -33,7 +33,7 @@ Each unit has a `Kind` on top of its dimension.
 | Kind family | Members | Rules |
 |---|---|---|
 | Temperature | `AbsTemperature`, `TempDifference` | abs − abs = diff; abs + diff = abs; abs + abs is an error. Temperature inside compound units (kJ/(kg·K)) is always the difference kind |
-| Pressure | `GaugePressure` (`psig`, `barg`, `Pag`); `Pa`, `bar` and `psi` are plain | a plain pressure unit does not say whether it is absolute or a difference. A gauge unit is measured from the ambient pressure and never converts to a plain one; the caller states the ambient pressure with a config unit that has an `offset` (ADR-022). There are no `AbsPressure` or `PressureDifference` kinds and no default ambient pressure |
+| Pressure | none (`Pa`, `bar` and `psi` are plain) | a plain pressure unit does not say whether it is absolute, gauge or a difference. dimvexa ships no gauge units (ADR-023): the caller states the ambient pressure with a config unit that has an `offset` (ADR-022) |
 | Composition | `MassFraction`, `MoleFraction`, `VolumeFraction`, concentrations | not convertible to each other without composition data. Bare `ppm` is rejected; use `ppmw`, `ppmv`, `ppmmol` |
 | Angle and cycle | `Angle`, `Cycle` | angle stays dimensionless (ADR-007). `rad/s` and `Hz` do not convert (they differ by 2 pi per cycle, ADR-020); each converts to a plain `1/s` |
 
@@ -74,7 +74,7 @@ Units are data (TOML, with a JSON export). Fields:
 ## 5. Parser
 
 - UCUM-like grammar: `.` and `/`, integer exponents, SI prefixes.
-- Engineering aliases: `kmol/h`, `barg`, `cP`, `gal/min`, `bbl/d`.
+- Engineering aliases: `kmol/h`, `cP`, `gal/min`, `bbl/d`.
 - Explicit precedence rules. Patterns like `m^3 Pa / mol K` are rejected as ambiguous or parsed by a documented rule, with a lint.
 - Parsing happens once per binding, never per evaluation.
 
@@ -87,7 +87,7 @@ Users take the base and choose what else they need, or take everything.
 | Crate / feature | Contents |
 |---|---|
 | `dimvexa-core` (base) | dimensions, kinds, shapes, rational factors, parser, registry, SI and SI-derived units, SI prefixes, binary prefixes |
-| `pack-process` | pressure (bar, atm, mmHg, psi, barg), flow (kmol/h, gal/min), viscosity (cP), energy (BTU variants, kcal), thermal conductivity |
+| `pack-process` | pressure (bar, atm, mmHg, psi), flow (kmol/h, gal/min), viscosity (cP), energy (BTU variants, kcal), thermal conductivity |
 | `pack-imperial` | US customary, imperial, survey units, apothecary, avoirdupois, troy |
 | `pack-science` | CGS, atomic units, natural units, astronomy, particle physics (measured constants marked) |
 | `pack-engineering` | electrical, acoustics, wire gauges, hardness and other engineering scales |
@@ -142,7 +142,7 @@ dimvexa/
   - parse cost, cold and cached
   - dimension multiply, divide and power
   - absolute vs delta temperature arithmetic
-  - gauge to absolute pressure
+  - gauge to absolute pressure (not implemented, ADR-023: the caller supplies the ambient pressure, ADR-022)
   - bulk conversion of 10^6-element slices
   - registry lookup with 10 and 10,000 plugin units
 - **iai-callgrind** in CI: deterministic instruction counts. Fail the build on a regression above about 5% against a stored baseline.

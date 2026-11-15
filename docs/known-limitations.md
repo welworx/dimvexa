@@ -34,12 +34,12 @@ Fixing one: remove or change the pinning test, update the entry (or delete it), 
 | KL-20 | (fixed by ADR-018, step 3) A value could only be a plain number, so `2*pi`, `2pi` and `pi/2` were `invalid_number`. A value may now contain `pi`, `* / ^` and parentheses, and stays exact. Still refused: a constant that has a unit (`2*h_P`, `refused`) and any addition. | Nothing for `pi`; a value with `h_P`, `e`, `k_B` or `N_A` is refused. | Fixed for dimensionless constants. | Pinned by `a_value_may_contain_pi_and_operators`. A constant with a unit in a value would have to multiply its unit into FROM; not done.
 | KL-21 | (fixed by ADR-020) Angle is dimensionless, so `rad/s` and `Hz` used to convert 1:1, which is wrong for a frequency (f = w / 2 pi). `Hz` is now the kind `cycle` and the angle units the kind `angle`; the conversion between them is refused (`kind_mismatch`). Still open: `rev`, `turn` and `rpm` are not shipped, and `rad/s` to `Hz` has no built-in 2 pi path. | `convert 1 rad/s Hz` (refused). | Fixed by refusal, not by a factor. | Pinned by `an_angle_rate_and_a_cycle_rate_do_not_convert`. A context option that applies 2 pi, and `rev`/`turn`/`rpm` as units. |
 
-## Gauge pressure (ADR-013) and gas volumes (ADR-021)
+## Gauge pressure and gas volumes (ADR-021, ADR-023)
 
 | ID | Limitation | When you see it | Why it is not fixed yet | Idea for the fix |
 |---|---|---|---|---|
-| KL-22 | A unit tied to a reference state (`psig`, `barg`, `Pag`) converts only within its own reference (ADR-013): `psig` to `barg` works, `psig` to `bar` is refused with `refused`. Gas volumes at stated reference conditions (`Nm3`, `Sm3`, `scf` and their multiples such as `MMscf/d`) are not implemented (ADR-021): the error says why and that the step belongs in an engineering tool. | `convert 1 psig bar`, `convert 1 Nm3 m3`. | Relating a standard or normal volume to an actual one assumes a gas model, which ADR-001 keeps out of the library for good. | None planned; the ADR-021 decision would have to be reversed. |
-| KL-23 | Gauge to absolute pressure is refused (`psig` to `bar`, `Pa` to `barg`). Assuming 101.325 kPa would silently be wrong at any real site. | `convert 5 psig bar`. | This is missing data (the ambient pressure), not a gas model. | Mitigated by ADR-022: a config unit with an `offset` is a gauge reading with your own ambient pressure (`examples/configs/ambient.toml`), so the caller supplies it. There is still no built-in default; one would need its own ADR.
+| KL-22 | Gas volumes at stated reference conditions (`Nm3`, `Sm3`, `scf`, `MMscf/d`, ...) and gauge pressures (`psig`, `barg`, `Pag` and prefixed forms such as `kPag`) are not implemented: they fail with `refused` and a message saying why (ADR-021, ADR-023). | `convert 1 Nm3 m3`, `convert 1 psig psi`. | A gas volume needs an equation of state or gas model, which ADR-001 keeps out for good. A gauge reading needs the ambient pressure, which only the caller knows. | For a gauge, define your own unit with an `offset` in a config (ADR-022, `examples/configs/ambient.toml`). A gas volume has no replacement here; do that step in an engineering tool. |
+| KL-23 | (closed by ADR-023) Gauge to absolute pressure used to be refused between the shipped `psig`/`barg`/`Pag` and plain units. The gauge units are gone; the caller states the ambient pressure with a config unit that has an `offset` (ADR-022). | `convert 5 psig bar` (not implemented), `examples/configs/ambient.toml`. | No built-in default ambient pressure: any default would be wrong at most real sites. | None planned. |
 
 ## Numbers with powers of ten and pi (ADR-018)
 
@@ -67,7 +67,6 @@ the `source` and `note` in `crates/dimvexa-data/data/units/common.toml` and the 
 | Unit | Claim to verify | Where it is cited | What to look at |
 |---|---|---|---|
 | `bbl` | 42 US gallons per petroleum barrel, 1.589 873 E-01 m^3 | `source` of `bbl` and its vector | NIST SP 811 (2008), Appendix B.8, entry "barrel [for petroleum, 42 gallons (U.S.)]"; confirm the exact wording and the printed value. |
-| `psig`, `barg`, `Pag` | gauge pressure is measured from the ambient pressure | `source` of the three units | NIST SP 811 gives `psi` and `bar` only; look for a standard that defines gauge pressure (for example ISO 80000-4 or ISO 80000-1) and cite it, or keep the current wording as a statement of the definition. |
 
 Not shipped, so nothing to check yet: the US liquid barrel (31.5 gal, said to be in NIST
 Handbook 44) and the US dry barrel (7 056 in^3). Check them when they are added.

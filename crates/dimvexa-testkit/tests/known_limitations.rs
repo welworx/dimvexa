@@ -106,31 +106,22 @@ fn known_limitation_kl_9_prefix_mode_is_not_checked_against_the_unit() {
     );
 }
 
-/// KL-22 (narrowed by ADR-013): units tied to a reference state exist and convert within
-/// their own reference, but never to another reference or to an actual volume.
+/// KL-22: gas volumes at reference conditions and gauge pressures are not implemented on
+/// purpose (ADR-021, ADR-023); the error says so and is `refused`.
 #[test]
-fn known_limitation_kl_22_reference_states_never_convert_across() {
+fn known_limitation_kl_22_reference_state_units_are_not_implemented() {
     let reg = registry().unwrap();
-    for (from, to) in [("psig", "bar"), ("Pa", "barg"), ("psig", "psi")] {
+    for (from, to) in [
+        ("Nm3", "m3"),
+        ("scf", "ft3"),
+        ("psig", "bar"),
+        ("Pa", "kPag"),
+    ] {
         let err = reg.conversion(from, to).unwrap_err();
-        assert_eq!(
-            err.code(),
-            "refused",
-            "KL-22 fixed? `{from}` to `{to}` now gives `{}`: update the test and delete the entry",
-            err.code()
-        );
-    }
-}
-
-/// KL-23: gauge to absolute pressure is refused because the ambient pressure is not known.
-#[test]
-fn known_limitation_kl_23_gauge_to_absolute_is_refused() {
-    let reg = registry().unwrap();
-    for (from, to) in [("psig", "bar"), ("bar", "psig"), ("barg", "Pa")] {
-        assert_eq!(
-            reg.conversion(from, to).unwrap_err().code(),
-            "refused",
-            "KL-23 fixed? then the caller must supply the ambient pressure"
+        assert_eq!(err.code(), "refused", "`{from}` to `{to}`");
+        assert!(
+            err.to_string().contains("not implemented"),
+            "KL-22 fixed? `{from}` to `{to}` now gives `{err}`: update the test and delete the entry"
         );
     }
 }

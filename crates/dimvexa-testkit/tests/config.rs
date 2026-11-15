@@ -640,88 +640,6 @@ fn a_density_literal_is_converted_to_kg_per_m3_exactly() {
     }
 }
 
-/// ADR-013: a user unit built on a reference unit keeps the reference kind and its conditions, so
-/// `bigpsig` is still a gauge pressure, also inside compound units.
-#[test]
-fn a_unit_built_on_a_reference_unit_keeps_the_reference_and_its_conditions() {
-    let reg = with(
-        "[[unit]]\nsymbol = \"bigpsig\"\nbase = \"psig\"\nfactor = \"1000\"\n\
-         exactness = \"defined\"\nsource = \"test\"\n\
-         [[unit]]\nsymbol = \"bigpsigd\"\nbase = \"psig/d\"\nfactor = \"1000\"\n\
-         exactness = \"defined\"\nsource = \"test\"\n",
-    );
-    let psig = reg.get("psig").unwrap();
-    for symbol in ["bigpsig", "bigpsigd"] {
-        let unit = reg.get(symbol).unwrap();
-        assert_eq!(unit.kind(), psig.kind(), "{symbol}");
-        assert_eq!(unit.conditions(), psig.conditions(), "{symbol}");
-        assert!(unit.conditions().contains("ambient"), "{symbol}");
-    }
-    // The size is the plain factor, within the reference.
-    assert_eq!(factor(&reg, "bigpsig", "psig"), Ratio::from_int(1_000));
-    assert_eq!(factor(&reg, "bigpsigd", "psig/d"), Ratio::from_int(1_000));
-    // And the reference still protects it: never to an absolute pressure.
-    for to in ["psi", "bar"] {
-        assert_eq!(
-            reg.conversion("bigpsig", to).unwrap_err().code(),
-            "refused",
-            "{to}"
-        );
-    }
-    // A unit built on a plain unit has no conditions.
-    let plain = with(
-        "[[unit]]\nsymbol = \"pail\"\nbase = \"L\"\nfactor = \"20\"\n\
-         exactness = \"defined\"\nsource = \"test\"\n",
-    );
-    assert_eq!(plain.get("pail").unwrap().conditions(), "");
-    // The expression carries the conditions of the unit that has the reference.
-    assert!(
-        reg.parse("bigpsig/h")
-            .unwrap()
-            .conditions()
-            .contains("ambient")
-    );
-    assert_eq!(reg.parse("m3/h").unwrap().conditions(), "");
-    assert_eq!(reg.parse("psig/psig").unwrap().conditions(), "");
-}
-
-/// Review of 2026-11-11: a power of 0 cancels a reference. `(psig)^0` is the plain number 1 and a
-/// unit built on it is plain, so it can never let an absolute pressure pass as `psig`; a reference at
-/// any other power than 1 cannot be a base.
-#[test]
-fn a_power_zero_of_a_reference_unit_is_plain_and_cannot_reach_the_reference() {
-    let reg = registry().unwrap();
-    let one = reg.parse("(psig)^0").unwrap();
-    assert_eq!(one.kind().name(), "plain");
-    assert_eq!(one.reference_power(), 0);
-    assert_eq!(one.conditions(), "");
-    assert_eq!(
-        reg.conversion("(psig)^0", "1").unwrap().factor(),
-        Ratio::ONE
-    );
-
-    let reg = with(
-        "[[unit]]\nsymbol = \"stdref\"\nbase = \"(psig)^0\"\nfactor = \"1\"\n\
-         exactness = \"defined\"\nsource = \"test\"\n",
-    );
-    let stdref = reg.get("stdref").unwrap();
-    assert_eq!(stdref.kind().name(), "plain");
-    assert_eq!(stdref.conditions(), "");
-    assert_eq!(
-        reg.conversion("stdref.Pa", "psig").unwrap_err().code(),
-        "refused"
-    );
-    for base in ["(psig)^2", "1/psig"] {
-        let text = format!(
-            "[[unit]]\nsymbol = \"x\"\nbase = \"{base}\"\nfactor = \"1\"\n\
-             exactness = \"defined\"\nsource = \"test\"\n"
-        );
-        let mut reg = registry().unwrap();
-        let outcome = apply(&mut reg, &[cfg(&text, "test.toml")]);
-        assert!(outcome.is_err(), "{base}");
-    }
-}
-
 #[test]
 fn a_constant_is_a_density_only_if_its_unit_is_one() {
     let reg = registry().unwrap();
@@ -856,7 +774,6 @@ fn an_offset_is_refused_where_it_would_be_wrong() {
         )
     };
     for (text, want) in [
-        (site("", "psig"), "only a plain unit can take an offset"),
         (site("", "deg"), "only a plain unit can take an offset"),
         (site("", "Hz"), "only a plain unit can take an offset"),
         (site("", "K"), "temperature point"),
@@ -878,9 +795,7 @@ fn an_offset_is_refused_where_it_would_be_wrong() {
         reg.conversion("barg_site/s", "bar/s").unwrap_err().code(),
         "refused"
     );
-    // The built-in gauge units stay gauge: they do not convert to the user's scale.
-    assert_eq!(
-        reg.conversion("barg", "barg_site").unwrap_err().code(),
-        "refused"
-    );
+    // The built-in gauge names are not implemented (ADR-023); the user's own scale is.
+    let err = reg.conversion("barg", "barg_site").unwrap_err();
+    assert!(err.to_string().contains("not implemented"), "{err}");
 }

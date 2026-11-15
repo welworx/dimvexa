@@ -185,9 +185,6 @@ impl Unit {
             }
             unit.aliases.push((*alias).to_string());
         }
-        if def.kind.is_reference() && def.conditions.trim().is_empty() {
-            return Err(bad("a unit with a reference state needs its conditions"));
-        }
         if def.symbol != def.id && !def.aliases.contains(&def.symbol) {
             return Err(bad("the symbol must be the id or one of the aliases"));
         }
@@ -370,7 +367,7 @@ impl Unit {
         &self.note
     }
 
-    /// The reference state the unit is defined at (`gauge: measured from the local ambient pressure` for `psig`), or an
+    /// The reference state the unit is defined at (empty for every shipped unit), or an
     /// empty string for a unit without one (ADR-013).
     #[must_use]
     pub fn conditions(&self) -> &str {
@@ -388,7 +385,7 @@ pub struct UnitExpr {
     expr: Expr,
     dim: Dim,
     kind: Kind,
-    /// Signed power of the reference state: 1 for `psig`, -1 for `1/psig`, 0 without one.
+    /// Signed power of the reference state: 1 for `rad`, -1 for `1/rad`, 0 without one.
     ref_exp: i32,
     /// The reference state text of the unit that carries the reference (ADR-013), empty without.
     conditions: String,
@@ -443,28 +440,15 @@ impl UnitExpr {
     }
 
     pub(crate) fn with_conditions(mut self, conditions: &str) -> Self {
-        if self.kind.is_reference() {
-            self.conditions = conditions.to_string();
-        }
+        self.conditions = conditions.to_string();
         self
     }
 
     /// The reference state of the unit that gives this expression its reference kind
-    /// (`gauge: ...` for `psig/h`), or an empty string without one.
+    /// or an empty string without one.
     #[must_use]
     pub fn conditions(&self) -> &str {
         &self.conditions
-    }
-
-    /// The conditions of whichever operand carries the reference, if the result has one.
-    fn composed_conditions(&self, other: &Self, kind: Kind) -> String {
-        if !kind.is_reference() {
-            String::new()
-        } else if self.kind.is_reference() {
-            self.conditions.clone()
-        } else {
-            other.conditions.clone()
-        }
     }
 
     pub(crate) fn with_difference(mut self, difference: Option<String>) -> Self {
@@ -507,8 +491,8 @@ impl UnitExpr {
         self.kind
     }
 
-    /// The signed power of the reference state (ADR-013): 1 for `psig` or `psig/h`, -1 for `h/psig`,
-    /// 0 for a unit without a reference. Two units convert only when kind and power agree.
+    /// The signed power of the angular kind (ADR-020): 1 for `rad` or `rad/s`, -1 for `s/rad`,
+    /// 0 for a unit without one.
     #[must_use]
     pub const fn reference_power(&self) -> i32 {
         self.ref_exp
@@ -548,10 +532,9 @@ impl UnitExpr {
         &self.sources
     }
 
-    /// Kind and reference power of a product (`sign` 1) or quotient (`sign` -1). A reference
-    /// survives (`psig/h` is still a gauge pressure per time) and its power is tracked, so
-    /// `psig/Pa` and `Pa/psig` differ; the same reference cancels; two different references in
-    /// one expression are refused.
+    /// Kind and power of a product (`sign` 1) or quotient (`sign` -1). An angular kind survives
+    /// (`rad/s` is still an angle per time) and its power is tracked, so `rad/rad` is plain;
+    /// two different angular kinds in one expression are refused.
     fn composed_reference(&self, other: &Self, sign: i32) -> Result<(Kind, i32)> {
         let overflow = || Error::Overflow {
             operation: "reference power",
@@ -634,7 +617,7 @@ impl UnitExpr {
         }
         self.refuse_affine(rhs)?;
         let (kind, ref_exp) = self.composed_reference(rhs, 1)?;
-        let conditions = self.composed_conditions(rhs, kind);
+        let conditions = String::new();
         Ok(Self {
             expr: Expr::Mul(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_add(rhs.dim)?,
@@ -660,7 +643,7 @@ impl UnitExpr {
         }
         self.refuse_affine(rhs)?;
         let (kind, ref_exp) = self.composed_reference(rhs, -1)?;
-        let conditions = self.composed_conditions(rhs, kind);
+        let conditions = String::new();
         Ok(Self {
             expr: Expr::Div(Box::new(self.expr.clone()), Box::new(rhs.expr.clone())),
             dim: self.dim.checked_sub(rhs.dim)?,
@@ -690,8 +673,7 @@ impl UnitExpr {
         let ref_exp = self.ref_exp.checked_mul(exp).ok_or(Error::Overflow {
             operation: "reference power",
         })?;
-        // A power of 0 cancels the reference: `(psig)^0` is the plain number 1, not a
-        // dimensionless gauge pressure that would let an absolute pressure pass as `psig`.
+        // A power of 0 cancels the kind: `(rad)^0` is the plain number 1.
         let keeps_reference = self.kind.tracks_power() && ref_exp != 0;
         Ok(Self {
             expr: Expr::Pow(Box::new(self.expr.clone()), exp),
@@ -763,7 +745,7 @@ mod tests {
         assert!(Unit::linear("m2", Dim::M, Ratio::ONE).is_err());
         assert!(Unit::linear("m", Dim::M, Ratio::ZERO).is_err());
         assert!(Unit::linear("m", Dim::M, Ratio::from_int(-1)).is_err());
-        assert!(Unit::new("x", Dim::M, Kind::GaugePressure, Ratio::ONE, Ratio::ONE).is_err());
+        assert!(Unit::new("x", Dim::M, Kind::Angle, Ratio::ONE, Ratio::ONE).is_err());
         // A plain unit may have an offset (a user scale, ADR-022).
         assert!(Unit::new("x", Dim::M, Kind::Plain, Ratio::ONE, Ratio::ONE).is_ok());
         assert!(

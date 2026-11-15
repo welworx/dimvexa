@@ -1,6 +1,7 @@
 # A gauge reading with YOUR ambient pressure. dimvexa never assumes one: ambient pressure
-# varies with altitude and weather, so the built-in gauge units (psig, barg, Pag) do not convert
-# to absolute units. A unit with an `offset` does, with the number you state (ADR-022).
+# varies with altitude and weather, so it ships no gauge units (psig, barg, Pag are not
+# implemented, ADR-023). A unit with an `offset` does the job, with the number you state
+# (ADR-022).
 #
 #   absolute (bar) = 1 * gauge + 1.01325        the 1013.25 mbar of the standard atmosphere
 #
@@ -8,7 +9,7 @@
 #   dimvexa convert 3.01325 bar barg_site --config examples/configs/ambient.toml
 #
 # `offset` is the value of the unit's zero point in the `base` unit. It needs a plain base (bar,
-# psi, Pa: not a gauge, angle or temperature unit) and prefixes = "none", and the unit cannot be
+# psi, Pa: not an angle, cycle or temperature unit) and prefixes = "none", and the unit cannot be
 # used in a compound unit such as barg_site/s.
 
 [[unit]]

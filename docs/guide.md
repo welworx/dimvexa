@@ -46,7 +46,7 @@ prefixes, so `km`, `mg` and `kPa` work). A test keeps it in sync with `dimvexa u
 | luminous_intensity | `cd`, `lm` |
 | frequency | `Hz`, `Bq` |
 | force | `N`, `lbf`, `dyn`, `kgf` |
-| pressure | `Pa`, `bar`, `atm`, `psi`, `mmHg`, `torr`, `psig`, `barg`, `Pag` |
+| pressure | `Pa`, `bar`, `atm`, `psi`, `mmHg`, `torr` |
 | energy | `J`, `Wh`, `eV`, `cal_th`, `cal_IT`, `Btu_IT`, `Btu_th`, `erg` |
 | power | `W`, `hp_mech`, `hp_metric` |
 | electric_charge | `C` |
@@ -379,15 +379,16 @@ Rules for your units:
 ### Example: gauge pressure with your own ambient pressure
 
 A gauge reading is measured from the ambient pressure, which changes with altitude and weather,
-so `psig`, `barg` and `Pag` never convert to absolute units (`bar`, `psi`, `Pa`). If you know
-your ambient pressure, say so with a unit that has an `offset` (ADR-022): the value in the
+so dimvexa ships no gauge units: `psig`, `barg` and `Pag` are refused as not implemented
+(ADR-023). If you know your ambient pressure, say so with a unit that has an `offset` (ADR-022): the value in the
 `base` unit is `factor * x + offset`. The unit needs a plain base and `prefixes = "none"`, and it
 cannot be part of a compound unit.
 
 ```toml
 # A gauge reading with YOUR ambient pressure. dimvexa never assumes one: ambient pressure
-# varies with altitude and weather, so the built-in gauge units (psig, barg, Pag) do not convert
-# to absolute units. A unit with an `offset` does, with the number you state (ADR-022).
+# varies with altitude and weather, so it ships no gauge units (psig, barg, Pag are not
+# implemented, ADR-023). A unit with an `offset` does the job, with the number you state
+# (ADR-022).
 #
 #   absolute (bar) = 1 * gauge + 1.01325        the 1013.25 mbar of the standard atmosphere
 #
@@ -395,7 +396,7 @@ cannot be part of a compound unit.
 #   dimvexa convert 3.01325 bar barg_site --config examples/configs/ambient.toml
 #
 # `offset` is the value of the unit's zero point in the `base` unit. It needs a plain base (bar,
-# psi, Pa: not a gauge, angle or temperature unit) and prefixes = "none", and the unit cannot be
+# psi, Pa: not an angle, cycle or temperature unit) and prefixes = "none", and the unit cannot be
 # used in a compound unit such as barg_site/s.
 
 [[unit]]

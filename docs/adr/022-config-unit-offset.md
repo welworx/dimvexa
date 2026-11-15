@@ -40,5 +40,4 @@ Amends [ADR-009](009-user-config.md) and [ADR-014](014-one-config-mechanism.md) 
   invertibly.
 * `ConfigUnit` gains a public field, which breaks code that builds it with a struct literal
   (0.x, CHANGELOG `Added`).
-* The built-in gauge units still never convert to plain ones. Whether they should be removed from
-  the shipped tables, now that a user can define their own, is not decided here.
+* The built-in gauge units were removed right after, in [ADR-023](023-drop-gauge-pressure.md).

@@ -2637,9 +2637,10 @@ fn a_config_offset_converts_a_gauge_reading_with_your_own_ambient_pressure() {
         dimvexa(&["convert", "3.01325", "bar", "barg_site", "--config", &cfg]).stdout,
         "2 barg_site\n"
     );
-    // The built-in gauge units do not know your ambient pressure.
+    // The built-in gauge names are not implemented (ADR-023).
     let r = dimvexa(&["convert", "1", "barg", "bar", "--config", &cfg]);
     assert_eq!(r.code, 1, "{}", r.stderr);
+    assert!(r.stderr.contains("is not implemented"), "{}", r.stderr);
     let list = dimvexa(&["configs", &cfg]);
     assert_eq!(list.code, 0, "{}", list.stderr);
     assert!(
@@ -2683,43 +2684,6 @@ fn gas_volumes_at_reference_conditions_are_not_implemented() {
     );
     let r = dimvexa(&["convert", "1", "scf", "ft3", "--config", &cfg]);
     assert_eq!(r.code, 0, "{}", r.stderr);
-}
-
-/// ADR-013: `units NAME` shows the reference state of a user unit built on `psig`.
-#[test]
-fn units_shows_the_conditions_of_a_user_unit_built_on_a_reference_unit() {
-    let cfg = config_file(
-        "bigpsig.toml",
-        "[[unit]]\nsymbol = \"bigpsig\"\nbase = \"psig\"\nfactor = \"1000\"\n\
-         exactness = \"defined\"\nsource = \"test\"\n",
-    );
-    let r = dimvexa(&["units", "bigpsig", "--config", &cfg]);
-    assert_eq!(r.code, 0, "{}", r.stderr);
-    assert!(
-        r.stdout.contains("quantity kind gauge_pressure"),
-        "{}",
-        r.stdout
-    );
-    assert!(
-        r.stdout
-            .lines()
-            .any(|l| l.trim_start().starts_with("conditions") && l.contains("ambient pressure")),
-        "{}",
-        r.stdout
-    );
-    let j = dimvexa(&["units", "bigpsig", "--json", "--config", &cfg]);
-    let v = json::parse(&j.stdout).unwrap();
-    json::check_units_schema(&v);
-    assert!(j.stdout.contains("\"conditions\":\"gauge"), "{}", j.stdout);
-    // The conversion itself still works within the reference and is refused across it.
-    assert_eq!(
-        dimvexa(&["convert", "1", "bigpsig", "psig", "--config", &cfg]).stdout,
-        "1000 psig\n"
-    );
-    assert_eq!(
-        dimvexa(&["convert", "1", "bigpsig", "bar", "--config", &cfg]).code,
-        1
-    );
 }
 
 /// A single prefixed unit is named from its prefix and its table unit (ADR-017); a compound is not.

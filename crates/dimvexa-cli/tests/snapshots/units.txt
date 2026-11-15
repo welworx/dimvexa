@@ -218,11 +218,6 @@ St	St	Stokes	plain	defined	si	stokes	NIST SP 811 (2008), Appendix B.8 (stokes = 
 ## volume
 bbl	bbl	Oil barrel	plain	defined	none	-	NIST SP 811 (2008), Appendix B.8 (barrel [for petroleum, 42 gallons (U.S.)] = 1.589 873 E-01 m^3); NIST Handbook 44, Appendix C (231 in^3 per gallon)
 
-## pressure
-psig	psig	Pound-force per square inch gauge	gauge_pressure	defined	none	-	NIST SP 811 (2008), Appendix B (pound-force per square inch); gauge pressure is measured from the ambient pressure (ADR-013)
-barg	barg	Bar gauge	gauge_pressure	defined	none	-	NIST SP 811 (2008), Appendix B (bar = 100 kPa); gauge pressure is measured from the ambient pressure (ADR-013)
-Pag	Pag	Pascal gauge	gauge_pressure	defined	si	-	BIPM SI Brochure (2019), Table 4 (pascal); gauge pressure is measured from the ambient pressure (ADR-013)
-
 ## ambiguous symbols (refused unless your config resolves them)
 # columns: symbol, candidates, planned, note
 ton	ton_short, ton_long, tonne	-	short ton (2000 lb), long ton (2240 lb) and metric tonne (1000 kg) are all called ton

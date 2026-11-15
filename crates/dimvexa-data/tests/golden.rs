@@ -280,12 +280,10 @@ const fn r_int(n: i128) -> Ratio {
     Ratio::from_int(n)
 }
 
-/// ADR-013: reference-state units convert within their own reference and are refused
-/// everywhere else, including inside compound units.
+/// The petroleum barrel is 42 US gallons (NIST SP 811, Appendix B.8).
 #[test]
-fn reference_state_units_convert_only_within_their_reference() {
+fn bbl_is_the_42_us_gallon_barrel() {
     let reg = dimvexa_data::registry().unwrap();
-    // Sizes: bbl is the 42 US gallon barrel, psig the psi.
     assert_eq!(
         reg.parse("bbl").unwrap().factor(),
         reg.parse("gal_us")
@@ -294,46 +292,8 @@ fn reference_state_units_convert_only_within_their_reference() {
             .checked_mul(Ratio::from_int(42))
             .unwrap()
     );
-    assert_eq!(
-        reg.parse("psig").unwrap().factor(),
-        reg.parse("psi").unwrap().factor()
-    );
-    // Same reference, including compounds and prefixes .
-    for (from, to) in [("psig/min", "psig/h"), ("psig", "barg"), ("kPag", "psig")] {
-        assert!(reg.conversion(from, to).is_ok(), "{from} -> {to}");
-    }
-    // Different reference, or an actual (unreferenced) quantity: refused, never guessed.
-    for (from, to) in [("psig", "bar"), ("Pa", "barg"), ("psig", "psi")] {
-        let err = reg.conversion(from, to).unwrap_err();
-        assert_eq!(err.code(), "refused", "{from} -> {to}");
-    }
     // `m3` is still m^3.
     assert_eq!(reg.parse("m3").unwrap().kind().name(), "plain");
-}
-
-/// Review findings on ADR-013: the power of the reference matters, and a power of the reference
-/// prints in a form that reads back.
-#[test]
-fn reference_state_edge_cases_are_refused() {
-    let reg = dimvexa_data::registry().unwrap();
-    // The power of the reference is part of the unit.
-    for (from, to) in [("psig/Pa", "Pa/psig"), ("psig/Pa^2", "1/psig")] {
-        assert_eq!(
-            reg.conversion(from, to).unwrap_err().code(),
-            "refused",
-            "{from} -> {to}"
-        );
-    }
-    // The same reference cancels to a plain number.
-    assert_eq!(reg.parse("psig/psig").unwrap().kind().name(), "plain");
-    assert!(reg.conversion("psig.h/psig", "min").is_ok());
-    // A reference unit with a power prints in a form that reads back.
-    let squared = reg.parse("(psig)^2").unwrap();
-    assert_eq!(squared.reference_power(), 2);
-    assert_eq!(
-        reg.parse(&squared.to_string()).unwrap().reference_power(),
-        2
-    );
 }
 
 /// ADR-018: the angle units are exact, and `eV` and `Da` compose where a plain `i128` fraction

@@ -544,7 +544,7 @@ The API below is a provisional sketch to show the intent, not a final design.
    println!("{}", energy.to("kWh")?);   // 264 kWh
    println!("{}", energy.to("MJ")?);    // 950.4 MJ
    ```
-2. **Process plant:** gauge to absolute pressure (`barg` to `bar` with an explicit atmospheric pressure), `kmol/h` and `lbmol/h`, and that `Nm3/h` or `scf/h` is deliberately not implemented (ADR-021), with the reason in the error.
+2. **Process plant:** gauge to absolute pressure (a gauge unit of your own with an explicit atmospheric pressure, ADR-022 and ADR-023), `kmol/h` and `lbmol/h`, and that `Nm3/h` or `scf/h` is deliberately not implemented (ADR-021), with the reason in the error.
 3. **Temperature done right:** absolute vs difference; why `degC` to `delta_degC` is refused (the error suggests the `delta_` unit), why `degC` to `K` converts, and why a K inside a compound unit such as kJ/(kg K) or W/(m K) is a temperature difference, so `kJ/(kg K)` and `kJ/(kg delta_K)` are the same unit. (Adding and subtracting temperatures was removed by ADR-014: dimvexa converts only.)
 4. **Home heating:** gas consumption in m3, kWh, MJ, therm and MMBtu using stated calorific-value factors supplied by the caller (not computed by the library).
 5. **Cooking and household:** US cup, tablespoon, fluid ounce vs imperial ones; why a bare `gal` or `oz` is rejected unless a config such as `us` or `gb` is loaded.
@@ -559,7 +559,7 @@ The API below is a provisional sketch to show the intent, not a final design.
 |---|---|
 | base | SI base and derived units, SI prefixes, binary prefixes, dimensionless units, time units, percent and per-mille, temperature kinds (points: K, degC, degF, degR; differences: delta_K, delta_degC, delta_degF, delta_degR) |
 | `common` | The optional pack of everyday conversions: energy (kWh, MJ, BTU variants, kcal, therm), power (kW, hp variants), volume (L, US and imperial gal, cup, fl oz), mass (lb, oz variants, tonne, US ton, long ton), length (in, ft, yd, mi, nmi), pressure (bar, psi, atm, mmHg, torr), speed, area, fuel economy. Ambiguous names only through configs |
-| `process` | barg/psig, kmol/h, lbmol/h, cP, cSt, W/(m K), kJ/(kg K), Btu/(lb degF), bbl/d, ppm variants, mol%, wt% |
+| `process` | kmol/h, lbmol/h, cP, cSt, W/(m K), kJ/(kg K), Btu/(lb degF), bbl/d, ppm variants, mol%, wt% |
 | `imperial` | Full US customary, imperial, survey units, avoirdupois, troy, apothecary |
 
 `science`, `engineering`, `scales`, `historical`, `ucum` follow in later milestones. The Tier 1 list (about 150 to 300 units) will come from the inventory research that is scheduled; until then, seed M0 with about 50 units chosen from the table above.

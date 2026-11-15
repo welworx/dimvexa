@@ -87,19 +87,14 @@ def test_unit_table() -> None:
     assert dimvexa.unit_info("nope") is None
 
 
-def test_reference_state_units() -> None:
-    # ADR-013: gauge pressures carry their reference state as `conditions`.
-    psig = dimvexa.unit_info("psig")
-    assert psig is not None
-    assert psig["kind"] == "gauge_pressure"
-    assert psig["conditions"]
-    # Same reference converts, a different one is refused, never guessed.
-    assert dimvexa.convert(60.0, "psig/h", "psig/min") == 1.0
-    assert dimvexa.convert(1.0, "bbl", "L") == 158.987294928
-    for a, b in [("psig", "bar"), ("bar", "psig"), ("psig", "psi")]:
+def test_gauge_pressures_and_gas_volumes_are_not_implemented() -> None:
+    # ADR-021, ADR-023: they need an ambient pressure or a gas model; the error says so.
+    for unit in ["psig", "kPag", "Nm3", "scf"]:
         with pytest.raises(dimvexa.DimvexaError) as err:
-            dimvexa.convert(1.0, a, b)
+            dimvexa.convert(1.0, unit, "bar" if unit.endswith("g") else "m3")
         assert err.value.code == "refused"
+        assert "not implemented" in str(err.value)
+    assert dimvexa.convert(1.0, "bbl", "L") == 158.987294928
     assert dimvexa.data_version().startswith("v")
 
 

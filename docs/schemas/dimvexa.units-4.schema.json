@@ -113,7 +113,6 @@
                   "plain",
                   "absolute_temperature",
                   "temperature_difference",
-                  "gauge_pressure",
                   "angle",
                   "cycle"
                 ]
@@ -474,7 +473,6 @@
                 "plain",
                 "absolute_temperature",
                 "temperature_difference",
-                "gauge_pressure",
                 "angle",
                 "cycle"
               ]

@@ -60,8 +60,31 @@ const OUT_OF_SCOPE_GAS_VOLUMES: [&str; 17] = [
     "scfh", "Mscfd", "MMscfd", "MMSCFD", "NM3", "SCF",
 ];
 
-/// The error for a name in [`OUT_OF_SCOPE_GAS_VOLUMES`]: not implemented, and why.
+/// Gauge pressure units, with or without an SI prefix (`psig`, `barg`, `kPag`). They are not
+/// units of this library (ADR-023): a gauge reading is measured from an ambient pressure that
+/// only the caller knows.
+const OUT_OF_SCOPE_GAUGE_PRESSURES: [&str; 3] = ["psig", "barg", "Pag"];
+
+fn is_gauge_pressure_name(symbol: &str) -> bool {
+    OUT_OF_SCOPE_GAUGE_PRESSURES
+        .iter()
+        .any(|g| symbol == *g || all_prefixes().any(|p| symbol.strip_prefix(p.symbol) == Some(*g)))
+}
+
+/// The error for a name that is not implemented on purpose (ADR-021, ADR-023), and why.
 fn out_of_scope(symbol: &str) -> Option<Error> {
+    if is_gauge_pressure_name(symbol) {
+        return Some(Error::Refused {
+            reason: format!(
+                "'{symbol}' is not implemented: a gauge pressure is measured from the ambient \
+                 pressure, which varies with altitude and weather, so it cannot become an \
+                 absolute pressure without a number only you know (ADR-023). Define your own \
+                 gauge unit with an offset in a config (examples/configs/ambient.toml), then \
+                 convert it to bar, psi or Pa"
+            ),
+            suggestions: Vec::new(),
+        });
+    }
     if !OUT_OF_SCOPE_GAS_VOLUMES.contains(&symbol) {
         return None;
     }

@@ -29,7 +29,8 @@ Follows [ADR-001](001-no-equations.md).
    only when the name is not a unit, so a config that defines its own `scf` still works. No new
    error code: `refused` already means "deliberately not supported, would require guessing".
 3. Keep the gauge-pressure units (`psig`, `barg`, `Pag`) and the reference-state mechanism of
-   ADR-013 for them. They need the ambient pressure, not a gas model.
+   ADR-013 for them. They need the ambient pressure, not a gas model. (Superseded: ADR-023
+   removes them too.)
 4. `quantity_kind` loses two enum values in `dimvexa.convert/3` and `dimvexa.units/4`. No field is
    renamed or removed, so the schema versions stay.
 
