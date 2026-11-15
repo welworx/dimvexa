@@ -56,6 +56,19 @@ until a primary source is checked. The shipped densities of water (`water_25C`,
 `water_max_density`) cite Tanaka et al. (2001) through a secondary page and still need a check
 against the paper's Table 1; there is no `water_20C` yet for the same reason.
 
+## US customary units not shipped (research needed)
+
+The Wikipedia article "United States customary units" lists more units than Dimvexa ships. The
+article is not an allowed source (`add-unit`), so each of these waits for a primary source. Until
+then they fail loudly with `unknown_unit`. Neither NIST SP 811 (2008) nor NIST Handbook 44 (2024),
+Appendix C, defines the units in KL-26.
+
+| ID | Limitation | When you see it | Why it is not fixed yet | Idea for the fix |
+|---|---|---|---|---|
+| KL-26 | No US liquid barrel (`bbl_us_liquid`, 31.5 gal), hogshead, beer and whiskey barrel (31 and 40 gal), dry gallon, dry barrel (7056 in^3), board foot, ton-force, survey section and township, drop, grain of water, jig and pottle. Also no quad, ton of refrigeration, pound-foot, R-value, circular mil, leather ounce, alcohol proof or langley. | `convert 1 hogshead L` is `unknown_unit`. | Not found in SP 811 or Handbook 44; the article's values are unverified (parts of it were read from a summary). | Find a statute, a standard or Handbook 130 that defines each one, then add it with `add-unit`. The dry barrel may be 15 U.S.C. 256, the beer barrel 26 U.S.C. 5051; check the text first. |
+| KL-27 | No printer's point, pica or twip, no `hand`, no rack unit. The article uses the desktop-publishing point of 1/72 in; SP 811 lists the older printer's point of 0.013 837 in. | `convert 1 pica mm` is `unknown_unit`. | Two different points exist, so a bare name would be a guess (rule 4). | Ship both as explicit ids (`point_dtp`, `point_printers`) with a standard for each, and list the bare `point` and `pica` in `ambiguous.toml`. |
+| KL-28 | No league, survey league, fathom, cable or inch of mercury. | `convert 1 fathom m` is `unknown_unit`. | The fathom is 6 ft in Handbook 44 but sits on the survey foot in SP 811, and the league and cable are given on one foot or the other depending on the source. An inch of mercury depends on the mercury density and temperature convention. | Decide the foot per unit (ids `fathom` and `fathom_us_survey`), cite the page, and pick one inHg convention such as the conventional mmHg density. |
+
 ## Open checks: citations written from memory (TODO, verify before relying on them)
 
 These units ship with a source that was written from memory of the document, not checked against
@@ -71,9 +84,3 @@ the `source` and `note` in `crates/dimvexa-data/data/units/common.toml` and the 
 | `Nm3` | normal condition 273.15 K and 101 325 Pa | `source` and `conditions` of `Nm3` | DIN 1343 (the year 1990 is cited); the standard is paywalled. Check the year and that "normal condition" is the term it uses. |
 | `bbl` | 42 US gallons per petroleum barrel, 1.589 873 E-01 m^3 | `source` of `bbl` and its vector | NIST SP 811 (2008), Appendix B.8, entry "barrel [for petroleum, 42 gallons (U.S.)]"; confirm the exact wording and the printed value. |
 | `psig`, `barg`, `Pag` | gauge pressure is measured from the ambient pressure | `source` of the three units | NIST SP 811 gives `psi` and `bar` only; look for a standard that defines gauge pressure (for example ISO 80000-4 or ISO 80000-1) and cite it, or keep the current wording as a statement of the definition. |
-
-Not shipped, so nothing to check yet: the US liquid barrel (31.5 gal), the US dry barrel (7 056 in^3),
-the US dry gallon, the board foot, ton-force, the survey section and township. Neither NIST SP 811
-(2008) nor Handbook 44 (2024) defines them; find a primary source first. The printer's point and
-pica, twip and fathom (SP 811 gives the fathom on the survey foot, Handbook 44 as 6 ft) are not
-shipped either.

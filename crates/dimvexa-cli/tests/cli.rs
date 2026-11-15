@@ -1739,6 +1739,53 @@ fn a_usage_error_follows_the_command_word_not_an_option_value() {
     assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.convert/3");
 }
 
+/// KL-26, KL-27, KL-28: US customary units that need a primary source are not shipped.
+#[test]
+fn known_limitation_kl_26_us_customary_units_without_a_source_are_unknown() {
+    for unit in [
+        "hogshead",
+        "bbl_us_liquid",
+        "board_ft",
+        "ton_force_short",
+        "pottle",
+    ] {
+        let r = dimvexa(&["convert", "1", unit, "L"]);
+        assert_eq!(
+            r.code, 1,
+            "KL-26 fixed? then {unit} ships: update the entry"
+        );
+    }
+}
+
+/// KL-27: no printer's point, pica or twip (two different points exist).
+#[test]
+fn known_limitation_kl_27_points_and_picas_are_unknown() {
+    for unit in ["pica", "twip", "point_dtp"] {
+        let r = dimvexa(&["convert", "1", unit, "mm"]);
+        assert_eq!(
+            r.code, 1,
+            "KL-27 fixed? then {unit} ships: update the entry"
+        );
+    }
+}
+
+/// KL-28: no league, fathom, cable or inch of mercury.
+#[test]
+fn known_limitation_kl_28_league_fathom_cable_inhg_are_unknown() {
+    for (unit, to) in [
+        ("league", "m"),
+        ("fathom", "m"),
+        ("cable", "m"),
+        ("inHg", "Pa"),
+    ] {
+        let r = dimvexa(&["convert", "1", unit, to]);
+        assert_eq!(
+            r.code, 1,
+            "KL-28 fixed? then {unit} ships: update the entry"
+        );
+    }
+}
+
 /// `docs/known-limitations.md` lists every limitation these tests pin, and each pinned entry
 /// has a test named after it somewhere in the workspace.
 #[test]
@@ -1766,7 +1813,9 @@ fn known_limitations_document_lists_the_pinned_entries() {
 }
 
 /// The entries of `docs/known-limitations.md` that a test pins.
-const PINNED_LIMITATIONS: [u32; 15] = [1, 4, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18, 24, 25];
+const PINNED_LIMITATIONS: [u32; 18] = [
+    1, 4, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18, 24, 25, 26, 27, 28,
+];
 
 /// Real outputs validate against the schema files in `docs/schemas/`, not only against the
 /// hand-written checks in `support/json.rs`.
