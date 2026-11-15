@@ -1,6 +1,6 @@
 # ADR-022: A config unit may have an offset
 
-Status: Proposed
+Status: Accepted (owner decision in conversation, 2026-11-15)
 
 Amends [ADR-009](009-user-config.md) and [ADR-014](014-one-config-mechanism.md) (what a config
 `[[unit]]` can say). Follows [ADR-013](013-references.md) and [ADR-021](021-drop-gas-volumes.md).

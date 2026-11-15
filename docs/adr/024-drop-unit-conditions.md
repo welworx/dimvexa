@@ -1,6 +1,6 @@
 # ADR-024: Drop the `conditions` of a unit; `dimvexa.units/5`
 
-Status: Proposed
+Status: Accepted (owner decision in conversation, 2026-11-15)
 
 Follows [ADR-023](023-drop-gauge-pressure.md). Same shape as [ADR-017](017-id-and-symbol.md)
 for the schema bump.

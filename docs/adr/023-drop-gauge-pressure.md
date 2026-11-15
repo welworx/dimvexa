@@ -1,6 +1,6 @@
 # ADR-023: Gauge pressure units are not implemented
 
-Status: Proposed
+Status: Accepted (owner decision in conversation, 2026-11-15)
 
 Amends [ADR-013](013-references.md). Follows [ADR-021](021-drop-gas-volumes.md) and
 [ADR-022](022-config-unit-offset.md).

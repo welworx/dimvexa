@@ -1,6 +1,6 @@
 # ADR-021: Gas volumes at stated reference conditions are not implemented
 
-Status: Proposed
+Status: Accepted (owner decision in conversation, 2026-11-14)
 
 Amends [ADR-013](013-references.md) (reference states are named, exact and part of the unit).
 Follows [ADR-001](001-no-equations.md).

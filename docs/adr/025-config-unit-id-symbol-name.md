@@ -1,6 +1,6 @@
 # ADR-025: A config unit has an `id`, a `symbol` and a `name`
 
-Status: Proposed
+Status: Accepted (owner decision in conversation, 2026-11-15)
 
 Amends [ADR-017](017-id-and-symbol.md) (a unit has an `id`, a `symbol` and a `name`) and
 [ADR-009](009-user-config.md) (user config). Follows [ADR-022](022-config-unit-offset.md).

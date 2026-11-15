@@ -1,6 +1,6 @@
 # ADR-020: Angle and cycle are kinds; `rad/s` and `Hz` do not convert
 
-Status: Proposed
+Status: Accepted (owner decision in conversation, 2026-11-14)
 
 Amends [ADR-007](007-angle.md) (angle is dimensionless). Uses the kind mechanism of
 [ADR-013](013-references.md).
