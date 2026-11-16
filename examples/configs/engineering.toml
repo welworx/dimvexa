@@ -1,0 +1,100 @@
+# Names a plant or design office uses every day, which dimvexa does not ship because each is
+# ambiguous, a spelling of something else, or a choice only you can make (ADR-006, ADR-020).
+# You decide here what they mean; nothing is guessed.
+#
+#   dimvexa convert 500 gpm m3/h --config examples/configs/engineering.toml
+#   dimvexa convert 1800 rpm rad/s --config examples/configs/engineering.toml
+#   dimvexa convert 60 ksi MPa --config examples/configs/engineering.toml
+#
+# Choices made here (change them for your use case):
+#   * BTU is the International Table Btu, kcal is the thermochemical kilocalorie (cal_th).
+#   * rev is 360 deg and rpm is 6 deg/s: the angle kind, so `rpm` converts to `rad/s` and
+#     `rev/min`, and is refused against `Hz` (ADR-020). The factor is 360 and not 2 pi because
+#     a config factor is a plain fraction; `deg` is exactly pi/180 rad (ADR-018).
+#   * ppm, psia, Nm3, scfm and other names that need a reference state are not here.
+#
+# The units below are composites of units dimvexa ships, so the factor is 1 (or a plain
+# number) and the dimension comes from the base.
+
+[map]
+lbm = "lb"
+lbs = "lb"
+hr = "h"
+BTU = "Btu_IT"
+# `kcal` itself cannot be mapped (a prefixed form of an ambiguous name); map `cal` and the
+# prefix follows: kcal is 1000 cal_th.
+cal = "cal_th"
+
+[[unit]]
+id = "mph"
+base = "mi/h"
+factor = "1"
+exactness = "defined"
+source = "composite of shipped units: international mile per hour"
+
+[[unit]]
+id = "kph"
+base = "km/h"
+factor = "1"
+exactness = "defined"
+source = "composite of shipped units: kilometre per hour"
+
+[[unit]]
+id = "fps"
+base = "ft/s"
+factor = "1"
+exactness = "defined"
+source = "composite of shipped units: international foot per second"
+
+[[unit]]
+id = "gpm"
+base = "gal_us/min"
+factor = "1"
+exactness = "defined"
+source = "composite of shipped units: US liquid gallon per minute"
+
+[[unit]]
+id = "cfm"
+base = "ft3/min"
+factor = "1"
+exactness = "defined"
+source = "composite of shipped units: cubic foot per minute"
+
+[[unit]]
+id = "sqft"
+base = "ft2"
+factor = "1"
+exactness = "defined"
+source = "composite of shipped units: square foot"
+
+[[unit]]
+id = "ksi"
+base = "kip/in2"
+factor = "1"
+exactness = "defined"
+source = "composite of shipped units: kip per square inch (1 kip = 1000 lbf)"
+
+[[unit]]
+id = "rev"
+base = "deg"
+factor = "360"
+exactness = "defined"
+prefixes = "none"
+source = "one revolution is 360 degrees"
+
+[[unit]]
+id = "rpm"
+base = "deg/s"
+factor = "6"
+exactness = "defined"
+prefixes = "none"
+source = "one revolution per minute is 360 deg / 60 s = 6 deg/s"
+
+[[unit]]
+id = "VA"
+base = "W"
+factor = "1"
+exactness = "defined"
+prefixes = "si"
+source = "volt-ampere: the product V*A, dimensionally a watt (apparent power, not real power)"
+note = "kVA and MVA follow from the prefixes; the library does not know real from apparent power"

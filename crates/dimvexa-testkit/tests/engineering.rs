@@ -25,6 +25,7 @@
 
 use dimvexa::{Quantity, Ratio, Registry, registry};
 use dimvexa_calc::Calc;
+use dimvexa_config::{Config, apply};
 use dimvexa_testkit::formula::Formula;
 
 // Independent SI constants for the expected values (exact by definition).
@@ -41,8 +42,12 @@ const PI: f64 = std::f64::consts::PI;
 
 /// Evaluates `formula` over `vars`, reads the result in `unit` and compares it with `want`.
 fn check(vars: &[(&str, &str)], formula: &str, unit: &str, want: f64) {
-    let reg = registry().unwrap();
-    let got = value(&reg, vars, formula, unit);
+    check_in(&registry().unwrap(), vars, formula, unit, want);
+}
+
+/// The same with a registry that carries a user config.
+fn check_in(reg: &Registry, vars: &[(&str, &str)], formula: &str, unit: &str, want: f64) {
+    let got = value(reg, vars, formula, unit);
     let rel = if want == 0.0 {
         got.abs()
     } else {
@@ -52,6 +57,23 @@ fn check(vars: &[(&str, &str)], formula: &str, unit: &str, want: f64) {
         rel < 1e-12,
         "{formula} [{unit}]: got {got:e}, want {want:e} (relative error {rel:e})"
     );
+}
+
+/// The shipped table plus `examples/configs/engineering.toml`: the names a design office uses
+/// (`gpm`, `mph`, `rpm`, `ksi`, `BTU`, ...) that dimvexa leaves to the user.
+fn with_engineering_config() -> Registry {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../examples/configs/engineering.toml"
+    );
+    let text = std::fs::read_to_string(path).unwrap();
+    let mut reg = registry().unwrap();
+    apply(
+        &mut reg,
+        &[Config::parse(&text, "engineering.toml").unwrap()],
+    )
+    .unwrap();
+    reg
 }
 
 fn value(reg: &Registry, vars: &[(&str, &str)], formula: &str, unit: &str) -> f64 {
@@ -701,6 +723,118 @@ fn mixture_density_weighted_by_volume() {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Names a use case defines itself: examples/configs/engineering.toml
+// ---------------------------------------------------------------------------------------------
+
+#[test]
+fn config_pump_duty_in_gpm_and_horsepower() {
+    let reg = with_engineering_config();
+    check_in(
+        &reg,
+        &[
+            ("Q", "500 gpm"),
+            ("H", "30 m"),
+            ("rho", "998 kg/m^3"),
+            ("g", "1 g_n"),
+        ],
+        "rho * g * Q * H",
+        "hp_mech",
+        998.0 * G_N * (500.0 * GAL_US / 60.0) * 30.0 / HP_MECH,
+    );
+}
+
+#[test]
+fn config_vehicle_kinetic_energy_from_mph_and_lbm() {
+    let reg = with_engineering_config();
+    check_in(
+        &reg,
+        &[("m", "3500 lbm"), ("v", "60 mph")],
+        "m * v^2 / 2",
+        "kJ",
+        0.5 * 3500.0 * LB * (60.0 * 1609.344 / 3600.0f64).powi(2) / 1000.0,
+    );
+}
+
+#[test]
+fn config_motor_shaft_power_from_rpm() {
+    // P = T w with the speed in rpm: the angle kind carries through to watts
+    let reg = with_engineering_config();
+    check_in(
+        &reg,
+        &[("T", "100 lbf*ft"), ("n", "1800 rpm")],
+        "T * n",
+        "kW",
+        100.0 * LBF * FT * 1800.0 * 2.0 * PI / 60.0 / 1000.0,
+    );
+    check_in(
+        &reg,
+        &[("n", "1800 rpm")],
+        "n",
+        "rad/s",
+        1800.0 * 2.0 * PI / 60.0,
+    );
+    check_in(&reg, &[("n", "3000 rev/min")], "n", "rpm", 3000.0);
+}
+
+#[test]
+fn config_rpm_is_not_a_frequency() {
+    // rpm and Hz differ by 2 pi per cycle: the config does not choose for you (ADR-020)
+    let reg = with_engineering_config();
+    let f = Formula::new(&reg).var("n", "1800 rpm").unwrap();
+    let n = f.eval("n").unwrap();
+    assert_eq!(f.f64_in(&n, "Hz").unwrap_err().code(), "kind_mismatch");
+}
+
+#[test]
+fn config_steel_stress_in_ksi_and_area_in_sqft() {
+    let reg = with_engineering_config();
+    check_in(
+        &reg,
+        &[("s", "60 ksi")],
+        "s",
+        "MPa",
+        60.0 * 1000.0 * PSI / 1e6,
+    );
+    check_in(&reg, &[("A", "10 sqft")], "A", "m^2", 10.0 * FT * FT);
+}
+
+#[test]
+fn config_ventilation_in_cfm_and_heat_in_btu() {
+    let reg = with_engineering_config();
+    check_in(
+        &reg,
+        &[("Q", "1000 cfm")],
+        "Q",
+        "m^3/h",
+        1000.0 * FT.powi(3) * 60.0,
+    );
+    check_in(
+        &reg,
+        &[("Q", "12000 BTU/hr")],
+        "Q",
+        "kW",
+        12_000.0 * BTU_IT / 3600.0 / 1000.0,
+    );
+    // kcal follows from mapping cal: the thermochemical calorie, 4.184 J
+    check_in(&reg, &[("E", "1 kcal")], "E", "J", 4184.0);
+}
+
+#[test]
+fn config_apparent_power_is_a_watt_by_dimension() {
+    let reg = with_engineering_config();
+    check_in(&reg, &[("S", "100 kVA")], "S", "kW", 100.0);
+    check_in(&reg, &[("V", "400 V"), ("I", "50 A")], "V * I", "kVA", 20.0);
+}
+
+#[test]
+fn config_names_that_dimvexa_refuses_stay_refused_without_it() {
+    let plain = registry().unwrap();
+    for u in ["gpm", "mph", "rpm", "ksi", "BTU", "kcal", "lbm"] {
+        assert!(plain.quantity(&format!("1 {u}")).is_err(), "{u}");
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
 // Open: what does not work yet. Each of these fails today and asserts the desired behavior.
 // ---------------------------------------------------------------------------------------------
 
@@ -907,13 +1041,6 @@ fn open_a5_force_along_an_incline_needs_sin() {
     );
 }
 
-/// A6: rotational speed in rpm, the first unit anyone tries for a motor.
-#[test]
-#[ignore = "open A6: rpm and rev are not units"]
-fn open_a6_motor_speed_in_rpm() {
-    check(&[("n", "1800 rpm")], "n", "rad/s", 1800.0 * 2.0 * PI / 60.0);
-}
-
 /// B1: adding two temperatures (not a rise) has no meaning; today `20 degC + 80 degC` is
 /// `100 degC`, which is 373.15 K. ADR-027 (decision 3) reads a same-scale point as a rise, so
 /// this one is a decision to revisit, not only a bug.
@@ -943,22 +1070,7 @@ fn open_c_celsius_in_a_specific_heat_is_an_interval() {
     check(&[("cp", "4.186 kJ/(kg*degC)")], "cp", "J/(kg*K)", 4186.0);
 }
 
-/// C: spellings that are clear aliases of units that ship. Names that are ambiguous on purpose
-/// (`BTU`, `kcal`, `ppm`, `psig`) are not listed: they stay refused.
-#[test]
-#[ignore = "open C: common spellings are unknown units"]
-fn open_c_common_spellings_are_units() {
-    let reg = registry().unwrap();
-    let missing: Vec<&str> = [
-        "mph", "fps", "kph", "hr", "sqft", "lbs", "lbm", "gpm", "cfm", "ksi", "rpm", "rev",
-    ]
-    .into_iter()
-    .filter(|u| reg.quantity(&format!("1 {u}")).is_err())
-    .collect();
-    assert!(missing.is_empty(), "unknown: {missing:?}");
-}
-
-/// C: notation engineers type that the unit parser refuses.
+/// C: notation engineers type (unit names are the use case's business: see the config above) that the unit parser refuses.
 #[test]
 #[ignore = "open C: superscripts and a space as multiplication are parse errors"]
 fn open_c_common_notation_is_read() {
