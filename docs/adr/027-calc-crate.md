@@ -105,9 +105,9 @@ Relates to [ADR-014](014-one-config-mechanism.md) (decision 7, "Conversion only"
 ### Open sub-decisions (recommended default first; not implemented before the owner confirms)
 
 * **OPEN 1: publish `dimvexa-calc` on crates.io.** Decided yes (owner, 2026-11-16): it is in
-  `.github/workflows/release.yml` (published last, since its first version is published by hand
-  before trusted publishing works for it, `docs/releasing.md`), the package job of
-  `.github/workflows/ci.yml` and `scripts/check-versions.sh`.
+  `.github/workflows/release.yml` (published last), the package job of
+  `.github/workflows/ci.yml` and `scripts/check-versions.sh`. Version 0.10.0 was published by
+  hand on 2026-11-16, and its trusted publisher is set up like the other crates'.
 * **OPEN 2: re-export from the `dimvexa` facade** (`dimvexa::calc`). Not for now (owner,
   2026-11-16); to be revisited when the crate leaves beta. Recommended: no, keep it opt-in so
   conversion-only users compile nothing extra and the facade (a hot-path file for

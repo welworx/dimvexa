@@ -33,8 +33,7 @@ PyPI and npm (`docs/releasing.md`).
 5. Packaging: `cargo package --list -p <crate> --locked` for dimvexa-core, dimvexa-data,
    dimvexa-config, dimvexa, dimvexa-cli, dimvexa-calc; `cargo publish --dry-run -p dimvexa-core
    --locked`. The workflow publishes in the order core, data, config, dimvexa, cli, calc, and
-   skips versions that are already on a registry. The first version of `dimvexa-calc` is
-   published by hand by the owner (`docs/releasing.md`, one-time setup).
+   skips versions that are already on a registry.
 6. Public API diff: `cargo semver-checks` once a baseline release exists (`api-change` skill).
 7. Benchmarks and `docs/precision.md` still match the code (`benchmarks`, `precision` skills):
    `cargo xtask bench-release` has been run on the release commit (every row of `m0.rs`, 6 runs,

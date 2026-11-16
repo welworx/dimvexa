@@ -384,8 +384,8 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
           VERSION: ${{ needs.plan.outputs.version }}
         run: |
-          # dimvexa-calc is last: it is new (ADR-027), and its first version must be published by
-          # hand before trusted publishing works for it (docs/releasing.md, one-time setup).
+          # dimvexa-calc (ADR-027) depends only on dimvexa-core; it is last because it was added
+          # last (first version published by hand, see docs/releasing.md).
           for c in dimvexa-core dimvexa-data dimvexa-config dimvexa dimvexa-cli dimvexa-calc; do
             code=$(curl -s -o /dev/null -w '%{http_code}' -A "dimvexa-release (github.com/${{ github.repository }})" \
               "https://crates.io/api/v1/crates/$c/$VERSION")
