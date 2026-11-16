@@ -63,14 +63,18 @@ folded the power into the fraction with 128-bit gcds.
    `Ratio::to_f64` tries these bounds first and folds the power of ten into the fraction only
    as the fallback. The technique is the one of the Eisel-Lemire parser (a table of powers of
    ten, a wide multiplication, a check that rounding is decided, a slow fallback).
-4. **Not changed (OPEN, recommended default: leave):**
-   * *OPEN 1.* Storing every entered decimal as digits and exponent, even when it fits. It would
+4. **Not changed:**
+   * *OPEN 1 (recommended: leave).* Storing every entered decimal as digits and exponent, even when it fits. It would
      give one canonical form per value, but `==`, `Hash`, `--exact` and the JSON output of
      entered values would change. Recommended: no.
-   * *OPEN 2.* Wider integers (a big-rational mode, ADR-004 M2) for what still overflows: digit
-     width, such as `k^4 / (h^3 c^2)` (43 digits) or `ly^3`. Recommended: later, as an optional
-     feature.
-   * *OPEN 3.* The table as a compile-time constant. It is built on first use today.
+   * *Decided (owner, 2026-11-16): the exact core stays as it is.* Digit width (`ly^3`,
+     `psi^3`, `k^4 / (h^3 c^2)`, which reduces to 21 / 40 digits) remains a limit of the exact
+     arithmetic, recorded as KL-31 and pinned by a test. Wider integers would end `Copy` on
+     `Ratio` (or only move the limit to 77 digits), slow every exact step, enlarge every number
+     and change the public API, for rare calculations; cancelling common factors across a
+     product does not rescue these cases. A labelled approximate tier (ADR-027) stays possible
+     and would be its own decision.
+   * *OPEN 3 (recommended: leave).* The table as a compile-time constant. It is built on first use today.
 
 ## Consequences
 

@@ -59,43 +59,8 @@ fn a2_coulomb_force_at_the_bohr_radius() {
     );
 }
 
-#[test]
-#[ignore = "open A2: digit width, 662607015^3 * 299792458^2 has 43 digits (i128 holds 38)"]
-fn open_a2_stefan_boltzmann_constant_from_k_h_c() {
-    let reg = registry().unwrap();
-    let k4_h3_c2 = value(
-        &reg,
-        &[
-            ("k", "1.380649e-23 J/K"),
-            ("h", "6.62607015e-34 J*s"),
-            ("c", "299792458 m/s"),
-        ],
-        "k^4 / (h^3 * c^2)",
-        "W/(m^2*K^4)",
-    );
-    let sigma = 2.0 * PI.powi(5) / 15.0 * k4_h3_c2;
-    assert!(
-        ((sigma - 5.670_374_419e-8) / 5.670_374_419e-8).abs() < 1e-9,
-        "{sigma}"
-    );
-}
-
-#[test]
-#[ignore = "open A3: pow(1 ly, 3) overflows"]
-fn open_a3_cubic_light_year_in_cubic_metres() {
-    check(
-        &[("d", "1 ly")],
-        "d^3",
-        "m^3",
-        9_460_730_472_580_800.0f64.powi(3),
-    );
-}
-
-#[test]
-#[ignore = "open A3: pow(1 psi, 3) overflows"]
-fn open_a3_psi_cubed() {
-    check(&[("p", "1 psi")], "p^3", "Pa^3", PSI.powi(3));
-}
+// Digit width is an accepted limit of the exact core (KL-31, ADR-028): `ly^3`, `psi^3` and
+// `k^4 / (h^3 * c^2)` fail with `overflow`. They are pinned in `known_limitations.rs`.
 
 // ---------------------------------------------------------------------------------------------
 // The same values with SI prefixes: the power of ten lives in the unit, so the digits stay small

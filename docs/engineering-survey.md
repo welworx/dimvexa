@@ -23,8 +23,8 @@ write the equation, and a precise result with the correct unit.
 | ID | Break | Test |
 |---|---|---|
 | A1 | *Fixed (ADR-028).* A value below about 1e-38 could not be entered (`overflow`): Planck's constant `6.62607015e-34 J*s`, the electron mass. Cause: the parser multiplied the whole decimal exponent into the denominator (`den = 10^digits * 10^exp`, must fit `i128`), although `Ratio` has a separate power-of-ten field that products only add. Now the exponent stays in that field when it does not fit. | `a1_*`, `prefix_*` |
-| A2 | *Fixed for powers of ten (ADR-028):* `(1.380649e-23 J/K)^2`, `(5.29e-11 m)^2`, the Coulomb force at the Bohr radius, a prefixed value read in the plain unit, and the order of the factors (all 120 orders agree). *Open:* the Stefan-Boltzmann constant from `k`, `h`, `c` needs 43 digits (digit width, not a power of ten). | `a2_*`, `open_a2_*` |
-| A3 | Powers of large unit factors overflow because of the width of their digits: `ly^3`, `psi^3` (a big-rational mode would fix it, ADR-028 OPEN 2). | `open_a3_*` |
+| A2 | *Fixed for powers of ten (ADR-028):* `(1.380649e-23 J/K)^2`, `(5.29e-11 m)^2`, the Coulomb force at the Bohr radius, a prefixed value read in the plain unit, and the order of the factors (all 120 orders agree). The Stefan-Boltzmann constant from `k`, `h`, `c` needs a 40-digit denominator: digit width, an accepted limit (KL-31). | `a2_*` |
+| A3 | Powers of large unit factors overflow because of the width of their digits: `ly^3`, `psi^3`. Accepted limit of the exact core (owner decision, KL-31), pinned in `known_limitations.rs`. | none open |
 | A4 | A computed temperature (`p V / (n R)`) cannot be read in K or degC (`kind_mismatch`); the hint says "use delta_K", which is wrong for an absolute temperature. | `open_a4_*` |
 | A5 | No `sqrt`, `ln`, `sin`, fractional exponents (`R^(2/3)`). Float tier planned (ADR-027). | `open_a5_*` |
 | A6 | `2 pi f` needs the detour through `1/s` (works, tested). `rpm` and `rev` are not shipped on purpose (ADR-020): a use case defines them, see below. | none open |

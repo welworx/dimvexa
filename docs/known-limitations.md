@@ -74,6 +74,12 @@ itself (SP 811 note 12 is used).
 | KL-29 | No printer's point, pica or rack unit (`twip` ships, as an imperial unit). The article uses the desktop-publishing point of 1/72 in; SP 811 lists the older printer's point of 0.013 837 in and SP 1038 prints 0.351 46 mm for the point and 4.217 5 mm for the pica, both rounded to five digits (so the pica is not exactly 12 points); the OCR of M121 is unreadable at that entry. | `convert 1 pica mm` is `unknown_unit`. | Two different points exist, so a bare name would be a guess (rule 4). | Ship both as explicit ids (`point_dtp`, `point_printers`) with a standard for each, and list the bare `point` and `pica` in `ambiguous.toml`. |
 | KL-30 | No survey league (3 survey miles); `league_int` ships. | `convert 1 league_us_survey m` is `unknown_unit`. | None of the sources above defines a US league. | Find a statute or a standard that defines it, then add `league_us_survey` and list it under the bare `league`. |
 
+## Size of the digits (ADR-004, ADR-028)
+
+| ID | Limitation | When you see it | Why it is not fixed yet | Idea for the fix |
+|---|---|---|---|---|
+| KL-31 | The numerator and the denominator of a number are `i128`, so each holds at most 38 decimal digits. A power of ten does not count against that (ADR-028: it stays in the exponent), the digits do. A product whose digits do not fit is `overflow`, loudly; nothing is rounded. | `convert 1 ly3 m3` (the 14 digits of a light year cubed are 42), `1 psi3 Pa3` (39), `k^4 / (h^3 * c^2)` from the SI constants (its reduced denominator has 40). `1 ly2 m2` and `1 psi2 Pa2` work. | Owner decision, 2026-11-16: the exact core stays as it is, every library has limits. Wider integers would end `Copy` on `Ratio` or move the wall to 77 digits, make every step slower and every number bigger, and change the public API for rare calculations. Cancelling common factors across a product does not help these cases. | A labelled approximate tier next to the exact one (ADR-027 plans a float tier), never mixed with exact values silently; or an optional big-rational mode (ADR-004 M2). |
+
 ## Not built yet (decisions, not limitations)
 
 The molar-mass constant is planned in [ADR-009](adr/009-user-config.md) and

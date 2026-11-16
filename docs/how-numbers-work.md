@@ -334,10 +334,14 @@ These still fail with `overflow`, loudly:
 | `1 psi^3` | the factor of `psi` is $\frac{8896443230521}{1290320000}$ (13 and 10 digits); cubed it needs 39 |
 | $2\pi^5k^4/(15\,h^3c^2)$ from the constants | $662607015^3\cdot299792458^2$ has 43 digits |
 
-Two ways out are recorded as open decisions in ADR-028: a big-rational mode with wider
-integers, and cancelling common factors across a whole product before multiplying. Until then a
-SI prefix on the input (`0.000662607015 qJ*s`) or on the result unit (`nN`, `pm^2`) keeps the
-digits small, because the prefix is a power of ten and powers of ten are free.
+This is an accepted limit of the exact core (owner decision, 2026-11-16; KL-31 in
+[known limitations](known-limitations.md), pinned by a test), not a bug to be fixed. Wider
+integers would cost every calculation (a larger and slower number, a new public type) for the
+rare ones that need them, and cancelling common factors across a product does not rescue these
+cases: $k^4/(h^3c^2)$ still has 40 digits in its reduced denominator. What helps today is
+keeping the *powers of ten* out of the digits, which is free: an SI prefix on the input
+(`0.000662607015 qJ*s`) or on the result unit (`nN`, `pm^2`). A separate, labelled approximate
+tier remains possible (ADR-027) and would never mix silently with exact values.
 
 ## 9. Where the code is and how it is tested
 

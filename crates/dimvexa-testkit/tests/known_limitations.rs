@@ -6,7 +6,9 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use dimvexa::{Ratio, registry};
+use dimvexa_calc::Calc;
 use dimvexa_config::{Config, apply};
+use dimvexa_testkit::formula::Formula;
 
 fn unit(symbol: &str, base: &str, factor: &str, extra: &str) -> String {
     format!(
@@ -165,4 +167,36 @@ fn known_limitation_kl_25_affine_with_exponents_is_refused() {
         "invalid_definition",
         "KL-25 fixed? then support it"
     );
+}
+
+/// KL-31: the digits of a fraction must fit an `i128` (38 digits). A power of ten does not count
+/// (ADR-028), digits do. Owner decision, 2026-11-16: the exact core stays as it is.
+#[test]
+fn known_limitation_kl_31_the_digits_of_a_fraction_must_fit_i128() {
+    let reg = registry().unwrap();
+    let calc = Calc::new(&reg);
+    let ly = reg.quantity("1 ly").unwrap();
+    // 9460730472580800 = 94607304725808 * 10^2: the 14 digits squared are 28, cubed 42 (> 38)
+    assert!(calc.pow(&ly, 2).is_ok());
+    assert_eq!(
+        calc.pow(&ly, 3).unwrap_err().code(),
+        "overflow",
+        "KL-31 fixed? then ly^3 is exact"
+    );
+    // the factor of the psi is 8896443230521/1290320000: 13 digits cubed is 39
+    let psi = reg.quantity("1 psi").unwrap();
+    assert!(calc.pow(&psi, 2).is_ok());
+    assert_eq!(calc.pow(&psi, 3).unwrap_err().code(), "overflow");
+    // k^4 / (h^3 c^2): reduced, the fraction is 21 / 40 digits, so even cancelling common
+    // factors across the product would not save it
+    let f = Formula::new(&reg)
+        .var("k", "1.380649e-23 J/K")
+        .unwrap()
+        .var("h", "6.62607015e-34 J*s")
+        .unwrap()
+        .var("c", "299792458 m/s")
+        .unwrap();
+    assert_eq!(f.eval("k^4 / (h^3 * c^2)").unwrap_err().code(), "overflow");
+    // the same digits with a power of ten moved out are fine: that part is free
+    assert!(f.eval("k^2 * h^2").is_ok());
 }
