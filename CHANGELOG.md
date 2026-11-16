@@ -7,7 +7,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 ### Added
-- `dimvexa-calc` (ADR-027, not published yet): exact calculation with core quantities.
+- `dimvexa-calc` (ADR-027, beta): exact calculation with core quantities.
   `Calc::add` and `sub` across units (`1.5 km + 250 m = 1.75 km`); temperatures as states and
   rises (`20 degC + 5 K = 25 degC`, `80 degC - 20 degC = 60 delta_degC`, `T_in + Q/(m_dot*cp)`
   works, `20 degC + 41 degF` and `20 degC - 5 K` are refused as ambiguous); `weighted_mean` for

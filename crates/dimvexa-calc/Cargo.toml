@@ -12,8 +12,6 @@ readme = "README.md"
 authors.workspace = true
 keywords.workspace = true
 categories.workspace = true
-# Not on crates.io until the owner decides ADR-027 OPEN 1.
-publish = false
 
 [dependencies]
 dimvexa-core = { workspace = true }

@@ -51,6 +51,9 @@ jobs is the test.
 * crates.io: crates can only be configured for trusted publishing after they exist. Publish
   `0.1.0` once by hand with a scoped token, then for each crate add a trusted publisher
   (repository `welworx/dimvexa`, workflow `release.yml`, environment `release`).
+  `dimvexa-calc` (ADR-027) is new and still needs this: publish its first version by hand with
+  a scoped token, then add its trusted publisher. Until then its step in `release.yml`, which
+  runs last, fails after the other crates are published.
 * PyPI: add a (pending) trusted publisher for project `dimvexa`: same repository, workflow and
   environment.
 * npm: the org `dimvexa` must exist. After the first manual publish, add a trusted publisher for

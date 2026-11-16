@@ -30,8 +30,8 @@ Relates to [ADR-014](014-one-config-mechanism.md) (decision 7, "Conversion only"
 
 1. **A new workspace crate `dimvexa-calc`** depends on `dimvexa-core` only, is std-only like
    the rest of the workspace and inherits the workspace lints. The core gains no code and no
-   dependency on it; the `dimvexa` facade does not re-export it (opt-in). It is
-   `publish = false` until OPEN 1 is decided.
+   dependency on it; the `dimvexa` facade does not re-export it (opt-in). It is published on
+   crates.io with the other crates and marked beta (owner, 2026-11-16).
 2. **Exact tier (this ADR).** `dimvexa_calc::Calc` borrows a `Registry` and offers, on core
    `Quantity` values, exact operations that return `Result` and never panic:
    * `add`, `sub`: the right operand is converted exactly into the unit of the left one and the
@@ -84,7 +84,8 @@ Relates to [ADR-014](014-one-config-mechanism.md) (decision 7, "Conversion only"
 5. **Errors.** The existing codes cover every failure: `dimension_mismatch`, `kind_mismatch`,
    `unrepresentable`, `overflow`, `division_by_zero`, `refused`. No code is added; the CLI and
    the JSON schemas do not change.
-6. **Bindings (a follow-up change, decided now so it is not reopened).**
+6. **Bindings: on hold until `dimvexa-calc` leaves beta (owner, 2026-11-16).** The shape is
+   decided now so it is not reopened:
    * Python: operators on the existing `Quantity` (`+ - * / ** -x abs`, `== != < <= > >=`)
      backed by this crate. `==` compares values across units and raises `dimension_mismatch`
      for different dimensions (owner, 2026-11-16); `Quantity` becomes unhashable. This replaces
@@ -102,9 +103,10 @@ Relates to [ADR-014](014-one-config-mechanism.md) (decision 7, "Conversion only"
 
 ### Open sub-decisions (recommended default first; not implemented before the owner confirms)
 
-* **OPEN 1: publish `dimvexa-calc` on crates.io** with the other crates (added to
-  `.github/workflows/release.yml`, the package job of `.github/workflows/ci.yml` and
-  `scripts/check-versions.sh`). Until then it is `publish = false`.
+* **OPEN 1: publish `dimvexa-calc` on crates.io.** Decided yes (owner, 2026-11-16): it is in
+  `.github/workflows/release.yml` (published last, since its first version is published by hand
+  before trusted publishing works for it, `docs/releasing.md`), the package job of
+  `.github/workflows/ci.yml` and `scripts/check-versions.sh`.
 * **OPEN 2: re-export from the `dimvexa` facade** (`dimvexa::calc`). Recommended: no, keep it
   opt-in so conversion-only users compile nothing extra and the facade (a hot-path file for
   `cargo xtask bench-impact`) does not change.
