@@ -114,6 +114,7 @@ committed.
 | `crates/dimvexa-data` | `data/units/*.toml`, `data/constants/*.toml`, `data/vectors/*.toml`, `data/data_version.toml`; `build.rs` compiles the tables |
 | `crates/dimvexa-config` | user config files (ADR-009): `Config`, `apply`; the core only offers `Registry::add_alias` and the helpers `name_is_free`, `prefix_clash` |
 | `crates/dimvexa` | facade crate (re-exports core + data) |
+| `crates/dimvexa-calc` | exact calculation with core quantities (ADR-027): `Calc` add, sub, weighted_mean, pow, scale, eq, cmp, to_unit; temperature states and rises; beta; the core stays conversion-only; not re-exported by the facade |
 | `crates/dimvexa-cli` | `dimvexa convert`, `units`, `configs`, `constants`, `update` (self-update, ADR-015); no conversion logic of its own; snapshots in `tests/snapshots` |
 | `crates/dimvexa-testkit` | test helpers; differential, exact-path, property, overflow and zero-allocation tests |
 | `xtask` | `ci`, `check-docs`, `validate-data`, `update-data-hash`, `bench-check`, `bench-impact`, `bench-release`, `bench-matrix` |
@@ -181,3 +182,7 @@ Read the matching skill in `skills/<name>/SKILL.md` (`.claude/skills` is a symli
   0.x, but it needs the `api-change` skill: new schema version and file, CHANGELOG `Changed`,
   an ADR for the decision, and the docs and snapshots updated in the same change.
 * Placeholders are not allowed: no unresolved owner or author markers in committed files.
+* Every file in the repository is in English: code, comments, docs, ADRs, tests, commit
+  messages and pull requests, even when the conversation with the owner is in another language.
+  Text in another language is allowed only as data under test or a quoted name (a German Excel
+  error such as `#ÜBERLAUF!`, a non-ASCII test input). Reviewed.

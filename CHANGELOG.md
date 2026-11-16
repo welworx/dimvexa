@@ -6,6 +6,15 @@ All notable changes are documented here. The format follows
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
 ## [Unreleased]
+### Added
+- `dimvexa-calc` (ADR-027, beta): exact calculation with core quantities.
+  `Calc::add` and `sub` across units (`1.5 km + 250 m = 1.75 km`); temperatures as states and
+  rises (`20 degC + 5 K = 25 degC`, `80 degC - 20 degC = 60 delta_degC`, `T_in + Q/(m_dot*cp)`
+  works, `20 degC + 41 degF` and `20 degC - 5 K` are refused as ambiguous); `weighted_mean` for
+  mixing states (`2 kg/s` at `20 degC` with `1 kg/s` at `80 degC` gives `40 degC`); `neg`,
+  `abs`, `pow`, `scale`, `div_scalar`; `eq` and `cmp` across units; `to_unit` and
+  `to_f64_in`. Powers of ten are folded before a sum or comparison gives up; a different power
+  of pi stays `unrepresentable`. The core, the CLI and the JSON schemas do not change.
 
 ## [0.10.0] - 2026-11-15
 ### Changed

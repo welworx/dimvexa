@@ -4,6 +4,7 @@ members = [
     "crates/dimvexa-core",
     "crates/dimvexa-data",
     "crates/dimvexa-config",
+    "crates/dimvexa-calc",
     "crates/dimvexa",
     "crates/dimvexa-testkit",
     "crates/dimvexa-cli",
@@ -13,6 +14,7 @@ default-members = [
     "crates/dimvexa-core",
     "crates/dimvexa-data",
     "crates/dimvexa-config",
+    "crates/dimvexa-calc",
     "crates/dimvexa",
     "crates/dimvexa-testkit",
     "crates/dimvexa-cli",
@@ -40,6 +42,7 @@ categories = ["science", "mathematics"]
 dimvexa-core = { version = "0.10.0", path = "crates/dimvexa-core" }
 dimvexa-data = { version = "0.10.0", path = "crates/dimvexa-data" }
 dimvexa-config = { version = "0.10.0", path = "crates/dimvexa-config" }
+dimvexa-calc = { version = "0.10.0", path = "crates/dimvexa-calc" }
 dimvexa = { version = "0.10.0", path = "crates/dimvexa" }
 dimvexa-testkit = { version = "0.10.0", path = "crates/dimvexa-testkit" }
 

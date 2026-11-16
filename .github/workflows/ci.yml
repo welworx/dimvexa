@@ -154,7 +154,7 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: List the files of every publishable crate
         run: |
-          for c in dimvexa-core dimvexa-data dimvexa-config dimvexa dimvexa-cli; do
+          for c in dimvexa-core dimvexa-data dimvexa-config dimvexa dimvexa-cli dimvexa-calc; do
             echo "== $c"
             cargo package --list --package "$c" --locked
           done

@@ -23,7 +23,10 @@
 
 use std::collections::BTreeMap;
 
-use dimvexa::{Conversion, Dim, Error, Expr, Quantity, Ratio, Registry, registry};
+use std::cmp::Ordering;
+
+use dimvexa::{Conversion, Dim, Error, Expr, Kind, Quantity, Ratio, Registry, registry};
+use dimvexa_calc::Calc;
 use dimvexa_testkit::generators as gen_;
 use dimvexa_testkit::rng::Rng;
 
@@ -453,4 +456,73 @@ fn dimension_mismatches_are_always_errors() {
             assert_eq!(r.unwrap_err().code(), "kind_mismatch", "{a} -> {b}");
         }
     }
+}
+
+#[test]
+fn calc_laws_hold_exactly_across_the_seed_table() {
+    // ADR-027: sums, differences and comparisons of `dimvexa-calc` across every group of
+    // interconvertible units. A failure may only be `overflow` or `unrepresentable`.
+    let reg = registry().unwrap();
+    let calc = Calc::new(&reg);
+    let groups = groups(&reg);
+    let members: Vec<&Vec<String>> = groups.values().filter(|m| m.len() >= 2).collect();
+    let mut rng = Rng::new(seed() ^ 0xa);
+    let (mut checked, mut refused) = (0_u32, 0_u32);
+    for _ in 0..cases(20_000) {
+        let m = *rng.pick(&members).unwrap();
+        let (a, b) = (rng.pick(m).unwrap(), rng.pick(m).unwrap());
+        let qa = Quantity::new(gen_::small_ratio(&mut rng), reg.parse(a).unwrap());
+        let qb = Quantity::new(gen_::small_ratio(&mut rng), reg.parse(b).unwrap());
+        let attempt = || -> Result<(), Error> {
+            if qa.unit().kind() == Kind::AbsoluteTemperature {
+                let (oa, ob) = (qa.unit().offset(), qb.unit().offset());
+                let same_scale =
+                    oa.checked_eq(ob)? && qa.unit().factor().checked_eq(qb.unit().factor())?;
+                // (a - b) + b == a: state - state is a difference, difference + state a state.
+                // An offset state minus a kelvin value is refused as ambiguous.
+                match calc.sub(&qa, &qb) {
+                    Ok(d) => {
+                        assert_eq!(d.unit().kind(), Kind::TemperatureDifference, "{qa} - {qb}");
+                        assert!(calc.eq(&calc.add(&d, &qb)?, &qa)?, "({qa} - {qb}) + {qb}");
+                    }
+                    Err(e) if e.code() == "kind_mismatch" => {
+                        assert!(!oa.is_zero() && ob.is_zero(), "{qa} - {qb}: {e}");
+                    }
+                    Err(e) => return Err(e),
+                }
+                // a + b reads one side as a rise unless both are different offset scales.
+                match calc.add(&qa, &qb) {
+                    Ok(s) => assert_eq!(s.unit().kind(), Kind::AbsoluteTemperature),
+                    Err(e) if e.code() == "kind_mismatch" => {
+                        assert!(!oa.is_zero() && !ob.is_zero() && !same_scale, "{qa} + {qb}");
+                    }
+                    Err(e) => return Err(e),
+                }
+            } else {
+                // (a + b) - b == a, and a + b == b + a
+                let s = calc.add(&qa, &qb)?;
+                assert!(calc.eq(&calc.sub(&s, &qb)?, &qa)?, "({qa} + {qb}) - {qb}");
+                assert!(calc.eq(&s, &calc.add(&qb, &qa)?)?, "{qa} + {qb} commutes");
+                // a - a == 0, -(-a) == a
+                assert!(calc.sub(&qa, &qa)?.value().is_zero(), "{qa} - {qa}");
+                assert_eq!(calc.neg(&calc.neg(&qa)?)?, qa);
+            }
+            // cmp is antisymmetric and agrees with eq
+            let ab = calc.cmp(&qa, &qb)?;
+            assert_eq!(calc.cmp(&qb, &qa)?, ab.reverse(), "cmp {qa} {qb}");
+            assert_eq!(calc.eq(&qa, &qb)?, ab == Ordering::Equal, "eq {qa} {qb}");
+            Ok(())
+        };
+        match attempt() {
+            Ok(()) => checked += 1,
+            Err(e) => {
+                assert!(
+                    matches!(e.code(), "overflow" | "unrepresentable"),
+                    "{qa} {qb}: {e}"
+                );
+                refused += 1;
+            }
+        }
+    }
+    assert!(checked > 15_000, "checked={checked} refused={refused}");
 }
