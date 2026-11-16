@@ -117,9 +117,9 @@ fn fluids_mass_flow_over_density_gives_volume_flow() {
     );
 }
 
+/// A5 (fixed, ADR-029): `sqrt` of a ratio with units; the result is approximate and labelled.
 #[test]
-#[ignore = "open A5: no sqrt in dimvexa-calc"]
-fn open_a5_orifice_flow_needs_a_square_root() {
+fn a5_orifice_flow_needs_a_square_root() {
     check(
         &[
             ("Cd", "0.61"),
@@ -130,5 +130,16 @@ fn open_a5_orifice_flow_needs_a_square_root() {
         "Cd * A * sqrt(2 * dp / rho)",
         "L/s",
         0.61 * 1e-3 * (2.0 * 50e3 / 998.0f64).sqrt() * 1000.0,
+    );
+}
+
+/// Torricelli's outflow speed `v = sqrt(2 g h)`.
+#[test]
+fn fluids_torricelli_outflow_speed() {
+    check(
+        &[("g", "1 g_n"), ("h", "10 m")],
+        "sqrt(2 * g * h)",
+        "m/s",
+        (2.0 * G_N * 10.0_f64).sqrt(),
     );
 }

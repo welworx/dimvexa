@@ -35,3 +35,30 @@ fn mixture_density_weighted_by_volume() {
         .unwrap();
     assert_eq!(calc.to_f64_in(&m, "kg/m^3").unwrap(), 900.0);
 }
+
+/// `pH = -log10(c / 1 mol/L)`, with the logarithm of base 10 written as `ln(x) / ln(10)`.
+#[test]
+fn chemistry_ph_from_a_concentration() {
+    check(
+        &[("c", "0.001 mol/L"), ("c0", "1 mol/L")],
+        "-ln(c / c0) / ln(10)",
+        "1",
+        3.0,
+    );
+}
+
+/// The Arrhenius rate constant `k = A exp(-Ea / (R T))`, with `T` in kelvin.
+#[test]
+fn chemistry_arrhenius_rate_constant() {
+    check(
+        &[
+            ("A", "1e10 1/s"),
+            ("Ea", "50 kJ/mol"),
+            ("R", "8.314462618 J/(mol*K)"),
+            ("T", "300 K"),
+        ],
+        "A * exp(-Ea / (R * T))",
+        "1/s",
+        1e10 * (-50_000.0 / (8.314_462_618 * 300.0_f64)).exp(),
+    );
+}

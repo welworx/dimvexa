@@ -81,3 +81,14 @@ fn civil_ten_term_sum_of_us_length_units() {
         want,
     );
 }
+
+/// Radius of gyration `r = sqrt(I / A)`, with the unit of `I` and `A` in cm.
+#[test]
+fn civil_radius_of_gyration_of_a_section() {
+    check(
+        &[("I", "8000 cm^4"), ("A", "25 cm^2")],
+        "sqrt(I / A)",
+        "cm",
+        (8000.0_f64 / 25.0).sqrt(),
+    );
+}

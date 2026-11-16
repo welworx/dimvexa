@@ -85,13 +85,32 @@ fn economy_fuel_use_from_consumption_and_distance() {
     );
 }
 
+/// A5 (fixed, ADR-029): `sin(30 deg)` is exactly 1/2, so this result is exact.
 #[test]
-#[ignore = "open A5: no sin in dimvexa-calc"]
-fn open_a5_force_along_an_incline_needs_sin() {
+fn a5_force_along_an_incline_needs_sin() {
     check(
         &[("m", "100 kg"), ("g", "1 g_n"), ("theta", "30 deg")],
         "m * g * sin(theta)",
         "N",
         100.0 * G_N * 0.5,
     );
+}
+
+/// The range of a projectile `R = v^2 sin(2 theta) / g`. At 15 degrees `sin(30 deg)` is exactly
+/// 1/2, so the whole result is exact.
+#[test]
+fn mechanical_projectile_range_at_fifteen_degrees_is_exact() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("v", "20 m/s")
+        .unwrap()
+        .var("g", "1 g_n")
+        .unwrap()
+        .var("theta", "15 deg")
+        .unwrap();
+    let range = f.eval("v^2 * sin(2 * theta) / g").unwrap();
+    assert!(range.is_exact(), "{range}");
+    let want = 400.0 * 0.5 / G_N;
+    let got = f.f64_in(&range, "m").unwrap();
+    assert!(((got - want) / want).abs() < 1e-12, "{got} vs {want}");
 }

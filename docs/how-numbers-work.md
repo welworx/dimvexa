@@ -14,8 +14,9 @@ guarantees are in [precision](precision.md).
 - [6. A worked example, step by step](#6-a-worked-example-step-by-step)
 - [7. What it costs](#7-what-it-costs)
 - [8. What can still overflow](#8-what-can-still-overflow)
-- [9. Where the code is and how it is tested](#9-where-the-code-is-and-how-it-is-tested)
-- [10. Glossary and references](#10-glossary-and-references)
+- [9. Functions: roots, logarithms, sines](#9-functions-roots-logarithms-sines)
+- [10. Where the code is and how it is tested](#10-where-the-code-is-and-how-it-is-tested)
+- [11. Glossary and references](#11-glossary-and-references)
 
 ## 1. The problem
 
@@ -343,7 +344,104 @@ keeping the *powers of ten* out of the digits, which is free: an SI prefix on th
 (`0.000662607015 qJ*s`) or on the result unit (`nN`, `pm^2`). A separate, labelled approximate
 tier remains possible (ADR-027) and would never mix silently with exact values.
 
-## 9. Where the code is and how it is tested
+## 9. Functions: roots, logarithms, sines
+
+Everything so far is exact: a result is a fraction (times powers of ten and $\pi$). But
+$\sqrt2$, $\ln3$ and $\sin45^\circ$ are not fractions, and engineering formulas need them (the
+orifice flow $Q=C_dA\sqrt{2\,\Delta p/\rho}$, the log mean temperature difference
+$\Delta T_{lm}=(\Delta T_1-\Delta T_2)/\ln(\Delta T_1/\Delta T_2)$, the force along a slope
+$mg\sin\theta$). `dimvexa-calc` has them (ADR-029) under one rule:
+
+> **A result is exact whenever the mathematics makes it exact. Otherwise it is an approximate
+> value, labelled `≈`, and everything computed from it is labelled too.**
+
+```
+sqrt(9 m^2)        = 3 m                       exact
+sin(30 deg)        = 1/2                       exact
+8^(2/3)            = 4                         exact
+sqrt(2 m^2)        ≈ 1.4142135623730951 m      approximate, labelled
+ln(3)              ≈ 1.0986122886681098        approximate, labelled
+```
+
+### 9.1 When a root is exact
+
+For $x=\dfrac{n}{d}\cdot10^{k}\pi^{m}$ and a root of index $q$:
+
+$$
+\sqrt[q]{x}\;=\;\frac{\sqrt[q]{n}}{\sqrt[q]{d}}\cdot10^{k/q}\cdot\pi^{m/q}
+$$
+
+is again of the stored form exactly when $n$ and $d$ are perfect $q$-th powers, and $q$ divides
+$m$ and the exponents of ten. A fraction has a rational $q$-th root only if $n$ and $d$ do (in
+lowest terms), so no exact case is missed. A power $x^{p/q}$ is the $q$-th root raised to the
+integer power $p$. The integer root is found by bisection with `checked_pow`.
+
+The power of ten needs one more step. Since $10^{k}=2^{k}\cdot5^{k}$, a value such as
+$1000\cdot10^{-101}$ is really $10^{-98}$, with the exact root $10^{-49}$, although its stored
+exponent $-101$ is odd; and $\tfrac25\cdot10^{1}=4$ has the root 2. So the 2s and 5s are taken
+out of $n$ and $d$ and counted together with $k$:
+
+$$
+\alpha=v_2(n)-v_2(d)+k,\qquad \beta=v_5(n)-v_5(d)+k,\qquad
+\text{exact}\iff q\mid\alpha,\ q\mid\beta,\ q\mid m,\ \text{and the rest of }n,d\text{ are }q\text{-th powers}
+$$
+
+where $v_p$ counts the factors $p$. A randomised test checks that the root of every perfect
+square and cube is found (`the_root_of_a_perfect_power_is_always_exact`).
+
+### 9.2 Units under a root
+
+Dimensions are vectors of integer exponents (`[kg, m, s, A, K, mol, cd]`), so a root is allowed
+only when every exponent stays an integer:
+
+$$
+\sqrt{\text{m}^{2}\,\text{s}^{-2}}=\text{m}\,\text{s}^{-1}\ \checkmark\qquad
+\sqrt{\text{m}}=\text{m}^{1/2}\ \times\ (\text{refused, KL-32})
+$$
+
+The value is first converted to SI base units (`16 km^2` is $16\cdot10^{6}\ \text{m}^2$), the
+exponents are scaled by $p/q$, and the result is in SI base units (`4000 m`). A dimensionless
+ratio has no such limit, which is how Manning's $R^{2/3}$ is written: $(R/1\,\text{m})^{2/3}$.
+
+### 9.3 Logarithm, exponential, sine, cosine
+
+By the Hermite–Lindemann theorem, $e^{x}$ is transcendental for every non-zero algebraic $x$, and
+so $\ln x$ is for every algebraic $x\ne0,1$. Hence the *only* exact cases are
+
+$$
+\ln 1=0,\qquad e^{0}=1
+$$
+
+Sine and cosine of an angle that is a rational multiple of $\pi$ (every `deg`, `grad`, `arcmin`
+is) are rational only at multiples of $30^\circ$, and then only $0,\pm\tfrac12,\pm1$ (Niven's
+theorem, 1956), so the table is complete:
+
+| $\theta$ | $0^\circ$ | $30^\circ$ | $90^\circ$ | $150^\circ$ | $180^\circ$ | $210^\circ$ | $270^\circ$ | $330^\circ$ |
+|---|---|---|---|---|---|---|---|---|
+| $\sin\theta$ | 0 | $\tfrac12$ | 1 | $\tfrac12$ | 0 | $-\tfrac12$ | $-1$ | $-\tfrac12$ |
+
+with $\cos\theta=\sin(\theta+90^\circ)$. At $60^\circ$ or $45^\circ$ the value is $\tfrac{\sqrt3}2$ or
+$\tfrac{\sqrt2}2$, which is irrational, so it is approximate. The test is exact arithmetic: an
+angle $\theta=\tfrac{n}{d}10^{k}\pi$ is $\theta/\text{deg}=\tfrac{n}{d}10^{k}\cdot180$ degrees; it is a
+multiple of $30^\circ$ when that number divided by 30 is an integer. A bare number is refused:
+`sin(0.5)` could be radians or degrees, and the library does not guess.
+
+### 9.4 What "approximate" means here
+
+An approximate value is an `f64` with its unit. It is made only when the exact result does not
+exist. From then on:
+
+* **It spreads.** Any operation with an approximate operand is approximate; it never becomes
+  exact again. `sqrt(2)^2` is `≈ 2.0000000000000004`, not `2`.
+* **Exact failures stay failures.** If the *exact* arithmetic overflows (the digit limit of
+  section 8), the answer is `overflow`, never an `f64` that hides it.
+* **Accuracy is stated, not promised.** Arithmetic and `sqrt` are IEEE operations (at most half
+  a unit in the last place per step), a unit conversion uses the correctly rounded exact factor,
+  and `ln`, `exp`, `sin`, `cos` and general powers come from the platform's maths library, which
+  promises no correct rounding (about 1 ulp is typical). The errors of a chain add up and are
+  not tracked (KL-33). If you need a bound, use the exact tier or compute one separately.
+
+## 10. Where the code is and how it is tested
 
 | What | Where |
 |---|---|
@@ -351,6 +449,7 @@ tier remains possible (ADR-027) and would never mix silently with exact values.
 | bounds, the table, the division, the proof | `crates/dimvexa-core/src/approx.rs` |
 | 256-bit helper for the wide product | `crates/dimvexa-core/src/wide.rs` |
 | sums, comparisons, temperatures | `crates/dimvexa-calc/src/lib.rs` |
+| `sqrt`, powers `p/q`, `ln`, `exp`, `sin`, `cos`, the approximate value | `crates/dimvexa-calc/src/math.rs` |
 
 | Claim | Test |
 |---|---|
@@ -360,9 +459,10 @@ tier remains possible (ADR-027) and would never mix silently with exact values.
 | every factor order gives one value | `a2_every_order_of_the_factors_gives_the_same_value` (`engineering/number_range.rs`) |
 | hostile exponents stay bounded | `a_decimal_exponent_is_kept_up_to_the_cap_and_refused_beyond_it` (`hostile_inputs.rs`) |
 | the new form of `6.62607015e-34` | `a_power_of_ten_that_does_not_fit_stays_in_the_exponent` (`ratio.rs`) |
+| the exact roots are complete | `the_root_of_a_perfect_power_is_always_exact`, `a_perfect_square_hidden_in_the_stored_power_of_ten_is_still_exact` (`crates/dimvexa-calc/tests/math.rs`) |
 | real engineering equations | `crates/dimvexa-testkit/tests/engineering/` (one file per field) |
 
-## 10. Glossary and references
+## 11. Glossary and references
 
 | Term | Meaning |
 |---|---|
@@ -382,3 +482,6 @@ References (standard works; the algorithms are described there, the code here is
 * D. E. Knuth, *The Art of Computer Programming*, vol. 2, §4.3.1, Algorithm D.
 * D. Goldberg, *What every computer scientist should know about floating-point arithmetic*,
   ACM Computing Surveys 23(1), 1991.
+* I. Niven, *Irrational Numbers*, Mathematical Association of America, 1956 (rational values of
+  the sine at rational multiples of $\pi$); the Hermite–Lindemann theorem (transcendence of
+  $e^{x}$ for non-zero algebraic $x$).

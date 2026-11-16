@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! Equations as text, evaluated exactly with units: the shape the engineering tests want.
+//! Equations as text, evaluated with units: the shape the engineering tests want.
 //!
 //! ```
 //! use dimvexa_testkit::formula::Formula;
@@ -10,25 +10,33 @@
 //!     .var("L", "20 ft")?;
 //! let m = f.eval("w * L^2 / 8")?;
 //! assert_eq!(f.f64_in(&m, "kN*m")?, 135.581_794_833_140_04);
+//!
+//! // a root, a fractional power and a logarithm: exact when the mathematics is exact
+//! let f = Formula::new(&reg).var("dp", "50 kPa")?.var("rho", "998 kg/m^3")?;
+//! let v = f.eval("sqrt(2 * dp / rho)")?;
+//! assert!(!v.is_exact()); // an approximate value, shown with ≈ (ADR-029)
+//! assert!((f.f64_in(&v, "m/s")? - (100_000.0_f64 / 998.0).sqrt()).abs() < 1e-12);
+//! assert!(f.eval("sqrt(4 * dp / dp)")?.is_exact());
 //! # Ok::<(), dimvexa::Error>(())
 //! ```
 //!
-//! Grammar: numbers (`2`, `0.5`, `1e-3`), variables, `+ - * /`, a unary minus, parentheses and
-//! an integer power (`L^4`, `v^-2`). Every step is a [`Calc`] or core operation, so the result
-//! is exact and carries the unit the arithmetic produced; read it in a unit with
-//! [`Formula::f64_in`] or [`Formula::to_unit`]. A function call such as `sqrt(x)` is parsed and
-//! refused with `refused`: `dimvexa-calc` has no such operation yet, and the tests that need
-//! one stay open until it has.
+//! Grammar: numbers (`2`, `0.5`, `1e-3`), variables, `+ - * /`, a unary minus, parentheses, a
+//! power with an integer, a decimal or a fraction as exponent (`L^4`, `v^-2`, `x^0.5`,
+//! `R^(2/3)`), and the functions `sqrt`, `ln`, `exp`, `sin` and `cos`. Every step is an
+//! operation of [`Math`] or of the core, so a result is exact whenever the mathematics is exact
+//! and an explicitly approximate [`Number`] otherwise (ADR-029). Read it in a unit with
+//! [`Formula::f64_in`] or [`Formula::to_unit`]; [`Formula::eval_exact`] refuses an approximate
+//! result.
 
-use dimvexa::{Error, Quantity, Registry, Result};
-use dimvexa_calc::Calc;
+use dimvexa::{Error, Quantity, Ratio, Registry, Result};
+use dimvexa_calc::{Math, Number};
 
 /// A set of named quantities and an evaluator for formulas over them.
 #[derive(Debug)]
 pub struct Formula<'r> {
     reg: &'r Registry,
-    calc: Calc<'r>,
-    vars: Vec<(String, Quantity)>,
+    math: Math<'r>,
+    vars: Vec<(String, Number)>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -114,77 +122,107 @@ impl Parser<'_, '_> {
         }
     }
 
-    fn expr(&mut self) -> Result<Quantity> {
+    fn expr(&mut self) -> Result<Number> {
         let mut acc = self.term()?;
         loop {
             if self.eat('+') {
                 let rhs = self.term()?;
-                acc = self.f.calc.add(&acc, &rhs)?;
+                acc = self.f.math.add(&acc, &rhs)?;
             } else if self.eat('-') {
                 let rhs = self.term()?;
-                acc = self.f.calc.sub(&acc, &rhs)?;
+                acc = self.f.math.sub(&acc, &rhs)?;
             } else {
                 return Ok(acc);
             }
         }
     }
 
-    fn term(&mut self) -> Result<Quantity> {
+    fn term(&mut self) -> Result<Number> {
         let mut acc = self.unary()?;
         loop {
             if self.eat('*') {
                 let rhs = self.unary()?;
-                acc = acc.checked_mul(&rhs)?;
+                acc = self.f.math.mul(&acc, &rhs)?;
             } else if self.eat('/') {
                 let rhs = self.unary()?;
-                acc = acc.checked_div(&rhs)?;
+                acc = self.f.math.div(&acc, &rhs)?;
             } else {
                 return Ok(acc);
             }
         }
     }
 
-    fn unary(&mut self) -> Result<Quantity> {
+    fn unary(&mut self) -> Result<Number> {
         if self.eat('-') {
             let inner = self.unary()?;
-            return self.f.calc.neg(&inner);
+            return self.f.math.neg(&inner);
         }
         self.power()
     }
 
-    fn power(&mut self) -> Result<Quantity> {
+    /// An integer: the digits of the token at the cursor.
+    fn int(&mut self) -> Result<i32> {
+        let at = self.here();
+        let Some(Tok::Num(text)) = self.peek().cloned() else {
+            return Err(parse_error(self.src, at, "an integer is expected"));
+        };
+        self.pos += 1;
+        text.parse()
+            .map_err(|_| parse_error(self.src, at, "an integer is expected"))
+    }
+
+    /// The exponent after `^` as `(p, q)`: `3`, `-2`, `0.5` or `(2/3)` (also `(-2/3)`).
+    fn exponent(&mut self) -> Result<(i32, i32)> {
+        let at = self.here();
+        if self.eat('(') {
+            let negative = self.eat('-');
+            let num = self.int()?;
+            let den = if self.eat('/') { self.int()? } else { 1 };
+            if !self.eat(')') {
+                return Err(parse_error(self.src, self.here(), "')' is expected"));
+            }
+            return Ok((if negative { -num } else { num }, den));
+        }
+        let negative = self.eat('-');
+        let at_num = self.here();
+        let Some(Tok::Num(text)) = self.peek().cloned() else {
+            return Err(parse_error(self.src, at, "an exponent is expected"));
+        };
+        self.pos += 1;
+        let ratio: Ratio = text
+            .parse()
+            .map_err(|_| parse_error(self.src, at_num, "the exponent must be a number"))?;
+        let num = i32::try_from(ratio.num())
+            .map_err(|_| parse_error(self.src, at_num, "the exponent is too large"))?;
+        let den = i32::try_from(ratio.den())
+            .map_err(|_| parse_error(self.src, at_num, "the exponent is too precise"))?;
+        Ok((if negative { -num } else { num }, den))
+    }
+
+    fn power(&mut self) -> Result<Number> {
         let base = self.atom()?;
         if !self.eat('^') {
             return Ok(base);
         }
-        let negative = self.eat('-');
-        let at = self.here();
-        let Some(Tok::Num(text)) = self.peek().cloned() else {
-            return Err(parse_error(self.src, at, "an integer exponent is expected"));
-        };
-        self.pos += 1;
-        let exp: i32 = text
-            .parse()
-            .map_err(|_| parse_error(self.src, at, "the exponent must be an integer"))?;
-        self.f.calc.pow(&base, if negative { -exp } else { exp })
+        let (num, den) = self.exponent()?;
+        if den == 1 {
+            self.f.math.pow(&base, num)
+        } else {
+            self.f.math.root(&base, num, den)
+        }
     }
 
-    fn atom(&mut self) -> Result<Quantity> {
+    fn atom(&mut self) -> Result<Number> {
         let at = self.here();
         match self.peek().cloned() {
             Some(Tok::Num(text)) => {
                 self.pos += 1;
-                self.f.reg.quantity(&format!("{text} 1"))
+                self.f.reg.quantity(&format!("{text} 1")).map(Number::from)
             }
             Some(Tok::Id(name)) => {
                 self.pos += 1;
                 if self.peek() == Some(&Tok::Op('(')) {
-                    return Err(Error::Refused {
-                        reason: format!(
-                            "the function '{name}' is not available in dimvexa-calc yet"
-                        ),
-                        suggestions: Vec::new(),
-                    });
+                    return self.call(&name);
                 }
                 self.f
                     .vars
@@ -205,6 +243,29 @@ impl Parser<'_, '_> {
             _ => Err(parse_error(self.src, at, "a value is expected")),
         }
     }
+
+    /// `name(argument)`.
+    fn call(&mut self, name: &str) -> Result<Number> {
+        self.pos += 1; // the '('
+        let arg = self.expr()?;
+        if !self.eat(')') {
+            return Err(parse_error(self.src, self.here(), "')' is expected"));
+        }
+        let math = self.f.math;
+        match name {
+            "sqrt" => math.sqrt(&arg),
+            "ln" => math.ln(&arg),
+            "exp" => math.exp(&arg),
+            "sin" => math.sin(&arg),
+            "cos" => math.cos(&arg),
+            _ => Err(Error::Refused {
+                reason: format!("the function '{name}' is not available"),
+                suggestions: ["sqrt", "ln", "exp", "sin", "cos"]
+                    .map(str::to_owned)
+                    .to_vec(),
+            }),
+        }
+    }
 }
 
 impl<'r> Formula<'r> {
@@ -213,7 +274,7 @@ impl<'r> Formula<'r> {
     pub const fn new(reg: &'r Registry) -> Self {
         Self {
             reg,
-            calc: Calc::new(reg),
+            math: Math::new(reg),
             vars: Vec::new(),
         }
     }
@@ -224,19 +285,22 @@ impl<'r> Formula<'r> {
     ///
     /// The error of [`Registry::quantity`] when the text is not a quantity.
     pub fn var(mut self, name: &str, quantity: &str) -> Result<Self> {
-        let q = self.reg.quantity(quantity)?;
+        let q = Number::from(self.reg.quantity(quantity)?);
         self.vars.retain(|(n, _)| n != name);
         self.vars.push((name.to_owned(), q));
         Ok(self)
     }
 
-    /// Evaluates `formula` exactly; the unit is whatever the arithmetic produced.
+    /// Evaluates `formula`: exact where the mathematics is exact, an approximate [`Number`]
+    /// otherwise; the unit is whatever the arithmetic produced.
     ///
     /// # Errors
     ///
-    /// `parse_error` for a syntax error or an unknown variable, `refused` for a function call,
-    /// and the error of the operation that failed (`dimension_mismatch`, `overflow`, ...).
-    pub fn eval(&self, formula: &str) -> Result<Quantity> {
+    /// `parse_error` for a syntax error or an unknown variable, `refused` for an unknown
+    /// function, and the error of the operation that failed (`dimension_mismatch`,
+    /// `overflow`, ...). An exact operation that fails is never answered with an approximate
+    /// value.
+    pub fn eval(&self, formula: &str) -> Result<Number> {
         let mut p = Parser {
             src: formula,
             toks: lex(formula)?,
@@ -250,21 +314,36 @@ impl<'r> Formula<'r> {
         Ok(q)
     }
 
-    /// The exact value of `q` in `unit`.
+    /// Like [`eval`](Self::eval), but only an exact result is accepted.
     ///
     /// # Errors
     ///
-    /// The error of [`Calc::to_unit`].
-    pub fn to_unit(&self, q: &Quantity, unit: &str) -> Result<Quantity> {
-        self.calc.to_unit(q, unit)
+    /// The errors of [`eval`](Self::eval), and `refused` for an approximate result.
+    pub fn eval_exact(&self, formula: &str) -> Result<Quantity> {
+        match self.eval(formula)? {
+            Number::Exact(q) => Ok(q),
+            Number::Approx(a) => Err(Error::Refused {
+                reason: format!("{formula} is approximate ({a}), not exact"),
+                suggestions: Vec::new(),
+            }),
+        }
     }
 
-    /// The value of `q` in `unit`, rounded once to the nearest `f64`.
+    /// `n` in `unit`; an exact number stays exact.
     ///
     /// # Errors
     ///
-    /// The error of [`Calc::to_f64_in`].
-    pub fn f64_in(&self, q: &Quantity, unit: &str) -> Result<f64> {
-        self.calc.to_f64_in(q, unit)
+    /// The error of [`Math::to_unit`].
+    pub fn to_unit(&self, n: &Number, unit: &str) -> Result<Number> {
+        self.math.to_unit(n, unit)
+    }
+
+    /// The value of `n` in `unit`, rounded once (exact) or converted exactly (approximate).
+    ///
+    /// # Errors
+    ///
+    /// The error of [`Math::to_f64_in`].
+    pub fn f64_in(&self, n: &Number, unit: &str) -> Result<f64> {
+        self.math.to_f64_in(n, unit)
     }
 }

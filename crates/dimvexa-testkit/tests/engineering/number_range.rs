@@ -187,8 +187,11 @@ fn a2_every_order_of_the_factors_gives_the_same_value() {
             })
             .collect();
         let text = tokens.join(" ");
-        let q = f.eval(&text).unwrap_or_else(|e| panic!("{text}: {e}"));
-        let in_nn = f
+        // exact: every order must give the same exact value, never an approximate one
+        let q = f
+            .eval_exact(&text)
+            .unwrap_or_else(|e| panic!("{text}: {e}"));
+        let in_nn = dimvexa_calc::Calc::new(&reg)
             .to_unit(&q, "nN")
             .unwrap_or_else(|e| panic!("{text} -> nN: {e}"));
         match &reference {

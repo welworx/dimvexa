@@ -229,9 +229,9 @@ fn open_a4_ideal_gas_temperature_in_celsius() {
     );
 }
 
+/// A5 (fixed, ADR-029): `ln` of a ratio of two temperature differences.
 #[test]
-#[ignore = "open A5: no ln in dimvexa-calc"]
-fn open_a5_log_mean_temperature_difference() {
+fn a5_log_mean_temperature_difference() {
     check(
         &[("d1", "60 delta_K"), ("d2", "20 delta_K")],
         "(d1 - d2) / ln(d1 / d2)",
@@ -253,4 +253,21 @@ fn open_b1_adding_two_celsius_states_is_refused() {
 #[ignore = "open C: degC inside a compound unit is refused"]
 fn open_c_celsius_in_a_specific_heat_is_an_interval() {
     check(&[("cp", "4.186 kJ/(kg*degC)")], "cp", "J/(kg*K)", 4186.0);
+}
+
+/// Newton cooling: the time to cool from 90 degC to 40 degC in 20 degC air with a time constant
+/// of 120 s is `t = tau ln((T0 - Tinf) / (T - Tinf))`.
+#[test]
+fn thermal_newton_cooling_time_uses_a_logarithm_of_temperature_differences() {
+    check(
+        &[
+            ("tau", "120 s"),
+            ("T0", "90 degC"),
+            ("Tinf", "20 degC"),
+            ("T", "40 degC"),
+        ],
+        "tau * ln((T0 - Tinf) / (T - Tinf))",
+        "s",
+        120.0 * 3.5_f64.ln(),
+    );
 }

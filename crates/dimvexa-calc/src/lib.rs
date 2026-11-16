@@ -14,6 +14,12 @@
 //! * [`Calc::to_unit`] and [`Calc::to_f64_in`]: the value in another unit, exact or rounded
 //!   once to the nearest `f64`.
 //!
+//! # Functions: `sqrt`, powers, `ln`, `sin`
+//!
+//! [`Math`] adds `sqrt`, fractional powers, `ln`, `exp`, `sin` and `cos` over [`Number`]: exact
+//! when the mathematics is exact (`sqrt(4 m^2)`, `sin(30 deg)`), otherwise an explicitly labelled
+//! [`Approx`] that spreads to everything computed from it (ADR-029).
+//!
 //! # Temperatures
 //!
 //! Temperature is an intensive state variable on a scale that may have an offset (`degC`,
@@ -64,6 +70,10 @@
 //! ```
 
 use core::cmp::Ordering;
+
+mod math;
+
+pub use math::{Approx, Math, Number};
 
 use dimvexa_core::{Dim, Error, Kind, Quantity, Ratio, Registry, Result, UnitExpr};
 

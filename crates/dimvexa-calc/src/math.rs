@@ -1,0 +1,815 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+//! Mathematical functions with an explicit approximate value (ADR-029): `sqrt`, fractional
+//! powers, `ln`, `exp`, `sin` and `cos`.
+//!
+//! The exact tier ([`Calc`](crate::Calc)) never rounds. These functions mostly cannot be exact:
+//! `sqrt(2)` has no fraction. So a [`Number`] is either
+//!
+//! * [`Number::Exact`]: a [`Quantity`]. The result is exact **whenever the mathematics makes it
+//!   exact**: `sqrt(4 m^2)` is `2 m`, `8^(1/3)` is `2`, `ln(1)` is `0`, `sin(30 deg)` is `1/2`;
+//! * [`Number::Approx`]: an [`Approx`], an `f64` with its unit, shown as `≈`. Anything computed
+//!   from an approximate value is approximate (it spreads, so it cannot be forgotten), and an
+//!   approximate value is never turned back into an exact one.
+//!
+//! Exact arithmetic that fails stays an error: an `overflow` of the exact tier is never
+//! answered with an approximate number (rule 4 of `AGENTS.md`, no silent fallback).
+//!
+//! Accuracy of an approximate value: the arithmetic and `sqrt` are IEEE operations (at most
+//! half a unit in the last place per step); a unit conversion uses the correctly rounded exact
+//! factor; `ln`, `exp`, `sin`, `cos` and general powers come from the platform's maths library,
+//! which promises no correct rounding (about one unit in the last place is typical). Errors of
+//! several steps add up and are not tracked. See `docs/how-numbers-work.md`.
+//!
+//! Dimensions have integer exponents, so a root needs a result whose exponents are integers:
+//! `sqrt(m^2)` is `m`, `sqrt(m)` is refused (KL-32). The result of a root is in SI base units.
+
+use core::fmt;
+use core::num::FpCategory;
+
+use dimvexa_core::{Conversion, Dim, Error, Kind, Quantity, Ratio, Registry, Result, UnitExpr};
+
+use crate::Calc;
+
+fn refused(reason: impl Into<String>) -> Error {
+    Error::Refused {
+        reason: reason.into(),
+        suggestions: Vec::new(),
+    }
+}
+
+const fn overflow(operation: &'static str) -> Error {
+    Error::Overflow { operation }
+}
+
+const fn finite(value: f64, operation: &'static str) -> Result<f64> {
+    if value.is_finite() {
+        Ok(value)
+    } else {
+        Err(overflow(operation))
+    }
+}
+
+fn is_zero_f64(x: f64) -> bool {
+    x.classify() == FpCategory::Zero
+}
+
+/// An approximate value: an `f64` with a unit. Made by the functions of [`Math`] when the exact
+/// result has no fraction, shown with `≈`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Approx {
+    value: f64,
+    unit: UnitExpr,
+}
+
+impl Approx {
+    /// The value in [`unit`](Self::unit).
+    #[must_use]
+    pub const fn value(&self) -> f64 {
+        self.value
+    }
+
+    /// The unit of the value.
+    #[must_use]
+    pub const fn unit(&self) -> &UnitExpr {
+        &self.unit
+    }
+}
+
+impl fmt::Display for Approx {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "≈ {} {}", self.value, self.unit)
+    }
+}
+
+/// An exact [`Quantity`] or an [`Approx`] value.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Number {
+    /// An exact quantity.
+    Exact(Quantity),
+    /// An approximate value.
+    Approx(Approx),
+}
+
+impl Number {
+    /// True for an exact quantity.
+    #[must_use]
+    pub const fn is_exact(&self) -> bool {
+        matches!(self, Self::Exact(_))
+    }
+
+    /// The exact quantity, or `None` for an approximate value.
+    #[must_use]
+    pub const fn exact(&self) -> Option<&Quantity> {
+        match self {
+            Self::Exact(q) => Some(q),
+            Self::Approx(_) => None,
+        }
+    }
+
+    /// The unit.
+    #[must_use]
+    pub const fn unit(&self) -> &UnitExpr {
+        match self {
+            Self::Exact(q) => q.unit(),
+            Self::Approx(a) => a.unit(),
+        }
+    }
+}
+
+impl From<Quantity> for Number {
+    fn from(q: Quantity) -> Self {
+        Self::Exact(q)
+    }
+}
+
+impl fmt::Display for Number {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Exact(q) => q.fmt(f),
+            Self::Approx(a) => a.fmt(f),
+        }
+    }
+}
+
+/// A value in SI base units: the exact rational or the `f64`.
+enum Si {
+    Exact(Ratio),
+    Approx(f64),
+}
+
+/// Mathematical functions and the arithmetic that goes with them, over [`Number`].
+///
+/// # Examples
+///
+/// ```
+/// use dimvexa_calc::{Math, Number};
+///
+/// let reg = dimvexa::registry()?;
+/// let math = Math::new(&reg);
+/// let q = |s: &str| reg.quantity(s).map(Number::from);
+///
+/// // exact when the mathematics is exact
+/// assert_eq!(math.sqrt(&q("9 m^2")?)?.to_string(), "3 m");
+/// // approximate, and labelled
+/// let r = math.sqrt(&q("2 m^2")?)?;
+/// assert!(!r.is_exact());
+/// assert_eq!(math.to_f64_in(&r, "mm")?, 1414.213562373095);
+/// # Ok::<(), dimvexa_core::Error>(())
+/// ```
+#[derive(Debug, Clone, Copy)]
+pub struct Math<'r> {
+    calc: Calc<'r>,
+}
+
+impl<'r> Math<'r> {
+    /// Functions over the units of `reg`.
+    #[must_use]
+    pub const fn new(reg: &'r Registry) -> Self {
+        Self {
+            calc: Calc::new(reg),
+        }
+    }
+
+    /// The exact calculator this one is built on.
+    #[must_use]
+    pub const fn calc(&self) -> Calc<'r> {
+        self.calc
+    }
+
+    const fn reg(self) -> &'r Registry {
+        self.calc.registry()
+    }
+
+    fn approx_of(n: &Number) -> Result<Approx> {
+        match n {
+            Number::Exact(q) => Ok(Approx {
+                value: q.value().to_f64()?,
+                unit: q.unit().clone(),
+            }),
+            Number::Approx(a) => Ok(a.clone()),
+        }
+    }
+
+    fn linear_only(unit: &UnitExpr) -> Result<()> {
+        if !unit.offset().is_zero() || unit.kind() == Kind::AbsoluteTemperature {
+            return Err(refused(
+                "a temperature point is exact-tier only; use a difference (delta_K) or K in a product",
+            ));
+        }
+        Ok(())
+    }
+
+    // ----- arithmetic ------------------------------------------------------------------------
+
+    /// Sum. Exact with exact; otherwise approximate, in the unit of the left operand.
+    ///
+    /// # Errors
+    ///
+    /// The errors of [`Calc::add`], or [`Error::DimensionMismatch`] and [`Error::KindMismatch`]
+    /// for an approximate operand, [`Error::Refused`] for a temperature point, and
+    /// [`Error::Overflow`] for a result that is not finite.
+    pub fn add(&self, a: &Number, b: &Number) -> Result<Number> {
+        self.sum(a, b, false)
+    }
+
+    /// Difference. See [`add`](Self::add).
+    ///
+    /// # Errors
+    ///
+    /// As [`add`](Self::add).
+    pub fn sub(&self, a: &Number, b: &Number) -> Result<Number> {
+        self.sum(a, b, true)
+    }
+
+    fn sum(self, a: &Number, b: &Number, subtract: bool) -> Result<Number> {
+        if let (Number::Exact(x), Number::Exact(y)) = (a, b) {
+            return if subtract {
+                self.calc.sub(x, y)
+            } else {
+                self.calc.add(x, y)
+            }
+            .map(Number::Exact);
+        }
+        let (x, y) = (Self::approx_of(a)?, Self::approx_of(b)?);
+        Self::linear_only(&x.unit)?;
+        Self::linear_only(&y.unit)?;
+        let yv = Conversion::between(&y.unit, &x.unit)?.apply_exact_f64(y.value)?;
+        let value = if subtract { x.value - yv } else { x.value + yv };
+        Ok(Number::Approx(Approx {
+            value: finite(value, "approximate sum")?,
+            unit: x.unit,
+        }))
+    }
+
+    /// Product. Exact with exact (`Quantity::checked_mul`); otherwise approximate.
+    ///
+    /// # Errors
+    ///
+    /// The errors of `Quantity::checked_mul`, and [`Error::Overflow`] for a result that is not
+    /// finite.
+    pub fn mul(&self, a: &Number, b: &Number) -> Result<Number> {
+        if let (Number::Exact(x), Number::Exact(y)) = (a, b) {
+            return x.checked_mul(y).map(Number::Exact);
+        }
+        let (x, y) = (Self::approx_of(a)?, Self::approx_of(b)?);
+        Ok(Number::Approx(Approx {
+            value: finite(x.value * y.value, "approximate product")?,
+            unit: x.unit.mul(&y.unit)?,
+        }))
+    }
+
+    /// Quotient. Exact with exact (`Quantity::checked_div`); otherwise approximate.
+    ///
+    /// # Errors
+    ///
+    /// The errors of `Quantity::checked_div`, [`Error::DivisionByZero`] and [`Error::Overflow`].
+    pub fn div(&self, a: &Number, b: &Number) -> Result<Number> {
+        if let (Number::Exact(x), Number::Exact(y)) = (a, b) {
+            return x.checked_div(y).map(Number::Exact);
+        }
+        let (x, y) = (Self::approx_of(a)?, Self::approx_of(b)?);
+        if is_zero_f64(y.value) {
+            return Err(Error::DivisionByZero);
+        }
+        Ok(Number::Approx(Approx {
+            value: finite(x.value / y.value, "approximate quotient")?,
+            unit: x.unit.div(&y.unit)?,
+        }))
+    }
+
+    /// Negation.
+    ///
+    /// # Errors
+    ///
+    /// The errors of [`Calc::neg`].
+    pub fn neg(&self, a: &Number) -> Result<Number> {
+        match a {
+            Number::Exact(q) => self.calc.neg(q).map(Number::Exact),
+            Number::Approx(x) => {
+                Self::linear_only(&x.unit)?;
+                Ok(Number::Approx(Approx {
+                    value: -x.value,
+                    unit: x.unit.clone(),
+                }))
+            }
+        }
+    }
+
+    /// Integer power. Exact for an exact number.
+    ///
+    /// # Errors
+    ///
+    /// The errors of [`Calc::pow`], [`Error::DivisionByZero`] and [`Error::Overflow`].
+    pub fn pow(&self, a: &Number, exp: i32) -> Result<Number> {
+        match a {
+            Number::Exact(q) => self.calc.pow(q, exp).map(Number::Exact),
+            Number::Approx(x) => {
+                if exp < 0 && is_zero_f64(x.value) {
+                    return Err(Error::DivisionByZero);
+                }
+                Ok(Number::Approx(Approx {
+                    value: finite(x.value.powi(exp), "approximate power")?,
+                    unit: x.unit.pow(exp)?,
+                }))
+            }
+        }
+    }
+
+    // ----- converting ------------------------------------------------------------------------
+
+    /// The number in `unit`; an exact number stays exact.
+    ///
+    /// # Errors
+    ///
+    /// The errors of [`Calc::to_unit`]; for an approximate number [`Error::DimensionMismatch`],
+    /// [`Error::KindMismatch`] and [`Error::Refused`] for a temperature point.
+    pub fn to_unit(&self, a: &Number, unit: &str) -> Result<Number> {
+        match a {
+            Number::Exact(q) => self.calc.to_unit(q, unit).map(Number::Exact),
+            Number::Approx(x) => {
+                let target = self.reg().parse(unit)?;
+                Self::linear_only(&x.unit)?;
+                Self::linear_only(&target)?;
+                let value = Conversion::between(&x.unit, &target)?.apply_exact_f64(x.value)?;
+                Ok(Number::Approx(Approx {
+                    value,
+                    unit: target,
+                }))
+            }
+        }
+    }
+
+    /// The value in `unit` as an `f64`: an exact number rounds once, an approximate number is
+    /// converted with the correctly rounded exact factor.
+    ///
+    /// # Errors
+    ///
+    /// As [`to_unit`](Self::to_unit); [`Error::Overflow`] if the value is not a normal `f64`.
+    pub fn to_f64_in(&self, a: &Number, unit: &str) -> Result<f64> {
+        match self.to_unit(a, unit)? {
+            Number::Exact(q) => q.value().to_f64(),
+            Number::Approx(x) => Ok(x.value),
+        }
+    }
+
+    // ----- roots and powers ------------------------------------------------------------------
+
+    /// Square root. Exact when the value is a perfect square (`sqrt(9 m^2)`, `sqrt(1/4)`),
+    /// otherwise approximate. The result is in SI base units.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] for a negative value or when the dimension exponents are not even
+    /// (`sqrt(m)`, KL-32), or for a kind that is not plain, a temperature point, or a bare
+    /// temperature result (state or difference?).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dimvexa_calc::{Math, Number};
+    /// # let reg = dimvexa::registry()?;
+    /// # let math = Math::new(&reg);
+    /// let q = |s: &str| reg.quantity(s).map(Number::from);
+    /// // an orifice: Q = Cd A sqrt(2 dp / rho)
+    /// let v = math.sqrt(&math.div(&math.mul(&q("2")?, &q("50 kPa")?)?, &q("998 kg/m^3")?)?)?;
+    /// assert!(!v.is_exact());
+    /// assert!((math.to_f64_in(&v, "m/s")? - (100_000.0_f64 / 998.0).sqrt()).abs() < 1e-12);
+    /// assert_eq!(math.sqrt(&q("1 m")?).unwrap_err().code(), "refused");
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn sqrt(&self, a: &Number) -> Result<Number> {
+        self.root(a, 1, 2)
+    }
+
+    /// `a` to the power `p/q` (`q > 0`), for example `root(a, 2, 3)` is `a^(2/3)`. Exact when
+    /// the value, its power of ten and its power of pi are perfect `q`-th powers, otherwise
+    /// approximate. The dimension exponents times `p/q` must be integers, and the result is in
+    /// SI base units; for a dimensionless value such as `R / (1 m)` there is no restriction.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] (negative base with an even `q`, a dimension that does not stay
+    /// integral, a kind that is not plain, `0^0`), [`Error::DivisionByZero`] (zero to a
+    /// negative power), [`Error::Overflow`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dimvexa_calc::{Math, Number};
+    /// # let reg = dimvexa::registry()?;
+    /// # let math = Math::new(&reg);
+    /// let q = |s: &str| reg.quantity(s).map(Number::from);
+    /// assert_eq!(math.root(&q("8")?, 1, 3)?.to_string(), "2 1");
+    /// assert_eq!(math.root(&q("8")?, 2, 3)?.to_string(), "4 1");
+    /// assert!(!math.root(&q("0.25")?, 2, 3)?.is_exact());
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn root(&self, base: &Number, num: i32, den: i32) -> Result<Number> {
+        if den <= 0 {
+            return Err(refused(
+                "the denominator of a fractional power must be positive",
+            ));
+        }
+        if num == 0 {
+            // the power zero is 1, as for `Calc::pow`, without a unit raised to the power zero
+            return Ok(Number::Exact(Quantity::new(Ratio::ONE, UnitExpr::unity())));
+        }
+        let common = i32::try_from(gcd(num.unsigned_abs(), den.unsigned_abs()))
+            .map_err(|_| overflow("power"))?;
+        let (num, den) = (
+            num.checked_div(common).ok_or_else(|| overflow("power"))?,
+            den.checked_div(common).ok_or_else(|| overflow("power"))?,
+        );
+        if den == 1 {
+            return self.pow(base, num);
+        }
+        let (si, dim) = Self::normalise(base, &[Kind::Plain])?;
+        let unit = self.base_unit(scale_dim(dim, num, den)?)?;
+        let negative = match &si {
+            Si::Exact(r) => r.num() < 0,
+            Si::Approx(real) => *real < 0.0,
+        };
+        if negative && den % 2 == 0 {
+            return Err(refused(
+                "an even root of a negative value has no real result",
+            ));
+        }
+        let zero = match &si {
+            Si::Exact(r) => r.is_zero(),
+            Si::Approx(real) => is_zero_f64(*real),
+        };
+        if zero {
+            if num < 0 {
+                return Err(Error::DivisionByZero);
+            }
+            return Ok(Number::Exact(Quantity::new(Ratio::ZERO, unit)));
+        }
+        let real = match si {
+            Si::Exact(r) => {
+                if let Some(exact) = exact_root(r, num, den)? {
+                    return Ok(Number::Exact(Quantity::new(exact, unit)));
+                }
+                r.to_f64()?
+            }
+            Si::Approx(real) => real,
+        };
+        let value = approx_root(real, num, den);
+        Ok(Number::Approx(Approx {
+            value: finite(value, "approximate root")?,
+            unit,
+        }))
+    }
+
+    /// The value of `a` in SI base units, and its dimension. Only units without an offset and
+    /// of one of the allowed kinds.
+    fn normalise(a: &Number, kinds: &[Kind]) -> Result<(Si, Dim)> {
+        let unit = a.unit();
+        if !kinds.contains(&unit.kind()) {
+            return Err(refused(format!(
+                "this function needs a plain value, not {} (kind {})",
+                unit,
+                unit.kind().name()
+            )));
+        }
+        if !unit.offset().is_zero() {
+            return Err(refused(
+                "a temperature scale with an offset cannot be an argument; use K or a difference",
+            ));
+        }
+        let si = match a {
+            Number::Exact(q) => Si::Exact(q.value().checked_mul(unit.factor())?),
+            Number::Approx(x) => Si::Approx(finite(
+                x.value * unit.factor().to_f64()?,
+                "approximate value in SI units",
+            )?),
+        };
+        Ok((si, unit.dim()))
+    }
+
+    /// The SI base unit expression of a dimension: `m.s^-1`, or `1`.
+    fn base_unit(self, dim: Dim) -> Result<UnitExpr> {
+        const SYMBOLS: [&str; 7] = ["kg", "m", "s", "A", "K", "mol", "cd"];
+        if dim == Dim::K {
+            return Err(refused(
+                "the result is a bare temperature: a state or a difference? use a delta unit or a product",
+            ));
+        }
+        let parts: Vec<String> = SYMBOLS
+            .iter()
+            .zip(dim.exponents())
+            .filter(|(_, e)| *e != 0)
+            .map(|(s, e)| {
+                if e == 1 {
+                    (*s).to_string()
+                } else {
+                    format!("{s}^{e}")
+                }
+            })
+            .collect();
+        if parts.is_empty() {
+            return Ok(UnitExpr::unity());
+        }
+        self.reg().parse(&parts.join("."))
+    }
+
+    // ----- logarithm, exponential, trigonometry ----------------------------------------------
+
+    /// Natural logarithm of a dimensionless value (a ratio such as `d1 / d2`). Exact only for
+    /// `ln(1) = 0`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] for a value that has a dimension or is not positive.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dimvexa_calc::{Math, Number};
+    /// # let reg = dimvexa::registry()?;
+    /// # let math = Math::new(&reg);
+    /// let q = |s: &str| reg.quantity(s).map(Number::from);
+    /// assert_eq!(math.ln(&q("1")?)?.to_string(), "0 1");
+    /// // the log mean temperature difference of a heat exchanger
+    /// let (d1, d2) = (q("60 delta_K")?, q("20 delta_K")?);
+    /// let lmtd = math.div(&math.sub(&d1, &d2)?, &math.ln(&math.div(&d1, &d2)?)?)?;
+    /// assert!((math.to_f64_in(&lmtd, "delta_K")? - 40.0 / 3.0_f64.ln()).abs() < 1e-12);
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn ln(&self, a: &Number) -> Result<Number> {
+        let f = match Self::dimensionless(a)? {
+            Si::Exact(r) => {
+                if r.num() <= 0 {
+                    return Err(refused("the logarithm of a value that is not positive"));
+                }
+                if r.checked_eq(Ratio::ONE)? {
+                    return Ok(Number::Exact(Quantity::new(Ratio::ZERO, UnitExpr::unity())));
+                }
+                r.to_f64()?
+            }
+            Si::Approx(f) => f,
+        };
+        if f <= 0.0 {
+            return Err(refused("the logarithm of a value that is not positive"));
+        }
+        unity(f.ln())
+    }
+
+    /// `e` to the power of a dimensionless value. Exact only for `exp(0) = 1`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] for a value that has a dimension, [`Error::Overflow`] if the result
+    /// is not a finite number.
+    pub fn exp(&self, a: &Number) -> Result<Number> {
+        let f = match Self::dimensionless(a)? {
+            Si::Exact(r) => {
+                if r.is_zero() {
+                    return Ok(Number::Exact(Quantity::new(Ratio::ONE, UnitExpr::unity())));
+                }
+                r.to_f64()?
+            }
+            Si::Approx(f) => f,
+        };
+        unity(f.exp())
+    }
+
+    fn dimensionless(a: &Number) -> Result<Si> {
+        let (si, dim) = Self::normalise(a, &[Kind::Plain, Kind::TemperatureDifference])?;
+        if !dim.is_dimensionless() {
+            return Err(refused(format!(
+                "this function needs a dimensionless value (a ratio), not {}",
+                a.unit()
+            )));
+        }
+        Ok(si)
+    }
+
+    /// Sine of an angle (`30 deg`, `0.5 rad`). Exact where the sine is `0`, `1/2`, `1` or their
+    /// negatives (`0`, `30`, `90`, `150`, ... degrees), otherwise approximate.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] for a value that is not an angle: write the unit (`rad`, `deg`).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dimvexa_calc::{Math, Number};
+    /// # let reg = dimvexa::registry()?;
+    /// # let math = Math::new(&reg);
+    /// let q = |s: &str| reg.quantity(s).map(Number::from);
+    /// assert_eq!(math.sin(&q("30 deg")?)?.to_string(), "0.5 1");
+    /// assert!(!math.sin(&q("45 deg")?)?.is_exact());
+    /// assert_eq!(math.sin(&q("0.5")?).unwrap_err().code(), "refused");
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn sin(&self, a: &Number) -> Result<Number> {
+        Self::trig(a, false)
+    }
+
+    /// Cosine of an angle. Exact where it is `0`, `1/2`, `1` or their negatives.
+    ///
+    /// # Errors
+    ///
+    /// As [`sin`](Self::sin).
+    pub fn cos(&self, a: &Number) -> Result<Number> {
+        Self::trig(a, true)
+    }
+
+    fn trig(a: &Number, cos: bool) -> Result<Number> {
+        let unit = a.unit();
+        if unit.kind() != Kind::Angle || !unit.dim().is_dimensionless() {
+            return Err(refused(
+                "sin and cos need an angle with a unit: write 30 deg or 0.5 rad, not a bare number",
+            ));
+        }
+        let f = match a {
+            Number::Exact(q) => {
+                let radians = q.value().checked_mul(unit.factor())?;
+                if let Some(exact) = special_angle(radians, cos) {
+                    return Ok(Number::Exact(Quantity::new(exact, UnitExpr::unity())));
+                }
+                radians.to_f64()?
+            }
+            Number::Approx(x) => x.value * unit.factor().to_f64()?,
+        };
+        unity(if cos { f.cos() } else { f.sin() })
+    }
+}
+
+fn unity(value: f64) -> Result<Number> {
+    Ok(Number::Approx(Approx {
+        value: finite(value, "approximate result")?,
+        unit: UnitExpr::unity(),
+    }))
+}
+
+fn gcd(a: u32, b: u32) -> u32 {
+    let (mut a, mut b) = (a, b);
+    while b != 0 {
+        let t = a.checked_rem(b).unwrap_or(0);
+        a = b;
+        b = t;
+    }
+    a
+}
+
+/// The dimension raised to `p/q`; every exponent must stay an integer (KL-32).
+fn scale_dim(dim: Dim, p: i32, q: i32) -> Result<Dim> {
+    let mut out = [0_i8; 7];
+    for (o, e) in out.iter_mut().zip(dim.exponents()) {
+        let scaled = i32::from(e)
+            .checked_mul(p)
+            .ok_or_else(|| overflow("dimension exponent"))?;
+        if scaled.checked_rem(q) != Some(0) {
+            return Err(refused(format!(
+                "the dimension would have a fractional exponent ({e} times {p}/{q}); dimension \
+                 exponents are integers (KL-32): divide by a unit first, as in (R / 1 m)^(2/3)"
+            )));
+        }
+        *o = i8::try_from(
+            scaled
+                .checked_div(q)
+                .ok_or_else(|| overflow("dimension exponent"))?,
+        )
+        .map_err(|_| overflow("dimension exponent"))?;
+    }
+    Ok(Dim::new(out))
+}
+
+/// The largest `x` with `x^q <= n`, if `x^q == n` (an exact root); `q >= 2`.
+fn iroot(n: u128, q: u32) -> Option<u128> {
+    if n < 2 {
+        return Some(n);
+    }
+    let bits = 128_u32.checked_sub(n.leading_zeros())?;
+    let mut lo: u128 = 0;
+    let mut hi: u128 = 1_u128.checked_shl(bits.checked_div(q)?.checked_add(1)?)?;
+    while hi.checked_sub(lo)? > 1 {
+        let mid = lo.checked_add(hi.checked_sub(lo)?.checked_div(2)?)?;
+        match mid.checked_pow(q) {
+            Some(v) if v <= n => lo = mid,
+            _ => hi = mid,
+        }
+    }
+    (lo.checked_pow(q) == Some(n)).then_some(lo)
+}
+
+/// Removes the factor `prime` from `n` as often as it divides, and counts it.
+fn split_prime(mut n: u128, prime: u128) -> (u128, i64) {
+    let mut count = 0_i64;
+    while n != 0 && n.checked_rem(prime) == Some(0) {
+        match n.checked_div(prime) {
+            Some(rest) => n = rest,
+            None => break,
+        }
+        count = count.saturating_add(1);
+    }
+    (n, count)
+}
+
+/// `value^(power/index)` exactly, or `None` when the result is not a rational times a power of
+/// ten and of pi.
+///
+/// The value is `n/d * 10^k * pi^m` and `10^k = 2^k * 5^k`, so the factors 2 and 5 are taken
+/// out of the fraction and counted together with `k`: the root is exact when the exponents of 2
+/// and of 5 are divisible by the index, the rest of `n` and `d` are perfect powers, and the
+/// index divides `m`. Looking at `k` alone would call `1000 * 10^-101` (which is `10^-98`)
+/// irrational and miss `2/5 * 10` (which is 4).
+fn exact_root(value: Ratio, power: i32, index: i32) -> Result<Option<Ratio>> {
+    let err = || overflow("root");
+    let index_u32 = u32::try_from(index).map_err(|_| overflow("power"))?;
+    let step = i64::from(index);
+    if i64::from(value.pi_exp()).checked_rem(step) != Some(0) {
+        return Ok(None);
+    }
+    let (top, twos_n) = split_prime(value.num().unsigned_abs(), 2);
+    let (top, fives_n) = split_prime(top, 5);
+    let (bottom, twos_d) = split_prime(value.den().unsigned_abs(), 2);
+    let (bottom, fives_d) = split_prime(bottom, 5);
+    let ten = i64::from(value.ten_exp());
+    let twos = twos_n
+        .checked_sub(twos_d)
+        .and_then(|x| x.checked_add(ten))
+        .ok_or_else(err)?;
+    let fives = fives_n
+        .checked_sub(fives_d)
+        .and_then(|x| x.checked_add(ten))
+        .ok_or_else(err)?;
+    if twos.checked_rem(step) != Some(0) || fives.checked_rem(step) != Some(0) {
+        return Ok(None);
+    }
+    let (Some(root_n), Some(root_d)) = (iroot(top, index_u32), iroot(bottom, index_u32)) else {
+        return Ok(None);
+    };
+    let (two_exp, five_exp) = (
+        twos.checked_div(step).ok_or_else(err)?,
+        fives.checked_div(step).ok_or_else(err)?,
+    );
+    // 2^a * 5^b = 10^min(a, b) * (the remaining power of 2 or of 5, never both)
+    let low = two_exp.min(five_exp);
+    let mut num = i128::try_from(root_n).map_err(|_| err())?;
+    for (prime, exp) in [(2_i128, two_exp), (5_i128, five_exp)] {
+        let rest = u32::try_from(exp.checked_sub(low).ok_or_else(err)?).map_err(|_| err())?;
+        num = num
+            .checked_mul(prime.checked_pow(rest).ok_or_else(err)?)
+            .ok_or_else(err)?;
+    }
+    if value.num() < 0 {
+        num = num.checked_neg().ok_or_else(err)?;
+    }
+    let base = Ratio::new(num, i128::try_from(root_d).map_err(|_| err())?)?.with_exponents(
+        i32::try_from(low).map_err(|_| err())?,
+        value.pi_exp().checked_div(index).ok_or_else(err)?,
+    );
+    base.checked_pow(power).map(Some)
+}
+
+/// `f^(p/q)` in `f64`, for `q >= 2` and `f` not zero; the sign of an odd root is kept.
+fn approx_root(f: f64, p: i32, q: i32) -> f64 {
+    if p == 1 && q == 2 {
+        return f.sqrt();
+    }
+    if p == 1 && q == 3 {
+        return f.cbrt();
+    }
+    let magnitude = f.abs().powf(f64::from(p) / f64::from(q));
+    if f < 0.0 && p % 2 != 0 {
+        -magnitude
+    } else {
+        magnitude
+    }
+}
+
+/// `sin` or `cos` of `radians` when it is exact: `0`, `1/2`, `1`, `-1/2`, `-1`.
+fn special_angle(radians: Ratio, cos: bool) -> Option<Ratio> {
+    if radians.is_zero() {
+        return Some(if cos { Ratio::ONE } else { Ratio::ZERO });
+    }
+    if radians.pi_exp() != 1 {
+        return None;
+    }
+    // r = (n/d) 10^k pi  =>  degrees = (n/d) 10^k * 180
+    let degrees = radians
+        .with_exponents(radians.ten_exp(), 0)
+        .checked_mul(Ratio::from_int(180))
+        .ok()?
+        .folded()
+        .ok()?;
+    let steps = degrees.checked_div(Ratio::from_int(30)).ok()?;
+    if steps.den() != 1 {
+        return None;
+    }
+    // multiples of 30 degrees; cos x = sin(x + 90 degrees)
+    let shift = if cos { 3 } else { 0 };
+    let j = steps.num().checked_add(shift)?.rem_euclid(12);
+    let half = Ratio::new(1, 2).ok()?;
+    match j {
+        0 | 6 => Some(Ratio::ZERO),
+        1 | 5 => Some(half),
+        3 => Some(Ratio::ONE),
+        7 | 11 => half.checked_neg().ok(),
+        9 => Ratio::ONE.checked_neg().ok(),
+        _ => None,
+    }
+}

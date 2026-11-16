@@ -80,6 +80,13 @@ itself (SP 811 note 12 is used).
 |---|---|---|---|---|
 | KL-31 | The numerator and the denominator of a number are `i128`, so each holds at most 38 decimal digits. A power of ten does not count against that (ADR-028: it stays in the exponent), the digits do. A product whose digits do not fit is `overflow`, loudly; nothing is rounded. | `convert 1 ly3 m3` (the 14 digits of a light year cubed are 42), `1 psi3 Pa3` (39), `k^4 / (h^3 * c^2)` from the SI constants (its reduced denominator has 40). `1 ly2 m2` and `1 psi2 Pa2` work. | Owner decision, 2026-11-16: the exact core stays as it is, every library has limits. Wider integers would end `Copy` on `Ratio` or move the wall to 77 digits, make every step slower and every number bigger, and change the public API for rare calculations. Cancelling common factors across a product does not help these cases. | A labelled approximate tier next to the exact one (ADR-027 plans a float tier), never mixed with exact values silently; or an optional big-rational mode (ADR-004 M2). |
 
+## Functions and the approximate value (ADR-029)
+
+| ID | Limitation | When you see it | Why it is not fixed yet | Idea for the fix |
+|---|---|---|---|---|
+| KL-32 | A dimension exponent is an integer (`Dim` is `[i8; 7]`), so a unit with a fractional exponent cannot be written, and a root whose result would have one is refused with `refused`. | Manning's roughness `s/m^(1/3)` (`parse_error`); `sqrt(4 m)` and `(0.5 m)^(2/3)` (`refused`, the message names KL-32). Dimensionless ratios have no limit: `(R / 1 m)^(2/3)` works. | Rational exponents would change `Dim`, `Expr`, the parser and the printing of every unit (`api-change`, a new JSON schema). The workaround is how engineers write it in SI anyway. | `Dim` over rationals, and `Expr::Pow` with a fraction. |
+| KL-33 | An approximate value carries no error bound. Each step is at most about half an ulp (arithmetic, `sqrt`, a unit conversion) or about one ulp (`ln`, `exp`, `sin`, `cos`, powers: the platform's maths library), and the errors of a chain add up unseen. `sqrt(2)^2` is `2.0000000000000004`, still labelled approximate. | A long chain of approximate steps, or comparing an approximate value with an exact one. | Interval arithmetic is a type of its own and a separate decision. | An `Approx` with a bound (a lower and an upper `f64`, rounded outward). |
+
 ## Not built yet (decisions, not limitations)
 
 The molar-mass constant is planned in [ADR-009](adr/009-user-config.md) and

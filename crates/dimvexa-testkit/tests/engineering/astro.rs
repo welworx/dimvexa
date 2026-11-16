@@ -42,3 +42,18 @@ fn time_calendar_sum() {
         8766.0 + 504.0 + 48.0,
     );
 }
+
+/// The speed of a circular orbit `v = sqrt(G M / r)`, 400 km above the Earth.
+#[test]
+fn astro_circular_orbit_speed() {
+    check(
+        &[
+            ("G", "6.6743e-11 m^3/(kg*s^2)"),
+            ("M", "5.972e24 kg"),
+            ("r", "6771 km"),
+        ],
+        "sqrt(G * M / r)",
+        "km/s",
+        (6.6743e-11 * 5.972e24 / 6.771e6_f64).sqrt() / 1000.0,
+    );
+}

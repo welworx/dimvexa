@@ -14,12 +14,21 @@ fn hydrology_rational_method_us_units_to_si() {
     );
 }
 
+/// A5 (fixed, ADR-029): a fractional power. Manning's equation in SI, `V = R^(2/3) S^(1/2) / n`
+/// with `n` in s/m^(1/3), has a unit with a fractional exponent, which cannot be written
+/// (KL-32). The usual way is the dimensionless form: `R` divided by 1 m, `n` as a number, and
+/// the unit of the result put back as `1 m / 1 s`.
 #[test]
-#[ignore = "open A5: exponents are integers"]
-fn open_a5_manning_velocity_needs_fractional_powers() {
+fn a5_manning_velocity_needs_fractional_powers() {
     check(
-        &[("n", "0.013 s/m^(1/3)"), ("R", "0.5 m"), ("S", "0.001")],
-        "R^(2/3) * S^(1/2) / n",
+        &[
+            ("n", "0.013"),
+            ("R", "0.5 m"),
+            ("S", "0.001"),
+            ("L1", "1 m"),
+            ("T1", "1 s"),
+        ],
+        "(L1 / T1) * (R / L1)^(2/3) * sqrt(S) / n",
         "m/s",
         0.5f64.powf(2.0 / 3.0) * 0.001f64.sqrt() / 0.013,
     );

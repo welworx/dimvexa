@@ -200,3 +200,38 @@ fn known_limitation_kl_31_the_digits_of_a_fraction_must_fit_i128() {
     // the same digits with a power of ten moved out are fine: that part is free
     assert!(f.eval("k^2 * h^2").is_ok());
 }
+
+/// KL-32: a dimension exponent is an integer, so a unit like `s/m^(1/3)` cannot be written and a
+/// root that would give `m^(2/3)` is refused. Dimensionless ratios have no such limit.
+#[test]
+fn known_limitation_kl_32_a_dimension_exponent_must_be_an_integer() {
+    let reg = registry().unwrap();
+    assert_eq!(
+        reg.quantity("0.013 s/m^(1/3)").unwrap_err().code(),
+        "parse_error"
+    );
+    let f = Formula::new(&reg)
+        .var("R", "0.5 m")
+        .unwrap()
+        .var("L1", "1 m")
+        .unwrap();
+    let err = f.eval("R^(2/3)").unwrap_err();
+    assert_eq!(err.code(), "refused", "KL-32 fixed? then m^(2/3) is a unit");
+    assert!(err.to_string().contains("KL-32"), "{err}");
+    // divided by a length, it is a plain number and works
+    assert!(f.eval("(R / L1)^(2/3)").is_ok());
+}
+
+/// KL-33: an approximate value has no tracked error bound. The square of the square root of 2 is
+/// `2.0000000000000004`, not 2, and stays labelled approximate.
+#[test]
+fn known_limitation_kl_33_approximate_values_carry_no_error_bound() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg);
+    let squared = f.eval("sqrt(2)^2").unwrap();
+    assert!(
+        !squared.is_exact(),
+        "KL-33 fixed? then sqrt(2)^2 is exactly 2"
+    );
+    assert_eq!(f.f64_in(&squared, "1").unwrap(), 2.000_000_000_000_000_4);
+}

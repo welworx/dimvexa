@@ -26,7 +26,7 @@ write the equation, and a precise result with the correct unit.
 | A2 | *Fixed for powers of ten (ADR-028):* `(1.380649e-23 J/K)^2`, `(5.29e-11 m)^2`, the Coulomb force at the Bohr radius, a prefixed value read in the plain unit, and the order of the factors (all 120 orders agree). The Stefan-Boltzmann constant from `k`, `h`, `c` needs a 40-digit denominator: digit width, an accepted limit (KL-31). | `a2_*` |
 | A3 | Powers of large unit factors overflow because of the width of their digits: `ly^3`, `psi^3`. Accepted limit of the exact core (owner decision, KL-31), pinned in `known_limitations.rs`. | none open |
 | A4 | A computed temperature (`p V / (n R)`) cannot be read in K or degC (`kind_mismatch`); the hint says "use delta_K", which is wrong for an absolute temperature. | `open_a4_*` |
-| A5 | No `sqrt`, `ln`, `sin`, fractional exponents (`R^(2/3)`). Float tier planned (ADR-027). | `open_a5_*` |
+| A5 | *Fixed (ADR-029):* `sqrt`, `ln`, `exp`, `sin`, `cos` and fractional powers, exact when the mathematics is exact and an explicit `≈` value otherwise. Limits: integer dimension exponents (KL-32, Manning is written dimensionless), no error bound on approximate values (KL-33). | `a5_*` |
 | A6 | `2 pi f` needs the detour through `1/s` (works, tested). `rpm` and `rev` are not shipped on purpose (ADR-020): a use case defines them, see below. | none open |
 | B1 | `20 degC + 80 degC` is accepted as `100 degC` (= 373.15 K); ADR-027 decision 3 reads a same-scale point as a rise. A decision to revisit. | `open_b1_*` |
 | B2 | `pow(5 m, 0)` is `1 m^0`, not dimensionless. | `open_b2_*` |
