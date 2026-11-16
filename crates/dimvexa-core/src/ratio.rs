@@ -354,13 +354,11 @@ impl Ratio {
     /// moved into the exponent.
     pub fn checked_mul(self, rhs: Self) -> Result<Self> {
         match self.mul_fraction(rhs) {
-            // When an operand already keeps a power of ten in its exponent (`eV`, `Da`), a factor
-            // of 10 in the other fraction (`2e29`) may be what overflows the product while the
-            // value fits: move such factors into the exponent and multiply again (exact). Plain
-            // fractions keep overflowing as before (ADR-004).
-            Err(Error::Overflow { .. }) if self.ten != 0 || rhs.ten != 0 => {
-                self.strip_tens()?.mul_fraction(rhs.strip_tens()?)
-            }
+            // A factor of 10 in a fraction (`2e29`, or `10^-20` written out) may be all that
+            // overflows the product while the value fits: move such factors into the exponent
+            // and multiply again (exact). Without this the result of a product of several
+            // numbers would depend on the order they are multiplied in (ADR-028).
+            Err(Error::Overflow { .. }) => self.strip_tens()?.mul_fraction(rhs.strip_tens()?),
             other => other,
         }
     }
@@ -560,6 +558,12 @@ impl Ratio {
     pub fn to_f64(self) -> Result<f64> {
         if !self.has_exponents() {
             return Self::frac_to_f64(self.num, self.den);
+        }
+        // The bracketing path is faster than folding the power of ten into the fraction (which
+        // needs 128-bit gcds); it only gives up within about 2^-120 of a rounding boundary or
+        // outside the normal range, and then folding decides exactly, as before.
+        if let Ok(f) = Self::round_exp_to_f64(self.num, self.den, self.ten, self.pi) {
+            return Ok(f);
         }
         if self.pi == 0 {
             if let Ok(f) = self.folded() {
@@ -1022,20 +1026,40 @@ fn parse_decimal(s: &str) -> Result<Ratio> {
         num = 0;
     }
     let frac_len = u32::try_from(frac_s.len()).map_err(|_| bad())?;
-    let mut den = pow10(frac_len)?;
-    if exp >= 0 {
-        let scale = pow10(u32::try_from(exp).map_err(|_| bad())?)?;
-        num = num
-            .checked_mul(scale)
-            .ok_or_else(|| overflow("decimal exponent"))?;
+    let den = pow10(frac_len)?;
+    // The power of ten goes into the fraction when it fits, so every number that parsed before
+    // is stored exactly as before.
+    let folded = if exp >= 0 {
+        u32::try_from(exp)
+            .ok()
+            .and_then(|e| pow10(e).ok())
+            .and_then(|scale| num.checked_mul(scale))
+            .map(|n| (n, den))
     } else {
-        let scale = pow10(exp.unsigned_abs())?;
-        den = den
-            .checked_mul(scale)
-            .ok_or_else(|| overflow("decimal exponent"))?;
+        pow10(exp.unsigned_abs())
+            .ok()
+            .and_then(|scale| den.checked_mul(scale))
+            .map(|d| (num, d))
+    };
+    if let Some((n, d)) = folded {
+        return Ratio::new(n, d);
     }
-    Ratio::new(num, den)
+    // It does not fit beside the digits (`6.62607015e-34` needs a denominator of 10^42): keep the
+    // digits as an integer and the power of ten in the exponent field, `digits * 10^(exp - f)`
+    // where `f` is the number of digits after the point (ADR-028). The exponent is capped so a
+    // hostile `1e999999999` stays an error and not a number that later loops.
+    if exp.unsigned_abs() > MAX_DECIMAL_EXPONENT {
+        return Err(overflow("decimal exponent"));
+    }
+    let ten = i32::try_from(frac_len)
+        .ok()
+        .and_then(|f| exp.checked_sub(f))
+        .ok_or_else(|| overflow("decimal exponent"))?;
+    Ok(Ratio::new(num, 1)?.with_exponents(ten, 0))
 }
+
+/// The largest power of ten a parsed decimal may name when it does not fit the fraction.
+const MAX_DECIMAL_EXPONENT: u32 = 10_000;
 
 impl fmt::Display for Ratio {
     /// Integers print as `n`, everything else as `n/d`, followed by the factors `10^k` and
@@ -1113,8 +1137,11 @@ mod tests {
         let big = Ratio::from_int(i128::MAX);
         assert!(big.checked_add(Ratio::ONE).is_err());
         assert!(big.checked_mul(Ratio::from_int(2)).is_err());
-        assert!(Ratio::from_int(10).checked_pow(39).is_err());
+        // a power of ten stays in the exponent (ADR-028); digits that do not fit still overflow
+        assert!(Ratio::from_int(10).checked_pow(39).is_ok());
         assert!(Ratio::from_int(10).checked_pow(38).is_ok());
+        assert!(big.checked_pow(2).is_err());
+        assert!(Ratio::from_int(7).checked_pow(46).is_err());
         assert!(big.checked_sub(Ratio::from_int(-1)).is_err());
     }
 
@@ -1139,11 +1166,41 @@ mod tests {
         assert_eq!(".5".parse::<Ratio>(), Ok(r(1, 2)));
         assert_eq!("-.25".parse::<Ratio>(), Ok(r(-1, 4)));
         for bad in [
-            "", "abc", "1.", "1/0x", "--1", "1e", "1 ", "0x10", "1/2/3", "1e999",
+            "", "abc", "1.", "1/0x", "--1", "1e", "1 ", "0x10", "1/2/3", "1e99999",
         ] {
             assert!(bad.parse::<Ratio>().is_err(), "{bad:?} should not parse");
         }
         assert_eq!("1/0".parse::<Ratio>(), Err(Error::DivisionByZero));
+    }
+
+    #[test]
+    fn a_power_of_ten_that_does_not_fit_stays_in_the_exponent() {
+        // Planck's constant: 9 digits and 10^-42, which does not fit a denominator (ADR-028).
+        let h: Ratio = "6.62607015e-34".parse().unwrap();
+        assert_eq!((h.num(), h.den(), h.ten_exp()), (662_607_015, 1, -42));
+        assert_eq!(
+            h.to_f64().unwrap().to_bits(),
+            6.626_070_15e-34_f64.to_bits()
+        );
+        // numbers that fit are stored as before, with no exponent
+        let k: Ratio = "1.5e-3".parse().unwrap();
+        assert_eq!((k.num(), k.den(), k.ten_exp()), (3, 2000, 0));
+        // sign, zero and a large positive exponent
+        let m: Ratio = "-9.1093837015e-31".parse().unwrap();
+        assert_eq!((m.num(), m.ten_exp()), (-91_093_837_015, -41));
+        assert_eq!(
+            m.to_f64().unwrap().to_bits(),
+            (-9.109_383_701_5e-31_f64).to_bits()
+        );
+        assert_eq!("0e-9999".parse::<Ratio>().unwrap(), Ratio::ZERO);
+        let big: Ratio = "1.5e300".parse().unwrap();
+        assert_eq!(big.to_f64().unwrap().to_bits(), 1.5e300_f64.to_bits());
+        // the digits themselves must still fit
+        assert!(
+            "1234567890123456789012345678901234567890e-5"
+                .parse::<Ratio>()
+                .is_err()
+        );
     }
 
     #[test]
@@ -1272,7 +1329,7 @@ mod tests {
     }
 
     #[test]
-    fn mul_moves_tens_into_the_exponent_only_beside_a_ten_exponent() {
+    fn mul_moves_tens_into_the_exponent_when_the_product_overflows() {
         let ev = pi_part(1_602_176_634, 1, -28, 0);
         let big = r(2_000_000_000_000_000_000_000_000_000_000, 1); // 2e30
         let p = big.checked_mul(ev).unwrap();
@@ -1284,8 +1341,10 @@ mod tests {
             p.to_f64().unwrap().to_bits(),
             3.204_353_268e11_f64.to_bits()
         );
-        // plain fractions still overflow (ADR-004), and so does a real overflow
-        assert!(r(10_i128.pow(38), 1).checked_mul(r(100, 1)).is_err());
+        // plain fractions do the same now (ADR-028): 10^38 * 100 is 1 * 10^40, exactly
+        let p = r(10_i128.pow(38), 1).checked_mul(r(100, 1)).unwrap();
+        assert!(p.checked_eq(r(1, 1).with_exponents(40, 0)).unwrap());
+        // a real overflow (digits, not a power of ten) is still an error
         let huge = r(i128::MAX, 1);
         assert!(huge.checked_mul(huge).is_err());
     }

@@ -8,6 +8,15 @@
 //! `f64` is the correctly rounded value. If they differ (the value lies within about 2^-120 of a
 //! rounding boundary) the function reports an error instead of guessing.
 //!
+//! The same idea is used by the Eisel-Lemire algorithm for parsing decimal numbers: a table of
+//! 128-bit powers of ten, one wide multiplication, and a proof that rounding is decided (or a
+//! fallback). Here the proof is the pair of bounds. `docs/how-numbers-work.md` explains it with
+//! the mathematics; ADR-028 records the decision.
+//!
+//! Two things keep it fast: the powers of ten come from a table ([`pow10_fx`]) instead of being
+//! rebuilt by squaring, and the division of two 128-bit mantissas takes two 64-bit quotient
+//! digits ([`div_frac`], Knuth's algorithm D) instead of 128 shift-and-subtract steps.
+//!
 //! This is the prepare-time and output path only; the `f64` fast path never calls it.
 
 use crate::error::{Error, Result};
@@ -82,21 +91,12 @@ impl Fx {
     fn div(self, rhs: Self, up: bool) -> Option<Self> {
         let divisor = rhs.m;
         let top_bit_set = self.m >= divisor;
-        let mut rem = if top_bit_set {
+        let rem0 = if top_bit_set {
             self.m.checked_sub(divisor)?
         } else {
             self.m
         };
-        let mut quot: u128 = 0;
-        for _ in 0..128 {
-            let carry = rem >> 127;
-            rem <<= 1;
-            quot <<= 1;
-            if carry == 1 || rem >= divisor {
-                rem = rem.wrapping_sub(divisor);
-                quot |= 1;
-            }
-        }
+        let (quot, rem) = div_frac(rem0, divisor)?;
         let base = self.e.checked_sub(rhs.e)?;
         let (mant, inexact, exp) = if top_bit_set {
             // the mantissa quotient is in [1, 2): drop the lowest of the 129 bits
@@ -153,11 +153,73 @@ impl Fx {
     }
 }
 
+/// `floor(rem * 2^128 / b)` and the remainder, for `rem < b` and `b >= 2^127`: two 64-bit
+/// quotient digits (Knuth algorithm D with a two-limb divisor) instead of 128 shift-subtract
+/// steps. The estimate of a digit can be too large by a little; the product check corrects it.
+fn div_frac(mut rem: u128, b: u128) -> Option<(u128, u128)> {
+    let b1 = b >> 64;
+    if b1 == 0 {
+        return None;
+    }
+    let mut quot: u128 = 0;
+    for _ in 0..2 {
+        let n2 = rem >> 64;
+        let n10 = rem << 64;
+        let n_top = (n2 << 64) | (n10 >> 64);
+        let mut qhat = n_top.checked_div(b1)?;
+        if qhat >> 64 != 0 {
+            qhat = u128::from(u64::MAX);
+        }
+        loop {
+            let (hi, lo) = mul_wide(qhat, b)?;
+            if hi > n2 || (hi == n2 && lo > n10) {
+                qhat = qhat.checked_sub(1)?;
+            } else {
+                break;
+            }
+        }
+        rem = n10.wrapping_sub(qhat.wrapping_mul(b));
+        quot = (quot << 64) | qhat;
+    }
+    Some((quot, rem))
+}
+
+/// The largest power of ten kept in the table: `f64` reaches about `10^308`, and a numerator of
+/// up to 39 digits can sit in front of it.
+const TABLE_MAX: usize = 350;
+
+/// Lower and upper bound of `10^k`, as 128-bit mantissas, for `k` in `0..=TABLE_MAX`.
+///
+/// Built on first use and then only read. It is a fixed-size array, so building it allocates
+/// nothing (`zero_alloc` test), and it costs 28,080 bytes (351 entries of 80 bytes) once per
+/// process, not per value. The
+/// bounds are the same as the repeated squaring gives, so the result of every conversion is
+/// unchanged; only the squarings are no longer repeated on every call (docs/how-numbers-work.md).
+fn pow10_table() -> &'static [Option<(Fx, Fx)>; TABLE_MAX + 1] {
+    static TABLE: std::sync::OnceLock<[Option<(Fx, Fx)>; TABLE_MAX + 1]> =
+        std::sync::OnceLock::new();
+    TABLE.get_or_init(|| {
+        core::array::from_fn(|k| {
+            let k = u32::try_from(k).ok()?;
+            let ten = Fx::from_u128(10)?;
+            Some((ten.pow(k, false)?, ten.pow(k, true)?))
+        })
+    })
+}
+
+fn pow10_fx(k: u32, up: bool) -> Option<Fx> {
+    if let Some(Some((lo, hi))) = pow10_table().get(usize::try_from(k).ok()?) {
+        return Some(if up { *hi } else { *lo });
+    }
+    // beyond the table: repeated squaring, as before
+    Fx::from_u128(10)?.pow(k, up)
+}
+
 /// `n * 10^ten * pi^pi` for one side of the fraction, rounded in one direction.
 fn side(n: u128, ten: u32, pi: u32, up: bool) -> Option<Fx> {
     let mut v = Fx::from_u128(n)?;
     if ten > 0 {
-        v = v.mul(Fx::from_u128(10)?.pow(ten, up)?, up)?;
+        v = v.mul(pow10_fx(ten, up)?, up)?;
     }
     if pi > 0 {
         let base = Fx {
@@ -207,6 +269,77 @@ fn split(x: i32) -> Option<(u32, u32)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn div_slow(a: u128, b: u128) -> (u128, u128) {
+        let mut rem = a;
+        let mut quot: u128 = 0;
+        for _ in 0..128 {
+            let carry = rem >> 127;
+            rem <<= 1;
+            quot <<= 1;
+            if carry == 1 || rem >= b {
+                rem = rem.wrapping_sub(b);
+                quot |= 1;
+            }
+        }
+        (quot, rem)
+    }
+
+    #[test]
+    fn bracketing_agrees_with_folding_where_both_decide() {
+        let mut x: u64 = 0x1234_5678_9ABC_DEF1;
+        let mut next = || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        };
+        let mut compared = 0_u32;
+        for _ in 0..300_000 {
+            let num = i128::from(next() % 1_000_000_000_000) + 1;
+            let den = i128::from(next() % 1_000_000) + 1;
+            let ten = i32::try_from(next() % 61).unwrap() - 30;
+            let r = Ratio::new(num, den).unwrap().with_exponents(ten, 0);
+            let (Ok(folded), Ok(bracket)) = (
+                r.folded()
+                    .and_then(|f| Ratio::frac_to_f64(f.num(), f.den())),
+                Ratio::round_exp_to_f64(r.num(), r.den(), r.ten_exp(), 0),
+            ) else {
+                continue;
+            };
+            compared += 1;
+            assert_eq!(folded.to_bits(), bracket.to_bits(), "{r:?}");
+        }
+        assert!(compared > 100_000, "{compared}");
+    }
+
+    #[test]
+    fn word_division_matches_bit_division() {
+        let mut x: u128 = 0x9E37_79B9_7F4A_7C15_F39C_C060_5CED_C834;
+        let mut next = || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x = x.wrapping_mul(0x2545_F491_4F6C_DD1D_9E37_79B9_7F4A_7C15) | 1;
+            x
+        };
+        for i in 0..2_000_000_u32 {
+            let b = next() | (1_u128 << 127);
+            // edge shapes now and then: divisor with a zero low limb, remainder close to b
+            let b = if i % 7 == 0 {
+                b & !((1_u128 << 64) - 1) | (1_u128 << 127)
+            } else {
+                b
+            };
+            let rem = match i % 5 {
+                0 => b - 1,
+                1 => 0,
+                2 => b / 2,
+                _ => next() % b,
+            };
+            assert_eq!(div_frac(rem, b), Some(div_slow(rem, b)), "rem {rem} b {b}");
+        }
+    }
 
     #[test]
     fn mul_wide_matches_u128_when_small() {

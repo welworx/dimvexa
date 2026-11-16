@@ -205,7 +205,7 @@ fn every_error_code_has_a_cli_test() {
             1,
         ),
         (&["convert", "1", "degC/s", "K/s"], "refused", 1),
-        (&["convert", "1", "Qm2", "qm2"], "overflow", 1),
+        (&["convert", "1", "ly3", "m3"], "overflow", 1),
         (&["convert", "1", "m"], "usage", 2),
     ];
     for (args, code, exit) in cases {

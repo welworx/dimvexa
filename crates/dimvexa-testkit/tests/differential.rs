@@ -430,8 +430,23 @@ fn exact_path_reports_overflow_where_the_fast_path_returns_infinity() {
     let reg = registry().unwrap();
     let conv = reg.conversion("km", "mm").unwrap();
     assert_eq!(conv.apply(f64::MAX), f64::INFINITY);
+    // The exact `f64` result is outside the normal range: an error, never an infinity.
+    assert_eq!(
+        conv.apply_exact_f64(f64::MAX).unwrap_err().code(),
+        "overflow"
+    );
+    // A big rational times 10^6 is still exact: the power of ten moves into the exponent
+    // (ADR-028), so the product no longer overflows the fraction.
     let huge = Ratio::from_int(i128::MAX / 2);
-    assert_eq!(conv.apply_exact(huge).unwrap_err().code(), "overflow");
+    let exact = conv.apply_exact(huge).unwrap();
+    assert!(
+        exact
+            .checked_eq(huge.checked_mul(Ratio::from_int(1_000_000)).unwrap())
+            .unwrap()
+    );
+    // Digits that really do not fit stay an error.
+    let ly = reg.conversion("ly", "angstrom").unwrap();
+    assert_eq!(ly.apply_exact(huge).unwrap_err().code(), "overflow");
 }
 
 #[test]

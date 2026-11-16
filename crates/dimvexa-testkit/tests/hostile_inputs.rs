@@ -44,6 +44,14 @@ const NASTY: &[&str] = &[
     "km^9999999999",
     "10^999999999999999999",
     "1e99999999999999999999",
+    "1e9999",
+    "1e10000",
+    "1e10001",
+    "1e-10000",
+    "1e2147483647",
+    "1e-2147483648",
+    "1.5e-2147483647",
+    "123456789.123456789e-9999",
     "170141183460469231731687303715884105728",
     "-170141183460469231731687303715884105728/-1",
     "1/0",
@@ -331,4 +339,29 @@ fn parsing_and_applying_config_files_never_panics() {
         applied >= 100,
         "only {applied} hostile configs applied; the test went quiet"
     );
+}
+
+/// ADR-028: a power of ten that does not fit beside the digits is kept in the exponent, up to a
+/// cap; beyond it the number is an `overflow`, so a hostile exponent never makes a value that
+/// later loops or allocates in proportion to it.
+#[test]
+fn a_decimal_exponent_is_kept_up_to_the_cap_and_refused_beyond_it() {
+    for s in ["1e-9999", "1e9999", "1e10000", "123456789.123456789e-9999"] {
+        let r: Ratio = s.parse().unwrap_or_else(|e| panic!("{s}: {e}"));
+        // exact arithmetic works, rounding to `f64` says it is out of range, nothing panics
+        let _ = r.checked_mul(r);
+        let _ = r.checked_pow(3);
+        let _ = r.checked_recip();
+        assert_eq!(r.to_f64().unwrap_err().code(), "overflow", "{s}");
+        let _ = r.to_string();
+    }
+    for s in [
+        "1e10001",
+        "1e-10001",
+        "1e2147483647",
+        "1e-2147483648",
+        "1.5e-2147483647",
+    ] {
+        assert_eq!(s.parse::<Ratio>().unwrap_err().code(), "overflow", "{s}");
+    }
 }

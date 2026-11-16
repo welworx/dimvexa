@@ -20,12 +20,19 @@ fn cfg(text: &str) -> Config {
 }
 
 /// KL-1: an overflow while defining a unit is an `invalid_definition` with "overflow" in the message.
+/// A power of ten no longer overflows (ADR-028), so the pin uses digits that do not fit: a
+/// 30-digit factor on the light year (14 digits).
 #[test]
 fn known_limitation_kl_1_unit_overflow_has_the_definition_code() {
     let mut reg = registry().unwrap();
     let err = apply(
         &mut reg,
-        &[cfg(&unit("huge", "Qm", "10000000000000000000", ""))],
+        &[cfg(&unit(
+            "huge",
+            "ly",
+            "123456789012345678901234567891",
+            "",
+        ))],
     )
     .unwrap_err();
     assert_eq!(

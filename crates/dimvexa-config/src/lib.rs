@@ -1929,10 +1929,12 @@ mod tests {
 
     #[test]
     fn numbers_that_overflow_say_so() {
-        let big = BARREL.replace("\"42\"", "\"1e40\"");
+        // a power of ten is kept in the exponent (ADR-028); 41 digits do not fit
+        let digits = "10000000000000000000000000000000000000000";
+        let big = BARREL.replace("\"42\"", &format!("\"{digits}\""));
         let msg = Config::parse(&big, "o").unwrap_err().to_string();
-        assert!(msg.contains("too large") && msg.contains("'1e40'"), "{msg}");
-        let msg = Config::parse(&WATER.replace("9982067/10000", "1e40"), "w")
+        assert!(msg.contains("too large") && msg.contains(digits), "{msg}");
+        let msg = Config::parse(&WATER.replace("9982067/10000", digits), "w")
             .unwrap_err()
             .to_string();
         assert!(msg.contains("too large"), "{msg}");

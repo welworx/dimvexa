@@ -941,8 +941,9 @@ mod tests {
     #[test]
     fn overflow_in_compound_units_is_an_error_not_a_wrap() {
         let r = reg();
-        // (10^30 m)^2 = 10^60 does not fit in i128.
-        assert_eq!(r.parse("Qm2").unwrap_err().code(), "overflow");
+        // (10^30 m)^2 = 10^60 does not fit an i128 fraction, but a power of ten is kept in the
+        // exponent now (ADR-028), so it is exact. A dimension exponent that does not fit is still the overflow.
+        assert!(r.parse("Qm2").is_ok());
         assert!(r.parse("Qm").is_ok());
         assert_eq!(r.parse("m^200").unwrap_err().code(), "overflow");
     }
