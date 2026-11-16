@@ -182,3 +182,7 @@ Read the matching skill in `skills/<name>/SKILL.md` (`.claude/skills` is a symli
   0.x, but it needs the `api-change` skill: new schema version and file, CHANGELOG `Changed`,
   an ADR for the decision, and the docs and snapshots updated in the same change.
 * Placeholders are not allowed: no unresolved owner or author markers in committed files.
+* Every file in the repository is in English: code, comments, docs, ADRs, tests, commit
+  messages and pull requests, even when the conversation with the owner is in another language.
+  Text in another language is allowed only as data under test or a quoted name (a German Excel
+  error such as `#ÜBERLAUF!`, a non-ASCII test input). Reviewed.
