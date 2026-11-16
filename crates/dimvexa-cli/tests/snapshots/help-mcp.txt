@@ -1,0 +1,27 @@
+dimvexa mcp - serve unit conversion to an AI assistant (Model Context Protocol)
+
+Usage:
+  dimvexa mcp [--config NAME_OR_PATH]...
+
+Starts an MCP server on stdin and stdout, which an MCP client (Claude Code,
+Claude Desktop, Cursor, VS Code, Codex, ...) starts for you; you do not type
+into it. It offers four read-only tools: convert, units, constants and
+configs. Each is one dimvexa command with --json, so an assistant gets the
+exact result with its sources, or an error with a stable code, never a guess.
+It reads and writes nothing else and needs no network.
+
+Add it to a client, for example: claude mcp add dimvexa -- dimvexa mcp
+Setup for other clients, and the tools: docs/mcp.md
+
+Examples:
+  dimvexa mcp --config us-customary
+
+Options:
+  --config NAME_OR_PATH
+                   apply a config to every call; repeatable. A path to your
+                   own file is allowed here, because you start the server;
+                   the assistant itself can only name shipped configs.
+                   A config that cannot be loaded stops the server at once.
+
+Exit codes: 0 when the client closed the connection, 1 on a config that
+cannot be loaded or a broken pipe, 2 usage error.

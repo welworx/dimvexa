@@ -95,6 +95,19 @@ The [user guide](docs/guide.md) has the full unit list, configs and densities, u
 own, the angle limitations and self-update. The Python and WASM bindings have their own
 READMEs in [`bindings/`](bindings); an Excel add-in is an early spike ([docs](docs/excel.md)).
 
+## Use it from an AI assistant (MCP)
+
+`dimvexa mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server, so Claude,
+Cursor, Codex and other assistants convert through dimvexa instead of guessing a factor, and relay
+a refusal instead of an invented number:
+
+```console
+$ claude mcp add dimvexa -- dimvexa mcp
+```
+
+Setup for Claude Code, Claude Desktop, Cursor, VS Code, Codex, Gemini CLI and others, and the
+tools: [docs/mcp.md](docs/mcp.md).
+
 ## Benchmarked against
 
 **The aim is to be the most accurate and the fastest unit-conversion library.** That is the goal

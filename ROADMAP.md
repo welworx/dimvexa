@@ -31,7 +31,7 @@ All are thin shells over the Rust core, after the API is stable.
 |---|---|
 | Python (PyO3, maturin, NumPy arrays, wheels) | Binding in `bindings/python` (ADR-012); published on PyPI (0.1.1) |
 | WASM binding (`bindings/wasm`, Node.js target, ADR-011) | Published on npm as `@dimvexa/wasm` (0.1.0); builds and runs in the Node benchmark |
-| MCP server (`convert`, `batch_convert`, `unit_info`, `search_units`, `explain_refusal`, `list_packs`, `list_contexts`) | Planned |
+| MCP server: `dimvexa mcp` (crate `dimvexa-mcp`, ADR-027, [guide](docs/mcp.md)): tools `convert`, `units`, `constants`, `configs` over stdio. A remote transport, `batch_convert` and the other planned tools are open items in the ADR | In `main`, unreleased |
 | Web tool on Cloudflare using the WASM build (domain dimvexa.com, to be confirmed) | Planned |
 | Excel add-in, optional: Office.js custom functions on the WASM build (ADR-016, [guide](docs/excel.md)) | Spike in `bindings/excel` (works in Excel on the web and on Mac; Windows untested) |
 | C ABI | Planned |

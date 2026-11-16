@@ -6,6 +6,9 @@ All notable changes are documented here. The format follows
 Commits. Releases are published by `.github/workflows/release.yml` (see `docs/releasing.md`).
 
 ## [Unreleased]
+### Added
+
+- `dimvexa mcp`: a Model Context Protocol server for AI assistants (Claude Code, Claude Desktop, Cursor, VS Code, Codex, Gemini CLI and others) over stdio, in the new dependency-free crate `dimvexa-mcp` (ADR-027). Four read-only tools, `convert`, `units`, `constants` and `configs`, each the JSON of the matching `dimvexa ... --json` command, so a refusal arrives as an error result with its stable code and candidates. `dimvexa mcp --config NAME_OR_PATH` applies a config to every call; the assistant itself can only name shipped configs. Setup for each client: `docs/mcp.md`. New `dimvexa mcp --help` page; the usage lines and overview list the command.
 
 ## [0.10.0] - 2026-11-15
 ### Changed

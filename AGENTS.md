@@ -114,12 +114,13 @@ committed.
 | `crates/dimvexa-data` | `data/units/*.toml`, `data/constants/*.toml`, `data/vectors/*.toml`, `data/data_version.toml`; `build.rs` compiles the tables |
 | `crates/dimvexa-config` | user config files (ADR-009): `Config`, `apply`; the core only offers `Registry::add_alias` and the helpers `name_is_free`, `prefix_clash` |
 | `crates/dimvexa` | facade crate (re-exports core + data) |
-| `crates/dimvexa-cli` | `dimvexa convert`, `units`, `configs`, `constants`, `update` (self-update, ADR-015); no conversion logic of its own; snapshots in `tests/snapshots` |
+| `crates/dimvexa-mcp` | the MCP server (ADR-027, `docs/mcp.md`): JSON-RPC over stdio, four tools; no dependencies and no conversion logic: each tool is a `dimvexa ... --json` command line run by a function the CLI passes in |
+| `crates/dimvexa-cli` | `dimvexa convert`, `units`, `configs`, `constants`, `update` (self-update, ADR-015), `mcp` (serves `dimvexa-mcp`); no conversion logic of its own; snapshots in `tests/snapshots` |
 | `crates/dimvexa-testkit` | test helpers; differential, exact-path, property, overflow and zero-allocation tests |
 | `xtask` | `ci`, `check-docs`, `validate-data`, `update-data-hash`, `bench-check`, `bench-impact`, `bench-release`, `bench-matrix` |
 | `bindings/` | `python`, `wasm`, `excel`: thin wrappers with no conversion logic; versions equal (`scripts/check-versions.sh`) |
 | `skills/` | the agent skills (`.claude/skills` is a symlink to it) |
-| `docs/` | `guide.md` (CLI user guide; its examples are tested in `crates/dimvexa-cli/tests/cli.rs`), `PLAN.md`, `DESIGN.md`, `adr/`, `excel.md`, `brand/` (logo, icons, design guidelines), `precision.md`, `benchmarks/`, `ci-pinning.md`, `schemas/` |
+| `docs/` | `guide.md` (CLI user guide; its examples are tested in `crates/dimvexa-cli/tests/cli.rs`), `mcp.md` (connecting an AI assistant), `PLAN.md`, `DESIGN.md`, `adr/`, `excel.md`, `brand/` (logo, icons, design guidelines), `precision.md`, `benchmarks/`, `ci-pinning.md`, `schemas/` |
 | `.github/` | workflows (pinned actions, see `docs/ci-pinning.md`), issue forms, PR template |
 | `extras/`, `fuzz/` | network-only tooling; separate workspaces, never built offline |
 | `benchmarks/` | cross-library comparison: corpus, runners, report generator (own workspaces; competitors need network) |
@@ -170,12 +171,16 @@ Read the matching skill in `skills/<name>/SKILL.md` (`.claude/skills` is a symli
   removing or renaming one needs a new version (ADR-014 did that for `/2`).
 * The CLI help is part of the interface. A new or changed command, option, config, JSON schema,
   exit code or error behaviour updates, in the same change: the overview (`HELP`) and the page
-  of that command (`HELP_CONVERT`, `HELP_UNITS`, `HELP_CONFIGS`, `HELP_CONSTANTS`, `HELP_UPDATE`) in
+  of that command (`HELP_CONVERT`, `HELP_UNITS`, `HELP_CONFIGS`, `HELP_CONSTANTS`, `HELP_UPDATE`, `HELP_MCP`) in
   `crates/dimvexa-cli/src/lib.rs`, its `Examples:` and `docs/guide.md`. A new command also needs a
   page, an entry in `HELP_PAGES` in `crates/dimvexa-cli/tests/cli.rs` and a line in the overview.
   Help lines stay within 80 columns and every example must run as typed from an empty
   directory (tests enforce both); colour wraps text only (`colorize_text`) and a test checks that
   stripping it gives the plain text; regenerate the `help*.txt` snapshots and read the diff.
+* The MCP tools are the CLI's `--json` output (ADR-027): a new or changed JSON field reaches
+  assistants with no extra work, but a new command is not a tool until `crates/dimvexa-mcp/src/lib.rs`
+  lists it (`TOOLS`, `command_line`) and `crates/dimvexa-cli/tests/cli.rs` runs it. The tool
+  descriptions name schema versions; keep them in step. An assistant may name only shipped configs.
 * Update `CHANGELOG.md` for user-visible changes and the relevant ADR or doc for a decision.
 * A breaking change (a renamed JSON field, a changed public item) is allowed while the crate is
   0.x, but it needs the `api-change` skill: new schema version and file, CHANGELOG `Changed`,

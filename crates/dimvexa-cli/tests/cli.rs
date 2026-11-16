@@ -289,13 +289,14 @@ fn error_snapshots() {
 }
 
 /// The help pages: the overview and one per command, by every spelling that reaches them.
-const HELP_PAGES: [&[&str]; 6] = [
+const HELP_PAGES: [&[&str]; 7] = [
     &["--help"],
     &["convert", "--help"],
     &["units", "--help"],
     &["configs", "--help"],
     &["constants", "--help"],
     &["update", "--help"],
+    &["mcp", "--help"],
 ];
 
 /// Every command in the `Examples:` section of every help page works as typed, from any
@@ -319,8 +320,10 @@ fn help_examples_run_from_an_empty_directory() {
             "the update page's examples are not run (network): keep it to one"
         );
         for line in section {
-            // `update` talks to GitHub: the tests build and run offline.
-            if line.starts_with("  dimvexa update") {
+            // `update` talks to GitHub: the tests build and run offline. `mcp` waits for a
+            // client on stdin and prints nothing by itself: `mcp_example_starts_and_stops_cleanly`
+            // runs it.
+            if line.starts_with("  dimvexa update") || line.starts_with("  dimvexa mcp") {
                 continue;
             }
             let args: Vec<&str> = line.split_whitespace().skip(1).collect();
@@ -349,7 +352,7 @@ fn help_examples_run_from_an_empty_directory() {
 #[test]
 fn per_command_help() {
     let overview = dimvexa(&["--help"]).stdout;
-    for cmd in ["convert", "units", "configs", "constants", "update"] {
+    for cmd in ["convert", "units", "configs", "constants", "update", "mcp"] {
         let page = dimvexa(&[cmd, "--help"]);
         assert_eq!(page.code, 0, "{cmd}");
         assert!(
@@ -3203,4 +3206,198 @@ fn json_output_lists_what_a_later_config_replaced() {
             .len(),
         0
     );
+}
+
+/// Runs `dimvexa mcp` with `input` on stdin; the end of the input is the client closing.
+fn mcp_session(args: &[&str], input: &str) -> Run {
+    use std::io::Write as _;
+    use std::process::Stdio;
+    let mut child = Command::new(env!("CARGO_BIN_EXE_dimvexa"))
+        .arg("mcp")
+        .args(args)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(input.as_bytes())
+        .unwrap();
+    let out = child.wait_with_output().unwrap();
+    Run {
+        code: out.status.code().unwrap(),
+        stdout: String::from_utf8(out.stdout).unwrap(),
+        stderr: String::from_utf8(out.stderr).unwrap(),
+    }
+}
+
+/// The value at a dotted path: `result.content.0.text` (a number indexes an array).
+fn at<'a>(v: &'a json::V, path: &str) -> &'a json::V {
+    let mut v = v;
+    for key in path.split('.') {
+        let next = key
+            .parse::<usize>()
+            .map_or_else(|_| v.get(key), |i| v.as_array().get(i));
+        v = next.unwrap_or_else(|| panic!("no `{key}` of `{path}` in {v:?}"));
+    }
+    v
+}
+
+/// The reply with this `id`: the JSON text of its tool result, parsed, and its `isError`.
+fn mcp_tool_reply(stdout: &str, id: u32) -> (json::V, bool) {
+    let line = stdout
+        .lines()
+        .find(|l| l.contains(&format!("\"id\":{id},")))
+        .unwrap_or_else(|| panic!("no reply {id} in {stdout}"));
+    let reply = json::parse(line).unwrap();
+    let text = at(&reply, "result.content.0.text").as_str().to_string();
+    let is_error = at(&reply, "result.isError").as_bool();
+    (json::parse(&text).unwrap(), is_error)
+}
+
+/// A whole MCP session against the real binary: the handshake, each tool, a refusal, a
+/// hostile argument. The tool result is the JSON `dimvexa --json` prints, field for field.
+#[test]
+fn mcp_session_runs_every_tool() {
+    let call = |id: u32, name: &str, args: &str| {
+        format!(
+            r#"{{"jsonrpc":"2.0","id":{id},"method":"tools/call","params":{{"name":"{name}","arguments":{args}}}}}"#
+        )
+    };
+    let input = [
+        r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}"#.to_string(),
+        r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#.to_string(),
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#.to_string(),
+        call(3, "convert", r#"{"value":"10","from":"m/s","to":"km/h"}"#),
+        call(4, "convert", r#"{"value":"1","from":"ton","to":"kg"}"#),
+        call(5, "convert", r#"{"value":"1","from":"ton","to":"kg","configs":["us-customary"]}"#),
+        call(6, "convert", r#"{"value":"1","from":"L","to":"kg","configs":["water"],"density":"water_25C"}"#),
+        call(7, "units", r#"{"groups":true}"#),
+        call(8, "units", r#"{"query":"psi"}"#),
+        call(9, "constants", r#"{"name":"k_B"}"#),
+        call(10, "configs", "{}"),
+        call(11, "configs", r#"{"name":"water"}"#),
+        call(12, "convert", r#"{"value":"1","from":"m","to":"km","configs":["./x.toml"]}"#),
+        call(13, "units", r#"{"query":"nonsense"}"#),
+    ]
+    .join("\n");
+    let r = mcp_session(&[], &format!("{input}\n"));
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert_eq!(r.stderr, "");
+    assert_eq!(
+        r.stdout.lines().count(),
+        13,
+        "one reply per request:\n{}",
+        r.stdout
+    );
+    for line in r.stdout.lines() {
+        json::parse(line).unwrap(); // every line is one JSON message
+    }
+    let init = json::parse(r.stdout.lines().next().unwrap()).unwrap();
+    assert_eq!(at(&init, "result.protocolVersion").as_str(), "2025-06-18");
+    assert_eq!(at(&init, "result.serverInfo.name").as_str(), "dimvexa");
+    assert_eq!(
+        at(&init, "result.serverInfo.version").as_str(),
+        env!("CARGO_PKG_VERSION")
+    );
+    let listed = json::parse(r.stdout.lines().nth(1).unwrap()).unwrap();
+    assert_eq!(at(&listed, "result.tools").as_array().len(), 4);
+
+    // The same JSON as the command line prints.
+    let (conv, err) = mcp_tool_reply(&r.stdout, 3);
+    assert!(!err);
+    let direct = json::parse(
+        dimvexa(&["convert", "10", "m/s", "km/h", "--json"])
+            .stdout
+            .trim(),
+    )
+    .unwrap();
+    assert_eq!(conv, direct);
+    assert_eq!(at(&conv, "output.value").as_str(), "36");
+
+    // A refusal is an error result with the stable code and its candidates.
+    let (refused, err) = mcp_tool_reply(&r.stdout, 4);
+    assert!(err);
+    assert!(!at(&refused, "ok").as_bool());
+    assert_eq!(at(&refused, "error.code").as_str(), "ambiguous_symbol");
+    assert!(at(&refused, "error.candidates").as_array().len() > 1);
+    let (resolved, err) = mcp_tool_reply(&r.stdout, 5);
+    assert!(!err, "{resolved:?}");
+    let (water, err) = mcp_tool_reply(&r.stdout, 6);
+    assert!(!err, "{water:?}");
+    assert_eq!(at(&water, "density.name").as_str(), "water_25C");
+
+    assert_eq!(
+        at(&mcp_tool_reply(&r.stdout, 7).0, "schema").as_str(),
+        "dimvexa.units/5"
+    );
+    assert!(at(&mcp_tool_reply(&r.stdout, 8).0, "ok").as_bool());
+    assert_eq!(
+        at(&mcp_tool_reply(&r.stdout, 9).0, "schema").as_str(),
+        "dimvexa.constants/1"
+    );
+    assert_eq!(
+        at(&mcp_tool_reply(&r.stdout, 10).0, "schema").as_str(),
+        "dimvexa.configs/3"
+    );
+    assert!(at(&mcp_tool_reply(&r.stdout, 11).0, "ok").as_bool());
+
+    // A file path from the assistant is refused before anything runs.
+    let line = r.stdout.lines().find(|l| l.contains("\"id\":12,")).unwrap();
+    assert!(line.contains("not a shipped config name"), "{line}");
+    assert!(line.contains("\"isError\":true"), "{line}");
+    let (unknown, err) = mcp_tool_reply(&r.stdout, 13);
+    assert!(err);
+    assert!(!at(&unknown, "ok").as_bool());
+}
+
+/// `dimvexa mcp --config NAME` applies the config to every call, a bad one stops the server
+/// at once (exit 1, nothing on stdout), and usage mistakes are exit 2.
+#[test]
+fn mcp_server_configs_and_usage() {
+    let ton = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"convert","arguments":{"value":"1","from":"ton","to":"kg"}}}"#;
+    let r = mcp_session(&["--config", "us-customary"], &format!("{ton}\n"));
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    let (resolved, err) = mcp_tool_reply(&r.stdout, 1);
+    assert!(!err, "{resolved:?}");
+
+    let r = mcp_session(&["--config", "no-such-config"], "");
+    assert_eq!(r.code, 1);
+    assert_eq!(r.stdout, "");
+    assert!(r.stderr.contains("cannot load the config"), "{}", r.stderr);
+    assert!(r.stderr.contains("no-such-config"), "{}", r.stderr);
+
+    for bad in [&["--json"][..], &["extra"], &["--exact"], &["--const", "x"]] {
+        let r = mcp_session(bad, "");
+        assert_eq!(r.code, 2, "{bad:?}");
+        assert!(
+            r.stderr
+                .starts_with("error[usage]: 'mcp' takes only --config"),
+            "{bad:?}: {}",
+            r.stderr
+        );
+        assert_eq!(r.stdout, "");
+    }
+}
+
+/// The example of the `mcp` help page starts the server and ends it when stdin closes.
+#[test]
+fn mcp_example_starts_and_stops_cleanly() {
+    let help = dimvexa(&["mcp", "--help"]).stdout;
+    let examples: Vec<&str> = help
+        .lines()
+        .skip_while(|l| *l != "Examples:")
+        .skip(1)
+        .take_while(|l| l.starts_with("  dimvexa "))
+        .collect();
+    assert_ne!(examples.len(), 0, "no examples on the mcp page");
+    for line in examples {
+        let args: Vec<&str> = line.split_whitespace().skip(2).collect();
+        let r = mcp_session(&args, "");
+        assert_eq!(r.code, 0, "`{line}`: {}", r.stderr);
+        assert_eq!((r.stdout.as_str(), r.stderr.as_str()), ("", ""), "`{line}`");
+    }
 }

@@ -507,6 +507,21 @@ What to know:
 The number type is described in [`docs/adr/018-constants-and-exact-pi.md`](adr/018-constants-and-exact-pi.md);
 the former limitation KL-19 (pi as a fraction) is closed in [`docs/known-limitations.md`](known-limitations.md).
 
+## Using dimvexa from an AI assistant
+
+`dimvexa mcp` starts a Model Context Protocol server on stdin and stdout, so an assistant such as
+Claude, Cursor or Codex converts units through dimvexa and relays a refusal instead of guessing:
+
+```console
+$ claude mcp add dimvexa -- dimvexa mcp
+$ dimvexa mcp --config us-customary   # your own or a shipped config, applied to every call
+```
+
+You do not type into it; the assistant starts it. It has four read-only tools (`convert`,
+`units`, `constants`, `configs`) that return the same JSON as the commands with `--json`. Setup
+for each client, the tools and the safety limits are in [mcp.md](mcp.md); the decisions in
+[ADR-027](adr/027-mcp-server.md).
+
 ## Updating
 
 A binary from the GitHub release page (or the Windows `dimvexa.exe`) updates itself:

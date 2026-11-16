@@ -15,7 +15,7 @@ bad=0
 check() { [ "$2" = "$want" ] || { echo "MISMATCH $1: $2 (workspace: $want)" >&2; bad=1; }; }
 check bindings/python/Cargo.toml "$(first bindings/python/Cargo.toml)"
 check bindings/wasm/Cargo.toml "$(first bindings/wasm/Cargo.toml)"
-for c in dimvexa-core dimvexa-data dimvexa-config dimvexa; do
+for c in dimvexa-core dimvexa-data dimvexa-config dimvexa dimvexa-mcp; do
   v=$(sed -n "s/^$c = { version = \"\([^\"]*\)\".*/\1/p" Cargo.toml)
   check "Cargo.toml [workspace.dependencies] $c" "$v"
 done

@@ -10,9 +10,12 @@
 //! that makes the generators produce only rejected input fails instead of passing quietly.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use std::fmt::Write as _;
+
 use dimvexa::registry;
 use dimvexa_config::{Config, apply};
 use dimvexa_core::{Error, Ratio};
+use dimvexa_mcp::{Options, Output, serve};
 
 /// Cases that have broken, or could break, a parser: huge exponents, deep nesting, odd Unicode,
 /// control characters, empty and near-empty input, numbers at the edge of `i128`.
@@ -330,5 +333,132 @@ fn parsing_and_applying_config_files_never_panics() {
     assert!(
         applied >= 100,
         "only {applied} hostile configs applied; the test went quiet"
+    );
+}
+
+/// A JSON string literal for `text`.
+fn json_quoted(text: &str) -> String {
+    let mut out = String::from("\"");
+    for c in text.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            c if u32::from(c) < 0x20 => {
+                let _ = write!(out, "\\u{:04x}", u32::from(c));
+            }
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+    out
+}
+
+/// The MCP server (ADR-027) takes every hostile text as an argument of every tool, plus hostile
+/// JSON and bytes. It never panics, it answers each line with exactly one line, and nothing the
+/// assistant writes ever reaches the command line as an option: a word that starts with `-`
+/// is refused (a negative value may start with one `-`), and a config named by the assistant is a
+/// plain name, never a path.
+#[test]
+fn serving_mcp_never_panics_and_assistant_text_never_becomes_an_option() {
+    let mut requests = Vec::new();
+    let mut id = 0_u32;
+    for text in inputs() {
+        let t = json_quoted(&text);
+        for (tool, args) in [
+            ("convert", format!(r#"{{"value":{t},"from":{t},"to":{t}}}"#)),
+            (
+                "convert",
+                format!(r#"{{"value":"1","from":"m","to":"km","density":{t}}}"#),
+            ),
+            (
+                "convert",
+                format!(r#"{{"value":"1","from":"m","to":"km","configs":[{t}]}}"#),
+            ),
+            ("units", format!(r#"{{"query":{t},"configs":[{t}]}}"#)),
+            ("constants", format!(r#"{{"name":{t}}}"#)),
+            ("configs", format!(r#"{{"name":{t}}}"#)),
+        ] {
+            id += 1;
+            requests.push(format!(
+                r#"{{"jsonrpc":"2.0","id":{id},"method":"tools/call","params":{{"name":"{tool}","arguments":{args}}}}}"#
+            ));
+        }
+    }
+    let requests_with_id = requests.len();
+    // Hostile JSON and raw junk: one reply each, never a crash.
+    let deep = format!("{}{}", "[".repeat(100_000), "]".repeat(100_000));
+    let mut lines = requests;
+    lines.extend(
+        [
+            "{", "}", "[]", "null", "\"", "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":null}",
+            r#"{"jsonrpc":"2.0","id":1e999999,"method":"ping"}"#,
+            r#"{"jsonrpc":"2.0","id":"\ud800","method":"ping"}"#,
+            r#"{"jsonrpc":"2.0","id":[],"method":"ping"}"#,
+            r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"convert","arguments":{"value":[[[[]]]]}}}"#,
+            "\u{feff}{}",
+        ]
+        .map(String::from),
+    );
+    lines.push(deep.clone());
+    lines.push(format!(r#"{{"id":1,"method":"ping","params":{deep}}}"#));
+    let mut rng = Rng(seed());
+    eprintln!("seed {}", seed());
+    for _ in 0..500 {
+        lines.push(junk(&mut rng));
+    }
+    let non_requests = lines.len() - requests_with_id;
+    let mut input = lines.join("\n").into_bytes();
+    input.extend_from_slice(b"\n\xff\xfe\n");
+
+    let mut calls: Vec<Vec<String>> = Vec::new();
+    let mut run = |args: &[String]| {
+        calls.push(args.to_vec());
+        Output::default()
+    };
+    let mut output = Vec::new();
+    serve(&mut &input[..], &mut output, &Options::default(), &mut run).unwrap();
+    let text = String::from_utf8(output).unwrap();
+    for line in text.lines() {
+        assert!(line.starts_with(r#"{"jsonrpc":"2.0","id":"#), "{line}");
+    }
+    // Every request line has a reply; a junk line has one too, unless it is blank or a notification.
+    assert!(
+        text.lines().count() >= requests_with_id,
+        "only {} replies",
+        text.lines().count()
+    );
+    assert!(non_requests > 500);
+
+    let known = ["--json", "--exact", "--groups", "--config", "--const"];
+    let mut reached = 0_usize;
+    for call in &calls {
+        reached += 1;
+        let mut after_config = false;
+        for (i, word) in call.iter().enumerate() {
+            if after_config {
+                assert!(
+                    !word.is_empty()
+                        && word
+                            .chars()
+                            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+                        && !word.starts_with('-'),
+                    "config {word:?} in {call:?}"
+                );
+            }
+            after_config = word == "--config";
+            if word.starts_with('-') {
+                let negative_value = i == 1
+                    && call.first().map(String::as_str) == Some("convert")
+                    && !word.starts_with("--");
+                assert!(
+                    known.contains(&word.as_str()) || negative_value,
+                    "{word:?} in {call:?}"
+                );
+            }
+        }
+    }
+    assert!(
+        reached >= 20,
+        "only {reached} tool calls got through; the test went quiet"
     );
 }

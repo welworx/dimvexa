@@ -30,6 +30,7 @@ dimvexa = { workspace = true }
 dimvexa-core = { workspace = true }
 dimvexa-data = { workspace = true }
 dimvexa-config = { workspace = true }
+dimvexa-mcp = { workspace = true }
 
 [lints]
 workspace = true

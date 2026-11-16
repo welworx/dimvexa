@@ -75,4 +75,9 @@ workflow is untested. If trusted publishing cannot be set up there, store a
   `dimvexa-cli` and PyPI `dimvexa` at 0.1.1, npm `@dimvexa/wasm` at 0.1.0 (checked 2026-11-09).
   The one-time setup above is already done for the registries that carry these versions; check
   the registry settings before relying on it for a new package.
+* `dimvexa-mcp` (ADR-027) is a new crate: it is published for the first time by the release that
+  includes `dimvexa mcp`, before `dimvexa-cli`, which depends on it. The crates.io trusted
+  publishing setup above must name it too (a crate that does not exist yet cannot have a
+  trusted publisher: the first publish of a new crate may need the token fallback described
+  above). Then `docs/mcp.md` can drop its "until the next release" note.
 * The Python and npm packages do not wait for each other, only for crates.io.

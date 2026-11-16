@@ -6,6 +6,7 @@
 //! dimvexa VALUE FROM TO [--exact] [--json]        shorthand
 //! dimvexa units [--groups | GROUP | UNIT] [--json]  list units by quantity, one group, or one unit
 //! dimvexa configs [NAME_OR_PATH] [--json]          what the shipped configs (or a file) contain
+//! dimvexa mcp [--config NAME_OR_PATH]...           serve the tools to an AI assistant (MCP, stdio)
 //! ```
 //!
 //! This crate contains **no conversion logic**: it parses arguments, calls the public
@@ -40,6 +41,7 @@ Usage:
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]
   dimvexa update [--check] [-y]
+  dimvexa mcp [--config NAME_OR_PATH]...
 
 Run 'dimvexa --help' for commands, options and examples.
 ";
@@ -53,10 +55,11 @@ Usage:
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]
   dimvexa update [--check] [-y]
+  dimvexa mcp [--config NAME_OR_PATH]...
 
 Converts VALUE from unit FROM to unit TO. Ambiguous input is an error.
 Run 'dimvexa COMMAND --help' (convert, units, configs, constants,
-update) for details.
+update, mcp) for details.
 
 Examples:
   dimvexa convert 10 m/s km/h
@@ -84,6 +87,8 @@ Commands:
   constants        list the constants: name, exact value, unit, conditions and
                    source (built in, plus those of any --config)
   constants NAME   show one constant, for example: dimvexa constants h_P
+  mcp              serve unit conversion to an AI assistant over MCP (Claude,
+                   Cursor, ...); see docs/mcp.md
   update           replace this binary with the latest GitHub release (needs
                    curl and tar; checks the published SHA-256 first; see
                    docs/adr/015-update-command.md)
@@ -277,6 +282,37 @@ Exit codes: 0 success, 1 invalid config file, 2 usage error (an unknown
 constant name is one).
 ";
 
+/// `dimvexa mcp --help`.
+const HELP_MCP: &str = "\
+dimvexa mcp - serve unit conversion to an AI assistant (Model Context Protocol)
+
+Usage:
+  dimvexa mcp [--config NAME_OR_PATH]...
+
+Starts an MCP server on stdin and stdout, which an MCP client (Claude Code,
+Claude Desktop, Cursor, VS Code, Codex, ...) starts for you; you do not type
+into it. It offers four read-only tools: convert, units, constants and
+configs. Each is one dimvexa command with --json, so an assistant gets the
+exact result with its sources, or an error with a stable code, never a guess.
+It reads and writes nothing else and needs no network.
+
+Add it to a client, for example: claude mcp add dimvexa -- dimvexa mcp
+Setup for other clients, and the tools: docs/mcp.md
+
+Examples:
+  dimvexa mcp --config us-customary
+
+Options:
+  --config NAME_OR_PATH
+                   apply a config to every call; repeatable. A path to your
+                   own file is allowed here, because you start the server;
+                   the assistant itself can only name shipped configs.
+                   A config that cannot be loaded stops the server at once.
+
+Exit codes: 0 when the client closed the connection, 1 on a config that
+cannot be loaded or a broken pipe, 2 usage error.
+";
+
 /// `dimvexa update --help`.
 const HELP_UPDATE: &str = "\
 dimvexa update - replace this binary with the latest GitHub release
@@ -359,6 +395,7 @@ fn command_help(topic: &str) -> &'static str {
         "configs" => HELP_CONFIGS,
         "constants" => HELP_CONSTANTS,
         "update" => HELP_UPDATE,
+        "mcp" => HELP_MCP,
         _ => HELP_CONVERT,
     }
 }
@@ -735,6 +772,8 @@ enum Parsed {
         check: bool,
         yes: bool,
     },
+    /// `dimvexa mcp`: the configs come from the `--config` options.
+    Mcp,
     /// `--help`, or `help COMMAND`, or `COMMAND --help`; `None` is the overview.
     Help(Option<&'static str>),
     Version,
@@ -925,6 +964,25 @@ fn parse_configs(
     }
 }
 
+/// The rest of `dimvexa mcp ...`: only `--config` is allowed. A refusal is never a `--json`
+/// error: the server speaks JSON-RPC, not the schemas of the other commands.
+fn parse_mcp(
+    misused: bool,
+    configs: Vec<String>,
+    schema: &'static str,
+) -> Result<(Parsed, Vec<String>), UsageError> {
+    if misused {
+        return Err(UsageError {
+            message: "'mcp' takes only --config; it speaks JSON-RPC on stdin and stdout"
+                .to_string(),
+            json: false,
+            schema,
+            suggestions: Vec::new(),
+        });
+    }
+    Ok((Parsed::Mcp, configs))
+}
+
 /// Checks what the command line says next to `update`: `extra` is a positional argument,
 /// `--exact`, `--json` or `--groups`; `value_options` is `--config` or `--const`. A refusal is
 /// never a `--json` error: the update has no JSON output and no schema.
@@ -1057,7 +1115,8 @@ fn help_topic(positional: &[&str]) -> Result<Option<&'static str>, String> {
     };
     if is_help_word && words.len() > 1 {
         return Err(
-            "'help' takes one command: convert, units, configs, constants or update".to_string(),
+            "'help' takes one command: convert, units, configs, constants, update or mcp"
+                .to_string(),
         );
     }
     Ok(match words.first().copied() {
@@ -1067,11 +1126,12 @@ fn help_topic(positional: &[&str]) -> Result<Option<&'static str>, String> {
         Some("configs") => Some("configs"),
         Some("constants") => Some("constants"),
         Some("update") => Some("update"),
+        Some("mcp") => Some("mcp"),
         // `dimvexa 10 m km --help`: help for the conversion that was being typed.
         Some(_) if !is_help_word => Some("convert"),
         Some(other) => {
             return Err(format!(
-                "no help for '{other}'; commands: convert, units, configs, constants, update"
+                "no help for '{other}'; commands: convert, units, configs, constants, update, mcp"
             ));
         }
     })
@@ -1118,14 +1178,15 @@ fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
             !configs.is_empty() || opts.density.is_some(),
             schema,
         )?;
-        let update = Parsed::Update {
-            check: want_check,
-            yes: want_yes,
-        };
-        return Ok((update, configs));
+        let (check, yes) = (want_check, want_yes);
+        return Ok((Parsed::Update { check, yes }, configs));
     }
     if want_check || want_yes {
         return Err(usage("'--check' and '-y' only apply to 'update'".into()));
+    }
+    if let Some((&"mcp", rest)) = positional.split_first() {
+        let misused = !rest.is_empty() || exact || want_json || want_groups;
+        return parse_mcp(misused || opts.density.is_some(), configs, schema);
     }
     if let Some((&"units", rest)) = positional.split_first() {
         if exact {
@@ -2581,6 +2642,42 @@ fn print_version(out: &mut dyn Write) -> u8 {
     0
 }
 
+/// Reports a `--const` that could not be resolved (JSON on stdout for `--json`, text on
+/// stderr); returns the exit code: 2 for a name that is not known, 1 for a refused value.
+fn report_density_error(
+    e: &DensityError,
+    json: bool,
+    out: &mut dyn Write,
+    err: &mut dyn Write,
+) -> u8 {
+    let (code, message, candidates, suggestions, status) = match e {
+        DensityError::Unknown { message: m, known } => {
+            ("usage", m.clone(), Vec::new(), known.clone(), 2)
+        }
+        DensityError::Lib(e) => (
+            e.code(),
+            format!("--const: {e}"),
+            e.candidates().to_vec(),
+            e.suggestions().to_vec(),
+            1,
+        ),
+        _ => (
+            "usage",
+            "unusable density".to_string(),
+            Vec::new(),
+            Vec::new(),
+            2,
+        ),
+    };
+    if json {
+        let line = json_error("convert", code, &message, &candidates, &suggestions);
+        let _ = writeln!(out, "{line}");
+    } else {
+        let _ = writeln!(err, "error[{code}]: {message}");
+    }
+    status
+}
+
 fn run_inner<I>(args: I, out: &mut dyn Write, err: &mut dyn Write, color: Color) -> u8
 where
     I: IntoIterator<Item = String>,
@@ -2615,6 +2712,7 @@ where
             });
         }
         Parsed::Update { check, yes } => return update::run(check, yes, out, err),
+        Parsed::Mcp => return run_mcp_on_stdin(&config_files, out, err),
         Parsed::Convert(a) => a,
     };
     let loaded = match load(&config_files) {
@@ -2626,34 +2724,7 @@ where
         None => None,
         Some(spec) => match loaded.lib.resolve_density(spec) {
             Ok(d) => Some(d),
-            Err(e) => {
-                let (code, message, candidates, suggestions, status) = match &e {
-                    DensityError::Unknown { message: m, known } => {
-                        ("usage", m.clone(), Vec::new(), known.clone(), 2)
-                    }
-                    DensityError::Lib(e) => (
-                        e.code(),
-                        format!("--const: {e}"),
-                        e.candidates().to_vec(),
-                        e.suggestions().to_vec(),
-                        1,
-                    ),
-                    _ => (
-                        "usage",
-                        "unusable density".to_string(),
-                        Vec::new(),
-                        Vec::new(),
-                        2,
-                    ),
-                };
-                if args.json {
-                    let line = json_error("convert", code, &message, &candidates, &suggestions);
-                    let _ = writeln!(out, "{line}");
-                } else {
-                    let _ = writeln!(err, "error[{code}]: {message}");
-                }
-                return status;
-            }
+            Err(e) => return report_density_error(&e, args.json, out, err),
         },
     };
     match compute(&args, &loaded, density.as_ref()) {
@@ -2684,6 +2755,61 @@ where
             0
         }
         Err(e) => fail(&args, &e, out, err),
+    }
+}
+
+/// `dimvexa mcp` on the real standard input.
+fn run_mcp_on_stdin(configs: &[String], out: &mut dyn Write, err: &mut dyn Write) -> u8 {
+    let stdin = std::io::stdin();
+    run_mcp(configs, &mut stdin.lock(), out, err)
+}
+
+/// `dimvexa mcp`: serves the tools on `input` and `out` until the client closes `input`.
+///
+/// The MCP crate knows no conversion logic: every tool call comes back here as a command line
+/// and runs through [`run`], so an assistant gets what `dimvexa ... --json` prints. A config
+/// that cannot be loaded stops the server before the first message, not at the first call.
+fn run_mcp(
+    configs: &[String],
+    input: &mut dyn std::io::BufRead,
+    out: &mut dyn Write,
+    err: &mut dyn Write,
+) -> u8 {
+    let mut run_line = |args: &[String]| {
+        let (mut stdout, mut stderr) = (Vec::new(), Vec::new());
+        let code = run(args.iter().cloned(), &mut stdout, &mut stderr);
+        dimvexa_mcp::Output {
+            code,
+            stdout: String::from_utf8_lossy(&stdout).into_owned(),
+            stderr: String::from_utf8_lossy(&stderr).into_owned(),
+        }
+    };
+    if !configs.is_empty() {
+        let mut check = vec![
+            "units".to_string(),
+            "--groups".to_string(),
+            "--json".to_string(),
+        ];
+        for c in configs {
+            check.push("--config".to_string());
+            check.push(c.clone());
+        }
+        let checked = run_line(&check);
+        if checked.code != 0 {
+            let _ = writeln!(err, "error: mcp: cannot load the config:");
+            let _ = write!(err, "{}{}", checked.stdout, checked.stderr);
+            return 1;
+        }
+    }
+    let options = dimvexa_mcp::Options {
+        configs: configs.to_vec(),
+    };
+    match dimvexa_mcp::serve(input, out, &options, &mut run_line) {
+        Ok(()) => 0,
+        Err(e) => {
+            let _ = writeln!(err, "error: mcp: {e}");
+            1
+        }
     }
 }
 

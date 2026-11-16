@@ -6,10 +6,11 @@ Usage:
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]
   dimvexa update [--check] [-y]
+  dimvexa mcp [--config NAME_OR_PATH]...
 
 Converts VALUE from unit FROM to unit TO. Ambiguous input is an error.
 Run 'dimvexa COMMAND --help' (convert, units, configs, constants,
-update) for details.
+update, mcp) for details.
 
 Examples:
   dimvexa convert 10 m/s km/h
@@ -37,6 +38,8 @@ Commands:
   constants        list the constants: name, exact value, unit, conditions and
                    source (built in, plus those of any --config)
   constants NAME   show one constant, for example: dimvexa constants h_P
+  mcp              serve unit conversion to an AI assistant over MCP (Claude,
+                   Cursor, ...); see docs/mcp.md
   update           replace this binary with the latest GitHub release (needs
                    curl and tar; checks the published SHA-256 first; see
                    docs/adr/015-update-command.md)
