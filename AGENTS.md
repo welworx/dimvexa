@@ -114,6 +114,7 @@ committed.
 | `crates/dimvexa-data` | `data/units/*.toml`, `data/constants/*.toml`, `data/vectors/*.toml`, `data/data_version.toml`; `build.rs` compiles the tables |
 | `crates/dimvexa-config` | user config files (ADR-009): `Config`, `apply`; the core only offers `Registry::add_alias` and the helpers `name_is_free`, `prefix_clash` |
 | `crates/dimvexa` | facade crate (re-exports core + data) |
+| `crates/dimvexa-calc` | exact calculation with core quantities (ADR-027): `Calc` add, sub, pow, scale, eq, cmp; the core stays conversion-only; not re-exported by the facade |
 | `crates/dimvexa-cli` | `dimvexa convert`, `units`, `configs`, `constants`, `update` (self-update, ADR-015); no conversion logic of its own; snapshots in `tests/snapshots` |
 | `crates/dimvexa-testkit` | test helpers; differential, exact-path, property, overflow and zero-allocation tests |
 | `xtask` | `ci`, `check-docs`, `validate-data`, `update-data-hash`, `bench-check`, `bench-impact`, `bench-release`, `bench-matrix` |

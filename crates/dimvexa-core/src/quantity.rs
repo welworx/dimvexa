@@ -11,8 +11,9 @@ use crate::unit::UnitExpr;
 
 /// A value with a unit, held as an exact rational.
 ///
-/// Multiplication and division compose units. There is no addition or subtraction: dimvexa
-/// converts, it does not calculate with temperatures (ADR-014).
+/// Multiplication and division compose units. There is no addition or subtraction here: the
+/// core converts, it does not calculate with temperatures (ADR-014). Sums, differences and
+/// comparisons across units are in the separate crate `dimvexa-calc` (ADR-027).
 ///
 /// # Examples
 ///

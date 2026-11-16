@@ -1,0 +1,25 @@
+[package]
+name = "dimvexa-calc"
+description = "Exact calculation with dimvexa quantities: sums, differences, powers, scaling and comparisons across units, temperature points and differences kept apart (ADR-027). Exact factors. Loud failures. Zero guessing."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+readme = "README.md"
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+# Not on crates.io until the owner decides ADR-027 OPEN 1.
+publish = false
+
+[dependencies]
+dimvexa-core = { workspace = true }
+
+[dev-dependencies]
+dimvexa = { workspace = true }
+
+[lints]
+workspace = true

@@ -11,6 +11,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "dimvexa-calc"
+version = "0.10.0"
+dependencies = [
+ "dimvexa",
+ "dimvexa-core",
+]
+
+[[package]]
 name = "dimvexa-cli"
 version = "0.10.0"
 dependencies = [
@@ -43,6 +51,7 @@ name = "dimvexa-testkit"
 version = "0.10.0"
 dependencies = [
  "dimvexa",
+ "dimvexa-calc",
  "dimvexa-config",
  "dimvexa-core",
  "dimvexa-data",
