@@ -39,19 +39,44 @@ Relates to [ADR-014](014-one-config-mechanism.md) (decision 7, "Conversion only"
      which is in the point's unit.
    * `neg`, `abs`, `pow` (integer exponent), `scale` and `div_scalar` (multiply or divide by an
      exact number).
+   * `weighted_mean` (`sum(w_i * v_i) / sum(w_i)`, decision 3).
    * `eq` (value equality across units), `cmp` (ordering across units).
-   * `to_f64_in` (convert exactly, then round once to the nearest `f64`).
+   * `to_unit` (exact, decision 3) and `to_f64_in` (convert exactly, then round once to the
+     nearest `f64`).
    * No operator traits (`std::ops::Add` and friends) in Rust: an operator cannot return a
      `Result` without panicking (`AGENTS.md` rule 1). The bindings put operators on top.
-3. **Temperatures (owner, 2026-11-16: point/difference rules).** An absolute temperature
-   (`K`, `degC`, `degF`, `degR`) is a point, a `delta_*` unit a difference:
-   * point + difference = point, difference + point = point, point - difference = point;
-   * point - point = difference, in the `delta_*` unit of the left operand's scale
-     (`30 degC - 20 degC = 10 delta_degC`); a point unit without one (a prefixed `mK`) is
-     refused with `kind_mismatch`;
-   * point + point, difference - point, `neg` and `abs` of a point are refused with
-     `kind_mismatch` and the `delta_*` unit as suggestion.
-   * Scaling a point by a number is refused, as `Quantity::checked_mul` already does.
+3. **Temperatures: states and rises (owner, 2026-11-16).** Temperature is an intensive state
+   variable. Two states are never added (`20 degC + 80 degC` has no physical meaning); what is
+   added to a state is a rise, and states combine by a mean weighted with an extensive quantity.
+   A point (`K`, `degC`, `degF`, `degR`) is a state; a rise is a `delta_*` unit or a quantity of
+   dimension temperature computed from others (kind plain, `Q / (m_dot * cp)`).
+   * **point + X raises the point by X**, in the left unit (`X` + point gives the same, in the
+     point's unit). `X` is read as a rise when it is a rise, a point without an offset (`5 K`,
+     `9 degR`, the SI way of writing a difference), or a point on the same scale (`20 degC +
+     5 degC = 25 degC`; "plus 5 degC" can only mean a rise). Two different offset scales
+     (`20 degC + 41 degF`) are refused with `kind_mismatch`: a rise or a temperature is unclear.
+   * **point - point is the difference of two states** (`80 degC - 20 degC = 60 delta_degC`),
+     in the `delta_*` unit of the left scale; a prefixed point without one (`mK`) is refused.
+     **point - rise cools the point** (`20 degC - 5 delta_K = 15 degC`). Both readings of a
+     point on the right are physics here, so it is always a state: `20 degC - 5 degC` is
+     `15 delta_degC`. An offset point minus a kelvin value (`20 degC - 5 K`) is refused with a
+     hint to write `delta_K`: cooling by 5 K and the difference to the state 5 K are both
+     plausible.
+   * **rise - point**, `neg` and `abs` of a point, and scaling a point are refused with
+     `kind_mismatch`. A sum of states written as a mean (`(20 degC + 80 degC) / 2`) reads the
+     second state as a rise (100 degC) and then fails at the division, so the intent has to be
+     written as `weighted_mean`.
+   * **`weighted_mean`** combines states: `2 kg/s` at `20 degC` and `1 kg/s` at `80 degC` give
+     `40 degC`. It is exact on an offset scale because the weights sum to one, and works for any
+     quantity whose values convert into the first one.
+   * **`to_unit`** converts a computed temperature and a `delta_*` unit into each other by their
+     factors (the core refuses this, since one is kind plain). A difference never becomes a
+     state: `60 delta_degC` to `K` stays refused, or `20 degC - 5 degC` would silently become
+     `15 K`.
+   * **Intensive and extensive are not checked in general.** The library sees units, not the
+     physical role of a quantity: `J` and `J/kg`, `Pa` and `J/m3` share dimensions, and a sum of
+     partial pressures (Dalton) is valid physics. Temperature is the one case checked, because
+     its offset scales turn a mix-up into a wrong number.
 4. **Number form.** Sums and comparisons fold powers of ten into the fractions before they
    give up. A different power of pi stays `unrepresentable`; it is never approximated.
    Equality across powers of pi is exact (a non-zero rational is never equal to a rational

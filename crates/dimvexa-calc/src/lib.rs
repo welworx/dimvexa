@@ -7,11 +7,36 @@
 //! core's [`Quantity`] values, and stays exact: every operation works on checked `i128`
 //! rationals and returns an error instead of a guess.
 //!
-//! * [`Calc::add`] and [`Calc::sub`] across units (`1.5 km + 250 m`), with temperature points
-//!   and differences kept apart (`30 degC - 20 degC = 10 delta_degC`),
+//! * [`Calc::add`] and [`Calc::sub`] across units (`1.5 km + 250 m`),
+//! * [`Calc::weighted_mean`]: mixing states (`2 kg/s` at `20 degC` with `1 kg/s` at `80 degC`),
 //! * [`Calc::neg`], [`Calc::abs`], [`Calc::pow`], [`Calc::scale`], [`Calc::div_scalar`],
 //! * [`Calc::eq`] and [`Calc::cmp`] across units (`1 km == 1000 m`),
-//! * [`Calc::to_f64_in`]: the value in a unit, rounded once to the nearest `f64`.
+//! * [`Calc::to_unit`] and [`Calc::to_f64_in`]: the value in another unit, exact or rounded
+//!   once to the nearest `f64`.
+//!
+//! # Temperatures
+//!
+//! Temperature is an intensive state variable on a scale that may have an offset (`degC`,
+//! `degF`). Two states are never added: `20 degC + 80 degC` has no physical meaning, and read
+//! as numbers on the kelvin scale it would be 373.15 degC. What is added to a temperature is a
+//! rise. So, with a point (an absolute temperature) on the left:
+//!
+//! * `point + X` raises the point by `X` and gives a point in the left unit. `X` is read as a
+//!   rise when it is a difference (`delta_K`), a quantity of dimension temperature computed from
+//!   others (`Q / (m_dot * cp)`), a unit without an offset (`5 K`, `9 degR`) or the same scale
+//!   as the point (`20 degC + 5 degC = 25 degC`). Two different offset scales (`20 degC + 41
+//!   degF`) are refused: it is unclear whether the right side is a rise or a temperature.
+//! * `point - point` is the difference of two states (`80 degC - 20 degC = 60 delta_degC`), and
+//!   `point - rise` cools by the rise (`20 degC - 5 delta_K = 15 degC`). Here both readings are
+//!   physics, so a point on the right is always a state: `20 degC - 5 degC` is
+//!   `15 delta_degC`, and using it as a temperature later fails loudly. `20 degC - 5 K` is
+//!   refused (cooling by 5 K, or the difference to the state 5 K?); write `5 delta_K`.
+//! * States are combined by a mean weighted with an extensive quantity:
+//!   [`Calc::weighted_mean`].
+//!
+//! The library does not know whether a quantity is intensive or extensive (`J` and `J/kg`,
+//! `Pa` and `J/m3` share dimensions, and a sum of partial pressures is valid physics), so this
+//! is checked for temperatures only, where the offset makes a mix-up give a wrong number.
 //!
 //! There are no operator impls (`+`, `-`): an operator cannot return a `Result`, and the
 //! library never panics. Multiplication and division are the core's
@@ -30,6 +55,8 @@
 //!
 //! let rise = calc.sub(&reg.quantity("30 degC")?, &reg.quantity("20 degC")?)?;
 //! assert_eq!(rise.to_string(), "10 delta_degC");
+//! let warm = calc.add(&reg.quantity("20 degC")?, &reg.quantity("5 K")?)?;
+//! assert_eq!(warm.to_string(), "25 degC");
 //!
 //! assert!(calc.eq(&reg.quantity("1 km")?, &reg.quantity("1000 m")?)?);
 //! assert_eq!(calc.to_f64_in(&total, "m")?, 1750.0);
@@ -38,13 +65,13 @@
 
 use core::cmp::Ordering;
 
-use dimvexa_core::{Error, Kind, Quantity, Ratio, Registry, Result, UnitExpr};
+use dimvexa_core::{Dim, Error, Kind, Quantity, Ratio, Registry, Result, UnitExpr};
 
 /// Exact operations on [`Quantity`] values, with the [`Registry`] they were made from.
 ///
-/// The registry is needed for one thing only: point - point gives a temperature difference,
-/// and the `delta_*` unit of that scale is looked up in it. Every other operation uses the
-/// units the quantities already carry.
+/// The registry is used to look up the `delta_*` unit of point - point and to read the target
+/// unit of [`to_unit`](Self::to_unit) and [`to_f64_in`](Self::to_f64_in). Every other
+/// operation uses the units the quantities already carry.
 #[derive(Debug, Clone, Copy)]
 pub struct Calc<'r> {
     reg: &'r Registry,
@@ -80,16 +107,17 @@ impl<'r> Calc<'r> {
     }
 
     /// Sum. The right operand is converted exactly into the unit of the left one; the result
-    /// is in the left operand's unit, except difference + point, which is in the point's unit.
+    /// is in the left operand's unit, except rise + point, which is in the point's unit.
     ///
-    /// Temperatures: point + difference and difference + point give a point; point + point is
-    /// refused.
+    /// Temperatures (see the [crate documentation](crate#temperatures)): `point + X` raises the
+    /// point by `X`, read as a rise when it is a difference, a computed temperature, a unit
+    /// without an offset or the point's own scale.
     ///
     /// # Errors
     ///
-    /// [`Error::DimensionMismatch`], [`Error::KindMismatch`] (point + point, an angle and a
-    /// cycle rate), [`Error::Unrepresentable`] (a different power of pi, `1 deg + 1 rad`),
-    /// [`Error::Overflow`].
+    /// [`Error::DimensionMismatch`], [`Error::KindMismatch`] (two different offset scales such
+    /// as `degC + degF`, an angle and a cycle rate), [`Error::Unrepresentable`] (a different
+    /// power of pi, `1 deg + 1 rad`), [`Error::Overflow`].
     ///
     /// # Examples
     ///
@@ -99,15 +127,20 @@ impl<'r> Calc<'r> {
     /// let q = |s| reg.quantity(s);
     /// assert_eq!(calc.add(&q("1.5 km")?, &q("250 m")?)?.to_string(), "1.75 km");
     /// assert_eq!(calc.add(&q("20 degC")?, &q("9 delta_degF")?)?.to_string(), "25 degC");
+    /// assert_eq!(calc.add(&q("20 degC")?, &q("5 K")?)?.to_string(), "25 degC");
+    /// assert_eq!(calc.add(&q("20 degC")?, &q("5 degC")?)?.to_string(), "25 degC");
     /// assert_eq!(calc.add(&q("1 m")?, &q("1 s")?).unwrap_err().code(), "dimension_mismatch");
-    /// assert_eq!(calc.add(&q("20 degC")?, &q("20 degC")?).unwrap_err().code(), "kind_mismatch");
+    /// assert_eq!(calc.add(&q("20 degC")?, &q("41 degF")?).unwrap_err().code(), "kind_mismatch");
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     pub fn add(&self, a: &Quantity, b: &Quantity) -> Result<Quantity> {
         same_dim(a, b)?;
         match (is_point(a), is_point(b)) {
-            (true, true) => Err(kind_mismatch(a, b, Op::Add.name())),
-            (true, false) => point_plus(a, b, Op::Add),
+            // `5 K + 20 degC`: the kelvin value can only be the rise.
+            (true, true) if !reads_as_rise(a, b)? && reads_as_rise(b, a)? => {
+                point_plus(b, a, Op::Add)
+            }
+            (true, _) => point_plus(a, b, Op::Add),
             (false, true) => point_plus(b, a, Op::Add),
             (false, false) => linear(a, b, Op::Add),
         }
@@ -115,14 +148,17 @@ impl<'r> Calc<'r> {
 
     /// Difference, in the unit of the left operand.
     ///
-    /// Temperatures: point - point gives a difference in the `delta_*` unit of the left
-    /// operand's scale (`30 degC - 20 degC = 10 delta_degC`); point - difference gives a point;
-    /// difference - point is refused.
+    /// Temperatures (see the [crate documentation](crate#temperatures)): point - point is the
+    /// difference of two states, in the `delta_*` unit of the left operand's scale
+    /// (`30 degC - 20 degC = 10 delta_degC`); point - rise cools the point (`20 degC - 5 delta_K
+    /// = 15 degC`); rise - point is refused, and so is an offset point minus a kelvin value
+    /// (`20 degC - 5 K`: cooling or a difference of states?).
     ///
     /// # Errors
     ///
-    /// As [`add`](Self::add); [`Error::KindMismatch`] also for point - point when the left
-    /// unit has no `delta_*` unit (a prefixed point such as `mK`).
+    /// As [`add`](Self::add); [`Error::KindMismatch`] also for rise - point, for an offset point
+    /// minus a kelvin value, and for point - point when the left unit has no `delta_*` unit (a
+    /// prefixed point such as `mK`).
     ///
     /// # Examples
     ///
@@ -131,7 +167,9 @@ impl<'r> Calc<'r> {
     /// # let calc = dimvexa_calc::Calc::new(&reg);
     /// let q = |s| reg.quantity(s);
     /// assert_eq!(calc.sub(&q("1 h")?, &q("90 min")?)?.to_string(), "-0.5 h");
-    /// assert_eq!(calc.sub(&q("30 degC")?, &q("50 degF")?)?.to_string(), "20 delta_degC");
+    /// assert_eq!(calc.sub(&q("80 degC")?, &q("20 degC")?)?.to_string(), "60 delta_degC");
+    /// assert_eq!(calc.sub(&q("20 degC")?, &q("5 delta_K")?)?.to_string(), "15 degC");
+    /// assert_eq!(calc.sub(&q("20 degC")?, &q("5 K")?).unwrap_err().code(), "kind_mismatch");
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     pub fn sub(&self, a: &Quantity, b: &Quantity) -> Result<Quantity> {
@@ -282,8 +320,7 @@ impl<'r> Calc<'r> {
     #[allow(clippy::unused_self)] // a method like every other operation, so all read `calc.op(..)`
     pub fn eq(&self, a: &Quantity, b: &Quantity) -> Result<bool> {
         same_dim(a, b)?;
-        let b = b.to_unit(a.unit())?;
-        a.value().checked_eq(b.value())
+        a.value().checked_eq(value_in_unit_of(b, a)?)
     }
 
     /// Orders two quantities once `b` is converted exactly into the unit of `a`.
@@ -307,17 +344,52 @@ impl<'r> Calc<'r> {
     #[allow(clippy::unused_self)] // a method like every other operation, so all read `calc.op(..)`
     pub fn cmp(&self, a: &Quantity, b: &Quantity) -> Result<Ordering> {
         same_dim(a, b)?;
-        let b = b.to_unit(a.unit())?;
-        cmp_values(a.value(), b.value())
+        cmp_values(a.value(), value_in_unit_of(b, a)?)
     }
 
-    /// The value of `a` in `unit` (parsed with the registry), converted exactly and then
-    /// rounded once to the nearest `f64`.
+    /// `a` re-expressed in `unit` (parsed with the registry), exactly.
+    ///
+    /// As [`Quantity::to_unit`], plus one case the core does not convert: a quantity of
+    /// dimension temperature computed from others (`Q / (m_dot * cp)`, kind plain) and a
+    /// temperature difference (`delta_K`, `delta_degF`) convert into each other by their
+    /// factors. A difference never becomes a point: `60 delta_degC` to `K` stays refused,
+    /// since `20 degC - 5 degC` would otherwise silently become `15 K`.
     ///
     /// # Errors
     ///
-    /// The errors of [`Registry::parse`] and [`Quantity::to_unit`]; [`Error::Overflow`] if the
-    /// value is not a normal `f64`. A power of pi rounds like any other value.
+    /// The errors of [`Registry::parse`] and [`Quantity::to_unit`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # let reg = dimvexa::registry()?;
+    /// # let calc = dimvexa_calc::Calc::new(&reg);
+    /// let q = |s| reg.quantity(s);
+    /// // Temperature rise of a heated stream: Q / (m_dot * cp).
+    /// let rise = q("501.6 kW")?.checked_div(&q("2 kg/s")?.checked_mul(&q("4.18 kJ/(kg.K)")?)?)?;
+    /// assert_eq!(calc.to_unit(&rise, "delta_K")?.to_string(), "60 delta_K");
+    /// assert_eq!(calc.to_unit(&rise, "K").unwrap_err().code(), "kind_mismatch");
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn to_unit(&self, a: &Quantity, unit: &str) -> Result<Quantity> {
+        let target = self.reg.parse(unit)?;
+        if is_rise(a) && is_rise_unit(&target) && a.unit().kind() != target.kind() {
+            let value = a
+                .value()
+                .checked_mul(a.unit().factor())?
+                .checked_div(target.factor())?;
+            return Ok(Quantity::new(value, target));
+        }
+        a.to_unit(&target)
+    }
+
+    /// The value of `a` in `unit`, converted exactly as [`to_unit`](Self::to_unit) does and
+    /// then rounded once to the nearest `f64`.
+    ///
+    /// # Errors
+    ///
+    /// The errors of [`to_unit`](Self::to_unit); [`Error::Overflow`] if the value is not a
+    /// normal `f64`. A power of pi rounds like any other value.
     ///
     /// # Examples
     ///
@@ -328,11 +400,74 @@ impl<'r> Calc<'r> {
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     pub fn to_f64_in(&self, a: &Quantity, unit: &str) -> Result<f64> {
-        let target = self.reg.parse(unit)?;
-        a.to_unit(&target)?.to_f64()
+        self.to_unit(a, unit)?.to_f64()
+    }
+
+    /// The mean of `values` weighted with `weights`: `sum(w_i * v_i) / sum(w_i)`, in the unit
+    /// of the first value, exactly.
+    ///
+    /// This is how states of an intensive quantity combine: two streams of water mix to the
+    /// temperature weighted with their mass flows (or heat capacity flows), never to the sum
+    /// of their temperatures. A weighted mean of temperature points is a point, and it is
+    /// correct on an offset scale (`degC`) because the weights sum to one. The values must
+    /// share a dimension and kind, the weights another dimension (`kg`, `kg/s`, `W/K`).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] for no values, [`Error::DimensionMismatch`] and
+    /// [`Error::KindMismatch`] for values or weights that do not convert into the first one (a
+    /// temperature point as a weight is refused), [`Error::DivisionByZero`] if the weights sum
+    /// to zero, [`Error::Unrepresentable`] and [`Error::Overflow`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # let reg = dimvexa::registry()?;
+    /// # let calc = dimvexa_calc::Calc::new(&reg);
+    /// let q = |s| reg.quantity(s);
+    /// // 2 kg/s of water at 20 degC mixed with 1 kg/s at 80 degC.
+    /// let mixed = calc.weighted_mean(&[
+    ///     (q("20 degC")?, q("2 kg/s")?),
+    ///     (q("80 degC")?, q("3600 kg/h")?),
+    /// ])?;
+    /// assert_eq!(mixed.to_string(), "40 degC");
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    #[allow(clippy::unused_self)] // a method like every other operation, so all read `calc.op(..)`
+    pub fn weighted_mean(&self, items: &[(Quantity, Quantity)]) -> Result<Quantity> {
+        let Some((v0, w0)) = items.first() else {
+            return Err(Error::Refused {
+                reason: "a weighted mean needs at least one value".to_string(),
+                suggestions: Vec::new(),
+            });
+        };
+        let (mut sum, mut total) = (Ratio::ZERO, Ratio::ZERO);
+        for (v, w) in items {
+            same_dim(v0, v)?;
+            same_dim(w0, w)?;
+            refuse_point(w, "weighted mean (a temperature point is not a weight)")?;
+            let (v, w) = (value_in_unit_of(v, v0)?, value_in_unit_of(w, w0)?);
+            sum = add_values(sum, w.checked_mul(v)?)?;
+            total = add_values(total, w)?;
+        }
+        if total.is_zero() {
+            return Err(Error::DivisionByZero);
+        }
+        Ok(Quantity::new(sum.checked_div(total)?, v0.unit().clone()))
     }
 
     fn point_minus_point(self, a: &Quantity, b: &Quantity) -> Result<Quantity> {
+        // `20 degC - 5 K`: cooling by 5 K (SI writes differences in kelvin) or the difference
+        // to the state 5 K? Both are physics, so neither is guessed.
+        if !a.unit().offset().is_zero() && b.unit().offset().is_zero() {
+            return Err(Error::KindMismatch {
+                from: a.unit().kind(),
+                to: b.unit().kind(),
+                operation: "subtraction (a rise or a temperature? write delta_K to cool by it, \
+                            or convert both temperatures to one scale for their difference)",
+                suggestions: difference_hints(&[b, a]),
+            });
+        }
         let Some(delta) = a.unit().difference_symbol() else {
             return Err(Error::KindMismatch {
                 from: Kind::AbsoluteTemperature,
@@ -403,15 +538,44 @@ fn refuse_point(a: &Quantity, operation: &'static str) -> Result<()> {
     }
 }
 
-/// `point + diff` or `point - diff`, in the unit of the point.
-fn point_plus(point: &Quantity, diff: &Quantity, op: Op) -> Result<Quantity> {
-    if diff.unit().kind() != Kind::TemperatureDifference {
-        return Err(kind_mismatch(point, diff, op.name()));
+/// A temperature difference, or a quantity of dimension temperature computed from others
+/// (kind plain, such as `Q / (m_dot * cp)`): something that can only be a rise.
+fn is_rise(q: &Quantity) -> bool {
+    is_rise_unit(q.unit())
+}
+
+fn is_rise_unit(u: &UnitExpr) -> bool {
+    match u.kind() {
+        Kind::TemperatureDifference => true,
+        Kind::Plain => u.dim() == Dim::K,
+        _ => false,
     }
-    // A difference converts to the point's scale by the ratio of the factors alone: the
-    // offsets cancel in a difference.
-    let ratio = diff.unit().factor().checked_div(point.unit().factor())?;
-    let delta = diff.value().checked_mul(ratio)?;
+}
+
+/// `X` in `point + X` is a rise: a difference, a computed temperature, a point on a scale
+/// without an offset (`5 K`), or a point on the same scale as `point` (`20 degC + 5 degC`).
+/// Two different offset scales (`degC + degF`) are not, since either reading is plausible.
+fn reads_as_rise(point: &Quantity, x: &Quantity) -> Result<bool> {
+    if is_rise(x) {
+        return Ok(true);
+    }
+    if !is_point(x) {
+        return Ok(false);
+    }
+    let same_scale = x.unit().factor().checked_eq(point.unit().factor())?
+        && x.unit().offset().checked_eq(point.unit().offset())?;
+    Ok(x.unit().offset().is_zero() || same_scale)
+}
+
+/// `point + rise` or `point - rise`, in the unit of the point.
+fn point_plus(point: &Quantity, rise: &Quantity, op: Op) -> Result<Quantity> {
+    if !reads_as_rise(point, rise)? {
+        return Err(kind_mismatch(point, rise, op.name()));
+    }
+    // A rise converts to the point's scale by the ratio of the factors alone: the offsets
+    // cancel in a difference.
+    let ratio = rise.unit().factor().checked_div(point.unit().factor())?;
+    let delta = rise.value().checked_mul(ratio)?;
     let delta = match op {
         Op::Add => delta,
         Op::Sub => delta.checked_neg()?,
@@ -422,9 +586,21 @@ fn point_plus(point: &Quantity, diff: &Quantity, op: Op) -> Result<Quantity> {
     ))
 }
 
+/// The value of `b` in the unit of `a`, exactly. A temperature difference and a computed
+/// temperature (both rises) convert by their factors, which the core does not do.
+fn value_in_unit_of(b: &Quantity, a: &Quantity) -> Result<Ratio> {
+    if is_rise(a) && is_rise(b) && a.unit().kind() != b.unit().kind() {
+        return b
+            .value()
+            .checked_mul(b.unit().factor())?
+            .checked_div(a.unit().factor());
+    }
+    Ok(b.to_unit(a.unit())?.value())
+}
+
 /// Sum or difference of two quantities without temperature points, in the unit of `a`.
 fn linear(a: &Quantity, b: &Quantity, op: Op) -> Result<Quantity> {
-    let b = b.to_unit(a.unit())?.value();
+    let b = value_in_unit_of(b, a)?;
     let b = match op {
         Op::Add => b,
         Op::Sub => b.checked_neg()?,

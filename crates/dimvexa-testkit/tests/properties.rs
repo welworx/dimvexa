@@ -475,11 +475,29 @@ fn calc_laws_hold_exactly_across_the_seed_table() {
         let qb = Quantity::new(gen_::small_ratio(&mut rng), reg.parse(b).unwrap());
         let attempt = || -> Result<(), Error> {
             if qa.unit().kind() == Kind::AbsoluteTemperature {
-                // (a - b) + b == a: point - point is a difference, difference + point a point.
-                let d = calc.sub(&qa, &qb)?;
-                assert_eq!(d.unit().kind(), Kind::TemperatureDifference, "{qa} - {qb}");
-                assert!(calc.eq(&calc.add(&d, &qb)?, &qa)?, "({qa} - {qb}) + {qb}");
-                assert_eq!(calc.add(&qa, &qb).unwrap_err().code(), "kind_mismatch");
+                let (oa, ob) = (qa.unit().offset(), qb.unit().offset());
+                let same_scale =
+                    oa.checked_eq(ob)? && qa.unit().factor().checked_eq(qb.unit().factor())?;
+                // (a - b) + b == a: state - state is a difference, difference + state a state.
+                // An offset state minus a kelvin value is refused as ambiguous.
+                match calc.sub(&qa, &qb) {
+                    Ok(d) => {
+                        assert_eq!(d.unit().kind(), Kind::TemperatureDifference, "{qa} - {qb}");
+                        assert!(calc.eq(&calc.add(&d, &qb)?, &qa)?, "({qa} - {qb}) + {qb}");
+                    }
+                    Err(e) if e.code() == "kind_mismatch" => {
+                        assert!(!oa.is_zero() && ob.is_zero(), "{qa} - {qb}: {e}");
+                    }
+                    Err(e) => return Err(e),
+                }
+                // a + b reads one side as a rise unless both are different offset scales.
+                match calc.add(&qa, &qb) {
+                    Ok(s) => assert_eq!(s.unit().kind(), Kind::AbsoluteTemperature),
+                    Err(e) if e.code() == "kind_mismatch" => {
+                        assert!(!oa.is_zero() && !ob.is_zero() && !same_scale, "{qa} + {qb}");
+                    }
+                    Err(e) => return Err(e),
+                }
             } else {
                 // (a + b) - b == a, and a + b == b + a
                 let s = calc.add(&qa, &qb)?;
