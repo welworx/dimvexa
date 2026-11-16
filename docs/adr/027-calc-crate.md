@@ -1,6 +1,6 @@
 # ADR-027: Calculation with quantities lives in a separate crate, `dimvexa-calc`
 
-Status: Proposed
+Status: Accepted (owner decision in conversation, 2026-11-16; OPEN 2, the facade re-export, stays open)
 
 Relates to [ADR-014](014-one-config-mechanism.md) (decision 7, "Conversion only") and
 [ADR-001](001-no-equations.md). Neither is changed: the core stays conversion-only.
