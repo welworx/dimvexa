@@ -5,10 +5,13 @@ electrical, mechanical, chemical, hydrological, aero and astronomical work, in S
 and imperial units. Every number that came back matched an independent `f64` SI calculation
 (relative error below 1e-12); every failure was loud, except B1.
 
-The calculations that work are tests in `crates/dimvexa-testkit/tests/engineering.rs`, written
+The calculations that work are tests in `crates/dimvexa-testkit/tests/engineering/`, one file per field, written
 as equations (`crates/dimvexa-testkit/src/formula.rs`: `"rho * v * D / mu"`). The breaks are
 `#[ignore = "open ..."]` tests in the same file that state the answer an engineer should get.
-They fail today on purpose:
+They fail today on purpose. Work one field at a time: the files are `civil`, `hydrology`, `fluids`,
+`thermal`, `electrical`, `mechanical`, `chemistry`, `astro`, `user_config`, `number_range` and
+`notation`, and a module name filters (`... --test engineering thermal::`).
+
 
 ```console
 cargo test -p dimvexa-testkit --test engineering -- --ignored
@@ -19,8 +22,8 @@ write the equation, and a precise result with the correct unit.
 
 | ID | Break | Test |
 |---|---|---|
-| A1 | A value below about 1e-38 cannot be entered (`overflow`): Planck's constant `6.62607015e-34 J*s`, the electron mass. The CLI too. | `open_a1_*` |
-| A2 | Products of small or large values overflow early: `(1.380649e-23 J/K)^2`, `(5.29e-11 m)^2`. The power of ten is folded into the denominator before the multiply (`docs/precision.md`). | `open_a2_*` |
+| A1 | A value below about 1e-38 cannot be entered (`overflow`): Planck's constant `6.62607015e-34 J*s`, the electron mass. The CLI too. Cause: the parser multiplies the whole decimal exponent into the denominator (`den = 10^digits * 10^exp`, must fit `i128`), although `Ratio` has a separate power-of-ten field that products only add. **Workaround that works today: write the value with an SI prefix** (`0.000662607015 qJ*s`). | `open_a1_*`, `prefix_*` |
+| A2 | Products of small or large values overflow early: `(1.380649e-23 J/K)^2`, `(5.29e-11 m)^2`. The power of ten is folded into the denominator before the multiply (`docs/precision.md`). With prefixed inputs and a prefixed result unit it works (`prefix_*`: Coulomb force in `nN`, `a0^2` in `pm^2`); reading it in the plain unit (`m^2`) folds 10^-24 into the fraction and overflows again, and so does `(1.380649e-23 J/K)^2` even with a prefix. The same equation can also overflow or not depending on the order of the factors (`ke * e^2 / a0^2` vs `ke * e * e / a0^2`). | `open_a2_*`, `prefix_*` |
 | A3 | Powers of large unit factors overflow: `ly^3`, `psi^3`. | `open_a3_*` |
 | A4 | A computed temperature (`p V / (n R)`) cannot be read in K or degC (`kind_mismatch`); the hint says "use delta_K", which is wrong for an absolute temperature. | `open_a4_*` |
 | A5 | No `sqrt`, `ln`, `sin`, fractional exponents (`R^(2/3)`). Float tier planned (ADR-027). | `open_a5_*` |
@@ -33,7 +36,7 @@ write the equation, and a precise result with the correct unit.
 
 Unknown or ambiguous names (`gpm`, `mph`, `kph`, `fps`, `cfm`, `sqft`, `ksi`, `lbm`, `lbs`, `hr`,
 `BTU`, `kcal`, `rev`, `rpm`, `kVA`) belong in a user config, not in the table
-(`examples/configs/engineering.toml`, tested in `engineering.rs`, `config_*`). Whether any of them
+(`examples/configs/engineering.toml`, tested in `engineering/user_config.rs`). Whether any of them
 is added to the repo later is decided case by case (`unit-request-triage`). Findings from writing
 that config:
 

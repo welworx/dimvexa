@@ -1,0 +1,97 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+//! Mechanics, machines and transport.
+
+use crate::common::*;
+
+#[test]
+fn mechanical_kinetic_energy_from_km_per_h() {
+    check(
+        &[("m", "1500 kg"), ("v", "100 km/h")],
+        "m * v^2 / 2",
+        "kJ",
+        0.5 * 1500.0 * (100.0 / 3.6f64).powi(2) / 1000.0,
+    );
+}
+
+#[test]
+fn mechanical_shaft_power_is_torque_times_angular_speed() {
+    check(
+        &[("T", "100 N*m"), ("w", "188.5 rad/s")],
+        "T * w",
+        "kW",
+        100.0 * 188.5 / 1000.0,
+    );
+}
+
+#[test]
+fn mechanical_arc_length_is_radius_times_angle() {
+    check(
+        &[("r", "2 m"), ("theta", "30 deg")],
+        "r * theta",
+        "m",
+        2.0 * 30.0 * PI / 180.0,
+    );
+}
+
+#[test]
+fn mechanical_centripetal_acceleration_in_g() {
+    check(
+        &[("w", "188.5 rad/s"), ("r", "0.1 m")],
+        "w^2 * r",
+        "g_n",
+        188.5f64.powi(2) * 0.1 / G_N,
+    );
+}
+
+#[test]
+fn mechanical_power_in_three_unit_systems_adds_up() {
+    check(
+        &[("a", "5 hp_mech"), ("b", "3 kW"), ("c", "10000 Btu_IT/h")],
+        "a + b + c",
+        "kW",
+        (5.0 * HP_MECH + 3000.0 + 10_000.0 * BTU_IT / 3600.0) / 1000.0,
+    );
+}
+
+#[test]
+fn mechanical_efficiency_is_a_dimensionless_ratio() {
+    check(
+        &[("out", "3 kW"), ("in", "5 hp_mech")],
+        "out / in",
+        "1",
+        3000.0 / (5.0 * HP_MECH),
+    );
+}
+
+#[test]
+fn mechanical_frequency_to_angular_speed_through_one_per_second() {
+    // omega = 2 pi f. Hz to rad/s is refused on purpose (ADR-020): go through 1/s.
+    let reg = registry().unwrap();
+    let calc = Calc::new(&reg);
+    let per_s = calc.to_unit(&q(&reg, "50 Hz"), "1/s").unwrap();
+    let w = calc.scale(&per_s, Ratio::PI).unwrap();
+    let w = calc.scale(&w, Ratio::new(2, 1).unwrap()).unwrap();
+    let got = calc.to_f64_in(&w, "rad/s").unwrap();
+    assert!((got - 2.0 * PI * 50.0).abs() < 1e-12 * got, "{got}");
+}
+
+#[test]
+fn economy_fuel_use_from_consumption_and_distance() {
+    check(
+        &[("c", "8 L"), ("d0", "100 km"), ("d", "450 km")],
+        "c / d0 * d",
+        "L",
+        36.0,
+    );
+}
+
+#[test]
+#[ignore = "open A5: no sin in dimvexa-calc"]
+fn open_a5_force_along_an_incline_needs_sin() {
+    check(
+        &[("m", "100 kg"), ("g", "1 g_n"), ("theta", "30 deg")],
+        "m * g * sin(theta)",
+        "N",
+        100.0 * G_N * 0.5,
+    );
+}

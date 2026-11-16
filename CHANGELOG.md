@@ -7,7 +7,7 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 ### Added
-- `examples/configs/engineering.toml`: the names a design office uses and dimvexa leaves to the user (`gpm`, `mph`, `cfm`, `ksi`, `rpm`, `rev`, `BTU`, `kcal`, `kVA`, ...), and `dimvexa_testkit::formula` with `tests/engineering.rs`: engineering calculations written as equations; what does not work yet is kept as `ignore`d tests (`docs/engineering-survey.md`).
+- `examples/configs/engineering.toml`: the names a design office uses and dimvexa leaves to the user (`gpm`, `mph`, `cfm`, `ksi`, `rpm`, `rev`, `BTU`, `kcal`, `kVA`, ...), and `dimvexa_testkit::formula` with `tests/engineering/` (one file per field): engineering calculations written as equations; what does not work yet is kept as `ignore`d tests (`docs/engineering-survey.md`).
 - `dimvexa-calc` (ADR-027, beta): exact calculation with core quantities.
   `Calc::add` and `sub` across units (`1.5 km + 250 m = 1.75 km`); temperatures as states and
   rises (`20 degC + 5 K = 25 degC`, `80 degC - 20 degC = 60 delta_degC`, `T_in + Q/(m_dot*cp)`
