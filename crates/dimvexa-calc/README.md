@@ -3,7 +3,7 @@
 # dimvexa-calc
 
 **Beta.** Younger and less proven than `dimvexa-core`: the API may still change (ADR-027).
-The Python and WebAssembly bindings come after the beta. Exact calculation with
+The owner decides when it leaves beta; the Python and WebAssembly bindings come after that. Exact calculation with
 [dimvexa](../../README.md) quantities. A separate crate on purpose: the core converts and does
 not calculate (ADR-014), so sums, differences and comparisons live here, and conversion-only
 users compile none of it.

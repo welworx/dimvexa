@@ -31,7 +31,8 @@ Relates to [ADR-014](014-one-config-mechanism.md) (decision 7, "Conversion only"
 1. **A new workspace crate `dimvexa-calc`** depends on `dimvexa-core` only, is std-only like
    the rest of the workspace and inherits the workspace lints. The core gains no code and no
    dependency on it; the `dimvexa` facade does not re-export it (opt-in). It is published on
-   crates.io with the other crates and marked beta (owner, 2026-11-16).
+   crates.io with the other crates and marked beta; the owner decides when it leaves beta
+   (2026-11-16). Its first version, 0.10.0, was published by hand on 2026-11-16.
 2. **Exact tier (this ADR).** `dimvexa_calc::Calc` borrows a `Registry` and offers, on core
    `Quantity` values, exact operations that return `Result` and never panic:
    * `add`, `sub`: the right operand is converted exactly into the unit of the left one and the
@@ -107,8 +108,9 @@ Relates to [ADR-014](014-one-config-mechanism.md) (decision 7, "Conversion only"
   `.github/workflows/release.yml` (published last, since its first version is published by hand
   before trusted publishing works for it, `docs/releasing.md`), the package job of
   `.github/workflows/ci.yml` and `scripts/check-versions.sh`.
-* **OPEN 2: re-export from the `dimvexa` facade** (`dimvexa::calc`). Recommended: no, keep it
-  opt-in so conversion-only users compile nothing extra and the facade (a hot-path file for
+* **OPEN 2: re-export from the `dimvexa` facade** (`dimvexa::calc`). Not for now (owner,
+  2026-11-16); to be revisited when the crate leaves beta. Recommended: no, keep it opt-in so
+  conversion-only users compile nothing extra and the facade (a hot-path file for
   `cargo xtask bench-impact`) does not change.
 
 ## Consequences
