@@ -30,7 +30,7 @@ write the equation, and a precise result with the correct unit.
 | A6 | `2 pi f` needs the detour through `1/s` (works, tested). `rpm` and `rev` are not shipped on purpose (ADR-020): a use case defines them, see below. | none open |
 | B1 | *Decided (owner, 2026-11-17):* `20 degC + 80 degC` is `100 degC`; ADR-027 decision 3 reads a same-scale point as a rise. Kept. | `b1_*` |
 | B2 | *Fixed:* a unit to the power 0 is the plain number 1 (it was `1 m^0`). | `b2_*` |
-| C | `degC` inside a compound (`kJ/(kg*degC)`) is refused (open). Notation: `m³`, `ft/s²`, `N·m` are read in `calc` equations (fixed); a space between units (`N m`, `m s^-1`) is not a product, by decision: write `N*m`, `m*s^-1`. | `open_c_celsius_*`, `superscripts_*` |
+| C | *Fixed:* `degC` (and `degF`) inside a compound (`kJ/(kg*degC)`) is read as the interval, `delta_degC`. Notation: `m³`, `ft/s²`, `N·m` are read in `calc` equations (fixed); a space between units (`N m`, `m s^-1`) is not a product, by decision: write `N*m`, `m*s^-1`. | `c_celsius_*`, `superscripts_*` |
 
 ## Names a use case defines itself
 

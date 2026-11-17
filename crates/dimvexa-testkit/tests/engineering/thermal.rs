@@ -255,8 +255,9 @@ fn b1_adding_two_celsius_states_is_allowed_by_decision() {
 }
 
 #[test]
-#[ignore = "open C: degC inside a compound unit is refused"]
-fn open_c_celsius_in_a_specific_heat_is_an_interval() {
+/// C (fixed): `degC` inside a compound unit is the interval, so a specific heat per degree
+/// Celsius reads as written.
+fn c_celsius_in_a_specific_heat_is_an_interval() {
     check(&[("cp", "4.186 kJ/(kg*degC)")], "cp", "J/(kg*K)", 4186.0);
 }
 

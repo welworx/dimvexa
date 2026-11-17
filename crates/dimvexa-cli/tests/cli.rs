@@ -204,7 +204,7 @@ fn every_error_code_has_a_cli_test() {
             "ambiguous_expression",
             1,
         ),
-        (&["convert", "1", "degC/s", "K/s"], "refused", 1),
+        (&["convert", "1", "psig", "psi"], "refused", 1),
         (&["convert", "1", "ly3", "m3"], "overflow", 1),
         (&["convert", "1", "m"], "usage", 2),
         // `calc` reaches the codes of a sum and a quotient (ADR-030)
@@ -4190,4 +4190,39 @@ fn engineering_config_short_symbols_equal_the_built_in_constants() {
     ]);
     assert_eq!(r.code, 0, "{}", r.stderr);
     assert!(r.stdout.starts_with("97.4953886604649"), "{}", r.stdout);
+}
+
+/// Small leftovers: trailing zeros of a value beyond f64 belong to the power of ten, one over
+/// kelvin works, a temperature scale in a compound unit is the interval.
+#[test]
+fn calc_small_leftovers() {
+    assert_eq!(calc(&["1e308 * 10"]).stdout, "1e309\n");
+    assert_eq!(calc(&["2 / 300 K"]).stdout, "0.006666666666666667… 1/K\n");
+    assert_eq!(
+        calc(&["alpha * 100 K", "--var", "alpha=1.2e-5 1/K"]).stdout,
+        "0.0012\n"
+    );
+    assert_eq!(calc(&["2 / 0 K"]).code, 1);
+    // a specific heat per degree Celsius
+    let r = calc(&[
+        "cp * m * dT",
+        "--var",
+        "cp=4.186 kJ/(kg*degC)",
+        "--var",
+        "m=2 kg",
+        "--var",
+        "dT=10 delta_degC",
+        "--to",
+        "kJ",
+    ]);
+    assert_eq!(
+        (r.code, r.stdout.as_str()),
+        (0, "83.72 kJ\n"),
+        "{}",
+        r.stderr
+    );
+    assert_eq!(
+        dimvexa(&["convert", "4.186", "kJ/(kg*degC)", "J/(kg*K)"]).stdout,
+        "4186 J/(kg.K)\n"
+    );
 }

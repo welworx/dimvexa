@@ -508,8 +508,8 @@ impl Registry {
         match expr {
             Expr::One => Ok(UnitExpr::unity()),
             Expr::Unit(s) => self.resolve_symbol(s),
-            Expr::Mul(a, b) => self.resolve(a)?.mul(&self.resolve(b)?),
-            Expr::Div(a, b) => self.resolve(a)?.div(&self.resolve(b)?),
+            Expr::Mul(a, b) => self.resolve_factor(a)?.mul(&self.resolve_factor(b)?),
+            Expr::Div(a, b) => self.resolve_factor(a)?.div(&self.resolve_factor(b)?),
             Expr::Pow(a, n) => {
                 // `Nm3` lexes as `Nm` to the power 3: say what it is, not "unknown unit Nm".
                 if let Expr::Unit(s) = &**a {
@@ -520,9 +520,27 @@ impl Registry {
                         }
                     }
                 }
-                self.resolve(a)?.pow(*n)
+                if *n == 1 {
+                    self.resolve(a)?.pow(*n)
+                } else {
+                    self.resolve_factor(a)?.pow(*n)
+                }
             }
         }
+    }
+
+    /// A unit inside a compound unit (`kJ/(kg*degC)`). A temperature scale there is the interval
+    /// of its degree, the way an engineer reads a specific heat per degree Celsius: `degC` is
+    /// `delta_degC` (the same size as a kelvin). A unit with an offset that has no difference unit
+    /// (a gauge scale of a config) stays refused.
+    fn resolve_factor(&self, expr: &Expr) -> Result<UnitExpr> {
+        let unit = self.resolve(expr)?;
+        if !unit.offset().is_zero() {
+            if let Some(difference) = unit.difference_symbol() {
+                return self.resolve_symbol(difference);
+            }
+        }
+        Ok(unit)
     }
 
     /// Parses and resolves a unit expression such as `km/h` or `kg.m/s2`.

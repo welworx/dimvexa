@@ -223,8 +223,14 @@ fn decimal_digits(num: i128, den: i128, ten: i32) -> Option<(String, i32)> {
     let digits = num
         .checked_mul(2_i128.checked_pow(k.checked_sub(twos)?)?)?
         .checked_mul(5_i128.checked_pow(k.checked_sub(fives)?)?)?;
-    let ten = ten.checked_sub(i32::try_from(k).ok()?)?;
-    Some((digits.to_string(), ten))
+    let mut ten = ten.checked_sub(i32::try_from(k).ok()?)?;
+    // trailing zeros of the digits belong to the power of ten: 10e308 is 1e309
+    let mut digits = digits.to_string();
+    while digits.len() > 1 && digits.ends_with('0') {
+        digits.pop();
+        ten = ten.checked_add(1)?;
+    }
+    Some((digits, ten))
 }
 
 #[cfg(test)]

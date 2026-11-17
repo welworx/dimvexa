@@ -299,6 +299,9 @@ impl<'r> Math<'r> {
             let u = n.unit();
             u.kind() == Kind::Plain && u.dim().is_dimensionless() && u.offset().is_zero()
         };
+        if divide && is_scalar(a) && is_kelvin(b) {
+            return Self::reciprocal_kelvin(a, b).map(Some);
+        }
         let (temperature, scalar) = if is_kelvin(a) && is_scalar(b) {
             (a, b)
         } else if !divide && is_scalar(a) && is_kelvin(b) {
@@ -329,6 +332,28 @@ impl<'r> Math<'r> {
             value: finite(value, "approximate product")?,
             unit: t.unit,
         })))
+    }
+
+    /// A plain number divided by a kelvin value (`2 / 300 K`): one over kelvin, as in a
+    /// coefficient of thermal expansion.
+    fn reciprocal_kelvin(scalar: &Number, temperature: &Number) -> Result<Number> {
+        let per_kelvin = UnitExpr::unity().div(temperature.unit())?;
+        let factor = scalar.unit().factor();
+        if let (Number::Exact(s), Number::Exact(t)) = (scalar, temperature) {
+            if t.value().is_zero() {
+                return Err(Error::DivisionByZero);
+            }
+            let value = s.value().checked_mul(factor)?.checked_div(t.value())?;
+            return Ok(Number::Exact(Quantity::new(value, per_kelvin)));
+        }
+        let (s, t) = (Self::approx_of(scalar)?, Self::approx_of(temperature)?);
+        if is_zero_f64(t.value) {
+            return Err(Error::DivisionByZero);
+        }
+        Ok(Number::Approx(Approx {
+            value: finite(s.value * factor.to_f64()? / t.value, "approximate quotient")?,
+            unit: per_kelvin,
+        }))
     }
 
     /// Negation.

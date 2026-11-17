@@ -289,3 +289,14 @@ fn eval_strict_refuses_an_unused_variable_and_eval_does_not() {
     // built-in constants need not be used
     assert!(f.eval_strict("a + b + 0 m").is_ok());
 }
+
+#[test]
+fn a_config_constant_with_a_bad_unit_is_refused_when_the_config_is_loaded() {
+    use dimvexa_config::{Config, load};
+    let text = "[[constant]]\nid = \"bad\"\nname = \"Bad\"\nvalue = \"1\"\nunit = \"nosuchunit\"\nexactness = \"measured\"\nconditions = \"c\"\nsource = \"s\"\n";
+    let config = Config::parse(text, "bad.toml").unwrap();
+    // loud at load: no constant with a unit that does not exist ever reaches an equation
+    let err = load(registry().unwrap(), &[config], dimvexa::CONSTANTS).unwrap_err();
+    assert_eq!(err.code(), "invalid_definition");
+    assert!(err.to_string().contains("nosuchunit"), "{err}");
+}

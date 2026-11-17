@@ -860,6 +860,7 @@ impl<'r> Formula<'r> {
     pub fn from_loaded(loaded: &'r dimvexa_config::Loaded) -> Self {
         let mut formula = Self::new(&loaded.reg);
         for c in loaded.constants.iter().filter(|c| c.id != "pi") {
+            // `dimvexa_config::load` has checked that every constant's unit exists
             let Ok(unit) = loaded.reg.parse(&c.unit) else {
                 continue;
             };
