@@ -25,12 +25,16 @@
 //!
 //! * **Numbers** (`2`, `0.5`, `1e-3`), **quantities** (a number and a unit: `10 cm2`,
 //!   `998 kg/m3`, `8.314 J/(mol*K)`, `20 degC`), **names** of values given with
-//!   [`Formula::var`], and the constant `pi`.
-//! * `+ - * /`, a unary minus, parentheses, and the power `^` with an integer, a decimal or a
-//!   fraction as exponent: `L^4`, `v^-2`, `x^0.5`, `R^(2/3)`.
+//!   [`Formula::var`], the constant `pi`, the SI constants and, with [`Formula::from_loaded`],
+//!   the constants of the configs.
+//! * `+ - * /`, a unary minus, parentheses, and the power `^` with an exact number without a
+//!   unit as exponent, written as a number, a name or an expression: `L^4`, `v^-2`, `x^0.5`,
+//!   `R^(2/3)`, `x^n`, `2^(1+1)` (`2^3^2` is `2^(3^2)`). `2 pi`, `2 pi r` and `pi r^2` multiply.
+//!   `m²`, `m³`, `s⁻¹`, `·`, `×`, `÷`, `−`, tabs and newlines are read.
 //! * The functions `sqrt`, `cbrt`, `abs`, `hypot(x, y)`, `min(x, y, ...)`, `max(x, y, ...)`,
 //!   `ln`, `exp`, `log10` (`lg`), `log2` (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`,
-//!   `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`, `tanh`, `asinh`, `acosh` and `atanh`.
+//!   `acos`, `atan`, `atan2(y, x)`, `kelvin` (a temperature as absolute kelvin), `sinh`, `cosh`,
+//!   `tanh`, `asinh`, `acosh` and `atanh`.
 //!   `log(x)` alone is ambiguous and refused. Any other well-known function (`pow`, `floor`,
 //!   `round`) is a `refused` error that says `'floor' is not implemented`, and how to write it
 //!   where there is a way (`x^p`); an unknown name says `unknown function`.
@@ -46,7 +50,7 @@
 //! [`Formula::f64_in`] or [`Formula::to_unit`]; [`Formula::eval_exact`] refuses an approximate
 //! result. The input is bounded (`MAX_EQUATION_CHARS`, `MAX_DEPTH`): hostile text is an error.
 
-use dimvexa_core::{Error, Quantity, Ratio, Registry, Result, UnitExpr};
+use dimvexa_core::{Error, Kind, Quantity, Ratio, Registry, Result, UnitExpr};
 
 use crate::{Math, Number};
 
@@ -168,9 +172,42 @@ fn scan_unit(chars: &[char], start: usize) -> usize {
     j
 }
 
+/// The characters an engineer writes that mean something simpler: tabs, newlines and the
+/// no-break space are spaces; `·`, `⋅` and `×` are `*`; `÷` is `/`; the minus sign `−` is `-`;
+/// `²`, `³` and `⁻¹` are `^2`, `^3` and `^-1`. (An error position counts the characters after
+/// this rewrite.)
+fn normalise(input: &str) -> Vec<char> {
+    let mut out = Vec::new();
+    let mut chars = input.chars().peekable();
+    while let Some(c) = chars.next() {
+        match c {
+            '\t' | '\n' | '\r' | '\u{a0}' | '\u{2009}' | '\u{202f}' => out.push(' '),
+            '·' | '⋅' | '×' => out.push('*'),
+            '÷' => out.push('/'),
+            '−' => out.push('-'),
+            '²' => out.extend(['^', '2']),
+            '³' => out.extend(['^', '3']),
+            '⁻' if chars.peek() == Some(&'¹') => {
+                chars.next();
+                out.extend(['^', '-', '1']);
+            }
+            c => out.push(c),
+        }
+    }
+    out
+}
+
 fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
-    let chars: Vec<char> = input.chars().collect();
-    if chars.len() > MAX_EQUATION_CHARS {
+    if input
+        .chars()
+        .take(MAX_EQUATION_CHARS.saturating_add(1))
+        .count()
+        > MAX_EQUATION_CHARS
+    {
+        return Err(parse_error(input, 0, "the equation is too long"));
+    }
+    let chars = normalise(input);
+    if chars.len() > MAX_EQUATION_CHARS.saturating_mul(3) {
         return Err(parse_error(input, 0, "the equation is too long"));
     }
     let mut out = Vec::new();
@@ -185,6 +222,21 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
             let mut after = i;
             while chars.get(after).is_some_and(|s| *s == ' ') {
                 after = next(after);
+            }
+            // `2 pi` is 2 times the constant, not a quantity of the unit `pi`
+            let mut word_end = after;
+            while chars
+                .get(word_end)
+                .is_some_and(|d| d.is_alphanumeric() || *d == '_')
+            {
+                word_end = next(word_end);
+            }
+            if text(&chars, after, word_end) == "pi" {
+                out.push((start, Tok::Num(number)));
+                out.push((after, Tok::Op('*')));
+                out.push((after, Tok::Id("pi".to_owned())));
+                i = word_end;
+                continue;
             }
             // a unit starts with a symbol, or with a parenthesis that opens on one: `998 (kg/m3)`
             let opens_unit = chars.get(after) == Some(&'(')
@@ -216,7 +268,7 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
 
 /// The functions the evaluator implements (ADR-029), with the number of arguments: `0` means
 /// two or more (`min`, `max`).
-const IMPLEMENTED: [(&str, usize); 26] = [
+const IMPLEMENTED: [(&str, usize); 27] = [
     ("sqrt", 1),
     ("cbrt", 1),
     ("abs", 1),
@@ -232,6 +284,7 @@ const IMPLEMENTED: [(&str, usize); 26] = [
     ("log", 2),
     ("sin", 1),
     ("cos", 1),
+    ("kelvin", 1),
     ("tan", 1),
     ("asin", 1),
     ("acos", 1),
@@ -344,10 +397,31 @@ impl Parser<'_, '_> {
             } else if self.eat('/') {
                 let rhs = self.unary()?;
                 acc = self.f.math.div(&acc, &rhs)?;
+            } else if self.after_pi_name() {
+                // `2 pi r` and `pi r^2`: a name written right after `pi` multiplies
+                let rhs = self.unary()?;
+                acc = self.f.math.mul(&acc, &rhs)?;
             } else {
                 return Ok(acc);
             }
         }
+    }
+
+    /// Whether the next token is a name that follows a run of names that starts with `pi`.
+    fn after_pi_name(&self) -> bool {
+        if !matches!(self.peek(), Some(Tok::Id(_))) {
+            return false;
+        }
+        let mut start = self.pos;
+        while start > 0
+            && matches!(
+                self.toks.get(start.saturating_sub(1)).map(|(_, t)| t),
+                Some(Tok::Id(_))
+            )
+        {
+            start = start.saturating_sub(1);
+        }
+        start < self.pos && matches!(self.toks.get(start), Some((_, Tok::Id(n))) if n == "pi")
     }
 
     fn unary(&mut self) -> Result<Number> {
@@ -362,47 +436,51 @@ impl Parser<'_, '_> {
         Ok(value)
     }
 
-    /// An integer: the digits of the token at the cursor.
-    fn int(&mut self) -> Result<i32> {
-        let at = self.here();
-        let Some(Tok::Num(text)) = self.peek().cloned() else {
-            return Err(parse_error(self.src, at, "an integer is expected"));
-        };
-        self.advance();
-        text.parse()
-            .map_err(|_| parse_error(self.src, at, "an integer is expected"))
-    }
-
-    /// The exponent after `^` as `(p, q)`: `3`, `-2`, `0.5` or `(2/3)` (also `(-2/3)`).
+    /// The exponent after `^` as `(p, q)`: an exact dimensionless number written as a number
+    /// (`3`, `-2`, `0.5`), a fraction in parentheses (`(2/3)`), a name (`n`) or any expression
+    /// in parentheses (`(1 + 1)`); `2^3^2` is `2^(3^2)`.
     fn exponent(&mut self) -> Result<(i32, i32)> {
         let at = self.here();
-        if self.eat('(') {
-            let negative = self.eat('-');
-            let num = self.int()?;
-            let den = if self.eat('/') { self.int()? } else { 1 };
-            if !self.eat(')') {
-                return Err(parse_error(self.src, self.here(), "')' is expected"));
-            }
-            return Ok((if negative { num.saturating_neg() } else { num }, den));
-        }
         let negative = self.eat('-');
-        let at_num = self.here();
-        let Some(Tok::Num(text)) = self.peek().cloned() else {
-            return Err(parse_error(self.src, at, "an exponent is expected"));
+        let value = self.power()?;
+        let unit = value.unit();
+        let ratio = match &value {
+            Number::Exact(q) if unit.kind() == Kind::Plain && unit.dim().is_dimensionless() => {
+                q.value().checked_mul(unit.factor())?
+            }
+            Number::Exact(_) => {
+                return Err(parse_error(
+                    self.src,
+                    at,
+                    "the exponent must be a plain number without a unit",
+                ));
+            }
+            Number::Approx(_) => {
+                return Err(parse_error(
+                    self.src,
+                    at,
+                    "the exponent must be exact (an approximate value such as sqrt(2) has no \
+                     fraction)",
+                ));
+            }
         };
-        self.advance();
-        let ratio: Ratio = text
-            .parse()
-            .map_err(|_| parse_error(self.src, at_num, "the exponent must be a number"))?;
         // `1e-50` is stored as a digit and a power of ten: fold it before reading the fraction,
         // and refuse an exponent that has no `i32` fraction (it is never silently truncated)
-        let ratio = ratio.folded().map_err(|_| {
-            parse_error(self.src, at_num, "the exponent is too large or too precise")
-        })?;
+        let ratio = ratio
+            .folded()
+            .ok()
+            .filter(|r| r.pi_exp() == 0)
+            .ok_or_else(|| {
+                parse_error(
+                    self.src,
+                    at,
+                    "the exponent is too large or too precise (or has pi)",
+                )
+            })?;
         let num = i32::try_from(ratio.num())
-            .map_err(|_| parse_error(self.src, at_num, "the exponent is too large"))?;
+            .map_err(|_| parse_error(self.src, at, "the exponent is too large"))?;
         let den = i32::try_from(ratio.den())
-            .map_err(|_| parse_error(self.src, at_num, "the exponent is too precise"))?;
+            .map_err(|_| parse_error(self.src, at, "the exponent is too precise"))?;
         Ok((if negative { num.saturating_neg() } else { num }, den))
     }
 
@@ -411,7 +489,9 @@ impl Parser<'_, '_> {
         if !self.eat('^') {
             return Ok(base);
         }
+        self.enter()?;
         let (num, den) = self.exponent()?;
+        self.leave();
         if den == 1 {
             self.f.math.pow(&base, num)
         } else {
@@ -533,6 +613,7 @@ impl Parser<'_, '_> {
             ("log2" | "lb", _) => math.log2(one),
             ("sin", _) => math.sin(one),
             ("cos", _) => math.cos(one),
+            ("kelvin", _) => math.kelvin(one),
             ("tan", _) => math.tan(one),
             ("asin", _) => math.asin(one),
             ("acos", _) => math.acos(one),
@@ -589,6 +670,31 @@ impl<'r> Formula<'r> {
             given: Vec::new(),
             warnings: Vec::new(),
         }
+    }
+
+    /// An evaluator over the registry of `loaded` (the configs' units and names) whose built-in
+    /// names are `pi` and every constant in effect: the built-in ones and those of the configs
+    /// (`water_25C`, your own `[[constant]]`), each exact and with its unit. A later config's
+    /// constant replaces an earlier one of the same name.
+    #[must_use]
+    pub fn from_loaded(loaded: &'r dimvexa_config::Loaded) -> Self {
+        let mut formula = Self::new(&loaded.reg);
+        for c in loaded.constants.iter().filter(|c| c.id != "pi") {
+            let Ok(unit) = loaded.reg.parse(&c.unit) else {
+                continue;
+            };
+            let number = Number::from(Quantity::new(c.value, unit));
+            match formula.vars.iter().position(|(n, _)| *n == c.id) {
+                Some(i) => {
+                    if let Some(slot) = formula.vars.get_mut(i) {
+                        *slot = (c.id.clone(), number);
+                    }
+                }
+                None => formula.vars.push((c.id.clone(), number)),
+            }
+        }
+        formula.builtin = formula.vars.len();
+        formula
     }
 
     /// What the caller should be told about: a name that replaces a built-in constant, or that

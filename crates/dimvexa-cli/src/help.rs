@@ -165,8 +165,10 @@ constant pi, + - * / and parentheses, a power with a fraction as exponent
 (x^0.5, y^(1/2) and sqrt(x) agree; R^(2/3)) and the functions sqrt, cbrt,
 abs, hypot, min, max, ln, exp, log10 (lg), log2 (lb), log(x, base), sin,
 cos, tan, asin, acos, atan, atan2(y, x), sinh, cosh, tanh, asinh, acosh,
-atanh, and the built-in names pi, h_P, e, k_B, N_A, c, R (the SI constants of
-'dimvexa constants'; --var may replace one, with a warning). Quote it, and
+atanh, kelvin (a temperature as K: kelvin(20 degC)); the names pi, h_P, e,
+k_B, N_A, c, R and the constants of the --config files ('dimvexa constants';
+--var may replace one, with a warning). Exponents may be names or sums
+(x^n, 2^(1+1)); 2 pi r and m² or N·m are read. Quote it, and
 put a space on both sides of an operator between quantities (write --
 before an expression that starts like an option, such as -h): a unit is the
 text after a number up to the next space, so 50 kPa / 998 kg/m3 is a

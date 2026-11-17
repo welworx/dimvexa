@@ -360,3 +360,15 @@ def test_calc_knows_the_constants_tan_atan2_and_merges_units() -> None:
     assert dimvexa.calc("1 m * 1 m")["unit"] == "m^2"
     with pytest.warns(UserWarning, match="replaces the built-in constant"):
         assert dimvexa.calc("e * 2", vars={"e": "3 C"})["text"] == "6 C"
+
+
+def test_calc_config_constants_kelvin_pi_names_and_notation() -> None:
+    r = dimvexa.calc("1 L * water_25C", to="kg", configs=["water"])
+    assert r["text"] == "0.99704702 kg"
+    gas = dimvexa.calc(
+        "n * R * kelvin(T) / V", vars={"n": "2 mol", "T": "20 degC", "V": "50 L"}, to="kPa"
+    )
+    assert gas["text"].startswith("97.4953886604649")
+    assert dimvexa.calc("2 pi r", vars={"r": "3 m"})["text"] == "18.84955592153876… m"
+    assert dimvexa.calc("x^n", vars={"x": "9 m2", "n": "0.5"})["text"] == "3 m"
+    assert dimvexa.calc("10 m² · 3 m")["text"] == "30 m^3"

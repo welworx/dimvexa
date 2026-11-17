@@ -347,21 +347,27 @@ their unit: `h_P`, `e` (the elementary charge), `k_B`, `N_A`, `c` (the speed of 
 exactly `N_A * k_B`, 8.31446261815324 J/(mol.K)), besides `pi`. The energy of a 500 nm photon
 is `h_P * c / 500 nm` (`--to J`), and `p V = n R T` reads `n * R * T / V`. A `--var` with the same name replaces the constant, with a warning (on stderr, and
 in `warnings` of the JSON), so a variable `e` or `R` (a radius) for your own purpose still
-works but is never silent. Constants of your own configs are not names in equations yet: pass them with `--var`.
+works but is never silent. The constants of the configs in effect are names too (`dimvexa constants
+--config water` lists them): `1 L * water_25C --config water --to kg` is `0.99704702 kg`. A
+config constant with the name of a built-in one replaces it, as for `dimvexa constants`.
 
 * **Numbers and units:** `10 cm2`, `998 kg/m3`, `8.314 J/(mol*K)`, `20 degC`, `1.5e-3 m`. A unit
   is the text after a number up to the next space, so put a space on both sides of an operator
   between quantities: `50 kPa / 998 kg/m3` is a quotient.
 * **Operators:** `+ - * /`, parentheses and `^`. The exponent may be an integer, a decimal or a
   fraction: `x^2`, `x^0.5`, `y^(1/2)` and `sqrt(y)` are the same, `R^(2/3)` works. The exponent
-  has to be a written number (`x^n`, `2^(1+1)` and `2^3^2` are parse errors). `pi` is the exact
-  constant, but not directly after a number: write `2 * pi * r`, not `2 pi r`.
+  may also be a name or an expression, if it is an exact number without a unit (`x^n`,
+  `2^(1+1)`, `x^(1/k)`); `2^3^2` is `2^(3^2)`, and an approximate exponent such as `2^sqrt(2)`
+  is refused. `pi` is the exact constant: `2 pi`, `2 * pi * r` and `2 pi r` are the same
+  (`pi` multiplies the names that follow it; `2 r` stays refused, see above).
 * **Spaces:** a space ends a unit. `1/2 m` is `1` divided by `2 m` (`0.5 1/m`), so write
-  `(1/2) * 1 m` or `0.5 m`. Tabs are not whitespace; use spaces. A comma separates arguments
-  (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.
+  `(1/2) * 1 m` or `0.5 m`. Tabs, newlines and the no-break space are spaces. A comma separates
+  arguments (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.
+* **Notation:** `m²`, `m³`, `s⁻¹`, `·`, `×`, `÷` and the minus sign `−` are read (`10 m² · 3 m`,
+  `1 kg·m/s²`); error positions count the characters after this rewrite.
 * **Functions:** `sqrt`, `cbrt`, `abs`, `hypot`, `min`, `max`, `ln`, `exp`, `log10` (`lg`), `log2`
   (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`,
-  `tanh`, `asinh`, `acosh`, `atanh`. The inverse functions return an angle in `rad` (`atan2(1 m, 1 m)
+  `tanh`, `asinh`, `acosh`, `atanh`, `kelvin`. The inverse functions return an angle in `rad` (`atan2(1 m, 1 m)
   --to deg` is `45 deg`); they are exact at the special values (`atan(1)` is exactly pi/4,
   `acos(0.5)` is pi/3, `tan(45 deg)` is `1`), and otherwise approximate.
   `min` and `max` need one dimension (`4 m` and `4 km` work, `4 m` and `3 L` do not) and return
@@ -411,12 +417,16 @@ answered with an approximate number.
   want; a wrong dimension is an error.
 * **Temperatures:** a point (`20 degC`) can be compared and shifted by a difference, not
   multiplied; `degC + degC` adds two points (`20 degC + 30 degC` is `50 degC`) while
-  `degC - degC` is a difference (`delta_degC`) and a point minus a kelvin is refused (ADR-027); a temperature that an equation computes is a plain value in `K`, not a point on a
-  scale (in `p V = n R T`, give `T` in `K`).
+  `degC - degC` is a difference (`delta_degC`) and a point minus a kelvin is refused (ADR-027).
+  `kelvin(x)` reads a temperature as absolute kelvin: a point (`kelvin(20 degC)` is `293.15 K`)
+  or a value whose dimension is a temperature (`kelvin(p * V / (n * R))`). So `p V = n R T`
+  with `T` in degrees Celsius is `n * R * kelvin(T) / V`, and a computed temperature is shown
+  in degC with `kelvin(...) --to degC`. A temperature difference is not a temperature
+  (`kelvin(5 delta_K)` is refused).
 * **Not units of every trade:** names that mean different things (`ton`, `gpm`, `mph`, `rpm`) are
   errors until a config chooses (`--config us-customary`, or your own, see
-  `examples/configs/engineering.toml`). Notation such as `m³` or `N m` is not read: write `m3`,
-  `N*m`.
+  `examples/configs/engineering.toml`). A space between two units is not a product: write
+  `N*m` or `N·m`, not `N m`.
 * **Size:** an equation has at most 4096 characters, 64 levels of parentheses and 512 names.
 
 #### In Python and JavaScript

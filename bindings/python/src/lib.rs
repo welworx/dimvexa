@@ -518,7 +518,7 @@ fn calc<'py>(
         &configs.unwrap_or_default(),
         &config_texts.unwrap_or_default(),
     )?;
-    let mut formula = Formula::new(&loaded.reg);
+    let mut formula = Formula::from_loaded(&loaded);
     for (name, value) in vars.unwrap_or_default() {
         formula = formula.var(&name, &value).map_err(|e| to_py(&e))?;
     }

@@ -223,3 +223,65 @@ fn an_exponent_that_does_not_fit_is_refused_not_truncated() {
     assert_eq!(f.f64_in(&f.eval("x^2e0").unwrap(), "1").unwrap(), 4.0);
     assert_eq!(f.f64_in(&f.eval("x^1e1").unwrap(), "1").unwrap(), 1024.0);
 }
+
+/// Superscripts, dots and crosses, and any whitespace are read in an equation.
+#[test]
+fn superscripts_dots_and_whitespace_are_read_in_equations() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg);
+    for (text, want) in [
+        ("1 m³", "1 m^3"),
+        ("9.81 m/s²", "9.81 m/s^2"),
+        ("2 N·m", "2 N.m"),
+        ("3 m × 4 m", "12 m.m"),
+        ("6 m ÷ 2", "3 m"),
+        ("2 m\t*\n3 m", "6 m.m"),
+        ("−2 m", "-2 m"),
+        ("1 s⁻¹", "1 s^-1"),
+    ] {
+        assert_eq!(f.eval(text).unwrap().to_string(), want, "{text}");
+    }
+}
+
+/// `2 pi r` and `pi r^2` multiply; a name after anything else is not guessed.
+#[test]
+fn pi_after_a_number_and_before_a_name_multiplies() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg).var("r", "3 m").unwrap();
+    let pi = std::f64::consts::PI;
+    assert_eq!(value(&reg, &[("r", "3 m")], "2 pi r", "m"), 6.0 * pi);
+    assert_eq!(value(&reg, &[("r", "3 m")], "pi r^2", "m2"), 9.0 * pi);
+    assert_eq!(value(&reg, &[], "2 pi", "1"), 2.0 * pi);
+    // `2 r` stays refused: the reader sees a number and a unit, the evaluator a name
+    assert_eq!(f.eval("2 r").unwrap_err().code(), "invalid_definition");
+}
+
+/// An exponent may be a name or an expression, if it is an exact plain number.
+#[test]
+fn exponents_may_be_names_and_expressions() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("x", "9 m2")
+        .unwrap()
+        .var("n", "0.5")
+        .unwrap()
+        .var("k", "2")
+        .unwrap();
+    for (text, unit, want) in [
+        ("2^3^2", "1", 512.0),
+        ("2^(1+1)", "1", 4.0),
+        ("x^n", "m", 3.0),
+        ("x^(1/k)", "m", 3.0),
+        ("2^-k", "1", 0.25),
+        ("2^(sqrt(4))", "1", 4.0),
+    ] {
+        assert_eq!(
+            f.f64_in(&f.eval(text).unwrap(), unit).unwrap(),
+            want,
+            "{text}"
+        );
+    }
+    for text in ["2^sqrt(2)", "x^(1 m)", "2^(pi)", "2^99999999999"] {
+        assert!(f.eval(text).is_err(), "{text}");
+    }
+}

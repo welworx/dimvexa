@@ -15,6 +15,7 @@ categories.workspace = true
 
 [dependencies]
 dimvexa-core = { workspace = true }
+dimvexa-config = { workspace = true }
 dimvexa-data = { workspace = true }
 
 [dev-dependencies]

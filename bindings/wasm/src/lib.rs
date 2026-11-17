@@ -424,7 +424,7 @@ pub fn calc(
     config_texts: Vec<String>,
 ) -> Result<JsValue, JsValue> {
     let loaded = load_config(config, &config_texts)?;
-    let mut formula = Formula::new(&loaded.reg);
+    let mut formula = Formula::from_loaded(&loaded);
     for entry in &vars {
         let (name, value) = entry
             .split_once('=')

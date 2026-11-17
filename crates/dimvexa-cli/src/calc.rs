@@ -34,7 +34,7 @@ type Failure = (Error, String);
 
 /// The result and what to warn about (a name that replaces a built-in constant or repeats).
 fn evaluate(req: &CalcRequest, loaded: &Loaded) -> Result<(Report, Vec<String>), Failure> {
-    let mut formula = Formula::new(&loaded.lib.reg);
+    let mut formula = Formula::from_loaded(&loaded.lib);
     for (name, value) in &req.vars {
         formula = formula
             .var(name, value)

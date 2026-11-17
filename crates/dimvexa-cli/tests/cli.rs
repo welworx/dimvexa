@@ -3803,3 +3803,52 @@ fn calc_c_is_the_speed_of_light() {
         "8.987551787368176e16… J\n"
     );
 }
+
+/// Config constants are names in equations; `kelvin` reads a temperature as K; `2 pi r`, `x^n`
+/// and the engineer's notation are read.
+#[test]
+fn calc_reads_config_constants_kelvin_pi_names_exponents_and_notation() {
+    let r = calc(&["1 L * water_25C", "--config", "water", "--to", "kg"]);
+    assert_eq!(
+        (r.code, r.stdout.as_str()),
+        (0, "0.99704702 kg\n"),
+        "{}",
+        r.stderr
+    );
+    // without the config the name does not exist
+    assert_eq!(calc(&["water_25C"]).code, 1);
+    // pV = nRT with T in degrees Celsius
+    let r = calc(&[
+        "n * R * kelvin(T) / V",
+        "--var",
+        "n=2 mol",
+        "--var",
+        "T=20 degC",
+        "--var",
+        "V=50 L",
+        "--to",
+        "kPa",
+    ]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(r.stdout.starts_with("97.4953886604649"), "{}", r.stdout);
+    assert_eq!(calc(&["kelvin(68 degF)"]).stdout, "293.15 K\n");
+    assert_eq!(calc(&["kelvin(5 m)"]).code, 1);
+    // pi after a number and before a name
+    assert_eq!(
+        calc(&["2 pi r", "--var", "r=3 m"]).stdout,
+        "18.84955592153876… m\n"
+    );
+    assert_eq!(calc(&["2 pi"]).stdout, "6.283185307179586…\n");
+    // exponents are exact expressions
+    assert_eq!(calc(&["2^3^2"]).stdout, "512\n");
+    assert_eq!(
+        calc(&["x^n", "--var", "x=9 m2", "--var", "n=0.5"]).stdout,
+        "3 m\n"
+    );
+    assert_eq!(calc(&["2^sqrt(2)"]).code, 1);
+    // superscripts, dots, crosses, any whitespace
+    assert_eq!(calc(&["10 m² · 3 m"]).stdout, "30 m^3\n");
+    assert_eq!(calc(&["1 kg·m/s²"]).stdout, "1 kg.m/s^2\n");
+    assert_eq!(calc(&["3 × 4 m"]).stdout, "12 m\n");
+    assert_eq!(calc(&["2 m\t*\n3 m"]).stdout, "6 m^2\n");
+}

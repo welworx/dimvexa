@@ -61,5 +61,6 @@ another.
 * The equation grammar is now a public interface: a change of it follows `api-change`.
 * The Python and WebAssembly bindings expose it as `calc`, with the fields of `--json` plus the CLI text (`dimvexa_calc::Report`, one implementation for all three). The Excel add-in does not yet (a gap, `docs/excel.md`).
 * Follow-up decisions (owner, 2026-11-17): the equation knows the SI constants by name (`h_P`, `e`, `k_B`, `N_A`, besides `pi`; `--var` may replace one, with a warning); `tan`, `asin`, `acos`, `atan`, `atan2` are implemented; a result unit is merged and cancelled for display (`m.m` is `m^2`) but a symbol is never renamed; a rounded exact result ends in `…`.
+* Follow-up decisions (owner, 2026-11-17, second round): the constants of the configs in effect are names in equations; `kelvin(x)` reads a temperature as kelvin; `2 pi r`, exponent expressions (`x^n`) and the engineer's notation (`m²`, `·`, `×`, tabs) are read; a result unit is not renamed to a named derived unit (the user gives `--to`).
 * OPEN (recommended default: later): a `--var` value that is itself an equation; `ans` and a
   REPL; `pow`, `floor`, `round`, which are refused as not implemented.

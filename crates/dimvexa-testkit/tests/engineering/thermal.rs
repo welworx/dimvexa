@@ -198,8 +198,8 @@ fn thermal_hvac_ton_of_refrigeration_is_12000_btu_per_hour() {
 }
 
 #[test]
-#[ignore = "open A4: a computed temperature cannot be read in K (kind_mismatch)"]
-fn open_a4_ideal_gas_temperature_in_kelvin() {
+/// A4 (fixed with `kelvin(...)`): a temperature that an equation computed is read as kelvin.
+fn a4_ideal_gas_temperature_in_kelvin() {
     check(
         &[
             ("p", "1 atm"),
@@ -207,25 +207,25 @@ fn open_a4_ideal_gas_temperature_in_kelvin() {
             ("n", "1 mol"),
             ("R", "8.314462618 J/(mol*K)"),
         ],
-        "p * V / (n * R)",
+        "kelvin(p * V / (n * R))",
         "K",
         101_325.0 * 0.022_414 / 8.314_462_618,
     );
 }
 
 #[test]
-#[ignore = "open A4: a computed temperature cannot be read in degC (kind_mismatch)"]
-fn open_a4_ideal_gas_temperature_in_celsius() {
+/// A4 (fixed with `kelvin(...)`): and shown in degrees Celsius.
+fn a4_ideal_gas_temperature_in_celsius() {
     check(
         &[
             ("p", "1 atm"),
-            ("V", "22.414 L"),
+            ("V", "24.055 L"),
             ("n", "1 mol"),
             ("R", "8.314462618 J/(mol*K)"),
         ],
-        "p * V / (n * R)",
+        "kelvin(p * V / (n * R))",
         "degC",
-        101_325.0 * 0.022_414 / 8.314_462_618 - 273.15,
+        101_325.0 * 0.024_055 / 8.314_462_618 - 273.15,
     );
 }
 
@@ -295,4 +295,15 @@ fn thermal_the_lower_of_two_temperature_limits() {
         .unwrap();
     // 170 degF is 76.7 degC
     assert_eq!(f.eval_exact("min(a, b)").unwrap().to_string(), "170 degF");
+}
+
+#[test]
+fn kelvin_reads_degrees_celsius_into_a_product() {
+    // p = n R T / V with T given in degrees Celsius: 2 mol at 20 degC in 50 L
+    check(
+        &[("n", "2 mol"), ("V", "50 L"), ("T", "20 degC")],
+        "n * R * kelvin(T) / V",
+        "kPa",
+        2.0 * 8.314_462_618_153_24 * 293.15 / 0.05 / 1000.0,
+    );
 }
