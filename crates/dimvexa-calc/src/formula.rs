@@ -568,7 +568,7 @@ impl Parser<'_, '_> {
 
 impl<'r> Formula<'r> {
     /// An evaluator with the built-in names: `pi` and the constants of `dimvexa constants`
-    /// (`h_P`, `e`, `k_B`, `N_A`, `R`), each with its unit, exact.
+    /// (`h_P`, `e`, `k_B`, `N_A`, `c`, `R`), each with its unit, exact.
     #[must_use]
     pub fn new(reg: &'r Registry) -> Self {
         let pi = Number::from(Quantity::new(Ratio::PI, UnitExpr::unity()));

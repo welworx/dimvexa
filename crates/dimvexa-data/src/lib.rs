@@ -79,7 +79,7 @@ mod tests {
     #[test]
     fn constants_load_with_a_source_and_a_unit_that_parses() {
         let reg = registry().unwrap();
-        for name in ["pi", "h_P", "e", "k_B", "N_A", "R"] {
+        for name in ["pi", "h_P", "e", "k_B", "N_A", "c", "R"] {
             let c = constant(name).unwrap_or_else(|| panic!("{name} missing"));
             assert!(!c.source.is_empty() && !c.conditions.is_empty(), "{name}");
             assert!(c.value().is_ok(), "{name}");

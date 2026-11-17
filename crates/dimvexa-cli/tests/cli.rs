@@ -2994,7 +2994,7 @@ fn constants_lists_the_built_in_table_with_exact_values_units_and_sources() {
         .map(|l| l.split('\t').collect())
         .collect();
     let names: Vec<&str> = rows.iter().map(|c| c[0]).collect();
-    assert_eq!(names, ["pi", "h_P", "e", "k_B", "N_A", "R"]);
+    assert_eq!(names, ["pi", "h_P", "e", "k_B", "N_A", "c", "R"]);
     snapshot("constants.txt", &r.stdout);
     snapshot("constants.json", &dimvexa(&["constants", "--json"]).stdout);
     let get = |n: &str| rows.iter().find(|c| c[0] == n).unwrap().clone();
@@ -3043,7 +3043,7 @@ fn constants_shows_one_constant_with_its_note_and_refuses_an_unknown_name() {
     assert_eq!(r.code, 2);
     assert!(
         r.stderr
-            .contains("no constant named 'nope'; known: pi, h_P, e, k_B, N_A, R"),
+            .contains("no constant named 'nope'; known: pi, h_P, e, k_B, N_A, c, R"),
         "{}",
         r.stderr
     );
@@ -3082,6 +3082,7 @@ fn constants_lists_those_of_a_config_after_the_built_in_ones() {
             "e",
             "k_B",
             "N_A",
+            "c",
             "R",
             "water_25C",
             "water_max_density"
@@ -3098,7 +3099,7 @@ fn constants_lists_those_of_a_config_after_the_built_in_ones() {
 /// `pi` cannot be redefined by a config: a user-defined pi would silently change every angle.
 #[test]
 fn a_config_cannot_redefine_a_built_in_constant() {
-    for name in ["pi", "h_P", "e", "k_B", "N_A", "R"] {
+    for name in ["pi", "h_P", "e", "k_B", "N_A", "c", "R"] {
         let cfg = config_file(
             &format!("redefine_{name}.toml"),
             &format!(
@@ -3701,7 +3702,7 @@ fn calc_refuses_a_name_that_is_also_a_unit_in_the_equation() {
 fn calc_knows_the_si_constants_and_warns_when_a_name_replaces_one() {
     assert_eq!(calc(&["k_B * 300 K"]).stdout, "4.141947e-21 J\n");
     assert_eq!(
-        calc(&["h_P * 299792458 m/s / 500 nm", "--to", "J"]).stdout,
+        calc(&["h_P * c / 500 nm", "--to", "J"]).stdout,
         "3.972891714297857e-19… J\n",
     );
     assert_eq!(
@@ -3788,5 +3789,17 @@ fn calc_ideal_gas_constant_is_n_a_times_k_b_and_runs_the_gas_law() {
         r.stderr.contains("replaces the built-in constant R"),
         "{}",
         r.stderr
+    );
+}
+
+#[test]
+fn calc_c_is_the_speed_of_light() {
+    assert_eq!(calc(&["c", "--to", "km/s"]).stdout, "299792.458 km/s\n");
+    // E = m c^2 is exact (89875517873681764 J); the f64 shown is marked as rounded
+    let r = calc(&["1 kg * c^2", "--to", "J", "--exact"]);
+    assert_eq!(r.stdout, "89875517873681764 J\n");
+    assert_eq!(
+        calc(&["1 kg * c^2", "--to", "J"]).stdout,
+        "8.987551787368176e16… J\n"
     );
 }

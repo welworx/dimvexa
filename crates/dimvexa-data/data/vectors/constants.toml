@@ -36,6 +36,12 @@ expect = "6.02214076 10^23"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: N_A = 6.022 140 76 x 10^23 mol^-1"
 
 [[constant_vector]]
+constant = "c"
+dim = [0, 1, -1, 0, 0, 0, 0]
+expect = "299792458"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: c = 299 792 458 m s^-1"
+
+[[constant_vector]]
 constant = "R"
 dim = [1, 2, -2, 0, -1, -1, 0]
 expect = "8.31446261815324"
