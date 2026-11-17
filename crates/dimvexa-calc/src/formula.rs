@@ -806,12 +806,28 @@ impl<'r> Formula<'r> {
                     .iter()
                     .find(|(n, _)| n != "pi" && !n.is_empty() && (*n == symbol || n == bare))
                 {
-                    return Err(Error::InvalidDefinition {
-                        symbol: name.clone(),
-                        message: format!(
+                    let is_unit = self.reg.parse(&symbol).is_ok() || self.reg.parse(bare).is_ok();
+                    let message = if is_unit {
+                        format!(
                             "the name '{name}' is also a unit in '{number} {unit}' of the \
                              equation: rename the variable"
-                        ),
+                        )
+                    } else {
+                        let power = symbol.strip_prefix(bare).unwrap_or_default();
+                        let times = if power.is_empty() {
+                            name.clone()
+                        } else {
+                            format!("{name}^{power}")
+                        };
+                        format!(
+                            "'{number} {unit}' reads '{symbol}' as a unit after the number, and \
+                             '{name}' is a variable, not a unit: write {number} * {times} to \
+                             multiply by the variable"
+                        )
+                    };
+                    return Err(Error::InvalidDefinition {
+                        symbol: name.clone(),
+                        message,
                     });
                 }
                 symbol.clear();

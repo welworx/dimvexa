@@ -3852,3 +3852,24 @@ fn calc_reads_config_constants_kelvin_pi_names_exponents_and_notation() {
     assert_eq!(calc(&["3 × 4 m"]).stdout, "12 m\n");
     assert_eq!(calc(&["2 m\t*\n3 m"]).stdout, "6 m^2\n");
 }
+
+/// The error for `2 r` never calls a name a unit when it is not one.
+#[test]
+fn calc_error_for_a_number_before_a_variable_only_says_unit_when_it_is() {
+    let r = calc(&["2 r", "--var", "r=3 m"]);
+    assert!(
+        r.stderr
+            .contains("'r' is a variable, not a unit: write 2 * r"),
+        "{}",
+        r.stderr
+    );
+    assert!(!r.stderr.contains("is also a unit"), "{}", r.stderr);
+    let r = calc(&["2 r2", "--var", "r=3 m"]);
+    assert!(r.stderr.contains("write 2 * r^2"), "{}", r.stderr);
+    let r = calc(&["0.5 h", "--var", "h=3 m"]);
+    assert!(
+        r.stderr.contains("the name 'h' is also a unit"),
+        "{}",
+        r.stderr
+    );
+}
