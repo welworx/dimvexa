@@ -444,6 +444,9 @@ pub fn calc(
     if !to.is_empty() {
         number = formula.to_unit(&number, to).map_err(|e| fail(&e))?;
     }
+    for w in formula.warnings() {
+        warn(w);
+    }
     let r = Report::new(&number).map_err(|e| fail(&e))?;
     let fraction = r
         .fraction

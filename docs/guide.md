@@ -339,8 +339,15 @@ stands for its value wherever it is written alone (`h * 2` with `--var h="3 m"` 
 such as `m` has nothing to do with the metre). It must not also be a unit that the equation
 writes after a number: `0.5 h` with a variable `h` is an error (`invalid_definition`: rename
 the variable), because the reader would see hours and the evaluator a length. `pi` cannot be
-redefined, a repeated `--var` name keeps the last value, and a name that is not used is
-ignored.
+redefined, a repeated `--var` name keeps the last value (with a warning), and a name that is not
+used is ignored.
+
+The SI constants of `dimvexa constants` are built-in names in every equation, exact and with
+their unit: `h_P`, `e` (the elementary charge), `k_B`, `N_A`, besides `pi`. The energy of a
+500 nm photon is `h_P * 299792458 m/s / 500 nm` (`--to J`), the molar gas constant is
+`N_A * k_B`. A `--var` with the same name replaces the constant, with a warning (on stderr, and
+in `warnings` of the JSON), so a variable `e` for your own purpose still works but is never
+silent. Constants of your own configs are not names in equations yet: pass them with `--var`.
 
 * **Numbers and units:** `10 cm2`, `998 kg/m3`, `8.314 J/(mol*K)`, `20 degC`, `1.5e-3 m`. A unit
   is the text after a number up to the next space, so put a space on both sides of an operator
@@ -353,7 +360,10 @@ ignored.
   `(1/2) * 1 m` or `0.5 m`. Tabs are not whitespace; use spaces. A comma separates arguments
   (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.
 * **Functions:** `sqrt`, `cbrt`, `abs`, `hypot`, `min`, `max`, `ln`, `exp`, `log10` (`lg`), `log2`
-  (`lb`), `log(x, base)`, `sin`, `cos`, `sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh`.
+  (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`,
+  `tanh`, `asinh`, `acosh`, `atanh`. The inverse functions return an angle in `rad` (`atan2(1 m, 1 m)
+  --to deg` is `45 deg`); they are exact at the special values (`atan(1)` is exactly pi/4,
+  `acos(0.5)` is pi/3, `tan(45 deg)` is `1`), and otherwise approximate.
   `min` and `max` need one dimension (`4 m` and `4 km` work, `4 m` and `3 L` do not) and return
   the winner in its own unit, exact. `abs` of a temperature point is refused. `sin` and `cos`
   take one angle unit (`30 deg`, `0.5 rad`, `pi/6 * 1 rad`), not a bare number and not
@@ -391,12 +401,14 @@ answered with an approximate number.
   A root is shown in SI base units.
 * **No error bound (KL-33):** an approximate result is the `f64` nearest to the computed value;
   how far that is from the true value is not stated.
-* **Not implemented** (they fail with `refused`, "'tan' is not implemented"): `tan`, `asin`,
-  `acos`, `atan`, `atan2`, `pow`, `floor`, `round`. `log(x)` alone is refused as ambiguous: write
+* **Not implemented** (they fail with `refused`, "'floor' is not implemented"): `pow`,
+  `floor`, `round`. `log(x)` alone is refused as ambiguous: write
   `ln`, `lg` or `log10`, `lb` or `log2`, or `log(x, base)`.
-* **Result units are not simplified:** the unit is what the arithmetic produced, so
-  `1 J / 1 N` is `J/N`, `10 kWh/100km * 250 km` is `(kWh/km).km` and `1 m * 1 m` is `m.m`. Give
-  `--to` (`--to m`, `--to kWh`) for the unit you want; a wrong dimension is an error.
+* **Result units are merged and cancelled, never renamed:** `1 m * 1 m` is `1 m^2`,
+  `10 kWh/100km * 250 km` is `25 kWh` and `8.314 J/(mol*K) * 300 K * 1 mol / 1 m3` is
+  `2494.2 J/m^3`. A different symbol stays as it is: `1 J / 1 N` is `J/N`, `km * m` stays
+  `km.m`, and `h_P * c / 500 nm` keeps `J.m/nm`. Give `--to` (`--to J`, `--to Pa`) for the unit you
+  want; a wrong dimension is an error.
 * **Temperatures:** a point (`20 degC`) can be compared and shifted by a difference, not
   multiplied; `degC + degC` adds two points (`20 degC + 30 degC` is `50 degC`) while
   `degC - degC` is a difference (`delta_degC`) and a point minus a kelvin is refused (ADR-027); a temperature that an equation computes is a plain value in `K`, not a point on a

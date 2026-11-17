@@ -526,6 +526,15 @@ fn calc<'py>(
     if let Some(unit) = to.map(str::trim).filter(|u| !u.is_empty()) {
         number = formula.to_unit(&number, unit).map_err(|e| to_py(&e))?;
     }
+    for w in formula.warnings() {
+        let message = std::ffi::CString::new(w.replace('\0', " ")).unwrap_or_default();
+        PyErr::warn(
+            py,
+            &py.get_type::<pyo3::exceptions::PyUserWarning>(),
+            &message,
+            1,
+        )?;
+    }
     let r = Report::new(&number).map_err(|e| to_py(&e))?;
     let out = PyDict::new(py);
     out.set_item("value", r.value)?;

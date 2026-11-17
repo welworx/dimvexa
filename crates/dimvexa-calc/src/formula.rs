@@ -29,11 +29,11 @@
 //! * `+ - * /`, a unary minus, parentheses, and the power `^` with an integer, a decimal or a
 //!   fraction as exponent: `L^4`, `v^-2`, `x^0.5`, `R^(2/3)`.
 //! * The functions `sqrt`, `cbrt`, `abs`, `hypot(x, y)`, `min(x, y, ...)`, `max(x, y, ...)`,
-//!   `ln`, `exp`, `log10` (`lg`), `log2` (`lb`), `log(x, base)`, `sin`, `cos`, `sinh`, `cosh`,
-//!   `tanh`, `asinh`, `acosh` and `atanh`. `log(x)` alone is ambiguous and refused. Any other
-//!   well-known function (`tan`, `atan2`, `floor`, ...) is a `refused` error that says
-//!   `'tan' is not implemented`, and how to write it where there is a way (`sin(x) / cos(x)`);
-//!   an unknown name says `unknown function`.
+//!   `ln`, `exp`, `log10` (`lg`), `log2` (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`,
+//!   `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`, `tanh`, `asinh`, `acosh` and `atanh`.
+//!   `log(x)` alone is ambiguous and refused. Any other well-known function (`pow`, `floor`,
+//!   `round`) is a `refused` error that says `'floor' is not implemented`, and how to write it
+//!   where there is a way (`x^p`); an unknown name says `unknown function`.
 //!
 //! **A unit is the text that follows a number without a space inside it**: `998 kg/m3` is one
 //! quantity, and `50 kPa / 998 kg/m3` is a quotient of two. So write a space on both sides of
@@ -53,7 +53,7 @@ use crate::{Math, Number};
 /// The longest equation accepted, in characters.
 pub const MAX_EQUATION_CHARS: usize = 4096;
 
-/// The most names one [`Formula`] binds (besides `pi`): binding is linear in their number, and an
+/// The most names one [`Formula`] binds (besides the built-in constants): binding is linear in their number, and an
 /// equation of 4096 characters cannot use more than a few hundred.
 pub const MAX_VARS: usize = 512;
 
@@ -66,6 +66,11 @@ pub struct Formula<'r> {
     reg: &'r Registry,
     math: Math<'r>,
     vars: Vec<(String, Number)>,
+    /// How many of `vars` are built in (`pi` and the SI constants), before any the caller binds.
+    builtin: usize,
+    /// The names the caller bound, in order.
+    given: Vec<String>,
+    warnings: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -211,7 +216,7 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
 
 /// The functions the evaluator implements (ADR-029), with the number of arguments: `0` means
 /// two or more (`min`, `max`).
-const IMPLEMENTED: [(&str, usize); 21] = [
+const IMPLEMENTED: [(&str, usize); 26] = [
     ("sqrt", 1),
     ("cbrt", 1),
     ("abs", 1),
@@ -227,6 +232,11 @@ const IMPLEMENTED: [(&str, usize); 21] = [
     ("log", 2),
     ("sin", 1),
     ("cos", 1),
+    ("tan", 1),
+    ("asin", 1),
+    ("acos", 1),
+    ("atan", 1),
+    ("atan2", 2),
     ("sinh", 1),
     ("cosh", 1),
     ("tanh", 1),
@@ -237,16 +247,7 @@ const IMPLEMENTED: [(&str, usize); 21] = [
 
 /// Well-known functions that are **not implemented**, each with the way to write it from the
 /// ones that are (empty where there is none). Using one is an error, never a guess.
-const NOT_IMPLEMENTED: [(&str, &str); 8] = [
-    ("tan", "sin(x) / cos(x)"),
-    ("asin", ""),
-    ("acos", ""),
-    ("atan", ""),
-    ("atan2", ""),
-    ("pow", "x^p"),
-    ("floor", ""),
-    ("round", ""),
-];
+const NOT_IMPLEMENTED: [(&str, &str); 3] = [("pow", "x^p"), ("floor", ""), ("round", "")];
 
 fn function_list() -> String {
     let names: Vec<&str> = IMPLEMENTED.iter().map(|(name, _)| *name).collect();
@@ -532,6 +533,11 @@ impl Parser<'_, '_> {
             ("log2" | "lb", _) => math.log2(one),
             ("sin", _) => math.sin(one),
             ("cos", _) => math.cos(one),
+            ("tan", _) => math.tan(one),
+            ("asin", _) => math.asin(one),
+            ("acos", _) => math.acos(one),
+            ("atan", _) => math.atan(one),
+            ("atan2", Some(x)) => math.atan2(one, x),
             ("sinh", _) => math.sinh(one),
             ("cosh", _) => math.cosh(one),
             ("tanh", _) => math.tanh(one),
@@ -561,15 +567,35 @@ impl Parser<'_, '_> {
 }
 
 impl<'r> Formula<'r> {
-    /// An evaluator with the constant `pi` and no other names yet.
+    /// An evaluator with the built-in names: `pi` and the constants of `dimvexa constants`
+    /// (`h_P`, `e`, `k_B`, `N_A`), each with its unit, exact.
     #[must_use]
     pub fn new(reg: &'r Registry) -> Self {
         let pi = Number::from(Quantity::new(Ratio::PI, UnitExpr::unity()));
+        let mut vars = vec![("pi".to_owned(), pi)];
+        for def in dimvexa_data::CONSTANTS.iter().filter(|c| c.id != "pi") {
+            let bound = def
+                .value()
+                .and_then(|v| Ok(Quantity::new(v, reg.parse(def.unit)?)));
+            if let Ok(q) = bound {
+                vars.push((def.id.to_owned(), Number::from(q)));
+            }
+        }
         Self {
             reg,
             math: Math::new(reg),
-            vars: vec![("pi".to_owned(), pi)],
+            builtin: vars.len(),
+            vars,
+            given: Vec::new(),
+            warnings: Vec::new(),
         }
+    }
+
+    /// What the caller should be told about: a name that replaces a built-in constant, or that
+    /// is bound twice (the last value is used).
+    #[must_use]
+    pub fn warnings(&self) -> &[String] {
+        &self.warnings
     }
 
     /// Binds `name` to the quantity written in `quantity` (`"998 kg/m^3"`); a second binding of
@@ -596,12 +622,34 @@ impl<'r> Formula<'r> {
         if name == "pi" {
             return Err(refuse("'pi' is the constant and cannot be redefined"));
         }
-        if self.vars.len() > MAX_VARS && !self.vars.iter().any(|(n, _)| n == name) {
+        let known = self.vars.iter().position(|(n, _)| n == name);
+        if known.is_none() && self.vars.len() >= self.builtin.saturating_add(MAX_VARS) {
             return Err(refuse("too many names"));
         }
         let q = Number::from(self.reg.quantity(quantity)?);
-        self.vars.retain(|(n, _)| n != name);
-        self.vars.push((name.to_owned(), q));
+        if let Some(i) = known {
+            if self.given.iter().any(|n| n == name) {
+                self.warnings.push(format!(
+                    "the name '{name}' is given twice; the last value is used"
+                ));
+            } else if i < self.builtin {
+                self.warnings.push(format!(
+                    "the name '{name}' replaces the built-in constant {name}; \
+                     the value you gave is used"
+                ));
+            }
+        }
+        if !self.given.iter().any(|n| n == name) {
+            self.given.push(name.to_owned());
+        }
+        match known {
+            Some(i) => {
+                if let Some(slot) = self.vars.get_mut(i) {
+                    *slot = (name.to_owned(), q);
+                }
+            }
+            None => self.vars.push((name.to_owned(), q)),
+        }
         Ok(self)
     }
 

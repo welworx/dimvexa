@@ -59,7 +59,7 @@ assert_eq!(r.to_string(), "≈ 1.4142135623730951 m");               // labelled
 ```
 
 `sqrt`, `cbrt`, `root(x, p, q)` (the power `p/q`), `abs`, `hypot`, `min`, `max`, `ln`, `exp`,
-`log10`, `log2`, `log(x, base)`, `sin`, `cos`, `sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh`
+`log10`, `log2`, `log(x, base)`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, `sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh`
 and the arithmetic on `Number`. An approximate value spreads to everything computed from it and never turns back into
 an exact one; an exact failure such as an `overflow` is never answered with an `f64`. A root
 needs integer dimension exponents (`sqrt(m)` is refused, KL-32) and returns SI base units;

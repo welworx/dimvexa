@@ -294,7 +294,7 @@ def test_calc_min_max_need_one_dimension_and_keep_the_winners_unit() -> None:
 def test_calc_errors_carry_codes_and_configs_apply() -> None:
     for expr, code in [
         ("1 m + 1 s", "dimension_mismatch"),
-        ("tan(1 rad)", "refused"),
+        ("floor(1.5 m)", "refused"),
         ("log(100)", "refused"),
         ("1 +", "parse_error"),
     ]:
@@ -351,3 +351,12 @@ def test_calc_marks_rounding_prints_beyond_f64_and_refuses_ambiguous_names() -> 
         with pytest.raises(dimvexa.DimvexaError) as e:
             dimvexa.calc(bad)
         assert e.value.code == "refused", bad
+
+
+def test_calc_knows_the_constants_tan_atan2_and_merges_units() -> None:
+    assert dimvexa.calc("k_B * 300 K")["text"] == "4.141947e-21 J"
+    assert dimvexa.calc("tan(45 deg)")["text"] == "1"
+    assert dimvexa.calc("atan2(1 m, 100 cm)", to="deg")["text"] == "45 deg"
+    assert dimvexa.calc("1 m * 1 m")["unit"] == "m^2"
+    with pytest.warns(UserWarning, match="replaces the built-in constant"):
+        assert dimvexa.calc("e * 2", vars={"e": "3 C"})["text"] == "6 C"

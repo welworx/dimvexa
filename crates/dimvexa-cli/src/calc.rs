@@ -32,7 +32,8 @@ pub struct CalcRequest {
 /// An error and what to say before its message (`--var dp: `).
 type Failure = (Error, String);
 
-fn evaluate(req: &CalcRequest, loaded: &Loaded) -> Result<Report, Failure> {
+/// The result and what to warn about (a name that replaces a built-in constant or repeats).
+fn evaluate(req: &CalcRequest, loaded: &Loaded) -> Result<(Report, Vec<String>), Failure> {
     let mut formula = Formula::new(&loaded.lib.reg);
     for (name, value) in &req.vars {
         formula = formula
@@ -47,7 +48,8 @@ fn evaluate(req: &CalcRequest, loaded: &Loaded) -> Result<Report, Failure> {
             .to_unit(&number, unit)
             .map_err(|e| (e, format!("--to {unit}: ")))?;
     }
-    Report::new(&number).map_err(|e| (e, String::new()))
+    let report = Report::new(&number).map_err(|e| (e, String::new()))?;
+    Ok((report, formula.warnings().to_vec()))
 }
 
 fn render_text(r: &Report, exact: bool, color: bool) -> String {
@@ -59,7 +61,7 @@ fn render_text(r: &Report, exact: bool, color: bool) -> String {
     }
 }
 
-fn render_json(req: &CalcRequest, r: &Report, loaded: &Loaded) -> String {
+fn render_json(req: &CalcRequest, r: &Report, loaded: &Loaded, warnings: &[String]) -> String {
     let variables: Vec<String> = req
         .vars
         .iter()
@@ -92,7 +94,7 @@ fn render_json(req: &CalcRequest, r: &Report, loaded: &Loaded) -> String {
         json_string(&r.kind),
         json_string(&dimvexa::data_version()),
         configs_json(&loaded.configs),
-        warnings_json(&loaded.lib.warnings),
+        warnings_json(warnings),
     )
 }
 
@@ -129,10 +131,15 @@ pub fn run_calc(
     };
     print_warnings(&loaded, err);
     match evaluate(req, &loaded) {
-        Ok(c) => {
+        Ok((c, formula_warnings)) => {
             let text = if req.json {
-                render_json(req, &c, &loaded)
+                let mut all = loaded.lib.warnings.clone();
+                all.extend(formula_warnings);
+                render_json(req, &c, &loaded, &all)
             } else {
+                for w in &formula_warnings {
+                    let _ = writeln!(err, "warning: {w}");
+                }
                 render_text(&c, req.exact, color)
             };
             let _ = writeln!(out, "{text}");

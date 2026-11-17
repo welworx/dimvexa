@@ -972,3 +972,137 @@ fn sums_and_comparisons_of_numbers_with_different_stored_exponents() {
     assert!(high.is_exact());
     assert_eq!(m.to_f64_in(&high, "m").unwrap(), 6.626_070_15e-34);
 }
+
+// ----- tan, asin, acos, atan, atan2 ----------------------------------------------------------
+
+fn num(reg: &dimvexa::Registry, text: &str) -> Number {
+    Number::from(reg.quantity(text).unwrap())
+}
+
+#[test]
+fn tan_is_exact_at_quarter_turns_where_it_exists() {
+    let reg = registry().unwrap();
+    let math = Math::new(&reg);
+    for (angle, want) in [
+        ("0 deg", "0 1"),
+        ("45 deg", "1 1"),
+        ("135 deg", "-1 1"),
+        ("180 deg", "0 1"),
+        ("225 deg", "1 1"),
+        ("-45 deg", "-1 1"),
+    ] {
+        let r = math.tan(&num(&reg, angle)).unwrap();
+        assert!(r.is_exact(), "{angle}");
+        assert_eq!(r.to_string(), want, "{angle}");
+    }
+    for angle in ["90 deg", "270 deg", "-90 deg"] {
+        assert_eq!(
+            math.tan(&num(&reg, angle)).unwrap_err().code(),
+            "refused",
+            "{angle}"
+        );
+    }
+    let t = math.tan(&num(&reg, "30 deg")).unwrap();
+    assert!(!t.is_exact());
+    close(
+        math.to_f64_in(&t, "1").unwrap(),
+        1.0 / 3.0_f64.sqrt(),
+        1e-14,
+    );
+    close(
+        math.to_f64_in(&math.tan(&num(&reg, "1 rad")).unwrap(), "1")
+            .unwrap(),
+        1.0_f64.tan(),
+        1e-14,
+    );
+    // 1e30 quarter turns are exact; a bare number or a product of angles is refused
+    assert!(math.tan(&num(&reg, "180e30 deg")).unwrap().is_exact());
+    assert_eq!(math.tan(&num(&reg, "1")).unwrap_err().code(), "refused");
+}
+
+#[test]
+fn inverse_trigonometric_functions_are_exact_at_the_special_values() {
+    let reg = registry().unwrap();
+    let math = Math::new(&reg);
+    for (f, x, deg) in [
+        ("asin", "0", 0.0),
+        ("asin", "0.5", 30.0),
+        ("asin", "-0.5", -30.0),
+        ("asin", "1", 90.0),
+        ("asin", "-1", -90.0),
+        ("acos", "1", 0.0),
+        ("acos", "0.5", 60.0),
+        ("acos", "0", 90.0),
+        ("acos", "-0.5", 120.0),
+        ("acos", "-1", 180.0),
+        ("atan", "0", 0.0),
+        ("atan", "1", 45.0),
+        ("atan", "-1", -45.0),
+    ] {
+        let n = num(&reg, x);
+        let r = match f {
+            "asin" => math.asin(&n),
+            "acos" => math.acos(&n),
+            _ => math.atan(&n),
+        }
+        .unwrap();
+        assert!(r.is_exact(), "{f}({x})");
+        assert_eq!(math.to_f64_in(&r, "deg").unwrap(), deg, "{f}({x})");
+    }
+    // otherwise approximate, in rad
+    let r = math.asin(&num(&reg, "0.3")).unwrap();
+    assert!(!r.is_exact());
+    close(math.to_f64_in(&r, "rad").unwrap(), 0.3_f64.asin(), 1e-14);
+    close(
+        math.to_f64_in(&math.atan(&num(&reg, "2")).unwrap(), "rad")
+            .unwrap(),
+        2.0_f64.atan(),
+        1e-14,
+    );
+    // a domain error and a dimension are refused, never NaN
+    assert_eq!(
+        math.asin(&num(&reg, "1.0001")).unwrap_err().code(),
+        "refused"
+    );
+    assert_eq!(math.acos(&num(&reg, "-2")).unwrap_err().code(), "refused");
+    assert_eq!(math.atan(&num(&reg, "1 m")).unwrap_err().code(), "refused");
+}
+
+#[test]
+fn atan2_takes_two_values_of_one_dimension() {
+    let reg = registry().unwrap();
+    let math = Math::new(&reg);
+    for (y, x, deg) in [
+        ("0 m", "5 m", 0.0),
+        ("0 m", "-5 m", 180.0),
+        ("2 m", "0 m", 90.0),
+        ("-2 m", "0 m", -90.0),
+        ("1 m", "100 cm", 45.0),
+        ("1 m", "-1000 mm", 135.0),
+        ("-1 m", "1 m", -45.0),
+        ("-3 N", "-3000 mN", -135.0),
+    ] {
+        let r = math.atan2(&num(&reg, y), &num(&reg, x)).unwrap();
+        assert!(r.is_exact(), "{y} {x}");
+        assert_eq!(math.to_f64_in(&r, "deg").unwrap(), deg, "{y} {x}");
+    }
+    let r = math.atan2(&num(&reg, "3 m"), &num(&reg, "4 m")).unwrap();
+    assert!(!r.is_exact());
+    close(
+        math.to_f64_in(&r, "rad").unwrap(),
+        3.0_f64.atan2(4.0),
+        1e-14,
+    );
+    assert_eq!(
+        math.atan2(&num(&reg, "1 m"), &num(&reg, "1 s"))
+            .unwrap_err()
+            .code(),
+        "refused"
+    );
+    assert_eq!(
+        math.atan2(&num(&reg, "0 m"), &num(&reg, "0 m"))
+            .unwrap_err()
+            .code(),
+        "refused"
+    );
+}

@@ -462,11 +462,13 @@ exist. From then on:
   exact again. `sqrt(2)^2` is `≈ 2.0000000000000004`, not `2`.
 * **Exact failures stay failures.** If the *exact* arithmetic overflows (the digit limit of
   section 8), the answer is `overflow`, never an `f64` that hides it.
-* **A function that does not exist is an error that says so.** `tan`, `asin`, `atan2` and
-  the others that are not implemented fail with `'tan' is not implemented` (code
-  `refused`, as for the other unsupported requests) and, where there is a way, how to write
-  them from the functions that are there: `sin(x) / cos(x)`, `x^p`. Not implemented today:
-  `tan`, `asin`, `acos`, `atan`, `atan2`, `pow`, `floor`, `round`.
+* **A function that does not exist is an error that says so.** The ones that are not
+  implemented fail with `'floor' is not implemented` (code `refused`, as for the other
+  unsupported requests) and, where there is a way, how to write them from the functions that
+  are there: `x^p`. Not implemented today: `pow`, `floor`, `round`. `tan`, `asin`, `acos`,
+  `atan` and `atan2` are implemented: exact at the quarter turns and the sines of 0, 1/2 and 1
+  (`atan(1)` is exactly `pi/4`, `tan(45 deg)` is exactly `1`), approximate otherwise; the
+  inverse functions return an angle in `rad`.
 * **Accuracy is stated, not promised.** Arithmetic and `sqrt` are IEEE operations (at most half
   a unit in the last place per step), a unit conversion uses the correctly rounded exact factor,
   and `ln`, `exp`, `sin`, `cos` and general powers come from the platform's maths library, which

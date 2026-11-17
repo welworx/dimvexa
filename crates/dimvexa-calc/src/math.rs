@@ -950,19 +950,279 @@ impl<'r> Math<'r> {
         Self::trig(a, true)
     }
 
-    fn trig(a: &Number, cos: bool) -> Result<Number> {
+    // ----- tangent and the inverse trigonometric functions ---------------------------------
+
+    /// Tangent of an angle in one angle unit. Exact at the multiples of 45 degrees where it is
+    /// defined (`tan(45 deg) = 1`, `tan(180 deg) = 0`), otherwise approximate.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] as for [`sin`](Self::sin), and at 90 degrees and the other odd
+    /// multiples of a quarter turn, where the tangent does not exist.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dimvexa_calc::{Math, Number};
+    /// # let reg = dimvexa::registry()?;
+    /// # let math = Math::new(&reg);
+    /// let q = |s: &str| reg.quantity(s).map(Number::from);
+    /// assert_eq!(math.tan(&q("45 deg")?)?.to_string(), "1 1");
+    /// assert_eq!(math.tan(&q("90 deg")?).unwrap_err().code(), "refused");
+    /// assert!(!math.tan(&q("30 deg")?)?.is_exact());
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn tan(&self, a: &Number) -> Result<Number> {
+        let unit = Self::angle_unit(a, "tan")?;
+        let f = match a {
+            Number::Exact(q) => {
+                let radians = q.value().checked_mul(unit.factor())?;
+                if radians.is_zero() {
+                    return Ok(Number::Exact(Quantity::new(Ratio::ZERO, UnitExpr::unity())));
+                }
+                if radians.pi_exp() == 1 {
+                    // quarter turns: n/d * 10^k * pi / (pi / 4) = 4 n / d * 10^k
+                    let quarters = radians
+                        .with_exponents(radians.ten_exp(), 0)
+                        .checked_mul(Ratio::from_int(4))
+                        .and_then(Ratio::folded);
+                    if let Ok(quarters) = quarters {
+                        if quarters.is_integer() && !quarters.has_exponents() {
+                            let exact = match quarters.num().rem_euclid(4) {
+                                0 => Ratio::ZERO,
+                                1 => Ratio::ONE,
+                                3 => Ratio::from_int(-1),
+                                _ => {
+                                    return Err(refused(
+                                        "tan is undefined at an odd multiple of 90 degrees",
+                                    ));
+                                }
+                            };
+                            return Ok(Number::Exact(Quantity::new(exact, UnitExpr::unity())));
+                        }
+                    }
+                }
+                radians_for_trig(radians)?
+            }
+            Number::Approx(x) => Self::approx_radians(x.value, unit)?,
+        };
+        unity(f.tan())
+    }
+
+    /// Arc sine of a dimensionless value in `[-1, 1]`, an angle in `rad`. Exact at `0`, `±1/2`
+    /// and `±1` (`0`, `±pi/6`, `±pi/2`).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] for a value with a dimension or outside `[-1, 1]`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dimvexa_calc::{Math, Number};
+    /// # let reg = dimvexa::registry()?;
+    /// # let math = Math::new(&reg);
+    /// let q = |s: &str| reg.quantity(s).map(Number::from);
+    /// assert_eq!(math.to_f64_in(&math.asin(&q("0.5")?)?, "deg")?, 30.0);
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn asin(&self, a: &Number) -> Result<Number> {
+        Self::inverse_trig(
+            self.calc.reg.parse("rad")?,
+            a,
+            "asin",
+            f64::asin,
+            &[(0, 1, 0, 1), (1, 2, 1, 6), (1, 1, 1, 2)],
+        )
+    }
+
+    /// Arc cosine of a dimensionless value in `[-1, 1]`, an angle in `rad`. Exact at `1`, `1/2`,
+    /// `0`, `-1/2` and `-1` (`0`, `pi/3`, `pi/2`, `2 pi/3`, `pi`).
+    ///
+    /// # Errors
+    ///
+    /// As [`asin`](Self::asin).
+    pub fn acos(&self, a: &Number) -> Result<Number> {
+        Self::inverse_trig(
+            self.calc.reg.parse("rad")?,
+            a,
+            "acos",
+            f64::acos,
+            &[
+                (1, 1, 0, 1),
+                (1, 2, 1, 3),
+                (0, 1, 1, 2),
+                (-1, 2, 2, 3),
+                (-1, 1, 1, 1),
+            ],
+        )
+    }
+
+    /// Arc tangent of a dimensionless value, an angle in `rad`. Exact at `0` and `±1`
+    /// (`0`, `±pi/4`).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] for a value with a dimension.
+    pub fn atan(&self, a: &Number) -> Result<Number> {
+        Self::inverse_trig(
+            self.calc.reg.parse("rad")?,
+            a,
+            "atan",
+            f64::atan,
+            &[(0, 1, 0, 1), (1, 1, 1, 4)],
+        )
+    }
+
+    /// The angle of the point `(x, y)` from the positive `x` axis, in `rad`, in `(-pi, pi]`;
+    /// `y` and `x` have one dimension and may be in different units. Exact where `y` is zero
+    /// or `x` is zero or `|y| = |x|` (multiples of `pi/4`), otherwise approximate.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] when the dimensions differ or both are zero.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dimvexa_calc::{Math, Number};
+    /// # let reg = dimvexa::registry()?;
+    /// # let math = Math::new(&reg);
+    /// let q = |s: &str| reg.quantity(s).map(Number::from);
+    /// let angle = math.atan2(&q("1 m")?, &q("100 cm")?)?;
+    /// assert_eq!(math.to_f64_in(&angle, "deg")?, 45.0);
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn atan2(&self, y: &Number, x: &Number) -> Result<Number> {
+        let kinds = [Kind::Plain, Kind::TemperatureDifference];
+        let ((sy, dy), (sx, dx)) = (Self::normalise(y, &kinds)?, Self::normalise(x, &kinds)?);
+        if dy != dx {
+            return Err(refused(format!(
+                "atan2 needs y and x of one dimension, not {} and {}",
+                y.unit(),
+                x.unit()
+            )));
+        }
+        let rad = self.calc.reg.parse("rad")?;
+        if let (Si::Exact(ry), Si::Exact(rx)) = (&sy, &sx) {
+            let (y_sign, x_sign) = (ry.signum(), rx.signum());
+            // |y| = |x|: y equals x, or minus x when the signs differ
+            let rx_signed = if y_sign == x_sign {
+                *rx
+            } else {
+                rx.checked_mul(Ratio::from_int(-1))?
+            };
+            let same_size = ry.checked_eq(rx_signed)?;
+            // in units of pi/4: (0, 1) = 0 ... the eight directions
+            let quarters: Option<i128> = match (y_sign, x_sign) {
+                (0, 0) => return Err(refused("atan2(0, 0) is undefined")),
+                (0, 1) => Some(0),
+                (0, _) => Some(4),
+                (1, 0) => Some(2),
+                (_, 0) => Some(-2),
+                (1, 1) if same_size => Some(1),
+                (1, _) if same_size => Some(3),
+                (_, 1) if same_size => Some(-1),
+                (_, _) if same_size => Some(-3),
+                _ => None,
+            };
+            if let Some(n) = quarters {
+                return Ok(Number::Exact(Quantity::new(
+                    Ratio::new(n, 4)?.with_exponents(0, 1),
+                    rad,
+                )));
+            }
+        }
+        let (fy, fx) = (Self::si_f64(&sy)?, Self::si_f64(&sx)?);
+        Ok(Number::Approx(Approx {
+            value: finite(fy.atan2(fx), "atan2")?,
+            unit: rad,
+        }))
+    }
+
+    fn si_f64(si: &Si) -> Result<f64> {
+        match si {
+            Si::Exact(r) => r.to_f64(),
+            Si::Approx(x) => Ok(*x),
+        }
+    }
+
+    /// `f` of a dimensionless value (in `[-1, 1]` except for `atan`), an angle in `rad`.
+    /// `exact` lists `(num, den, pi_num, pi_den)`: at `num/den` the result is `pi_num/pi_den`
+    /// times pi, and at `-num/den` the negative of it, except for `acos`.
+    fn inverse_trig(
+        rad: UnitExpr,
+        a: &Number,
+        name: &str,
+        f: fn(f64) -> f64,
+        exact: &[(i128, i128, i128, i128)],
+    ) -> Result<Number> {
+        let bounded = name != "atan";
+        let odd = name != "acos";
+        let x = match Self::dimensionless(a)? {
+            Si::Exact(r) => {
+                let x = r.to_f64()?;
+                if bounded && x.abs() > 1.0 {
+                    return Err(refused(format!("{name} needs a value between -1 and 1")));
+                }
+                for (n, d, pn, pd) in exact {
+                    let at = Ratio::new(*n, *d)?;
+                    let mirrored = at.checked_mul(Ratio::from_int(-1))?;
+                    let angle = Ratio::new(*pn, *pd)?.with_exponents(0, 1);
+                    if r.checked_eq(at)? {
+                        return Ok(Number::Exact(Quantity::new(angle, rad)));
+                    }
+                    if odd && r.checked_eq(mirrored)? {
+                        let negative = angle.checked_mul(Ratio::from_int(-1))?;
+                        return Ok(Number::Exact(Quantity::new(negative, rad)));
+                    }
+                }
+                x
+            }
+            Si::Approx(x) => {
+                if bounded && x.abs() > 1.0 {
+                    return Err(refused(format!("{name} needs a value between -1 and 1")));
+                }
+                x
+            }
+        };
+        Ok(Number::Approx(Approx {
+            value: finite(f(x), "approximate result")?,
+            unit: rad,
+        }))
+    }
+
+    /// The unit of an angle argument: one angle unit, never a product or quotient of angles.
+    fn angle_unit<'a>(a: &'a Number, name: &str) -> Result<&'a UnitExpr> {
         let unit = a.unit();
         if unit.kind() != Kind::Angle || !unit.dim().is_dimensionless() {
-            return Err(refused(
-                "sin and cos need an angle with a unit: write 30 deg or 0.5 rad, not a bare number",
-            ));
+            return Err(refused(format!(
+                "{name} needs an angle with a unit: write 30 deg or 0.5 rad, not a bare number"
+            )));
         }
         if !is_one_unit(unit.expr()) {
+            return Err(refused(format!(
+                "{name} needs an angle in one angle unit (30 deg, 0.5 rad), not a product or \
+                 quotient of angles such as deg*deg or 1/rad (for pi/6 rad write pi/6 * 1 rad)"
+            )));
+        }
+        Ok(unit)
+    }
+
+    /// An approximate angle in radians, with the same bound as the exact path.
+    fn approx_radians(value: f64, unit: &UnitExpr) -> Result<f64> {
+        let radians = value * unit.factor().to_f64()?;
+        if radians.abs() > 1e7 {
             return Err(refused(
-                "sin and cos need an angle in one angle unit (30 deg, 0.5 rad), not a product or \
-                 quotient of angles such as deg*deg or 1/rad (for pi/6 rad write pi/6 * 1 rad)",
+                "the angle is too large for an approximate sine, cosine or tangent (its f64 value \
+                 would not decide the phase); reduce it modulo a full turn first",
             ));
         }
+        Ok(radians)
+    }
+
+    fn trig(a: &Number, cos: bool) -> Result<Number> {
+        let unit = Self::angle_unit(a, if cos { "cos" } else { "sin" })?;
         let f = match a {
             Number::Exact(q) => {
                 let radians = q.value().checked_mul(unit.factor())?;
@@ -971,16 +1231,7 @@ impl<'r> Math<'r> {
                 }
                 radians_for_trig(radians)?
             }
-            Number::Approx(x) => {
-                let value = x.value * unit.factor().to_f64()?;
-                if value.abs() > 1e7 {
-                    return Err(refused(
-                        "the angle is too large for an approximate sine or cosine (its f64 value \
-                         would not decide the phase); reduce it modulo a full turn first",
-                    ));
-                }
-                value
-            }
+            Number::Approx(x) => Self::approx_radians(x.value, unit)?,
         };
         unity(if cos { f.cos() } else { f.sin() })
     }

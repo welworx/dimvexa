@@ -32,7 +32,7 @@ fn functions_that_are_not_implemented_say_so() {
         .unwrap()
         .var("y", "2")
         .unwrap();
-    for name in ["tan", "asin", "acos", "atan", "floor", "round"] {
+    for name in ["floor", "round"] {
         let err = f.eval(&format!("{name}(x)")).unwrap_err();
         assert_eq!(err.code(), "refused", "{name}");
         let msg = err.to_string();
@@ -43,7 +43,7 @@ fn functions_that_are_not_implemented_say_so() {
         assert!(err.suggestions().contains(&"sqrt".to_owned()), "{name}");
     }
     // more than one argument: the name decides, not the comma
-    for call in ["atan2(x, y)", "pow(x, y)", "tan("] {
+    for call in ["pow(x, y)", "floor("] {
         let err = f.eval(call).unwrap_err();
         assert_eq!(err.code(), "refused", "{call}");
         assert!(
@@ -58,10 +58,9 @@ fn a_function_that_is_not_implemented_says_how_to_write_it() {
     let reg = registry().unwrap();
     let f = Formula::new(&reg);
     let hint = |call: &str| f.eval(call).unwrap_err().to_string();
-    assert!(hint("tan(0.5 rad)").contains("write sin(x) / cos(x)"));
     assert!(hint("pow(2, 3)").contains("write x^p"));
     // no way to write it from the implemented ones: no hint
-    assert!(!hint("atan(1)").contains("write"));
+    assert!(!hint("floor(1.5)").contains("write"));
 }
 
 #[test]

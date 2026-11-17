@@ -9,16 +9,19 @@ EXPRESSION is an equation: numbers, quantities written with their unit
 constant pi, + - * / and parentheses, a power with a fraction as exponent
 (x^0.5, y^(1/2) and sqrt(x) agree; R^(2/3)) and the functions sqrt, cbrt,
 abs, hypot, min, max, ln, exp, log10 (lg), log2 (lb), log(x, base), sin,
-cos, sinh, cosh, tanh, asinh, acosh, atanh. Quote it, and put a space on
-both sides of an operator between quantities (write -- before an expression
-that starts like an option, such as -h): a unit is the text after a
-number up to the next space, so 50 kPa / 998 kg/m3 is a quotient.
+cos, tan, asin, acos, atan, atan2(y, x), sinh, cosh, tanh, asinh, acosh,
+atanh, and the built-in names pi, h_P, e, k_B, N_A (the SI constants of
+'dimvexa constants'; --var may replace one, with a warning). Quote it, and
+put a space on both sides of an operator between quantities (write --
+before an expression that starts like an option, such as -h): a unit is the
+text after a number up to the next space, so 50 kPa / 998 kg/m3 is a
+quotient.
 
 The result is exact when the mathematics is exact (sqrt(9 m2) is 3 m,
 sin(30 deg) is 0.5) and starts with ≈ when it is not: an approximate f64,
 and so is everything computed from it. Without --to the unit is the one
 the arithmetic gave. A temperature point (20 degC) cannot be multiplied;
-tan, asin, atan2, floor and other functions are not implemented, and log(x)
+pow, floor, round and other functions are not implemented, and log(x)
 alone is ambiguous: write ln, lg or log10, lb or log2, or log(x, base).
 
 Examples:

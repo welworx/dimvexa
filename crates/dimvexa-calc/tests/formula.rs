@@ -210,6 +210,8 @@ fn hostile_equations_are_errors_and_never_panic() {
         "log(1)",
         "tan(1)",
         "atan2(1, 2)",
+        "asin(1 m)",
+        "atan2(1 m)",
         "frobnicate(1)",
     ] {
         let _ = f.eval(text);

@@ -4,7 +4,7 @@
 //! One implementation, so that `dimvexa calc`, `dimvexa.calc()` and `calc()` of the WASM build
 //! print the same text and carry the same fields (ADR-030). Nothing here calculates.
 
-use dimvexa_core::{Ratio, Result};
+use dimvexa_core::{Expr, Ratio, Result};
 
 use crate::Number;
 
@@ -82,7 +82,7 @@ impl Report {
             unit: if unit.is_unity() {
                 String::new()
             } else {
-                unit.to_string()
+                simplified(unit.expr()).unwrap_or_else(|| unit.to_string())
             },
             exact: number.is_exact(),
             rounded,
@@ -121,6 +121,64 @@ impl Report {
             format!("{number} {}", self.unit)
         }
     }
+}
+
+/// The unit with equal symbols merged and cancelled (`m.m` is `m^2`, `(kWh/km).km` is `kWh`,
+/// `J/(mol.K).K.mol/m^3` is `J/m^3`); a symbol is never renamed to another (`km` and `m` stay
+/// apart). `None` when nothing merges, so a unit that is already written well is shown as it is.
+fn simplified(expr: &Expr) -> Option<String> {
+    fn flatten(expr: &Expr, power: i32, out: &mut Vec<(String, i32)>) {
+        match expr {
+            Expr::One => {}
+            Expr::Unit(symbol) => out.push((symbol.clone(), power)),
+            Expr::Mul(a, b) => {
+                flatten(a, power, out);
+                flatten(b, power, out);
+            }
+            Expr::Div(a, b) => {
+                flatten(a, power, out);
+                flatten(b, power.saturating_neg(), out);
+            }
+            Expr::Pow(base, n) => flatten(base, power.saturating_mul(*n), out),
+        }
+    }
+    fn term((symbol, power): &(String, i32)) -> String {
+        if *power == 1 {
+            symbol.clone()
+        } else {
+            format!("{symbol}^{power}")
+        }
+    }
+    let mut raw = Vec::new();
+    flatten(expr, 1, &mut raw);
+    let mut merged: Vec<(String, i32)> = Vec::new();
+    for (symbol, power) in &raw {
+        match merged.iter_mut().find(|(s, _)| s == symbol) {
+            Some((_, p)) => *p = p.saturating_add(*power),
+            None => merged.push((symbol.clone(), *power)),
+        }
+    }
+    merged.retain(|(_, p)| *p != 0);
+    if merged.len() == raw.len() {
+        return None;
+    }
+    let top: Vec<String> = merged.iter().filter(|(_, p)| *p > 0).map(term).collect();
+    let bottom: Vec<String> = merged
+        .iter()
+        .filter(|(_, p)| *p < 0)
+        .map(|(s, p)| term(&(s.clone(), p.saturating_neg())))
+        .collect();
+    let numerator = if top.is_empty() {
+        "1".to_owned()
+    } else {
+        top.join(".")
+    };
+    Some(match bottom.len() {
+        0 if top.is_empty() => String::new(),
+        0 => numerator,
+        1 => format!("{numerator}/{}", bottom.join(".")),
+        _ => format!("{numerator}/({})", bottom.join(".")),
+    })
 }
 
 /// Whether the shortest text of `v` is exactly `r` (`0.3` for 3/10, not `0.333…` for 1/3).
@@ -208,5 +266,21 @@ mod tests {
             (tiny.value, tiny.text(false)),
             (None, "1e-400 m".to_string())
         );
+    }
+
+    #[test]
+    fn units_merge_and_cancel_but_are_never_renamed() {
+        let unit = |text: &str| simplified(&Expr::parse(text).unwrap());
+        assert_eq!(unit("m.m").as_deref(), Some("m^2"));
+        assert_eq!(unit("(kWh/km).km").as_deref(), Some("kWh"));
+        assert_eq!(unit("(J/(mol.K)).K.mol/m^3").as_deref(), Some("J/m^3"));
+        assert_eq!(unit("J/N").as_deref(), None);
+        assert_eq!(unit("kg.m.s^-2").as_deref(), None);
+        assert_eq!(unit("km.m").as_deref(), None);
+        assert_eq!(unit("(m/s).s").as_deref(), Some("m"));
+        assert_eq!(unit("m.s^-1.s").as_deref(), Some("m"));
+        assert_eq!(unit("m.m^-1").as_deref(), Some(""));
+        assert_eq!(unit("1/(s.s)").as_deref(), Some("1/s^2"));
+        assert_eq!(unit("(m.m).(m/(kg.kg))").as_deref(), Some("m^3/kg^2"));
     }
 }

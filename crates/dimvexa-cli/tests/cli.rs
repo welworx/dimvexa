@@ -214,7 +214,7 @@ fn every_error_code_has_a_cli_test() {
         (&["calc", "5 foo"], "unknown_unit", 1),
         (&["calc", "1 +"], "parse_error", 1),
         (&["calc", "(1 ly)^3"], "overflow", 1),
-        (&["calc", "tan(1 rad)"], "refused", 1),
+        (&["calc", "floor(1.5 m)"], "refused", 1),
         (&["calc"], "usage", 2),
     ];
     for (args, code, exit) in cases {
@@ -3421,7 +3421,7 @@ fn calc_failures_use_the_library_codes_and_exit_1() {
         ("(1 ly)^3", "overflow", "overflow"),
         ("1 + pi", "unrepresentable", "pi"),
         ("1 m / 0 s", "division_by_zero", "division by zero"),
-        ("tan(1 rad)", "refused", "'tan' is not implemented"),
+        ("floor(1.5 m)", "refused", "'floor' is not implemented"),
         ("log(100)", "refused", "ambiguous"),
         ("sqrt(4 m)", "refused", "KL-32"),
         ("abs(-5 degC)", "kind_mismatch", "delta_degC"),
@@ -3693,4 +3693,78 @@ fn calc_refuses_a_name_that_is_also_a_unit_in_the_equation() {
     assert_eq!(calc(&["h * 2", "--var", "h=3 m"]).stdout, "6 m\n");
     assert_eq!(calc(&["m * 2 cm", "--var", "m=3"]).stdout, "6 cm\n");
     assert_eq!(calc(&["0.5 h", "--var", "hh=3 m"]).stdout, "0.5 h\n");
+}
+
+/// The SI constants are names in every equation; a `--var` that replaces one is warned about.
+#[test]
+fn calc_knows_the_si_constants_and_warns_when_a_name_replaces_one() {
+    assert_eq!(calc(&["k_B * 300 K"]).stdout, "4.141947e-21 J\n");
+    assert_eq!(
+        calc(&["h_P * 299792458 m/s / 500 nm", "--to", "J"]).stdout,
+        "3.972891714297857e-19… J\n",
+    );
+    assert_eq!(
+        calc(&["N_A * k_B", "--to", "J/(mol*K)"]).stdout,
+        "8.31446261815324 J/(mol.K)\n"
+    );
+    let r = calc(&["e * 2", "--var", "e=3 C"]);
+    assert_eq!((r.code, r.stdout.as_str()), (0, "6 C\n"));
+    assert_eq!(
+        r.stderr,
+        "warning: the name 'e' replaces the built-in constant e; the value you gave is used\n"
+    );
+    let r = calc(&["x", "--var", "x=1 m", "--var", "x=2 m"]);
+    assert_eq!(r.stdout, "2 m\n");
+    assert!(r.stderr.contains("'x' is given twice"), "{}", r.stderr);
+    let v = json::parse(&calc(&["e", "--var", "e=3 C", "--json"]).stdout).unwrap();
+    assert_eq!(v.get("warnings").unwrap().as_array().len(), 1);
+    // pi cannot be replaced
+    assert_eq!(calc(&["pi", "--var", "pi=3"]).code, 1);
+}
+
+/// `tan` and the inverse functions: exact at the special values, approximate otherwise.
+#[test]
+fn calc_inverse_trigonometry_returns_an_angle() {
+    assert_eq!(calc(&["tan(45 deg)"]).stdout, "1\n");
+    assert_eq!(
+        calc(&["atan2(1 m, 100 cm)", "--to", "deg"]).stdout,
+        "45 deg\n"
+    );
+    assert_eq!(calc(&["acos(0.5)", "--to", "deg"]).stdout, "60 deg\n");
+    assert_eq!(
+        calc(&["asin(0.5)", "--exact"]).stdout,
+        "1/6 pi = 0.5235987755982989… rad\n"
+    );
+    assert_eq!(
+        calc(&["atan(2)", "--to", "deg"]).stdout,
+        "≈ 63.434948822922 deg\n"
+    );
+    for expr in [
+        "tan(90 deg)",
+        "asin(2)",
+        "atan2(1 m, 1 s)",
+        "atan2(0 m, 0 m)",
+        "tan(1)",
+    ] {
+        let r = calc(&[expr]);
+        assert!(
+            r.stderr.starts_with("error[refused]"),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+}
+
+/// Units are merged and cancelled, never renamed.
+#[test]
+fn calc_merges_and_cancels_the_unit_but_never_renames_it() {
+    for (expr, text) in [
+        ("1 m * 1 m", "1 m^2"),
+        ("10 kWh/100km * 250 km", "25 kWh"),
+        ("8.314 J/(mol*K) * 300 K * 1 mol / 1 m3", "2494.2 J/m^3"),
+        ("1 J / 1 N", "1 J/N"),
+        ("2 km * 3 m", "6 km.m"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, format!("{text}\n"), "{expr}");
+    }
 }

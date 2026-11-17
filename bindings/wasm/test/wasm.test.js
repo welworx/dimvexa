@@ -113,7 +113,11 @@ assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", 
   assert.strictEqual(code(() => d.calc("min(4 m, 3 L)", [], "", "", [])), "dimension_mismatch");
   // failures carry the stable codes
   assert.strictEqual(code(() => d.calc("1 m + 1 s", [], "", "", [])), "dimension_mismatch");
-  assert.strictEqual(code(() => d.calc("tan(1 rad)", [], "", "", [])), "refused");
+  assert.strictEqual(code(() => d.calc("floor(1.5 m)", [], "", "", [])), "refused");
+  assert.strictEqual(d.calc("k_B * 300 K", [], "", "", []).text, "4.141947e-21 J");
+  assert.strictEqual(d.calc("tan(45 deg)", [], "", "", []).text, "1");
+  assert.strictEqual(d.calc("atan2(1 m, 100 cm)", [], "deg", "", []).text, "45 deg");
+  assert.strictEqual(d.calc("1 m * 1 m", [], "", "", []).unit, "m^2");
   assert.strictEqual(code(() => d.calc("log(100)", [], "", "", [])), "refused");
   assert.strictEqual(code(() => d.calc("1 +", [], "", "", [])), "parse_error");
   assert.strictEqual(code(() => d.calc("1 m", ["novalue"], "", "", [])), "invalid_definition");
