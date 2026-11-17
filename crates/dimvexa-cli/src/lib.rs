@@ -4,7 +4,7 @@
 //! ```text
 //! dimvexa convert VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--const NAME_OR_VALUE]
 //! dimvexa VALUE FROM TO [--exact] [--json]        shorthand
-//! dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--json]   an equation with units
+//! dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--exact] [--json]   an equation with units
 //! dimvexa units [--groups | GROUP | UNIT] [--json]  list units by quantity, one group, or one unit
 //! dimvexa configs [NAME_OR_PATH] [--json]          what the shipped configs (or a file) contain
 //! ```

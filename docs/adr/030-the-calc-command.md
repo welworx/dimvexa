@@ -59,6 +59,6 @@ another.
 
 * Everything of ADR-027 and ADR-029 is reachable without writing Rust.
 * The equation grammar is now a public interface: a change of it follows `api-change`.
-* The Python, WebAssembly and Excel bindings do not expose it yet (a later change).
+* The Python and WebAssembly bindings expose it as `calc` (`{value, unit, exact, text}`; no fraction, dimension or kind, so an exact result beyond 2^53 is shown rounded). The Excel add-in does not yet (a gap, `docs/excel.md`).
 * OPEN (recommended default: later): a `--var` value that is itself an equation; `ans` and a
   REPL; `tan`, `atan2` and the other functions that are refused as not implemented.

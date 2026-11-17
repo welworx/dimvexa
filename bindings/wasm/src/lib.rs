@@ -410,7 +410,8 @@ pub fn convert_quantity(quantity: &str, to: &str) -> Result<String, JsValue> {
 ///
 /// # Errors
 ///
-/// Throws a `DimvexaError` with a stable `code`; a bad `vars` entry says which name.
+/// Throws a `DimvexaError` with a stable `code`; a `vars` entry that is not `NAME=VALUE` is
+/// `invalid_definition` and says which entry. An empty `to` means the unit the arithmetic gave.
 #[wasm_bindgen]
 pub fn calc(
     expression: &str,

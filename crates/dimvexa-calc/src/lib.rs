@@ -75,7 +75,7 @@ use core::cmp::Ordering;
 mod formula;
 mod math;
 
-pub use formula::{Formula, MAX_EQUATION_CHARS};
+pub use formula::{Formula, MAX_EQUATION_CHARS, MAX_VARS};
 pub use math::{Approx, Math, Number};
 
 use dimvexa_core::{Dim, Error, Kind, Quantity, Ratio, Registry, Result, UnitExpr};

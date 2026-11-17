@@ -107,6 +107,12 @@ pub fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), Usa
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
+        // `--` ends the options: what follows is text (an expression such as `-h`).
+        if a == "--" {
+            rest.push(a.clone());
+            rest.extend(it.by_ref().cloned());
+            break;
+        }
         let (name, inline) = match a.split_once('=') {
             Some((n @ ("--config" | "--const" | "--var" | "--to"), v)) => (n, Some(v.to_string())),
             _ => (a.as_str(), None),
@@ -240,6 +246,11 @@ pub fn parse_calc(
         return Err(usage(
             "'calc' needs an EXPRESSION, for example: dimvexa calc \"2 m * 3 m\" --to cm2"
                 .to_string(),
+        ));
+    }
+    if to.as_deref().is_some_and(|u| u.trim().is_empty()) {
+        return Err(usage(
+            "'--to' needs a unit, for example --to cm2".to_string(),
         ));
     }
     let mut named = Vec::new();
@@ -476,8 +487,11 @@ pub fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     let (mut exact, mut want_json, mut want_groups) = (false, false, false);
     let (mut want_check, mut want_yes) = (false, false);
     let (mut want_help, mut unknown) = (None, None::<String>);
+    let mut literal = false;
     for a in args {
         match a.as_str() {
+            s if literal => positional.push(s),
+            "--" => literal = true,
             "--check" => want_check = true,
             "-y" | "--yes" => want_yes = true,
             "--exact" => exact = true,

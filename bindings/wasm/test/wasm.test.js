@@ -101,6 +101,8 @@ assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", 
   assert.strictEqual(code(() => d.calc("log(100)", [], "", "", [])), "refused");
   assert.strictEqual(code(() => d.calc("1 +", [], "", "", [])), "parse_error");
   assert.strictEqual(code(() => d.calc("1 m", ["novalue"], "", "", [])), "invalid_definition");
+  assert.strictEqual(code(() => d.calc("1 m", ["d p=3 m"], "", "", [])), "invalid_definition");
+  assert.strictEqual(code(() => d.calc("1 m", ["pi=3"], "", "", [])), "invalid_definition");
   assert.strictEqual(code(() => d.calc("1 ton * 1 g_n", [], "N", "", [])), "ambiguous_symbol");
   assert.strictEqual(d.calc("1 ton * 1 g_n", [], "N", "us-customary", []).text, "8896.443230521 N");
 }

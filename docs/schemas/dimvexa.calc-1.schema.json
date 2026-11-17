@@ -75,7 +75,7 @@
                 "string",
                 "null"
               ],
-              "description": "The exact value as a fraction, optionally followed by 10^k and pi^m (for example `662607015 10^-42`); null for an approximate result."
+              "description": "The exact value as a fraction, optionally followed by 10^k and pi (for example `662607015 10^-42`, `pi`, `1/2 pi`); null for an approximate result."
             },
             "dimension": {
               "type": "array",

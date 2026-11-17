@@ -215,3 +215,25 @@ fn hostile_equations_are_errors_and_never_panic() {
         let _ = f.eval(text);
     }
 }
+
+#[test]
+fn names_are_identifiers_pi_stays_and_the_count_is_bounded() {
+    let reg = dimvexa::registry().unwrap();
+    for bad in ["", " x", "d p", "1x", "a-b", "pi"] {
+        match Formula::new(&reg).var(bad, "1 m") {
+            Ok(_) => panic!("{bad:?} was accepted"),
+            Err(e) => assert_eq!(e.code(), "invalid_definition", "{bad:?}"),
+        }
+    }
+    // a name that is also a unit symbol is allowed (variables are looked up first)
+    let f = Formula::new(&reg).var("A", "10 cm2").unwrap();
+    assert_eq!(f.eval("A * 2").unwrap().to_string(), "20 cm^2");
+    let mut f = Formula::new(&reg);
+    for i in 0..dimvexa_calc::MAX_VARS {
+        f = f.var(&format!("v{i}"), "1 m").unwrap();
+    }
+    assert_eq!(
+        f.var("one_too_many", "1 m").err().unwrap().code(),
+        "invalid_definition"
+    );
+}

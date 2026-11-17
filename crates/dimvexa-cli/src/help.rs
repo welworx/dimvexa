@@ -7,7 +7,7 @@
 pub const USAGE: &str = "\
 Usage:
   dimvexa [convert] VALUE FROM TO [OPTIONS]
-  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--json]
+  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--exact] [--json]
   dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]
@@ -156,7 +156,7 @@ pub const HELP_CALC: &str = "\
 dimvexa calc - calculate with units, exact where the mathematics is exact
 
 Usage:
-  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--exact]
+  dimvexa calc [--] EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--exact]
       [--json | --pretty] [--config NAME_OR_PATH]...
 
 EXPRESSION is an equation: numbers, quantities written with their unit
@@ -165,7 +165,8 @@ constant pi, + - * / and parentheses, a power with a fraction as exponent
 (x^0.5, y^(1/2) and sqrt(x) agree; R^(2/3)) and the functions sqrt, cbrt,
 abs, hypot, min, max, ln, exp, log10 (lg), log2 (lb), log(x, base), sin,
 cos, sinh, cosh, tanh, asinh, acosh, atanh. Quote it, and put a space on
-both sides of an operator between quantities: a unit is the text after a
+both sides of an operator between quantities (write -- before an expression
+that starts like an option, such as -h): a unit is the text after a
 number up to the next space, so 50 kPa / 998 kg/m3 is a quotient.
 
 The result is exact when the mathematics is exact (sqrt(9 m2) is 3 m,

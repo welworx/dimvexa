@@ -2192,12 +2192,18 @@ fn known_limitation_kl_17_a_unit_named_like_a_group_is_shadowed_by_the_group() {
     );
 }
 
-/// KL-18: `--` is not supported, and an unknown short option is read as a value.
+/// KL-18: `--` ends the options (fixed with `calc`, so an expression may be `-h`), but an
+/// unknown short option is still read as a value.
 #[test]
 fn known_limitation_kl_18_end_of_options_and_short_options() {
-    let r = dimvexa(&["convert", "1", "m", "km", "--"]);
-    assert_eq!(r.code, 2, "KL-18 fixed? then `--` ends the options");
-    assert!(r.stderr.contains("unknown option '--'"));
+    assert_eq!(
+        dimvexa(&["convert", "1", "m", "km", "--"]).stdout,
+        "0.001 km\n"
+    );
+    assert_eq!(
+        dimvexa(&["convert", "--", "-40", "degC", "degF"]).stdout,
+        "-40 degF\n"
+    );
     let r = dimvexa(&["-x", "m", "km"]);
     assert_eq!(
         (r.code, r.stderr.starts_with("error[invalid_number]")),
@@ -3552,4 +3558,22 @@ fn guide_calc_examples_are_what_the_cli_prints() {
         a.extend(args);
         assert_eq!(calc(&a).stdout, format!("{out}\n"), "{expr}");
     }
+}
+
+/// `--` ends the options, so an expression may look like one.
+#[test]
+fn calc_double_dash_lets_an_expression_start_like_an_option() {
+    let r = dimvexa(&["calc", "--var", "h=3 m", "--", "-h"]);
+    assert_eq!((r.code, r.stdout.as_str()), (0, "-3 m\n"), "{}", r.stderr);
+    assert_eq!(
+        dimvexa(&["calc", "--", "-y + 4 m", "--var", "y=3 m"]).code,
+        1
+    );
+    assert_eq!(
+        dimvexa(&["calc", "--var", "y=3 m", "--", "-y + 4 m"]).stdout,
+        "1 m\n"
+    );
+    // an empty unit is a usage error, as is a name that is not an identifier
+    let r = dimvexa(&["calc", "1 m", "--to", ""]);
+    assert_eq!(r.code, 2, "{}", r.stderr);
 }

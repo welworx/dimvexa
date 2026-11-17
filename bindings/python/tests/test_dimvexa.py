@@ -292,3 +292,10 @@ def test_calc_errors_carry_codes_and_configs_apply() -> None:
     assert e.value.code == "ambiguous_symbol"
     r = dimvexa.calc("1 ton * 1 g_n", to="N", configs=["us-customary"])
     assert r["text"] == "8896.443230521 N"
+
+
+def test_calc_refuses_bad_names_and_pi() -> None:
+    for name in ("d p", " x ", "1x", "pi"):
+        with pytest.raises(dimvexa.DimvexaError) as e:
+            dimvexa.calc("1 m", vars={name: "3 m"})
+        assert e.value.code == "invalid_definition", name

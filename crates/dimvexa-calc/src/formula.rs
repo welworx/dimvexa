@@ -53,6 +53,10 @@ use crate::{Math, Number};
 /// The longest equation accepted, in characters.
 pub const MAX_EQUATION_CHARS: usize = 4096;
 
+/// The most names one [`Formula`] binds (besides `pi`): binding is linear in their number, and an
+/// equation of 4096 characters cannot use more than a few hundred.
+pub const MAX_VARS: usize = 512;
+
 /// How deeply parentheses and function calls may nest.
 const MAX_DEPTH: usize = 64;
 
@@ -573,8 +577,28 @@ impl<'r> Formula<'r> {
     ///
     /// # Errors
     ///
-    /// The error of [`Registry::quantity`] when the text is not a quantity.
+    /// `invalid_definition` when `name` is not letters, digits and `_` starting with a letter or
+    /// `_`, is `pi` (the constant cannot be redefined), or when more than [`MAX_VARS`] names
+    /// are bound; the error of [`Registry::quantity`] when the text is not a quantity.
     pub fn var(mut self, name: &str, quantity: &str) -> Result<Self> {
+        let mut chars = name.chars();
+        let valid = chars.next().is_some_and(|c| c.is_alphabetic() || c == '_')
+            && chars.all(|c| c.is_alphanumeric() || c == '_');
+        let refuse = |message: &str| Error::InvalidDefinition {
+            symbol: name.to_owned(),
+            message: message.to_owned(),
+        };
+        if !valid {
+            return Err(refuse(
+                "a name is letters, digits and '_' and starts with a letter or '_'",
+            ));
+        }
+        if name == "pi" {
+            return Err(refuse("'pi' is the constant and cannot be redefined"));
+        }
+        if self.vars.len() > MAX_VARS && !self.vars.iter().any(|(n, _)| n == name) {
+            return Err(refuse("too many names"));
+        }
         let q = Number::from(self.reg.quantity(quantity)?);
         self.vars.retain(|(n, _)| n != name);
         self.vars.push((name.to_owned(), q));
