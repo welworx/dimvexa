@@ -197,17 +197,6 @@ fn normalise(input: &str) -> Vec<char> {
     out
 }
 
-/// `r` and `r2` (a name and the same name with digits added): after a number the second also
-/// reads as a power of the first, so they cannot be bound together.
-fn digit_variants(a: &str, b: &str) -> bool {
-    // the shorter name must be the longer one without all its trailing digits (`v1` and `v10`
-    // do not clash: after a number `v10` is `v^10`, never `v1^0`)
-    let extends = |long: &str, short: &str| {
-        long.len() > short.len() && long.trim_end_matches(|c: char| c.is_ascii_digit()) == short
-    };
-    extends(a, b) || extends(b, a)
-}
-
 fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
     if input
         .chars()
@@ -529,14 +518,21 @@ impl Parser<'_, '_> {
                         Error::UnknownUnit {
                             symbol,
                             suggestions,
-                        } if suggestions.is_empty() => parse_error(
-                            self.src,
-                            at,
-                            &format!(
-                                "'{symbol}' in '{number} {unit}' is not a unit and not a \
-                                     variable (a variable is defined with --var {symbol}=VALUE)"
-                            ),
-                        ),
+                        } if suggestions.is_empty() => {
+                            // as written: `r2`, not the `r` the unit parser stripped it to
+                            let written = unit
+                                .split(|c: char| !(c.is_alphanumeric() || c == '_'))
+                                .find(|run| run.starts_with(symbol.as_str()))
+                                .map_or_else(|| symbol.clone(), str::to_owned);
+                            parse_error(
+                                self.src,
+                                at,
+                                &format!(
+                                    "'{written}' in '{number} {unit}' is not a unit and not a \
+                                     variable (a variable is defined with --var {written}=VALUE)"
+                                ),
+                            )
+                        }
                         other => other,
                     })
             }
@@ -755,19 +751,6 @@ impl<'r> Formula<'r> {
         if name == "pi" {
             return Err(refuse("'pi' is the constant and cannot be redefined"));
         }
-        if let Some(other) = self.given.iter().find(|other| digit_variants(name, other)) {
-            let (short, long) = if other.len() < name.len() {
-                (other.as_str(), name)
-            } else {
-                (name, other.as_str())
-            };
-            let digits = long.strip_prefix(short).unwrap_or_default();
-            return Err(refuse(&format!(
-                "'{short}' and '{long}' cannot be used together: after a number '{long}' also \
-                 reads as {short}^{digits} (2 {long} is 2 * {short}^{digits}). Rename one, for \
-                 example '{long}' to '{short}_{digits}'"
-            )));
-        }
         let known = self.vars.iter().position(|(n, _)| n == name);
         if known.is_none() && self.vars.len() >= self.builtin.saturating_add(MAX_VARS) {
             return Err(refuse("too many names"));
@@ -843,27 +826,21 @@ impl<'r> Formula<'r> {
                     symbol.push(c);
                     continue;
                 }
-                // `m3` and `m^3` are the unit `m`: a name that equals the symbol or the symbol
-                // without its trailing digits collides
+                // `m3` and `m^3` are the unit `m` (a power of it): a name that equals the symbol
+                // or the symbol without its trailing digits collides with a real unit
                 let bare = symbol
                     .trim_end_matches(|d: char| d.is_ascii_digit())
                     .to_owned();
                 let usable = |n: &&String| *n != "pi" && !n.is_empty();
-                let found = self
-                    .vars
-                    .iter()
-                    .map(|(n, _)| n)
-                    .filter(usable)
-                    .find(|n| **n == symbol)
-                    .or_else(|| {
-                        self.vars
-                            .iter()
-                            .map(|(n, _)| n)
-                            .filter(usable)
-                            .find(|n| **n == bare)
-                    });
-                if let Some(name) = found {
-                    if self.reg.parse(&symbol).is_ok() || self.reg.parse(&bare).is_ok() {
+                let named = |text: &str| {
+                    self.vars
+                        .iter()
+                        .map(|(n, _)| n)
+                        .filter(usable)
+                        .find(|n| n.as_str() == text)
+                };
+                if self.reg.parse(&symbol).is_ok() || self.reg.parse(&bare).is_ok() {
+                    if let Some(name) = named(&symbol).or_else(|| named(&bare)) {
                         return Err(Error::InvalidDefinition {
                             symbol: name.clone(),
                             message: format!(
@@ -872,15 +849,10 @@ impl<'r> Formula<'r> {
                             ),
                         });
                     }
-                    if leading {
-                        let power = symbol.strip_prefix(&bare).unwrap_or_default();
-                        let tail = unit.get(symbol.len()..).unwrap_or_default();
-                        rewrite = Some(if **name == symbol || power.is_empty() {
-                            unit.clone()
-                        } else {
-                            format!("{name}^{power}{tail}")
-                        });
-                    }
+                } else if leading && named(&symbol).is_some() {
+                    // the whole symbol is a variable that is not a unit: `2 r`, `2 r2` and
+                    // `2 r^2` are the number times the variable (`r2` is a name, not `r^2`)
+                    rewrite = Some(unit.clone());
                 }
                 leading = false;
                 symbol.clear();

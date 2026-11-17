@@ -374,10 +374,10 @@ def test_calc_config_constants_kelvin_pi_names_and_notation() -> None:
     assert dimvexa.calc("10 m² · 3 m")["text"] == "30 m^3"
 
 
-def test_calc_refuses_r_and_r2_and_says_what_an_unknown_name_is() -> None:
-    with pytest.raises(dimvexa.DimvexaError) as e:
-        dimvexa.calc("2 r2", vars={"r": "3 m", "r2": "5 m"})
-    assert e.value.code == "invalid_definition"
+def test_calc_r_and_r2_are_two_names_and_an_unknown_name_is_said_so() -> None:
+    both = {"r": "3 m", "r2": "5 m"}
+    assert dimvexa.calc("2 r2", vars=both)["text"] == "10 m"
+    assert dimvexa.calc("2 r^2", vars=both)["text"] == "18 m^2"
     with pytest.raises(dimvexa.DimvexaError) as e:
         dimvexa.calc("2 r")
     assert e.value.code == "parse_error"

@@ -3859,8 +3859,15 @@ fn calc_reads_config_constants_kelvin_pi_names_exponents_and_notation() {
 #[test]
 fn calc_a_number_before_a_variable_multiplies_unless_the_name_is_a_unit() {
     assert_eq!(calc(&["2 r", "--var", "r=3 m"]).stdout, "6 m\n");
-    assert_eq!(calc(&["2 r2", "--var", "r=3 m"]).stdout, "18 m^2\n");
+    // `r2` is a name, not `r^2`: the square is written with ^
     assert_eq!(calc(&["2 r^2", "--var", "r=3 m"]).stdout, "18 m^2\n");
+    let r = calc(&["2 r2", "--var", "r=3 m"]);
+    assert!(
+        r.stderr
+            .contains("'r2' in '2 r2' is not a unit and not a variable"),
+        "{}",
+        r.stderr
+    );
     // the product binds tighter than the division around it
     assert_eq!(
         calc(&["10 m / 2 r", "--var", "r=3 s"]).stdout,
@@ -3888,45 +3895,33 @@ fn calc_a_number_before_a_variable_multiplies_unless_the_name_is_a_unit() {
     );
 }
 
-/// `r` and `r2` cannot both be variables: after a number `r2` also reads as `r^2`.
+/// `r` and `r2` are two names: `2 r2` is the number times the variable `r2`, and the square of
+/// `r` is written `r^2`.
 #[test]
-fn calc_refuses_a_name_and_the_same_name_with_digits() {
+fn calc_r_and_r2_are_different_names() {
     for order in [["r=3 m", "r2=5 m"], ["r2=5 m", "r=3 m"]] {
         let r = calc(&["2 r2", "--var", order[0], "--var", order[1]]);
-        assert_eq!(r.code, 1, "{order:?}");
-        assert!(
-            r.stderr.starts_with("error[invalid_definition]: --var "),
-            "{}",
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, "10 m\n"),
+            "{order:?}: {}",
             r.stderr
         );
-        assert!(
-            r.stderr.contains("'r' and 'r2' cannot be used together"),
-            "{}",
-            r.stderr
+        assert_eq!(
+            calc(&["2 r", "--var", order[0], "--var", order[1]]).stdout,
+            "6 m\n"
         );
-        assert!(r.stderr.contains("r_2"), "{}", r.stderr);
+        assert_eq!(
+            calc(&["2 r^2", "--var", order[0], "--var", order[1]]).stdout,
+            "18 m^2\n"
+        );
     }
-    // different names, a replaced name and underscored names are fine
-    assert_eq!(
-        calc(&["d1 - d2", "--var", "d1=6 m", "--var", "d2=2 m"]).stdout,
-        "4 m\n"
-    );
-    assert_eq!(
-        calc(&["r_2 + r", "--var", "r=3 m", "--var", "r_2=5 m"]).stdout,
-        "8 m\n"
-    );
-    assert_eq!(
-        calc(&["r2", "--var", "r2=3 m", "--var", "r2=4 m"]).stdout,
-        "4 m\n"
-    );
-}
-
-#[test]
-fn calc_allows_names_that_only_share_digits() {
-    // `v10` is `v^10` after a number, never `v1^0`: v1 and v10 do not clash, v and v10 do
     assert_eq!(
         calc(&["v1 + v10", "--var", "v1=1 m", "--var", "v10=2 m"]).stdout,
         "3 m\n"
     );
-    assert_eq!(calc(&["1", "--var", "v=1 m", "--var", "v10=2 m"]).code, 1);
+    // a name is letters, digits and underscores
+    for bad in ["r-2=1 m", "r.2=1 m", "r 2=1 m"] {
+        assert_eq!(calc(&["1 m", "--var", bad]).code, 2, "{bad}");
+    }
 }
