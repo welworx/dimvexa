@@ -364,7 +364,9 @@ config constant with the name of a built-in one replaces it, as for `dimvexa con
   `2^(1+1)`, `x^(1/k)`); `2^3^2` is `2^(3^2)`, a name after a number right after `^` (`x^2 n`) is
   refused as ambiguous (write `x^2 * n` or `x^(2 n)`), and an approximate exponent such as `2^sqrt(2)`
   is refused. `pi` is the exact constant: `2 pi`, `2 * pi * r` and `2 pi r` are the same
-  (`pi` multiplies the names that follow it).
+  (`pi` multiplies the names that follow it). After a division the form is ambiguous and refused:
+  `10 m / 2 pi` is `(10 m / 2) * pi` or `10 m / (2 * pi)`, so write `10 m / (2 pi)` or
+  `10 m / 2 * pi`; the same for `Q / pi r^2`.
 * **Spaces:** a space ends a unit. `1/2 m` is `1` divided by `2 m` (`0.5 1/m`), so write
   `(1/2) * 1 m` or `0.5 m`. Tabs, newlines and the no-break space are spaces. A comma separates
   arguments (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.

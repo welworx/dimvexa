@@ -85,6 +85,8 @@ enum Tok {
     Qty(String, String),
     Id(String),
     Op(char),
+    /// The multiplication in `2 pi`: no operator was written.
+    Implicit,
 }
 
 fn parse_error(input: &str, position: usize, message: &str) -> Error {
@@ -233,7 +235,7 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
             }
             if text(&chars, after, word_end) == "pi" {
                 out.push((start, Tok::Num(number)));
-                out.push((after, Tok::Op('*')));
+                out.push((after, Tok::Implicit));
                 out.push((after, Tok::Id("pi".to_owned())));
                 i = word_end;
                 continue;
@@ -392,15 +394,33 @@ impl Parser<'_, '_> {
 
     fn term(&mut self) -> Result<Number> {
         let mut acc = self.unary()?;
+        // the last operator of this chain was `/`: a product written without an operator right
+        // after it (`a / 2 pi`) is read two ways, and is refused
+        let mut divided = false;
         loop {
             if self.eat('*') {
                 let rhs = self.unary()?;
                 acc = self.f.math.mul(&acc, &rhs)?;
+                divided = false;
             } else if self.eat('/') {
                 let rhs = self.unary()?;
                 acc = self.f.math.div(&acc, &rhs)?;
-            } else if self.after_pi_name() {
-                // `2 pi r` and `pi r^2`: a name written right after `pi` multiplies
+                divided = true;
+            } else if self.peek() == Some(&Tok::Implicit) || self.after_pi_name() {
+                // `2 pi`, `2 pi r` and `pi r^2`: pi multiplies the number or names around it
+                if divided {
+                    return Err(parse_error(
+                        self.src,
+                        self.here(),
+                        "a division followed by a product written with `pi` and no operator \
+                         (`a / 2 pi`) can be read (a / 2) * pi or a / (2 * pi): write the \
+                         operator, a / 2 * pi, for the first, or the parentheses, a / (2 pi), \
+                         for the second",
+                    ));
+                }
+                if self.peek() == Some(&Tok::Implicit) {
+                    self.advance();
+                }
                 let rhs = self.unary()?;
                 acc = self.f.math.mul(&acc, &rhs)?;
             } else {

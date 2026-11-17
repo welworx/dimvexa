@@ -3999,3 +3999,26 @@ fn calc_review_round_three_regressions() {
         r.stderr
     );
 }
+
+/// `a / 2 pi` and `a / pi r^2` are refused (two readings); with parentheses or an operator they
+/// are fine, and so is a product that is not after a division.
+#[test]
+fn calc_a_division_before_an_implicit_pi_product_is_refused() {
+    for expr in ["10 m / 2 pi", "10 m / pi r^2"] {
+        let r = calc(&[expr, "--var", "r=2 m"]);
+        assert_eq!(r.code, 1, "{expr}");
+        assert!(
+            r.stderr
+                .contains("can be read (a / 2) * pi or a / (2 * pi)"),
+            "{}",
+            r.stderr
+        );
+    }
+    assert_eq!(calc(&["10 m / (2 pi)"]).stdout, "1.5915494309189533… m\n");
+    assert_eq!(calc(&["10 m / 2 * pi"]).stdout, "15.707963267948966… m\n");
+    assert_eq!(calc(&["10 m * 2 pi"]).stdout, "62.83185307179586… m\n");
+    assert_eq!(
+        calc(&["2 pi r", "--var", "r=3 m"]).stdout,
+        "18.84955592153876… m\n"
+    );
+}
