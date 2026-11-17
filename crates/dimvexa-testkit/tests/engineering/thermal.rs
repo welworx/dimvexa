@@ -170,12 +170,12 @@ fn thermal_interpolation_between_two_table_rows() {
     check(
         &[
             ("T", "47.3 degC"),
-            ("T0", "40 degC"),
-            ("T1", "50 degC"),
-            ("h0", "167.5 kJ/kg"),
-            ("h1", "209.3 kJ/kg"),
+            ("T_0", "40 degC"),
+            ("T_1", "50 degC"),
+            ("h_0", "167.5 kJ/kg"),
+            ("h_1", "209.3 kJ/kg"),
         ],
-        "h0 + (T - T0) / (T1 - T0) * (h1 - h0)",
+        "h_0 + (T - T_0) / (T_1 - T_0) * (h_1 - h_0)",
         "kJ/kg",
         167.5 + 0.73 * (209.3 - 167.5),
     );
@@ -256,17 +256,17 @@ fn open_c_celsius_in_a_specific_heat_is_an_interval() {
 }
 
 /// Newton cooling: the time to cool from 90 degC to 40 degC in 20 degC air with a time constant
-/// of 120 s is `t = tau ln((T0 - Tinf) / (T - Tinf))`.
+/// of 120 s is `t = tau ln((T_0 - Tinf) / (T - Tinf))`.
 #[test]
 fn thermal_newton_cooling_time_uses_a_logarithm_of_temperature_differences() {
     check(
         &[
             ("tau", "120 s"),
-            ("T0", "90 degC"),
+            ("T_0", "90 degC"),
             ("Tinf", "20 degC"),
             ("T", "40 degC"),
         ],
-        "tau * ln((T0 - Tinf) / (T - Tinf))",
+        "tau * ln((T_0 - Tinf) / (T - Tinf))",
         "s",
         120.0 * 3.5_f64.ln(),
     );

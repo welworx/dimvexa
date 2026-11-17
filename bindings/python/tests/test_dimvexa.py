@@ -372,3 +372,14 @@ def test_calc_config_constants_kelvin_pi_names_and_notation() -> None:
     assert dimvexa.calc("2 pi r", vars={"r": "3 m"})["text"] == "18.84955592153876… m"
     assert dimvexa.calc("x^n", vars={"x": "9 m2", "n": "0.5"})["text"] == "3 m"
     assert dimvexa.calc("10 m² · 3 m")["text"] == "30 m^3"
+
+
+def test_calc_refuses_r_and_r2_and_says_what_an_unknown_name_is() -> None:
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("2 r2", vars={"r": "3 m", "r2": "5 m"})
+    assert e.value.code == "invalid_definition"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("2 r")
+    assert e.value.code == "parse_error"
+    assert "not a unit and not a variable" in str(e.value)
+    assert dimvexa.calc("2 r", vars={"r": "3 m"})["text"] == "6 m"

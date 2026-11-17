@@ -77,9 +77,20 @@ fn a_unit_is_the_text_after_the_number_up_to_a_space() {
         f.f64_in(&f.eval("max(1 km, 900 m)").unwrap(), "m").unwrap(),
         1000.0
     );
-    // a unit that does not exist is a loud error with suggestions
+    // a unit with a close match is an unknown unit with the suggestion; a name with none is
+    // most likely an undefined variable, and the error says it is neither
+    let err = f.eval("5 PSI").unwrap_err();
+    assert_eq!(
+        (err.code(), err.suggestions()),
+        ("unknown_unit", &["psi".to_owned()][..])
+    );
     let err = f.eval("5 foo").unwrap_err();
-    assert_eq!(err.code(), "unknown_unit");
+    assert_eq!(err.code(), "parse_error");
+    assert!(
+        err.to_string()
+            .contains("'foo' in '5 foo' is not a unit and not a variable"),
+        "{err}"
+    );
     // a number that is a bare number stays dimensionless
     assert_eq!(f.f64_in(&f.eval("2 * 3").unwrap(), "1").unwrap(), 6.0);
 }
@@ -232,7 +243,7 @@ fn names_are_identifiers_pi_stays_and_the_count_is_bounded() {
     assert_eq!(f.eval("A * 2").unwrap().to_string(), "20 cm^2");
     let mut f = Formula::new(&reg);
     for i in 0..dimvexa_calc::MAX_VARS {
-        f = f.var(&format!("v{i}"), "1 m").unwrap();
+        f = f.var(&format!("v_{i}"), "1 m").unwrap();
     }
     assert_eq!(
         f.var("one_too_many", "1 m").err().unwrap().code(),

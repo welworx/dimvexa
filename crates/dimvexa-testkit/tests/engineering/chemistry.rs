@@ -40,8 +40,8 @@ fn mixture_density_weighted_by_volume() {
 #[test]
 fn chemistry_ph_from_a_concentration() {
     check(
-        &[("c", "0.001 mol/L"), ("c0", "1 mol/L")],
-        "-ln(c / c0) / ln(10)",
+        &[("c", "0.001 mol/L"), ("c_0", "1 mol/L")],
+        "-ln(c / c_0) / ln(10)",
         "1",
         3.0,
     );
@@ -70,9 +70,9 @@ fn chemistry_ph_of_a_power_of_ten_is_exact() {
     let f = Formula::new(&reg)
         .var("c", "0.001 mol/L")
         .unwrap()
-        .var("c0", "1 mol/L")
+        .var("c_0", "1 mol/L")
         .unwrap();
-    let ph = f.eval("-log10(c / c0)").unwrap();
+    let ph = f.eval("-log10(c / c_0)").unwrap();
     assert!(ph.is_exact(), "{ph}");
     assert_eq!(f.f64_in(&ph, "1").unwrap(), 3.0);
 }

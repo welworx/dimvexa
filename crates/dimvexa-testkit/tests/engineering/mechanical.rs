@@ -78,8 +78,8 @@ fn mechanical_frequency_to_angular_speed_through_one_per_second() {
 #[test]
 fn economy_fuel_use_from_consumption_and_distance() {
     check(
-        &[("c", "8 L"), ("d0", "100 km"), ("d", "450 km")],
-        "c / d0 * d",
+        &[("c", "8 L"), ("d_0", "100 km"), ("d", "450 km")],
+        "c / d_0 * d",
         "L",
         36.0,
     );

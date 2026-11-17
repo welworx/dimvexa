@@ -175,7 +175,7 @@ fn lg_and_lb_are_log10_and_log2() {
 fn the_absolute_value_of_a_temperature_point_is_refused_and_names_the_delta_unit() {
     let reg = registry().unwrap();
     let f = Formula::new(&reg)
-        .var("T", "-5 degC")
+        .var("Tc", "-5 degC")
         .unwrap()
         .var("T1", "20 degC")
         .unwrap()
@@ -183,7 +183,7 @@ fn the_absolute_value_of_a_temperature_point_is_refused_and_names_the_delta_unit
         .unwrap()
         .var("d", "-5 delta_degC")
         .unwrap();
-    for call in ["abs(T)", "-T"] {
+    for call in ["abs(Tc)", "-Tc"] {
         let err = f.eval(call).unwrap_err();
         assert_eq!(err.code(), "kind_mismatch", "{call}");
         assert_eq!(err.suggestions(), ["delta_degC".to_owned()], "{call}");

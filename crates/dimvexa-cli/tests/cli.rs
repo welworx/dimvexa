@@ -211,7 +211,7 @@ fn every_error_code_has_a_cli_test() {
         (&["calc", "1 + pi"], "unrepresentable", 1),
         (&["calc", "1 m / 0 s"], "division_by_zero", 1),
         (&["calc", "1 m + 1 s"], "dimension_mismatch", 1),
-        (&["calc", "5 foo"], "unknown_unit", 1),
+        (&["calc", "5 PSI"], "unknown_unit", 1),
         (&["calc", "1 +"], "parse_error", 1),
         (&["calc", "(1 ly)^3"], "overflow", 1),
         (&["calc", "floor(1.5 m)"], "refused", 1),
@@ -3417,7 +3417,8 @@ fn calc_json_has_the_documented_fields() {
 fn calc_failures_use_the_library_codes_and_exit_1() {
     for (expr, code, needle) in [
         ("1 m + 1 s", "dimension_mismatch", "cannot be converted"),
-        ("5 foo", "unknown_unit", "foo"),
+        ("5 PSI", "unknown_unit", "PSI"),
+        ("5 foo", "parse_error", "not a unit and not a variable"),
         ("nothing * 2", "parse_error", "unknown variable"),
         ("1 +", "parse_error", "a value is expected"),
         ("(1 ly)^3", "overflow", "overflow"),
@@ -3867,7 +3868,12 @@ fn calc_a_number_before_a_variable_multiplies_unless_the_name_is_a_unit() {
     );
     // no variable: an unknown unit, never a claim about a variable
     let r = calc(&["2 r"]);
-    assert!(r.stderr.starts_with("error[unknown_unit]"), "{}", r.stderr);
+    assert!(r.stderr.starts_with("error[parse_error]"), "{}", r.stderr);
+    assert!(
+        r.stderr.contains("not a unit and not a variable"),
+        "{}",
+        r.stderr
+    );
     // a name that is also a unit is refused, and says so
     let r = calc(&["0.5 h", "--var", "h=3 m"]);
     assert!(
@@ -3880,4 +3886,47 @@ fn calc_a_number_before_a_variable_multiplies_unless_the_name_is_a_unit() {
             .stderr
             .contains("not a unit")
     );
+}
+
+/// `r` and `r2` cannot both be variables: after a number `r2` also reads as `r^2`.
+#[test]
+fn calc_refuses_a_name_and_the_same_name_with_digits() {
+    for order in [["r=3 m", "r2=5 m"], ["r2=5 m", "r=3 m"]] {
+        let r = calc(&["2 r2", "--var", order[0], "--var", order[1]]);
+        assert_eq!(r.code, 1, "{order:?}");
+        assert!(
+            r.stderr.starts_with("error[invalid_definition]: --var "),
+            "{}",
+            r.stderr
+        );
+        assert!(
+            r.stderr.contains("'r' and 'r2' cannot be used together"),
+            "{}",
+            r.stderr
+        );
+        assert!(r.stderr.contains("r_2"), "{}", r.stderr);
+    }
+    // different names, a replaced name and underscored names are fine
+    assert_eq!(
+        calc(&["d1 - d2", "--var", "d1=6 m", "--var", "d2=2 m"]).stdout,
+        "4 m\n"
+    );
+    assert_eq!(
+        calc(&["r_2 + r", "--var", "r=3 m", "--var", "r_2=5 m"]).stdout,
+        "8 m\n"
+    );
+    assert_eq!(
+        calc(&["r2", "--var", "r2=3 m", "--var", "r2=4 m"]).stdout,
+        "4 m\n"
+    );
+}
+
+#[test]
+fn calc_allows_names_that_only_share_digits() {
+    // `v10` is `v^10` after a number, never `v1^0`: v1 and v10 do not clash, v and v10 do
+    assert_eq!(
+        calc(&["v1 + v10", "--var", "v1=1 m", "--var", "v10=2 m"]).stdout,
+        "3 m\n"
+    );
+    assert_eq!(calc(&["1", "--var", "v=1 m", "--var", "v10=2 m"]).code, 1);
 }

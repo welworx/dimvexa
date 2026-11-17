@@ -197,6 +197,17 @@ fn normalise(input: &str) -> Vec<char> {
     out
 }
 
+/// `r` and `r2` (a name and the same name with digits added): after a number the second also
+/// reads as a power of the first, so they cannot be bound together.
+fn digit_variants(a: &str, b: &str) -> bool {
+    // the shorter name must be the longer one without all its trailing digits (`v1` and `v10`
+    // do not clash: after a number `v10` is `v^10`, never `v1^0`)
+    let extends = |long: &str, short: &str| {
+        long.len() > short.len() && long.trim_end_matches(|c: char| c.is_ascii_digit()) == short
+    };
+    extends(a, b) || extends(b, a)
+}
+
 fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
     if input
         .chars()
@@ -512,6 +523,22 @@ impl Parser<'_, '_> {
                     .reg
                     .quantity(&format!("{number} {unit}"))
                     .map(Number::from)
+                    .map_err(|e| match e {
+                        // a name with no close unit is most likely a variable that was not
+                        // defined: say what it is not, never only "unknown unit"
+                        Error::UnknownUnit {
+                            symbol,
+                            suggestions,
+                        } if suggestions.is_empty() => parse_error(
+                            self.src,
+                            at,
+                            &format!(
+                                "'{symbol}' in '{number} {unit}' is not a unit and not a \
+                                     variable (a variable is defined with --var {symbol}=VALUE)"
+                            ),
+                        ),
+                        other => other,
+                    })
             }
             Some(Tok::Id(name)) => {
                 self.advance();
@@ -728,6 +755,19 @@ impl<'r> Formula<'r> {
         if name == "pi" {
             return Err(refuse("'pi' is the constant and cannot be redefined"));
         }
+        if let Some(other) = self.given.iter().find(|other| digit_variants(name, other)) {
+            let (short, long) = if other.len() < name.len() {
+                (other.as_str(), name)
+            } else {
+                (name, other.as_str())
+            };
+            let digits = long.strip_prefix(short).unwrap_or_default();
+            return Err(refuse(&format!(
+                "'{short}' and '{long}' cannot be used together: after a number '{long}' also \
+                 reads as {short}^{digits} (2 {long} is 2 * {short}^{digits}). Rename one, for \
+                 example '{long}' to '{short}_{digits}'"
+            )));
+        }
         let known = self.vars.iter().position(|(n, _)| n == name);
         if known.is_none() && self.vars.len() >= self.builtin.saturating_add(MAX_VARS) {
             return Err(refuse("too many names"));
@@ -808,11 +848,20 @@ impl<'r> Formula<'r> {
                 let bare = symbol
                     .trim_end_matches(|d: char| d.is_ascii_digit())
                     .to_owned();
+                let usable = |n: &&String| *n != "pi" && !n.is_empty();
                 let found = self
                     .vars
                     .iter()
                     .map(|(n, _)| n)
-                    .find(|n| *n != "pi" && !n.is_empty() && (**n == symbol || **n == bare));
+                    .filter(usable)
+                    .find(|n| **n == symbol)
+                    .or_else(|| {
+                        self.vars
+                            .iter()
+                            .map(|(n, _)| n)
+                            .filter(usable)
+                            .find(|n| **n == bare)
+                    });
                 if let Some(name) = found {
                     if self.reg.parse(&symbol).is_ok() || self.reg.parse(&bare).is_ok() {
                         return Err(Error::InvalidDefinition {

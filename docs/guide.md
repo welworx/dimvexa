@@ -340,7 +340,9 @@ such as `m` has nothing to do with the metre). A number before a name that is no
 multiplies: `2 r` with `--var r="3 m"` is `6 m` (and `2 r2` is `2 r^2`). A name that is also a
 unit must not follow a number: `0.5 h` with a variable `h` is an error (`invalid_definition`:
 rename the variable), because the reader would see hours and the evaluator a length. `pi` cannot be
-redefined, a repeated `--var` name keeps the last value (with a warning), and a name that is not
+redefined. A name and the same name with digits added cannot both be used (`r` and `r2`, `T` and
+`T1`): after a number `r2` also reads as `r^2`, so `2 r2` would be ambiguous. Write `r_2` instead
+(`v1` and `v10`, `d1` and `d2` are fine). A repeated `--var` name keeps the last value (with a warning), and a name that is not
 used is ignored.
 
 The SI constants of `dimvexa constants` are built-in names in every equation, exact and with
