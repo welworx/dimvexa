@@ -237,3 +237,21 @@ fn names_are_identifiers_pi_stays_and_the_count_is_bounded() {
         "invalid_definition"
     );
 }
+
+#[test]
+fn a_name_that_is_also_a_unit_in_the_equation_is_refused() {
+    let reg = registry().unwrap();
+    let h = Formula::new(&reg).var("h", "3 m").unwrap();
+    for expr in ["0.5 h", "2 h * 1 m", "1 m/h"] {
+        let e = h.eval(expr).err().map(|e| e.code());
+        assert_eq!(e, Some("invalid_definition"), "{expr}");
+    }
+    // alone, the name is its value; a longer name is another name
+    assert_eq!(h.eval("h * 2").unwrap().to_string(), "6 m");
+    let m = Formula::new(&reg).var("m", "3 kg").unwrap();
+    assert_eq!(
+        m.eval("2 m3").err().map(|e| e.code()),
+        Some("invalid_definition")
+    );
+    assert_eq!(m.eval("m * 2").unwrap().to_string(), "6 kg");
+}

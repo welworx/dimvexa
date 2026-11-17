@@ -4,7 +4,7 @@
 //! One implementation, so that `dimvexa calc`, `dimvexa.calc()` and `calc()` of the WASM build
 //! print the same text and carry the same fields (ADR-030). Nothing here calculates.
 
-use dimvexa_core::Result;
+use dimvexa_core::{Ratio, Result};
 
 use crate::Number;
 
@@ -25,21 +25,26 @@ pub fn format_f64(x: f64) -> String {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Report {
     /// The result as an `f64`: an exact result rounded once to the nearest `f64`, an approximate
-    /// result as it is.
-    pub value: f64,
+    /// result as it is. `None` for an exact result outside the range of `f64` (`1e300 * 1e300`):
+    /// it is shown from its exact value, never as infinity.
+    pub value: Option<f64>,
     /// The unit as text; empty for the plain number `1`.
     pub unit: String,
     /// `true` when the mathematics was exact; `false` for an approximate `f64` (`sqrt(2)`).
     pub exact: bool,
+    /// `true` when the number shown is not the exact value: an exact result such as `1/3` or
+    /// `4.2808398950131235 ft` that the `f64` text only approaches. Always `false` for an
+    /// approximate result (its `≈` already says so).
+    pub rounded: bool,
     /// The exact value as a fraction (`1/3`, `pi`, `1/2 pi`, `662607015 10^-42`); `None` when
     /// the result is approximate.
     pub fraction: Option<String>,
-    /// The exponents of the seven base dimensions (length, mass, time, current, temperature,
-    /// amount, luminous intensity).
+    /// The exponents of the seven base dimensions (kg, m, s, A, K, mol, cd).
     pub dimension: [i8; 7],
     /// The kind of quantity: `plain`, `temperature_difference`, `absolute_temperature`, ...
     pub kind: String,
-    /// The exact value as a whole number when it is one (`--exact` shows it without a fraction).
+    /// The exact value as text where it is not an `f64`: a whole number (`--exact` shows it
+    /// without a fraction) or `1e600` for a value beyond `f64`.
     whole: Option<String>,
 }
 
@@ -48,19 +53,29 @@ impl Report {
     ///
     /// # Errors
     ///
-    /// `overflow` when an exact result is outside the range of `f64` (never infinity).
+    /// `overflow` only for an approximate value that is not finite (the evaluator never makes
+    /// one).
     pub fn new(number: &Number) -> Result<Self> {
         let unit = number.unit();
-        let (value, fraction, whole) = match number {
+        let (value, rounded, fraction, whole) = match number {
             Number::Exact(q) => {
                 let r = q.value();
                 let whole = match r.folded() {
                     Ok(w) if w.is_integer() && !w.has_exponents() => Some(w.num().to_string()),
                     _ => None,
                 };
-                (r.to_f64()?, Some(r.to_fraction_string()), whole)
+                let (value, rounded, beyond) = r.to_f64().map_or_else(
+                    |_| (None, false, Some(beyond_f64_text(r))),
+                    |v| (Some(v), !shown_exactly(r, v), None),
+                );
+                (
+                    value,
+                    rounded,
+                    Some(r.to_fraction_string()),
+                    beyond.or(whole),
+                )
             }
-            Number::Approx(a) => (a.value(), None, None),
+            Number::Approx(a) => (Some(a.value()), false, None, None),
         };
         Ok(Self {
             value,
@@ -70,6 +85,7 @@ impl Report {
                 unit.to_string()
             },
             exact: number.is_exact(),
+            rounded,
             fraction,
             dimension: unit.dim().exponents(),
             kind: unit.kind().name().to_string(),
@@ -77,16 +93,20 @@ impl Report {
         })
     }
 
-    /// The number as shown: an exact result is the rounded `f64`, an approximate one starts with
-    /// `≈ `. With `show_fraction` an exact result that is not a whole number reads
-    /// `1/3 = 0.3333333333333333`.
+    /// The number as shown: an exact result is the rounded `f64` (followed by `…` when that is
+    /// not the exact value), an approximate one starts with `≈ `. With `show_fraction` an exact
+    /// result that is not a whole number reads `1/3 = 0.3333333333333333…`.
     #[must_use]
     pub fn number_text(&self, show_fraction: bool) -> String {
+        let digits = self
+            .value
+            .map_or_else(|| self.whole.clone().unwrap_or_default(), format_f64);
+        let more = if self.rounded { "…" } else { "" };
         match (&self.fraction, &self.whole) {
             (Some(_), Some(w)) if show_fraction => w.clone(),
-            (Some(f), None) if show_fraction => format!("{f} = {}", format_f64(self.value)),
-            (Some(_), _) => format_f64(self.value),
-            (None, _) => format!("≈ {}", format_f64(self.value)),
+            (Some(f), None) if show_fraction => format!("{f} = {digits}{more}"),
+            (Some(_), _) => format!("{digits}{more}"),
+            (None, _) => format!("≈ {digits}"),
         }
     }
 
@@ -100,6 +120,23 @@ impl Report {
         } else {
             format!("{number} {}", self.unit)
         }
+    }
+}
+
+/// Whether the shortest text of `v` is exactly `r` (`0.3` for 3/10, not `0.333…` for 1/3).
+fn shown_exactly(r: Ratio, v: f64) -> bool {
+    format_f64(v)
+        .parse::<Ratio>()
+        .and_then(|shown| shown.checked_eq(r))
+        .unwrap_or(false)
+}
+
+/// An exact value outside the range of `f64`: `1e600` for a power of ten, else the fraction.
+fn beyond_f64_text(r: Ratio) -> String {
+    if r.den() == 1 && r.pi_exp() == 0 && r.ten_exp() != 0 {
+        format!("{}e{}", r.num(), r.ten_exp())
+    } else {
+        r.to_fraction_string()
     }
 }
 
@@ -145,5 +182,31 @@ mod tests {
                 x = 1.0;
             }
         }
+    }
+
+    #[test]
+    fn rounded_exact_results_are_marked_and_huge_ones_are_printed_exactly() {
+        let q = |text: &str| {
+            let reg = dimvexa::registry().unwrap();
+            Report::new(&crate::Formula::new(&reg).eval(text).unwrap()).unwrap()
+        };
+        let third = q("1 m / 3");
+        assert!(third.rounded && third.exact);
+        assert_eq!(third.text(false), "0.3333333333333333… m");
+        assert_eq!(third.text(true), "1/3 = 0.3333333333333333… m");
+        let tenth = q("0.1 m");
+        assert!(!tenth.rounded);
+        assert_eq!(tenth.text(false), "0.1 m");
+        let huge = q("1e300 m * 1e300");
+        assert_eq!(
+            (huge.value, huge.text(false)),
+            (None, "1e600 m".to_string())
+        );
+        assert_eq!(huge.fraction.as_deref(), Some("10^600"));
+        let tiny = q("1e-200 m * 1e-200");
+        assert_eq!(
+            (tiny.value, tiny.text(false)),
+            (None, "1e-400 m".to_string())
+        );
     }
 }

@@ -274,7 +274,10 @@ impl fmt::Display for Error {
                 Ok(())
             }
             Self::Overflow { operation } => {
-                write!(f, "integer overflow in exact arithmetic ({operation})")
+                write!(
+                    f,
+                    "overflow ({operation}): the result is outside what exact arithmetic or an f64 can hold"
+                )
             }
             Self::Unrepresentable { operation } => write!(
                 f,

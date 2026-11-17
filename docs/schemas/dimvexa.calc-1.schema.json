@@ -53,14 +53,18 @@
             "value",
             "unit",
             "exact",
+            "rounded",
             "fraction",
             "dimension",
             "kind"
           ],
           "properties": {
             "value": {
-              "type": "number",
-              "description": "An exact result rounded once to the nearest f64 (0 ulp); an approximate result as computed."
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "An exact result rounded once to the nearest f64 (0 ulp); an approximate result as computed (a function result can be an ulp or two from the true value). Null for an exact result outside the range of f64 (use `fraction`)."
             },
             "unit": {
               "type": "string",
@@ -69,6 +73,10 @@
             "exact": {
               "type": "boolean",
               "description": "True when the result is exact; false when it, or anything it was computed from, is approximate."
+            },
+            "rounded": {
+              "type": "boolean",
+              "description": "True when the number shown for an exact result is not its exact value (1/3 shown as 0.3333333333333333). Always false for an approximate result."
             },
             "fraction": {
               "type": [

@@ -334,20 +334,30 @@ $ dimvexa calc "sqrt(2 m2)"
 
 Write the values in the equation (`0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)`) or name them
 with `--var` (`"Cd * A * sqrt(2 * dp / rho)" --var Cd=0.61 --var A="10 cm2" --var dp="50 kPa"
---var rho="998 kg/m3"`); both give the same result. A name is whatever you write after
-`--var`, so it may also be the symbol of a unit (`--var m="3 kg"` fills `m` in the equation and
-has nothing to do with the metre); `pi` cannot be redefined.
+--var rho="998 kg/m3"`); both give the same result. A name is letters, digits and `_`. It
+stands for its value wherever it is written alone (`h * 2` with `--var h="3 m"` is `6 m`; a name
+such as `m` has nothing to do with the metre). It must not also be a unit that the equation
+writes after a number: `0.5 h` with a variable `h` is an error (`invalid_definition`: rename
+the variable), because the reader would see hours and the evaluator a length. `pi` cannot be
+redefined, a repeated `--var` name keeps the last value, and a name that is not used is
+ignored.
 
 * **Numbers and units:** `10 cm2`, `998 kg/m3`, `8.314 J/(mol*K)`, `20 degC`, `1.5e-3 m`. A unit
   is the text after a number up to the next space, so put a space on both sides of an operator
   between quantities: `50 kPa / 998 kg/m3` is a quotient.
 * **Operators:** `+ - * /`, parentheses and `^`. The exponent may be an integer, a decimal or a
-  fraction: `x^2`, `x^0.5`, `y^(1/2)` and `sqrt(y)` are the same, `R^(2/3)` works. `pi` is the
-  exact constant.
+  fraction: `x^2`, `x^0.5`, `y^(1/2)` and `sqrt(y)` are the same, `R^(2/3)` works. The exponent
+  has to be a written number (`x^n`, `2^(1+1)` and `2^3^2` are parse errors). `pi` is the exact
+  constant, but not directly after a number: write `2 * pi * r`, not `2 pi r`.
+* **Spaces:** a space ends a unit. `1/2 m` is `1` divided by `2 m` (`0.5 1/m`), so write
+  `(1/2) * 1 m` or `0.5 m`. Tabs are not whitespace; use spaces. A comma separates arguments
+  (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.
 * **Functions:** `sqrt`, `cbrt`, `abs`, `hypot`, `min`, `max`, `ln`, `exp`, `log10` (`lg`), `log2`
   (`lb`), `log(x, base)`, `sin`, `cos`, `sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh`.
   `min` and `max` need one dimension (`4 m` and `4 km` work, `4 m` and `3 L` do not) and return
-  the winner in its own unit, exact. `abs` of a temperature point is refused.
+  the winner in its own unit, exact. `abs` of a temperature point is refused. `sin` and `cos`
+  take one angle unit (`30 deg`, `0.5 rad`, `pi/6 * 1 rad`), not a bare number and not
+  `deg*deg` or `1/rad`.
 * **Options:** `--to UNIT` shows the result in a unit, `--exact` adds the fraction of an exact
   result (`1/3 = 0.3333333333333333 m`), `--json` or `--pretty` print the schema
   `dimvexa.calc/1`, `--config` adds your own units as for `convert`. An expression that starts
@@ -355,11 +365,21 @@ has nothing to do with the metre); `pi` cannot be redefined.
 
 #### Exact, or approximate and labelled
 
-Every step is exact while it can be: `sqrt(9 m2)` is `3 m`, `8^(1/3)` is `2`, `sin(30 deg)` is
+Every step is exact while it can be (this is what `exact` in the JSON says): `sqrt(9 m2)` is `3 m`, `8^(1/3)` is `2`, `sin(30 deg)` is
 `0.5`, `log10(1000)` is `3`, `ln(1)` is `0`, `max(10, sqrt(2))` is exactly `10`. When the
 mathematics is not exact (`sqrt(2)`, `sin(1 rad)`), the result is an `f64` with `≈` in front, and
 so is everything computed from it afterwards; an exact step that fails (an overflow) is never
-answered with an approximate number. A result in `f64` is rounded once, to the nearest `f64`.
+answered with an approximate number.
+
+* An **exact** result is shown as the `f64` nearest to its exact value (rounded once), and
+  `…` follows the number when that is not the exact value: `1 m / 3` is
+  `0.3333333333333333… m`, `0.1 + 0.2` is `0.3`. `--exact` adds the fraction, and `rounded` in
+  the JSON says the same. An exact value beyond the range of `f64` is printed from the exact
+  value (`1e300 m * 1e300` is `1e600 m`, `value` is `null`, `fraction` is `10^600`).
+* An **approximate** result (`≈`) is computed in `f64`: the function results are within an ulp
+  or two of the true value, and each following step can add to that (`sqrt(2)^2` is
+  `2.0000000000000004`). It is not the nearest `f64` and carries no error bound (KL-33).
+  A result outside the range of `f64` is an `overflow` error, never infinity.
 
 #### Limitations
 
@@ -374,8 +394,12 @@ answered with an approximate number. A result in `f64` is rounded once, to the n
 * **Not implemented** (they fail with `refused`, "'tan' is not implemented"): `tan`, `asin`,
   `acos`, `atan`, `atan2`, `pow`, `floor`, `round`. `log(x)` alone is refused as ambiguous: write
   `ln`, `lg` or `log10`, `lb` or `log2`, or `log(x, base)`.
+* **Result units are not simplified:** the unit is what the arithmetic produced, so
+  `1 J / 1 N` is `J/N`, `10 kWh/100km * 250 km` is `(kWh/km).km` and `1 m * 1 m` is `m.m`. Give
+  `--to` (`--to m`, `--to kWh`) for the unit you want; a wrong dimension is an error.
 * **Temperatures:** a point (`20 degC`) can be compared and shifted by a difference, not
-  multiplied; a temperature that an equation computes is a plain value in `K`, not a point on a
+  multiplied; `degC + degC` adds two points (`20 degC + 30 degC` is `50 degC`) while
+  `degC - degC` is a difference (`delta_degC`) and a point minus a kelvin is refused (ADR-027); a temperature that an equation computes is a plain value in `K`, not a point on a
   scale (in `p V = n R T`, give `T` in `K`).
 * **Not units of every trade:** names that mean different things (`ton`, `gpm`, `mph`, `rpm`) are
   errors until a config chooses (`--config us-customary`, or your own, see
@@ -389,7 +413,7 @@ The same calculation, the same fields as `--json` and the same text:
 
 ```python
 dimvexa.calc("sqrt(2 * dp / rho)", vars={"dp": "50 kPa", "rho": "998 kg/m3"}, to="m/s")
-# {'value': 10.01001502504383, 'unit': 'm/s', 'exact': False, 'fraction': None,
+# {'value': 10.01001502504383, 'unit': 'm/s', 'exact': False, 'rounded': False, 'fraction': None,
 #  'dimension': [0, 1, -1, 0, 0, 0, 0], 'kind': 'plain', 'text': '≈ 10.01001502504383 m/s'}
 ```
 

@@ -83,16 +83,22 @@ assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", 
 {
   const r = d.calc("sqrt(9 m2)", [], "", "", []);
   assert.deepStrictEqual({ ...r, dimension: [...r.dimension] }, {
-    value: 3, unit: "m", exact: true, fraction: "3/1", dimension: [0, 1, 0, 0, 0, 0, 0], kind: "plain", text: "3 m",
+    value: 3, unit: "m", exact: true, rounded: false, fraction: "3/1", dimension: [0, 1, 0, 0, 0, 0, 0], kind: "plain", text: "3 m",
   });
   assert.strictEqual(d.calc("sqrt(2 m2)", [], "", "", []).fraction, null);
   const plain = d.calc("3 m / 2 m", [], "", "", []);
   assert.deepStrictEqual([plain.unit, plain.fraction, plain.text, [...plain.dimension].every((e) => e === 0)], ["", "3/2", "1.5", true]);
   // the number text is the one of the command line
-  for (const [e, t] of [["1 m / 3", "0.3333333333333333 m"], ["1e15 m", "1000000000000000 m"], ["1e16 m", "1e16 m"],
+  for (const [e, t] of [["1 m / 3", "0.3333333333333333… m"], ["1e15 m", "1000000000000000 m"], ["1e16 m", "1e16 m"],
     ["0.0001 m", "0.0001 m"], ["0.00001 m", "1e-5 m"], ["2 m - 2 m", "0 m"], ["sqrt(1e40 m2)", "1e20 m"],
     ["sqrt(2e-10 m2)", "≈ 1.4142135623730951e-5 m"]]) assert.strictEqual(d.calc(e, [], "", "", []).text, t, e);
   assert.strictEqual(d.calc("20 degC + 5 K", [], "", "", []).kind, "absolute_temperature");
+  const huge = d.calc("1e300 * 1e300 m", [], "", "", []);
+  assert.deepStrictEqual([huge.value, huge.text, huge.fraction, huge.rounded], [null, "1e600 m", "10^600", false]);
+  assert.strictEqual(d.calc("1 m / 3", [], "", "", []).rounded, true);
+  assert.strictEqual(code(() => d.calc("0.5 h", ["h=3 m"], "", "", [])), "invalid_definition");
+  assert.strictEqual(d.calc("h * 2", ["h=3 m"], "", "", []).text, "6 m");
+  assert.strictEqual(code(() => d.calc("sin(30 deg * 30 deg)", [], "", "", [])), "refused");
   assert.strictEqual(d.calc("100 kg * 1 g_n * sin(30 deg)", [], "N", "", []).text, "490.3325 N");
   const inline = d.calc("0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)", [], "L/s", "", []);
   const named = d.calc("Cd * A * sqrt(2 * dp / rho)",

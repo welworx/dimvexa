@@ -957,6 +957,12 @@ impl<'r> Math<'r> {
                 "sin and cos need an angle with a unit: write 30 deg or 0.5 rad, not a bare number",
             ));
         }
+        if !is_one_unit(unit.expr()) {
+            return Err(refused(
+                "sin and cos need an angle in one angle unit (30 deg, 0.5 rad), not a product or \
+                 quotient of angles such as deg*deg or 1/rad (for pi/6 rad write pi/6 * 1 rad)",
+            ));
+        }
         let f = match a {
             Number::Exact(q) => {
                 let radians = q.value().checked_mul(unit.factor())?;
@@ -977,6 +983,22 @@ impl<'r> Math<'r> {
             }
         };
         unity(if cos { f.cos() } else { f.sin() })
+    }
+}
+
+/// `true` when the unit expression is one unit symbol to the power 1 (`deg`, `rad`), possibly
+/// multiplied by the literal `1`.
+fn is_one_unit(expr: &dimvexa_core::Expr) -> bool {
+    use dimvexa_core::Expr;
+    match expr {
+        Expr::Unit(_) => true,
+        Expr::Pow(e, 1) => is_one_unit(e),
+        Expr::Mul(a, b) => match (&**a, &**b) {
+            (Expr::One, e) | (e, Expr::One) => is_one_unit(e),
+            _ => false,
+        },
+        Expr::Div(a, b) => matches!(&**b, Expr::One) && is_one_unit(a),
+        Expr::One | Expr::Pow(..) => false,
     }
 }
 

@@ -244,6 +244,7 @@ def test_calc_is_exact_when_the_mathematics_is() -> None:
         "value": 3.0,
         "unit": "m",
         "exact": True,
+        "rounded": False,
         "fraction": "3/1",
         "dimension": [0, 1, 0, 0, 0, 0, 0],
         "kind": "plain",
@@ -320,7 +321,7 @@ def test_calc_refuses_bad_names_and_pi() -> None:
 def test_calc_number_text_is_the_text_of_the_command_line() -> None:
     # the same forms as format_f64 in dimvexa-calc, which the CLI prints too
     for expr, text in [
-        ("1 m / 3", "0.3333333333333333 m"),
+        ("1 m / 3", "0.3333333333333333… m"),
         ("1e15 m", "1000000000000000 m"),
         ("1e16 m", "1e16 m"),
         ("0.0001 m", "0.0001 m"),
@@ -333,3 +334,20 @@ def test_calc_number_text_is_the_text_of_the_command_line() -> None:
         assert dimvexa.calc(expr)["text"] == text, expr
     t = dimvexa.calc("20 degC + 5 K")
     assert (t["text"], t["kind"]) == ("25 degC", "absolute_temperature")
+
+
+def test_calc_marks_rounding_prints_beyond_f64_and_refuses_ambiguous_names() -> None:
+    third = dimvexa.calc("1 m / 3")
+    assert (third["rounded"], third["exact"], third["fraction"]) == (True, True, "1/3")
+    assert dimvexa.calc("0.1 + 0.2")["rounded"] is False
+    huge = dimvexa.calc("1e300 * 1e300 m")
+    assert (huge["value"], huge["text"], huge["fraction"]) == (None, "1e600 m", "10^600")
+    # a name that is also a unit in the equation is refused, not guessed
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("0.5 h", vars={"h": "3 m"})
+    assert e.value.code == "invalid_definition"
+    assert dimvexa.calc("h * 2", vars={"h": "3 m"})["text"] == "6 m"
+    for bad in ("sin(30 deg * 30 deg)", "sin(1 / 1 rad)"):
+        with pytest.raises(dimvexa.DimvexaError) as e:
+            dimvexa.calc(bad)
+        assert e.value.code == "refused", bad

@@ -3,9 +3,10 @@ from typing import Any, TypedDict
 __version__: str
 
 class CalcResult(TypedDict):
-    value: float
+    value: float | None
     unit: str
     exact: bool
+    rounded: bool
     fraction: str | None
     dimension: list[int]
     kind: str

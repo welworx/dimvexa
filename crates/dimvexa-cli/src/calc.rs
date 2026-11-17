@@ -78,14 +78,15 @@ fn render_json(req: &CalcRequest, r: &Report, loaded: &Loaded) -> String {
         .map_or_else(|| "null".to_string(), json_string);
     format!(
         "{{\"schema\":{},\"ok\":true,\"expression\":{},\"variables\":[{}],\
-\"result\":{{\"value\":{},\"unit\":{},\"exact\":{},\"fraction\":{},\"dimension\":[{}],\"kind\":{}}},\
+\"result\":{{\"value\":{},\"unit\":{},\"exact\":{},\"rounded\":{},\"fraction\":{},\"dimension\":[{}],\"kind\":{}}},\
 \"data_version\":{},\"config\":{},\"warnings\":{}}}",
         json_string(&schema_id("calc")),
         json_string(&req.expression),
         variables.join(","),
-        f64_text(r.value),
+        r.value.map_or_else(|| "null".to_string(), f64_text),
         json_string(&r.unit),
         r.exact,
+        r.rounded,
         fraction,
         dims.join(","),
         json_string(&r.kind),

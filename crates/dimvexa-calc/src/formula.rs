@@ -615,9 +615,11 @@ impl<'r> Formula<'r> {
     /// operation that failed (`dimension_mismatch`, `overflow`, ...). An exact operation that
     /// fails is never answered with an approximate value.
     pub fn eval(&self, formula: &str) -> Result<Number> {
+        let toks = lex(formula)?;
+        self.refuse_names_used_as_units(&toks)?;
         let mut p = Parser {
             src: formula,
-            toks: lex(formula)?,
+            toks,
             pos: 0,
             depth: 0,
             f: self,
@@ -627,6 +629,41 @@ impl<'r> Formula<'r> {
             return Err(parse_error(formula, p.here(), "unexpected input"));
         }
         Ok(q)
+    }
+
+    /// A name that is also written as a unit in the equation (`0.5 h` with a variable `h`) is
+    /// ambiguous: the reader sees one thing and the evaluator takes the other.
+    fn refuse_names_used_as_units(&self, toks: &[(usize, Tok)]) -> Result<()> {
+        for (_, tok) in toks {
+            let Tok::Qty(number, unit) = tok else {
+                continue;
+            };
+            let mut symbol = String::new();
+            for c in unit.chars().chain(std::iter::once(' ')) {
+                if c.is_alphanumeric() || c == '_' {
+                    symbol.push(c);
+                    continue;
+                }
+                // `m3` and `m^3` are the unit `m`: a name that equals the symbol or the symbol
+                // without its trailing digits collides
+                let bare = symbol.trim_end_matches(|d: char| d.is_ascii_digit());
+                if let Some((name, _)) = self
+                    .vars
+                    .iter()
+                    .find(|(n, _)| n != "pi" && !n.is_empty() && (*n == symbol || n == bare))
+                {
+                    return Err(Error::InvalidDefinition {
+                        symbol: name.clone(),
+                        message: format!(
+                            "the name '{name}' is also a unit in '{number} {unit}' of the \
+                             equation: rename the variable"
+                        ),
+                    });
+                }
+                symbol.clear();
+            }
+        }
+        Ok(())
     }
 
     /// Like [`eval`](Self::eval), but only an exact result is accepted.

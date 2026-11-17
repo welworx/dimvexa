@@ -405,7 +405,9 @@ pub fn convert_quantity(quantity: &str, to: &str) -> Result<String, JsValue> {
 /// gave). `config` and `config_texts` are as for `convertWith`.
 ///
 /// Returns an object with the fields of `dimvexa calc --json`: `value` (an exact result rounded
-/// once), `unit`, `exact` (whether the mathematics was exact), `fraction` (the exact value as
+/// once; `null` for an exact result beyond the range of `f64`, see `fraction`), `unit`, `exact`
+/// (whether the mathematics was exact), `rounded` (whether the number shown is not the exact
+/// value), `fraction` (the exact value as
 /// text, `null` when approximate), `dimension` (the exponents of kg, m, s, A, K, mol, cd), `kind`, and `text`, exactly
 /// what `dimvexa calc` prints (`3 m`, `≈ 1.4142135623730951 m`).
 ///
@@ -454,9 +456,10 @@ pub fn calc(
         .collect();
     let out = js_sys::Object::new();
     for (key, v) in [
-        ("value", JsValue::from_f64(r.value)),
+        ("value", r.value.map_or(JsValue::NULL, JsValue::from_f64)),
         ("unit", JsValue::from_str(&r.unit)),
         ("exact", JsValue::from_bool(r.exact)),
+        ("rounded", JsValue::from_bool(r.rounded)),
         ("fraction", fraction),
         ("dimension", dimension.into()),
         ("kind", JsValue::from_str(&r.kind)),

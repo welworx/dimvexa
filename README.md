@@ -97,7 +97,7 @@ note: used density --const (998.2067 kg/m3; supplied by the caller on the comman
 ## Equations with units: `dimvexa calc`
 
 `dimvexa calc` evaluates an equation with units, exact where the mathematics is exact, and says
-so when it is not (`≈`). The unit of the result is worked out for you:
+so when it is not (`≈`). The unit of the result follows the arithmetic (`--to` converts it):
 
 ```console
 $ dimvexa calc "2 kip/ft * (20 ft)^2 / 8" --to kN*m

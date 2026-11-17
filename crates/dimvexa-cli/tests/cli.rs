@@ -3368,7 +3368,7 @@ fn calc_x_to_the_one_half_is_the_square_root() {
 fn calc_exact_adds_the_fraction_of_an_exact_result() {
     assert_eq!(
         calc(&["1 m / 3", "--exact"]).stdout,
-        "1/3 = 0.3333333333333333 m\n"
+        "1/3 = 0.3333333333333333… m\n"
     );
     assert_eq!(calc(&["3 m / 3", "--exact"]).stdout, "1 m\n");
     // an approximate result has no fraction
@@ -3608,4 +3608,89 @@ fn readme_calc_examples_are_what_the_cli_prints() {
             "{expr}"
         );
     }
+}
+
+/// An exact result that the printed number does not equal is marked with `…`; one that it
+/// equals is not; an exact value beyond `f64` is printed from the exact value.
+#[test]
+fn calc_marks_rounded_exact_results_and_prints_values_beyond_f64() {
+    for (expr, text) in [
+        ("1 m / 3", "0.3333333333333333… m"),
+        ("1 ft + 1 m", "4.2808398950131235… ft"),
+        ("0.1 + 0.2", "0.3"),
+        ("1 m / 8", "0.125 m"),
+        ("3 m / 3", "1 m"),
+        ("1e300 * 1e300 m", "1e600 m"),
+        ("1e-400 m", "1e-400 m"),
+        ("1e300 m * 1e300", "1e600 m"),
+        ("sqrt(2 m2)", "≈ 1.4142135623730951 m"),
+    ] {
+        let r = calc(&[expr]);
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, format!("{text}\n").as_str()),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+    let v = json::parse(&calc(&["1 m / 3", "--json"]).stdout).unwrap();
+    assert!(v.get("result").unwrap().get("rounded").unwrap().as_bool());
+    let v = json::parse(&calc(&["1e300 * 1e300 m", "--json"]).stdout).unwrap();
+    let result = v.get("result").unwrap();
+    assert_eq!(result.get("value").unwrap(), &json::V::Null);
+    assert_eq!(result.get("fraction").unwrap().as_str(), "10^600");
+    // the stated range of an approximate result is still an error, with a clear message
+    let r = calc(&["exp(1000)"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr
+            .contains("outside what exact arithmetic or an f64 can hold"),
+        "{}",
+        r.stderr
+    );
+}
+
+/// `sin` and `cos` take one angle unit: not `deg*deg`, not `1/rad`.
+#[test]
+fn calc_trig_needs_one_angle_unit() {
+    for expr in [
+        "sin(30 deg * 30 deg)",
+        "sin(1 / 1 rad)",
+        "sin(pi/6 rad)",
+        "cos(30)",
+    ] {
+        let r = calc(&[expr]);
+        assert!(
+            r.stderr.starts_with("error[refused]"),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+    assert_eq!(calc(&["sin(pi/6 * 1 rad)"]).stdout, "0.5\n");
+    assert_eq!(calc(&["sin(30 deg)"]).stdout, "0.5\n");
+    assert_eq!(calc(&["cos(2 * 30 deg)"]).stdout, "0.5\n");
+}
+
+/// A name that is also a unit written in the equation is refused, not guessed.
+#[test]
+fn calc_refuses_a_name_that_is_also_a_unit_in_the_equation() {
+    for (expr, var) in [
+        ("0.5 h", "h=3 m"),
+        ("2 m", "m=3 kg"),
+        ("2 m3", "m=3 kg"),
+        ("1 kg/m", "m=3 kg"),
+    ] {
+        let r = calc(&[expr, "--var", var]);
+        assert_eq!(r.code, 1, "{expr}");
+        assert!(
+            r.stderr.starts_with("error[invalid_definition]: "),
+            "{expr}: {}",
+            r.stderr
+        );
+        assert!(r.stderr.contains("is also a unit"), "{}", r.stderr);
+    }
+    // standing alone, or as a different symbol, the name is the value
+    assert_eq!(calc(&["h * 2", "--var", "h=3 m"]).stdout, "6 m\n");
+    assert_eq!(calc(&["m * 2 cm", "--var", "m=3"]).stdout, "6 cm\n");
+    assert_eq!(calc(&["0.5 h", "--var", "hh=3 m"]).stdout, "0.5 h\n");
 }

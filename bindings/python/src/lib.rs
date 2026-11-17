@@ -498,8 +498,9 @@ fn quantity(
 /// Calculate an equation with units (ADR-030): `calc("sqrt(2 * dp / rho)", vars={"dp": "50 kPa",
 /// "rho": "998 kg/m3"}, to="m/s")`, or with the quantities written in the equation
 /// (`calc("2 m * 3 m")`). Returns a dict with the fields of `dimvexa calc --json`: `value`
-/// (float; an exact result is rounded once), `unit`, `exact` (False when the result is an
-/// approximate `f64`), `fraction` (the exact value as text, None when approximate), `dimension`
+/// (float; an exact result is rounded once; None for an exact result beyond the range of
+/// `f64`, see `fraction`), `unit`, `exact` (False when the result is an approximate `f64`),
+/// `rounded` (True when the number shown is not the exact value), `fraction` (the exact value as text, None when approximate), `dimension`
 /// (the exponents of kg, m, s, A, K, mol, cd), `kind`, and `text` (exactly what `dimvexa calc` prints, `≈ ` first when
 /// approximate). `to` is the unit of the result; without it the unit the arithmetic gave.
 /// Options as in `convert`.
@@ -530,6 +531,7 @@ fn calc<'py>(
     out.set_item("value", r.value)?;
     out.set_item("unit", &r.unit)?;
     out.set_item("exact", r.exact)?;
+    out.set_item("rounded", r.rounded)?;
     out.set_item("fraction", &r.fraction)?;
     out.set_item("dimension", r.dimension.to_vec())?;
     out.set_item("kind", &r.kind)?;
