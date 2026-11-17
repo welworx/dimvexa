@@ -48,7 +48,8 @@ folded the power into the fraction with 128-bit gcds.
 1. **The parser keeps a power of ten in the exponent when it does not fit.** A decimal with
    digits `D`, `f` digits after the point and exponent `e` is `D * 10^(e-f)`. If that fits an
    `i128` fraction it is stored exactly as before (so every number that parsed before has the
-   same representation, `==`, hash and output). Otherwise it is stored as `D/1 * 10^(e-f)`.
+   same representation, `==`, hash and output); the trailing zeros of the digits are moved into
+   the exponent first, so `1.0e-38` and `1e-38` are one number in one form and `1.5e38` fits. Otherwise it is stored as `D/1 * 10^(e-f)`.
    The exponent is capped at 10 000 (`overflow` beyond it), so a hostile `1e999999999` stays an
    error and nothing loops in proportion to it.
 2. **`checked_mul` always retries with the factors of ten moved into the exponent** after an
@@ -82,9 +83,11 @@ folded the power into the fraction with 128-bit gcds.
   normal `f64` range is still an `overflow` when it is rounded to `f64` (loud, never infinity).
 * Existing tests that pinned `overflow` for a power of ten now pin the exact result
   (`overflow_census`, `Qm2` to `qm2`, KL-1). A real overflow (digit width) is still tested.
-* Sums and comparisons of values with different exponents are still `unrepresentable` in the
-  core (KL-24); `dimvexa-calc` folds the power of ten first, which works whenever the result
-  fits.
+* Sums and comparisons of values with different powers of ten are aligned in the core
+  (`checked_add`, `checked_cmp`, after the folding that always worked): exact when the scaled
+  digits fit, `overflow` when they do not, and an ordering never overflows. Only a different
+  power of pi is `unrepresentable` (KL-24, amended). `dimvexa-calc` keeps its own fold for the
+  case of pi.
 * Rounding a value that carries a power of ten or pi to `f64` is 4 to 8 times faster (209, 432
   and 379 ns become 46, 54 and 51 ns; the guarded `deg -> rad` row of `bench-impact` went from
   448 to 103 ns); plain fractions (31 ns) and the fast path are untouched.

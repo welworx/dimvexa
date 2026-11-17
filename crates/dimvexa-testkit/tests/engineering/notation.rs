@@ -199,3 +199,28 @@ fn the_absolute_value_of_a_temperature_point_is_refused_and_names_the_delta_unit
         "60 delta_degC"
     );
 }
+
+/// Review F2: an exponent with a far power of ten used to be read from the digits alone, so
+/// `x^1e-50` was `x^1` and `x^2e40` was `x^2`.
+#[test]
+fn an_exponent_that_does_not_fit_is_refused_not_truncated() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg).var("x", "2").unwrap();
+    for call in ["x^1e-50", "x^1e39", "x^2e40", "x^1e100"] {
+        let err = f.eval(call).unwrap_err();
+        assert_eq!(err.code(), "parse_error", "{call}: {err}");
+        assert!(
+            err.to_string().contains("too large or too precise"),
+            "{call}: {err}"
+        );
+    }
+    // exponents that fit: a decimal is a fraction (sqrt(2) is approximate), a power of ten
+    // that folds is a whole number
+    let half = f.eval("x^0.5").unwrap();
+    assert!(!half.is_exact());
+    assert_eq!(f.f64_in(&half, "1").unwrap(), 2.0_f64.sqrt());
+    assert!(f.eval_exact("x^0.5").is_err());
+    assert_eq!(f.f64_in(&f.eval("x^2").unwrap(), "1").unwrap(), 4.0);
+    assert_eq!(f.f64_in(&f.eval("x^2e0").unwrap(), "1").unwrap(), 4.0);
+    assert_eq!(f.f64_in(&f.eval("x^1e1").unwrap(), "1").unwrap(), 1024.0);
+}

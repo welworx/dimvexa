@@ -845,3 +845,130 @@ fn hostile_arguments_to_the_new_functions_never_panic() {
         }
     }
 }
+
+// ----- review fixes: huge angles, the power zero -------------------------------------------------
+
+/// Review F3: the exact tier never falls through to an `f64` when the exact test cannot be made
+/// by folding. `1.8e38 deg` is 10^36 half turns: the sine is exactly 0.
+#[test]
+fn the_sine_of_a_huge_angle_in_degrees_is_decided_exactly() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    let sin = |s: &str| m.sin(&n(&reg, s)).unwrap();
+    let cos = |s: &str| m.cos(&n(&reg, s)).unwrap();
+    assert_eq!(sin("1.8e38 deg").to_string(), "0 1");
+    assert_eq!(sin("1.8e40 deg").to_string(), "0 1");
+    assert_eq!(sin("1.8e400 deg").to_string(), "0 1");
+    assert_eq!(cos("1.8e38 deg").to_string(), "1 1");
+    assert_eq!(cos("-1.8e400 deg").to_string(), "1 1");
+    // 10^38 degrees is 280 degrees after whole turns (10^38 mod 360): not a special angle, and
+    // the approximate value has the right phase
+    let r = sin("1e38 deg");
+    assert!(!r.is_exact());
+    close(
+        m.to_f64_in(&r, "1").unwrap(),
+        -0.984_807_753_012_208_1,
+        1e-12,
+    );
+    let r = cos("1e38 deg");
+    close(
+        m.to_f64_in(&r, "1").unwrap(),
+        0.173_648_177_666_926_92,
+        1e-12,
+    );
+    // a step count that is not a whole number is not decided by the exponent either
+    assert!(!sin("1e30 deg").is_exact());
+    close(
+        m.to_f64_in(&sin("1e30 deg"), "1").unwrap(),
+        -0.984_807_753_012_208_1,
+        1e-12,
+    );
+}
+
+/// Review F3: exactness on both sides of the exponent, with fractions of a degree.
+#[test]
+fn the_steps_of_thirty_degrees_work_for_every_sign_of_the_exponent() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    let sin = |s: &str| m.sin(&n(&reg, s)).unwrap();
+    // 1800 arcmin and 108000 arcsec are 30 degrees
+    assert_eq!(sin("1800 arcmin").to_string(), "0.5 1");
+    assert_eq!(sin("108000 arcsec").to_string(), "0.5 1");
+    assert_eq!(sin("3e1 deg").to_string(), "0.5 1");
+    assert_eq!(sin("0.3e2 deg").to_string(), "0.5 1");
+    assert_eq!(sin("300e-1 deg").to_string(), "0.5 1");
+    // 50 degrees is not a multiple of 30
+    let r = sin("0.5e2 deg");
+    assert!(!r.is_exact());
+    close(
+        m.to_f64_in(&r, "1").unwrap(),
+        50.0_f64.to_radians().sin(),
+        1e-15,
+    );
+    // a tiny angle is approximate and right
+    let r = sin("1e-30 deg");
+    assert!(!r.is_exact());
+    close(m.to_f64_in(&r, "1").unwrap(), 1e-30_f64.to_radians(), 1e-12);
+}
+
+/// An approximate sine of a huge angle in radians is refused: the `f64` of the angle no longer
+/// decides the phase. An angle in degrees is reduced exactly first and is fine.
+#[test]
+fn a_huge_angle_in_radians_is_refused_for_the_approximate_sine() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    assert_eq!(code(m.sin(&n(&reg, "1e30 rad"))), "refused");
+    assert_eq!(code(m.cos(&n(&reg, "-1e30 rad"))), "refused");
+    let r = m.sin(&n(&reg, "1e6 rad")).unwrap();
+    close(m.to_f64_in(&r, "1").unwrap(), 1e6_f64.sin(), 1e-12);
+    // an approximate angle beyond the limit is refused too
+    let big = m
+        .mul(&m.sqrt(&n(&reg, "2")).unwrap(), &n(&reg, "1e30 rad"))
+        .unwrap();
+    assert_eq!(code(m.sin(&big)), "refused");
+}
+
+/// Review F6: the power zero is 1 for every plain value (also zero), and the argument must still
+/// be plain, as for every other power.
+#[test]
+fn the_power_zero_of_a_root_checks_the_argument() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    assert_eq!(code(m.root(&n(&reg, "20 degC"), 0, 3)), "refused");
+    assert_eq!(code(m.root(&n(&reg, "30 deg"), 0, 3)), "refused");
+    assert_eq!(m.root(&n(&reg, "0"), 0, 2).unwrap().to_string(), "1 1");
+    assert_eq!(m.root(&n(&reg, "5 m"), 0, 3).unwrap().to_string(), "1 1");
+}
+
+/// Review F4: sums and orderings of far exponents work whenever the aligned digits fit.
+#[test]
+fn sums_and_comparisons_of_numbers_with_different_stored_exponents() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    let sum = m
+        .add(&n(&reg, "6.62607015e-34 m"), &n(&reg, "1e-34 m"))
+        .unwrap();
+    assert!(sum.is_exact());
+    assert_eq!(m.to_f64_in(&sum, "m").unwrap(), 7.626_070_15e-34);
+    let diff = m
+        .sub(&n(&reg, "1e-34 m"), &n(&reg, "6.62607015e-34 m"))
+        .unwrap();
+    assert_eq!(m.to_f64_in(&diff, "m").unwrap(), -5.626_070_15e-34);
+    // the same value written two ways is one number
+    assert_eq!(
+        m.add(&n(&reg, "1.0e-38 m"), &n(&reg, "1e-38 m"))
+            .unwrap()
+            .to_string(),
+        m.add(&n(&reg, "1e-38 m"), &n(&reg, "1e-38 m"))
+            .unwrap()
+            .to_string()
+    );
+    // min and max compare them
+    let (big, small) = (n(&reg, "6.62607015e-34 m"), n(&reg, "1e-34 m"));
+    let low = m.min(&big, &small).unwrap();
+    assert!(low.is_exact());
+    assert_eq!(m.to_f64_in(&low, "m").unwrap(), 1e-34);
+    let high = m.max(&small, &big).unwrap();
+    assert!(high.is_exact());
+    assert_eq!(m.to_f64_in(&high, "m").unwrap(), 6.626_070_15e-34);
+}

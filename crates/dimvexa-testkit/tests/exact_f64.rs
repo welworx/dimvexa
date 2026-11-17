@@ -678,8 +678,8 @@ fn factors_with_pi_or_a_power_of_ten_are_correctly_rounded() {
 
 /// ADR-028: a decimal whose power of ten does not fit the fraction (Planck's constant,
 /// `1e-300`) is rounded to `f64` as correctly as the standard library rounds it. The oracle is
-/// `str::parse::<f64>`, which is correctly rounded; the numbers are random decimals with up to
-/// 19 digits and exponents from -330 to 300, most of them outside what an `i128` denominator
+/// `str::parse::<f64>`, which is correctly rounded; the numbers are random decimals, positive and
+/// negative, with up to 38 digits (the most an `i128` takes) and exponents from -330 to 300, most of them outside what an `i128` denominator
 /// can hold. A value that is too close to a rounding boundary for the 128-bit proof is allowed
 /// to be refused (`overflow`), never to be rounded differently; the test counts how often.
 #[test]
@@ -688,8 +688,11 @@ fn decimals_with_a_far_exponent_round_like_the_standard_library() {
     eprintln!("seed 0x00ad_4028_5eed");
     let (mut compared, mut refused, mut kept) = (0_u32, 0_u32, 0_u32);
     for _ in 0..200_000 {
-        let digits = 1 + rng.below(19);
+        let digits = 1 + rng.below(38);
         let mut mantissa = String::new();
+        if rng.below(3) == 0 {
+            mantissa.push('-');
+        }
         for i in 0..digits {
             let d = rng.below(10);
             mantissa.push(char::from(
@@ -698,7 +701,8 @@ fn decimals_with_a_far_exponent_round_like_the_standard_library() {
         }
         // sometimes a decimal point after the first digit
         if digits > 1 && rng.below(2) == 0 {
-            mantissa.insert(1, '.');
+            // after the first digit (and the sign, if any)
+            mantissa.insert(usize::from(mantissa.starts_with('-')) + 1, '.');
         }
         let exp = rng.range_i64(-330, 300);
         let text = format!("{mantissa}e{exp}");

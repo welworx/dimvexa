@@ -391,8 +391,8 @@ impl<'r> Math<'r> {
     /// # Errors
     ///
     /// [`Error::Refused`] (negative base with an even `q`, a dimension that does not stay
-    /// integral, a kind that is not plain, `0^0`), [`Error::DivisionByZero`] (zero to a
-    /// negative power), [`Error::Overflow`].
+    /// integral, a kind that is not plain), [`Error::DivisionByZero`] (zero to a negative
+    /// power), [`Error::Overflow`]. The power zero is 1, also for zero (as for [`Calc::pow`]).
     ///
     /// # Examples
     ///
@@ -413,7 +413,9 @@ impl<'r> Math<'r> {
             ));
         }
         if num == 0 {
-            // the power zero is 1, as for `Calc::pow`, without a unit raised to the power zero
+            // the power zero is 1 (also for zero, as for `Calc::pow`) without a unit raised to
+            // the power zero; the argument must still be a plain value
+            Self::normalise(base, &[Kind::Plain])?;
             return Ok(Number::Exact(Quantity::new(Ratio::ONE, UnitExpr::unity())));
         }
         let common = i32::try_from(gcd(num.unsigned_abs(), den.unsigned_abs()))
@@ -958,12 +960,21 @@ impl<'r> Math<'r> {
         let f = match a {
             Number::Exact(q) => {
                 let radians = q.value().checked_mul(unit.factor())?;
-                if let Some(exact) = special_angle(radians, cos) {
+                if let Some(exact) = special_angle(radians, cos)? {
                     return Ok(Number::Exact(Quantity::new(exact, UnitExpr::unity())));
                 }
-                radians.to_f64()?
+                radians_for_trig(radians)?
             }
-            Number::Approx(x) => x.value * unit.factor().to_f64()?,
+            Number::Approx(x) => {
+                let value = x.value * unit.factor().to_f64()?;
+                if value.abs() > 1e7 {
+                    return Err(refused(
+                        "the angle is too large for an approximate sine or cosine (its f64 value \
+                         would not decide the phase); reduce it modulo a full turn first",
+                    ));
+                }
+                value
+            }
         };
         unity(if cos { f.cos() } else { f.sin() })
     }
@@ -1135,35 +1146,122 @@ fn approx_root(f: f64, p: i32, q: i32) -> f64 {
     }
 }
 
-/// `sin` or `cos` of `radians` when it is exact: `0`, `1/2`, `1`, `-1/2`, `-1`.
-fn special_angle(radians: Ratio, cos: bool) -> Option<Ratio> {
+/// `base^exp mod 12`: the number of 30-degree steps matters only modulo 12.
+const fn pow_mod_12(base: u64, exp: u64) -> u64 {
+    const MODULUS: u64 = 12;
+    let (mut result, mut square, mut left) = (1_u64, base % MODULUS, exp);
+    while left > 0 {
+        if left & 1 == 1 {
+            result = result.saturating_mul(square) % MODULUS;
+        }
+        square = square.saturating_mul(square) % MODULUS;
+        left >>= 1;
+    }
+    result
+}
+
+/// `n/d * 6 * 10^ten`, the angle `n/d * 10^ten * pi` in steps of 30 degrees, reduced modulo 12:
+/// `Ok(None)` when it is not a whole number of steps, `Ok(Some(j))` with `j` in `0..12`
+/// otherwise. It works with the factors 2 and 5 and with the exponent, never with the number
+/// `10^ten` itself, so `1.8e38 deg` and `1.8e400 deg` are as exact as `180 deg`.
+fn steps_of_30_degrees(num: i128, den: i128, ten: i32) -> Result<Option<i64>> {
+    let err = || overflow("angle");
+    // 6 n / d in lowest terms (n / d is already reduced)
+    let rem =
+        u32::try_from(den.unsigned_abs().checked_rem(6).ok_or_else(err)?).map_err(|_| err())?;
+    let common = i128::from(gcd(6, rem));
+    let top = num
+        .checked_mul(6_i128.checked_div(common).ok_or_else(err)?)
+        .ok_or_else(err)?;
+    let bottom = den.checked_div(common).ok_or_else(err)?;
+    if ten < 0 {
+        // top / (bottom * 10^|ten|) is a whole number only if bottom is 1 and 10^|ten| divides top
+        let (1, Some(divisor)) = (bottom, 10_i128.checked_pow(ten.unsigned_abs())) else {
+            return Ok(None);
+        };
+        if top.checked_rem(divisor) != Some(0) {
+            return Ok(None);
+        }
+        let steps = top.checked_div(divisor).ok_or_else(err)?;
+        return Ok(Some(
+            i64::try_from(steps.rem_euclid(12)).map_err(|_| err())?,
+        ));
+    }
+    // top * 10^ten / bottom is whole iff bottom divides 10^ten, i.e. bottom = 2^x 5^y, x and y <= ten
+    let (rest, twos) = split_prime(bottom.unsigned_abs(), 2);
+    let (rest, fives) = split_prime(rest, 5);
+    let ten = i64::from(ten);
+    if rest != 1 || twos > ten || fives > ten {
+        return Ok(None);
+    }
+    // top * 2^(ten - x) * 5^(ten - y), modulo 12
+    let power = |base: u64, exp: i64| -> Result<u64> {
+        Ok(pow_mod_12(base, u64::try_from(exp).map_err(|_| err())?))
+    };
+    let product = top
+        .rem_euclid(12)
+        .saturating_mul(i128::from(power(2, ten.saturating_sub(twos))?))
+        .saturating_mul(i128::from(power(5, ten.saturating_sub(fives))?))
+        .rem_euclid(12);
+    Ok(Some(i64::try_from(product).map_err(|_| err())?))
+}
+
+/// The angle as `f64` radians for the approximate `sin` and `cos`, with its phase intact: an
+/// angle written with pi (every `deg`, `grad`, `arcmin`) is reduced modulo a full turn exactly
+/// first, so `1e38 deg` is not rounded to an `f64` whose last bit is millions of turns. Anything
+/// else beyond a few million radians is refused, because its `f64` value no longer decides the
+/// sine.
+fn radians_for_trig(radians: Ratio) -> Result<f64> {
+    const LIMIT: f64 = 1e7;
+    if radians.pi_exp() == 1 {
+        // degrees = (n/d) 10^k * 180; reduced to [0, 360)
+        let degrees = radians
+            .with_exponents(radians.ten_exp(), 0)
+            .checked_mul(Ratio::from_int(180))
+            .and_then(Ratio::folded);
+        if let Ok(degrees) = degrees {
+            let turn = degrees.den().checked_mul(360);
+            let unit = degrees.den().checked_mul(180);
+            if let (Some(turn), Some(unit)) = (turn, unit) {
+                let reduced = degrees.num().rem_euclid(turn);
+                return Ratio::new(reduced, unit)?.with_exponents(0, 1).to_f64();
+            }
+        }
+    }
+    let value = radians.to_f64()?;
+    if value.abs() > LIMIT {
+        return Err(refused(
+            "the angle is too large for an approximate sine or cosine (its f64 value would not \
+             decide the phase); reduce it modulo a full turn first",
+        ));
+    }
+    Ok(value)
+}
+
+/// `sin` or `cos` of `radians` when it is exact: `0`, `1/2`, `1`, `-1/2`, `-1`. An angle that
+/// cannot be decided exactly is an error, never an approximation (the exact tier does not
+/// fall back to an `f64`).
+fn special_angle(radians: Ratio, cos: bool) -> Result<Option<Ratio>> {
     if radians.is_zero() {
-        return Some(if cos { Ratio::ONE } else { Ratio::ZERO });
+        return Ok(Some(if cos { Ratio::ONE } else { Ratio::ZERO }));
     }
     if radians.pi_exp() != 1 {
-        return None;
+        return Ok(None);
     }
-    // r = (n/d) 10^k pi  =>  degrees = (n/d) 10^k * 180
-    let degrees = radians
-        .with_exponents(radians.ten_exp(), 0)
-        .checked_mul(Ratio::from_int(180))
-        .ok()?
-        .folded()
-        .ok()?;
-    let steps = degrees.checked_div(Ratio::from_int(30)).ok()?;
-    if steps.den() != 1 {
-        return None;
-    }
+    // r = (n/d) 10^k pi  =>  r / 30 degrees = (n/d) 10^k * 6 steps
+    let Some(steps) = steps_of_30_degrees(radians.num(), radians.den(), radians.ten_exp())? else {
+        return Ok(None);
+    };
     // multiples of 30 degrees; cos x = sin(x + 90 degrees)
     let shift = if cos { 3 } else { 0 };
-    let j = steps.num().checked_add(shift)?.rem_euclid(12);
-    let half = Ratio::new(1, 2).ok()?;
-    match j {
+    let j = steps.saturating_add(shift).rem_euclid(12);
+    let half = Ratio::new(1, 2)?;
+    Ok(match j {
         0 | 6 => Some(Ratio::ZERO),
         1 | 5 => Some(half),
         3 => Some(Ratio::ONE),
-        7 | 11 => half.checked_neg().ok(),
-        9 => Ratio::ONE.checked_neg().ok(),
+        7 | 11 => Some(half.checked_neg()?),
+        9 => Some(Ratio::ONE.checked_neg()?),
         _ => None,
-    }
+    })
 }

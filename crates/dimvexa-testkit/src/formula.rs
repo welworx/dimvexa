@@ -263,6 +263,11 @@ impl Parser<'_, '_> {
         let ratio: Ratio = text
             .parse()
             .map_err(|_| parse_error(self.src, at_num, "the exponent must be a number"))?;
+        // `1e-50` is stored as a digit and a power of ten: fold it before reading the fraction,
+        // and refuse an exponent that has no `i32` fraction (it is never silently truncated)
+        let ratio = ratio.folded().map_err(|_| {
+            parse_error(self.src, at_num, "the exponent is too large or too precise")
+        })?;
         let num = i32::try_from(ratio.num())
             .map_err(|_| parse_error(self.src, at_num, "the exponent is too large"))?;
         let den = i32::try_from(ratio.den())

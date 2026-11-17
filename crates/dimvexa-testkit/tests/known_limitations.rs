@@ -235,3 +235,23 @@ fn known_limitation_kl_33_approximate_values_carry_no_error_bound() {
     );
     assert_eq!(f.f64_in(&squared, "1").unwrap(), 2.000_000_000_000_000_4);
 }
+
+/// KL-34: a value outside the normal `f64` range is held exactly but cannot be the argument of an
+/// approximate function (`overflow`, loudly).
+#[test]
+fn known_limitation_kl_34_a_value_beyond_f64_cannot_be_an_approximate_argument() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("tiny", "1e-400")
+        .unwrap()
+        .var("huge", "2e400")
+        .unwrap();
+    // exact arithmetic with them works
+    assert!(f.eval_exact("tiny * huge").is_ok());
+    assert_eq!(
+        f.eval("log10(tiny)").unwrap_err().code(),
+        "overflow",
+        "KL-34 fixed? then log10(1e-400) is exactly -400"
+    );
+    assert_eq!(f.eval("sqrt(huge)").unwrap_err().code(), "overflow");
+}

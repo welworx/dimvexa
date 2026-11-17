@@ -306,8 +306,9 @@ impl Ratio {
     /// # Errors
     ///
     /// [`Error::Overflow`] if an intermediate or the result does not fit in `i128`.
-    /// [`Error::Unrepresentable`] if both numbers are non-zero and have different exponents
-    /// (`1 + pi`).
+    /// [`Error::Unrepresentable`] if both numbers are non-zero and have different powers of pi
+    /// (`1 + pi`). Different powers of ten are aligned (ADR-028): exact when the scaled digits
+    /// fit, [`Error::Overflow`] when they do not.
     pub fn checked_add(self, rhs: Self) -> Result<Self> {
         let err = || overflow("ratio add");
         if self.is_zero() {
@@ -316,8 +317,30 @@ impl Ratio {
         if rhs.is_zero() {
             return Ok(self);
         }
-        if self.ten != rhs.ten || self.pi != rhs.pi {
-            return Err(unrepresentable("ratio add (different exponents)"));
+        if self.pi != rhs.pi {
+            return Err(unrepresentable("ratio add (different powers of pi)"));
+        }
+        if self.ten != rhs.ten {
+            // First the way that always worked: fold each power of ten into its fraction.
+            if let (Ok(x), Ok(y)) = (self.folded(), rhs.folded()) {
+                if let Ok(sum) = x.checked_add(y) {
+                    return Ok(sum);
+                }
+            }
+            // Otherwise align (ADR-028): `a * 10^k + c * 10^j` with `k > j` is
+            // `(a * 10^(k-j) + c) * 10^j`, exact whenever the scaled digits fit and `overflow`
+            // when they do not. `6.62607015e-34 + 1e-34` has no folded form but this works.
+            let (hi, lo) = if self.ten > rhs.ten {
+                (self, rhs)
+            } else {
+                (rhs, self)
+            };
+            let diff = u32::try_from(i64::from(hi.ten).saturating_sub(i64::from(lo.ten)))
+                .map_err(|_| err())?;
+            let scaled = Self::plain(hi.num, hi.den)
+                .times_ten_to(diff)?
+                .with_exponents(lo.ten, hi.pi);
+            return scaled.checked_add(lo);
         }
         let g = i128::try_from(gcd(self.den.unsigned_abs(), rhs.den.unsigned_abs()))
             .map_err(|_| err())?;
@@ -337,7 +360,7 @@ impl Ratio {
     /// # Errors
     ///
     /// [`Error::Overflow`] if an intermediate or the result does not fit in `i128`.
-    /// [`Error::Unrepresentable`] if both numbers are non-zero and have different exponents.
+    /// [`Error::Unrepresentable`] if both numbers are non-zero and have different powers of pi.
     pub fn checked_sub(self, rhs: Self) -> Result<Self> {
         let neg = rhs.checked_neg().map_err(|_| overflow("ratio sub"))?;
         self.checked_add(neg).map_err(|e| match e {
@@ -385,6 +408,39 @@ impl Ratio {
             ten,
             ..self
         })
+    }
+
+    /// A plain fraction times `10^e`, in steps that fit an `i128` and cross-reduce each time,
+    /// so `1/10^34 * 10^42` is `10^8` although `10^42` alone does not fit.
+    fn times_ten_to(self, exp: u32) -> Result<Self> {
+        let mut acc = self;
+        let mut left = exp;
+        while left > 0 {
+            let step = left.min(38);
+            acc = acc.mul_fraction(Self::from_int(pow10(step)?))?;
+            left = left.saturating_sub(step);
+        }
+        Ok(acc)
+    }
+
+    /// Compares `|hi|` with `|lo|` for `hi.ten > lo.ten`: `a/b * 10^k` against `c/d * 10^j` is
+    /// `a*d*10^(k-j)` against `c*b`, in 256 bits. A left side that outgrows 256 bits is larger
+    /// than any right side, so no exponent can make the comparison overflow.
+    fn compare_aligned(hi: Self, lo: Self) -> Result<Ordering> {
+        let right = mul_wide(lo.num.unsigned_abs(), hi.den.unsigned_abs())
+            .ok_or_else(|| overflow("ratio compare"))?;
+        let Some(mut left) = mul_wide(hi.num.unsigned_abs(), lo.den.unsigned_abs()) else {
+            return Ok(Ordering::Greater);
+        };
+        let mut steps = i64::from(hi.ten).saturating_sub(i64::from(lo.ten));
+        while steps > 0 {
+            let Some(next) = mul10(left) else {
+                return Ok(Ordering::Greater);
+            };
+            left = next;
+            steps = steps.saturating_sub(1);
+        }
+        Ok(left.cmp(&right))
     }
 
     fn mul_fraction(self, rhs: Self) -> Result<Self> {
@@ -504,19 +560,34 @@ impl Ratio {
     ///
     /// # Errors
     ///
-    /// [`Error::Unrepresentable`] if two non-zero numbers have different exponents (they are
-    /// never compared approximately). The cross products are formed in 256 bits, so ordinary
+    /// [`Error::Unrepresentable`] if two non-zero numbers have different powers of pi (they are
+    /// never compared approximately). Powers of ten are aligned in 256 bits, like
+    /// [`checked_eq`](Self::checked_eq). The cross products are formed in 256 bits, so ordinary
     /// fractions never overflow.
     pub fn checked_cmp(self, rhs: Self) -> Result<Ordering> {
-        if self.ten != rhs.ten || self.pi != rhs.pi {
+        if self.pi != rhs.pi {
             if self.is_zero() || rhs.is_zero() {
                 return Ok(self.signum().cmp(&rhs.signum()));
             }
-            return Err(unrepresentable("ratio compare (different exponents)"));
+            return Err(unrepresentable("ratio compare (different powers of pi)"));
         }
         let by_sign = self.signum().cmp(&rhs.signum());
         if by_sign != Ordering::Equal || self.is_zero() {
             return Ok(by_sign);
+        }
+        if self.ten != rhs.ten {
+            let self_is_hi = self.ten > rhs.ten;
+            let magnitude = if self_is_hi {
+                Self::compare_aligned(self, rhs)?
+            } else {
+                Self::compare_aligned(rhs, self)?.reverse()
+            };
+            // `magnitude` compares |self| with |rhs|; negative numbers reverse it
+            return Ok(if self.signum() < 0 {
+                magnitude.reverse()
+            } else {
+                magnitude
+            });
         }
         // Same sign, same exponents: compare `|a|*d` with `|c|*b` in 256 bits.
         let l = mul_wide(self.num.unsigned_abs(), rhs.den.unsigned_abs())
@@ -534,11 +605,12 @@ impl Ratio {
     /// The correctly rounded (round-half-to-even) `f64` nearest to this value.
     ///
     /// A plain fraction is never subnormal or infinite (every `i128` ratio lies inside the
-    /// normal `f64` range). A number with a power of ten that fits the fraction is folded
-    /// first; otherwise, and for every power of pi, the value is bracketed with 128-bit
-    /// directed rounding and rounded only if both bounds agree, which proves the result (see
-    /// `docs/precision.md`). A value outside the normal `f64` range, or within about 2^-120 of a
-    /// rounding boundary, is an error and never a guess.
+    /// normal `f64` range). A number with a power of ten or of pi is bracketed with 128-bit
+    /// directed rounding (a table of bounds of `10^k`) and rounded only if both bounds agree,
+    /// which proves the result; if they cannot decide, a power of ten that fits is folded into
+    /// the fraction and rounded exactly (see `docs/precision.md`). A value outside the normal
+    /// `f64` range, or too close to a rounding boundary for 128-bit bounds (a relative distance
+    /// of about 2^-118, one value in 10^19), is an error and never a guess.
     ///
     /// # Errors
     ///
@@ -804,7 +876,7 @@ impl Ratio {
             .strip_prefix('-')
             .map_or((1_i128, first), |rest| (-1_i128, rest));
         let starts_factor = |t: &str| t == "pi" || t.starts_with("pi^") || t.starts_with("10^");
-        let mut coef = if starts_factor(unsigned) {
+        let coef = if starts_factor(unsigned) {
             // the coefficient is left out: the first token is already a factor
             if let Some(slot) = tokens.first_mut() {
                 *slot = unsigned;
@@ -829,8 +901,10 @@ impl Ratio {
                 return Err(bad());
             }
         }
-        coef = coef.with_exponents(ten.unwrap_or(0), pi.unwrap_or(0));
-        Ok(coef)
+        // the coefficient may carry a power of ten of its own (`6.62607015e-34`, ADR-028): add
+        let ten_total = coef.ten.checked_add(ten.unwrap_or(0)).ok_or_else(bad)?;
+        let pi_total = coef.pi.checked_add(pi.unwrap_or(0)).ok_or_else(bad)?;
+        Ok(coef.with_exponents(ten_total, pi_total))
     }
 
     /// Decimal expansion truncated toward zero after at most `max_fraction_digits` digits.
@@ -1025,37 +1099,42 @@ fn parse_decimal(s: &str) -> Result<Ratio> {
     if neg && num == 0 {
         num = 0;
     }
-    let frac_len = u32::try_from(frac_s.len()).map_err(|_| bad())?;
-    let den = pow10(frac_len)?;
-    // The power of ten goes into the fraction when it fits, so every number that parsed before
-    // is stored exactly as before.
-    let folded = if exp >= 0 {
-        u32::try_from(exp)
+    let frac_len = i32::try_from(frac_s.len()).map_err(|_| bad())?;
+    if exp.unsigned_abs() > MAX_DECIMAL_EXPONENT {
+        return Err(overflow("decimal exponent"));
+    }
+    // The value is `digits * 10^net`. Trailing zeros of the digits move into the exponent first,
+    // so `1.0e-38` and `1e-38` are the same number in the same form (and `1.5e38` fits).
+    let mut net = exp
+        .checked_sub(frac_len)
+        .ok_or_else(|| overflow("decimal exponent"))?;
+    while num != 0 && num.checked_rem(10) == Some(0) {
+        num = num
+            .checked_div(10)
+            .ok_or_else(|| overflow("decimal exponent"))?;
+        net = net
+            .checked_add(1)
+            .ok_or_else(|| overflow("decimal exponent"))?;
+    }
+    if num == 0 {
+        return Ok(Ratio::ZERO);
+    }
+    // It goes into the fraction when it fits, so every number that parsed before is stored
+    // exactly as before.
+    let folded = if net >= 0 {
+        pow10(net.unsigned_abs())
             .ok()
-            .and_then(|e| pow10(e).ok())
             .and_then(|scale| num.checked_mul(scale))
-            .map(|n| (n, den))
+            .map(|n| (n, 1))
     } else {
-        pow10(exp.unsigned_abs())
-            .ok()
-            .and_then(|scale| den.checked_mul(scale))
-            .map(|d| (num, d))
+        pow10(net.unsigned_abs()).ok().map(|d| (num, d))
     };
     if let Some((n, d)) = folded {
         return Ratio::new(n, d);
     }
     // It does not fit beside the digits (`6.62607015e-34` needs a denominator of 10^42): keep the
-    // digits as an integer and the power of ten in the exponent field, `digits * 10^(exp - f)`
-    // where `f` is the number of digits after the point (ADR-028). The exponent is capped so a
-    // hostile `1e999999999` stays an error and not a number that later loops.
-    if exp.unsigned_abs() > MAX_DECIMAL_EXPONENT {
-        return Err(overflow("decimal exponent"));
-    }
-    let ten = i32::try_from(frac_len)
-        .ok()
-        .and_then(|f| exp.checked_sub(f))
-        .ok_or_else(|| overflow("decimal exponent"))?;
-    Ok(Ratio::new(num, 1)?.with_exponents(ten, 0))
+    // digits as an integer and the power of ten in the exponent field (ADR-028).
+    Ok(Ratio::new(num, 1)?.with_exponents(net, 0))
 }
 
 /// The largest power of ten a parsed decimal may name when it does not fit the fraction.
@@ -1201,6 +1280,136 @@ mod tests {
                 .parse::<Ratio>()
                 .is_err()
         );
+    }
+
+    #[test]
+    fn add_and_compare_align_powers_of_ten() {
+        let one = Ratio::ONE;
+        let tiny = pi_part(3, 1, -28, 0); // 3e-28
+        let sum = one.checked_add(tiny).unwrap();
+        assert!(
+            sum.checked_eq(r(10_i128.pow(28) + 3, 10_i128.pow(28)))
+                .unwrap()
+        );
+        assert_eq!(sum.checked_sub(tiny).unwrap().checked_eq(one), Ok(true));
+        assert_eq!(sum.checked_cmp(one), Ok(Ordering::Greater));
+        assert_eq!(one.checked_cmp(sum), Ok(Ordering::Less));
+        assert_eq!(tiny.checked_cmp(one), Ok(Ordering::Less));
+        // negative numbers reverse the order of the magnitudes
+        let (neg_one, neg_tiny) = (one.checked_neg().unwrap(), tiny.checked_neg().unwrap());
+        assert_eq!(neg_tiny.checked_cmp(neg_one), Ok(Ordering::Greater));
+        assert_eq!(neg_one.checked_cmp(neg_tiny), Ok(Ordering::Less));
+        assert_eq!(neg_one.checked_cmp(tiny), Ok(Ordering::Less));
+        // Planck's constant plus a smaller number, both kept as digits and an exponent
+        let h: Ratio = "6.62607015e-34".parse().unwrap();
+        let t: Ratio = "1e-34".parse().unwrap();
+        assert!(
+            h.checked_add(t)
+                .unwrap()
+                .checked_eq("7.62607015e-34".parse().unwrap())
+                .unwrap()
+        );
+        assert_eq!(h.checked_cmp(t), Ok(Ordering::Greater));
+        assert!(h.checked_sub(h).unwrap().is_zero());
+        // an ordering never overflows, however far apart the exponents are...
+        let far: Ratio = "1e5000".parse().unwrap();
+        assert_eq!(far.checked_cmp(one), Ok(Ordering::Greater));
+        assert_eq!(one.checked_cmp(far), Ok(Ordering::Less));
+        assert_eq!(
+            far.checked_neg().unwrap().checked_cmp(one),
+            Ok(Ordering::Less)
+        );
+        // ...but a sum needs the scaled digits to fit: 10^38 + 1e-30 has 69
+        let big = r(10_i128.pow(38), 1);
+        assert_eq!(
+            big.checked_add(pi_part(1, 1, -30, 0)).unwrap_err().code(),
+            "overflow"
+        );
+        assert_eq!(
+            big.checked_cmp(pi_part(1, 1, -30, 0)),
+            Ok(Ordering::Greater)
+        );
+    }
+
+    /// Sums and orderings of numbers with different powers of ten agree with the same sums and
+    /// orderings of the folded fractions (which are exact when they fit).
+    #[test]
+    fn aligned_sums_and_orderings_match_folded_fractions() {
+        let mut x: u64 = 0x5eed_0028_cafe_f00d;
+        let mut next = move |bound: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % bound
+        };
+        let mut compared = 0_u32;
+        for _ in 0..20_000 {
+            let make = |next: &mut dyn FnMut(u64) -> u64| {
+                let sign = if next(2) == 0 { -1 } else { 1 };
+                let num = sign * i128::from(next(1_000_000) + 1);
+                let den = i128::from(next(1_000) + 1);
+                let ten = i32::try_from(next(41)).unwrap() - 20;
+                Ratio::new(num, den).unwrap().with_exponents(ten, 0)
+            };
+            let (a, b) = (make(&mut next), make(&mut next));
+            let (Ok(fa), Ok(fb)) = (a.folded(), b.folded()) else {
+                continue;
+            };
+            assert_eq!(a.checked_cmp(b), fa.checked_cmp(fb), "{a:?} {b:?}");
+            if let Ok(want) = fa.checked_add(fb) {
+                let got = a
+                    .checked_add(b)
+                    .unwrap_or_else(|e| panic!("{a:?} + {b:?}: {e}"));
+                assert!(got.checked_eq(want).unwrap(), "{a:?} + {b:?}");
+                compared += 1;
+            }
+        }
+        assert!(compared > 10_000, "{compared}");
+    }
+
+    #[test]
+    fn a_decimal_that_differs_only_in_trailing_zeros_is_the_same_number() {
+        for (a, b) in [
+            ("1.0e-38", "1e-38"),
+            ("1.50e-38", "1.5e-38"),
+            ("100e-40", "1e-38"),
+            ("6.620000e-34", "6.62e-34"),
+            ("1.0e-100", "1e-100"),
+        ] {
+            let (a, b): (Ratio, Ratio) = (a.parse().unwrap(), b.parse().unwrap());
+            assert_eq!(a, b, "{a:?} {b:?}");
+        }
+        // 1.5e38 fits an i128 now that the digits and the exponent are looked at together
+        let x: Ratio = "1.5e38".parse().unwrap();
+        assert_eq!(
+            (x.num(), x.den(), x.ten_exp()),
+            (15 * 10_i128.pow(37), 1, 0)
+        );
+    }
+
+    #[test]
+    fn the_symbolic_form_keeps_the_exponent_of_a_far_decimal() {
+        // parse_symbolic used to replace the exponent of the coefficient with the written one
+        let h = Ratio::parse_symbolic("6.62607015e-34").unwrap();
+        assert_eq!((h.num(), h.ten_exp()), (662_607_015, -42));
+        let tiny = Ratio::parse_symbolic("1e-50").unwrap();
+        assert_eq!((tiny.num(), tiny.ten_exp()), (1, -50));
+        let with_pi = Ratio::parse_symbolic("1e50 pi").unwrap();
+        assert_eq!((with_pi.ten_exp(), with_pi.pi_exp()), (50, 1));
+        // a coefficient with an exponent and an explicit power of ten add up
+        let both = Ratio::parse_symbolic("1e-50 10^7").unwrap();
+        assert_eq!(both.ten_exp(), -43);
+        // and what `Display` prints reads back as the same value
+        for s in ["6.62607015e-34", "-9.1093837015e-31", "1e50", "1e-100"] {
+            let r: Ratio = s.parse().unwrap();
+            assert!(
+                Ratio::parse_symbolic(&r.to_string())
+                    .unwrap()
+                    .checked_eq(r)
+                    .unwrap(),
+                "{s}"
+            );
+        }
     }
 
     #[test]
@@ -1381,14 +1590,14 @@ mod tests {
     }
 
     #[test]
-    fn add_and_compare_refuse_different_exponents() {
+    fn add_and_compare_refuse_different_powers_of_pi() {
         let pi = Ratio::PI;
         let one = Ratio::ONE;
         assert_eq!(one.checked_add(pi).unwrap_err().code(), "unrepresentable");
         assert_eq!(one.checked_sub(pi).unwrap_err().code(), "unrepresentable");
         assert_eq!(one.checked_cmp(pi).unwrap_err().code(), "unrepresentable");
         let ev = pi_part(3, 1, -28, 0);
-        assert!(one.checked_add(ev).is_err());
+        assert_eq!(pi.checked_add(ev).unwrap_err().code(), "unrepresentable");
         // zero belongs to every exponent
         assert_eq!(pi.checked_add(Ratio::ZERO), Ok(pi));
         assert_eq!(Ratio::ZERO.checked_add(ev), Ok(ev));

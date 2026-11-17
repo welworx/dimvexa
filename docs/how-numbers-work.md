@@ -70,8 +70,8 @@ keeping them apart:
 
 ## 3. Reading a decimal such as `6.62607015e-34`
 
-Take the text apart into the digits $D$ (as one integer), the number $f$ of digits after the
-decimal point, and the exponent $e$:
+Take the text apart into the digits $D$ (as one integer, with the trailing zeros moved into the
+exponent), the number $f$ of digits after the decimal point, and the exponent $e$:
 
 $$
 \texttt{6.62607015e-34}:\quad D=662607015,\quad f=8,\quad e=-34
@@ -81,10 +81,11 @@ $$
 
 Then there are two ways to store it:
 
-1. **It fits as a fraction.** If $e-f<0$ and $10^{\,f-e}<2^{127}$, store $D/10^{f-e}$ (reduced);
-   if $e-f\ge0$ and $D\cdot10^{e-f}<2^{127}$, store the integer. This is how every number was
-   stored before, and it still is: nothing that worked changes its representation, its `==`, its
-   hash or its printed form.
+1. **It fits as a fraction.** With $n=e-f$ and the trailing zeros of $D$ already moved into $n$:
+   if $n<0$ and $10^{-n}<2^{127}$, store $D/10^{-n}$ (reduced); if $n\ge0$ and
+   $D\cdot10^{n}<2^{127}$, store the integer. Every number that parsed before is stored exactly
+   as before (its `==`, its hash, its printed form). The zeros make `1.0e-38` and `1e-38` the
+   same number in the same form, and let `1.5e38` fit, which it did not before.
 2. **It does not fit.** Store $n=D,\ d=1,\ k=e-f$. This is the new case (ADR-028). Here
    $10^{42}\ge2^{127}$, so Planck's constant is stored as $n=662607015,\ d=1,\ k=-42$.
 
@@ -135,10 +136,14 @@ a\cdot10^{k_1}+b\cdot10^{k_2}\quad\text{needs both on one exponent, say } k_1\le
 \bigl(a+b\cdot10^{\,k_2-k_1}\bigr)\cdot10^{k_1}
 $$
 
-which only works when $b\cdot10^{k_2-k_1}$ fits the integer. The core refuses sums and
-comparisons of unlike exponents with `unrepresentable` (ADR-019, KL-24): for $\pi$ it is a real
-impossibility ($1+\pi$ has no exact form, and Dimvexa never approximates). `dimvexa-calc` first
-folds the power of ten into the fraction, which succeeds whenever the *result* fits:
+which works when $b\cdot10^{k_2-k_1}$ fits the integer, and is `overflow` when it does not (the
+digit limit of section 8). The core first tries to fold each power of ten into its fraction
+(this is how sums always worked), and otherwise aligns the exponents as above, in steps that
+cross-reduce, so `6.62607015e-34 + 1e-34` is `7.62607015e-34` although neither number has a
+folded form. An *ordering* never overflows: the cross products are formed in 256 bits, and a
+side that outgrows them is the larger one. Only a different power of $\pi$ is
+`unrepresentable` (ADR-019, KL-24): $1+\pi$ has no exact form, and Dimvexa never approximates.
+The folding gives, for example:
 
 $$
 1\ \text{J}+1\ \text{eV}=\Bigl(1+1602176634\cdot10^{-28}\Bigr)\ \text{J}\quad\text{(exact)}
@@ -203,11 +208,12 @@ U=\frac{\lceil N\rceil}{\lfloor D\rfloor}\ \text{(rounded up)}
 $$
 
 where $\lfloor\cdot\rfloor,\lceil\cdot\rceil$ are the 128-bit lower and upper bounds. A few dozen
-operations at $<2^{-127}$ each keep $U/L-1$ below about $2^{-120}$.
+operations at $<2^{-127}$ each keep $U/L-1$ below about $2^{-118}$ (the squarings behind $10^{k}$
+double the relative error each time, so the largest powers are the loosest).
 
 **How often does it fail?** The midpoints between neighbouring `f64` are about $2^{-52}$ apart
-relatively, so the chance that a random $x$ lies within $2^{-120}$ of one is about
-$2^{-120}/2^{-52}=2^{-68}$, roughly one in $10^{20}$. In 194 000 random decimals compared with
+relatively, so the chance that a random $x$ lies within $2^{-118}$ of one is about
+$2^{-118}/2^{-52}=2^{-66}$, roughly one in $7\cdot10^{19}$. In 194 000 random decimals compared with
 the standard library it never happened (`exact_f64.rs`). When it does, the error is explicit.
 
 ### 5.5 Where the time went, and the three speed-ups
@@ -309,8 +315,10 @@ is closer. Plain `f64` arithmetic returns the first.
 
 Per call, release build, best of five runs, in the cloud container this was developed in
 (Linux x86-64, shared machine, so read small differences as noise). The `to_f64` rows come
-from a micro benchmark of `Ratio::to_f64`; the guarded row comes from the repository's
-`cargo xtask bench-impact`:
+from `cargo run --release -p dimvexa-testkit --example ratio_to_f64_bench`, run on the commit
+before ADR-028 (the "before" column) and on the current one; the guarded row comes from the
+repository's `cargo xtask bench-impact`. Absolute numbers depend on the machine; the ratios are
+what to look at:
 
 | `Ratio::to_f64` of | before | after |
 |---|---|---|
@@ -454,8 +462,8 @@ exist. From then on:
   exact again. `sqrt(2)^2` is `≈ 2.0000000000000004`, not `2`.
 * **Exact failures stay failures.** If the *exact* arithmetic overflows (the digit limit of
   section 8), the answer is `overflow`, never an `f64` that hides it.
-* **A function that does not exist is an error that says so.** `tan`, `asin`, `log10`, `atan2`,
-  `hypot` and the others that are not implemented fail with `'tan' is not implemented` (code
+* **A function that does not exist is an error that says so.** `tan`, `asin`, `atan2` and
+  the others that are not implemented fail with `'tan' is not implemented` (code
   `refused`, as for the other unsupported requests) and, where there is a way, how to write
   them from the functions that are there: `sin(x) / cos(x)`, `x^p`. Not implemented today:
   `tan`, `asin`, `acos`, `atan`, `atan2`, `pow`, `floor`, `round`.
