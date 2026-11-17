@@ -764,7 +764,8 @@ fn readme_console_examples_are_real() {
                 continue;
             };
             let cmd = cmd.split(" #").next().unwrap().trim_end();
-            let args: Vec<&str> = cmd.split_whitespace().collect();
+            let words = shell_words(cmd);
+            let args: Vec<&str> = words.iter().map(String::as_str).collect();
             let r = dimvexa_at_root(&args);
             let mut shown = String::new();
             while let Some(out) = lines.next_if(|l| !l.starts_with('$')) {
