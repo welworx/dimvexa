@@ -4,6 +4,7 @@
 //! ```text
 //! dimvexa convert VALUE FROM TO [--exact] [--json] [--config NAME_OR_PATH]... [--const NAME_OR_VALUE]
 //! dimvexa VALUE FROM TO [--exact] [--json]        shorthand
+//! dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--json]   an equation with units
 //! dimvexa units [--groups | GROUP | UNIT] [--json]  list units by quantity, one group, or one unit
 //! dimvexa configs [NAME_OR_PATH] [--json]          what the shipped configs (or a file) contain
 //! ```
@@ -16,7 +17,7 @@
 //!
 //! Exit codes: `0` success, `1` conversion refused or invalid input, `2` usage error.
 //! With `--json`, errors are printed to stdout as JSON (schema `dimvexa.convert/3`, see
-//! `docs/schemas/`; `units --json` uses `dimvexa.units/5`, `configs --json` `dimvexa.configs/3`, `constants --json` `dimvexa.constants/1`) and the exit code stays non-zero. The error `code` is one of the
+//! `docs/schemas/`; `calc --json` uses `dimvexa.calc/1`, `units --json` uses `dimvexa.units/5`, `configs --json` `dimvexa.configs/3`, `constants --json` `dimvexa.constants/1`) and the exit code stays non-zero. The error `code` is one of the
 //! library's stable codes ([`dimvexa::Error::ALL_CODES`]) or `usage`.
 #![forbid(unsafe_code)]
 #![doc(
@@ -25,6 +26,7 @@
 )]
 
 mod args;
+mod calc;
 mod color;
 mod configs;
 mod constants;
@@ -37,7 +39,8 @@ mod update;
 
 pub use color::Color;
 
-use crate::args::{Parsed, UsageError, command_schema, parse_args};
+use crate::args::{Args, Parsed, UsageError, command_schema, parse_args};
+use crate::calc::run_calc;
 use crate::color::{ColorWhen, TextKind, colorize_diagnostics, paint_with, take_color_option};
 use crate::configs::run_configs;
 use crate::constants::run_constants;
@@ -174,10 +177,30 @@ where
                 run_constants(target.as_deref(), &config_files, json, o, err)
             });
         }
+        Parsed::Calc(request) => {
+            return run_calc(
+                &request,
+                &config_files,
+                color.out && !request.json,
+                out,
+                err,
+            );
+        }
         Parsed::Update { check, yes } => return update::run(check, yes, out, err),
         Parsed::Convert(a) => a,
     };
-    let loaded = match load(&config_files) {
+    run_convert(&args, &config_files, color.out, out, err)
+}
+
+/// `dimvexa [convert] VALUE FROM TO`.
+fn run_convert(
+    args: &Args,
+    config_files: &[String],
+    color: bool,
+    out: &mut dyn Write,
+    err: &mut dyn Write,
+) -> u8 {
+    let loaded = match load(config_files) {
         Ok(l) => l,
         Err(e) => return report_load_error(&e, args.json, "convert", out, err),
     };
@@ -216,15 +239,15 @@ where
             }
         },
     };
-    match compute(&args, &loaded, density.as_ref()) {
+    match compute(args, &loaded, density.as_ref()) {
         Ok(outcome) => {
             let text = if args.json {
                 match render_json(&outcome) {
                     Ok(t) => t,
-                    Err(e) => return fail(&args, &e, out, err),
+                    Err(e) => return fail(args, &e, out, err),
                 }
             } else {
-                render_text(&outcome, color.out)
+                render_text(&outcome, color)
             };
             let _ = writeln!(out, "{text}");
             if !args.json {
@@ -243,7 +266,7 @@ where
             }
             0
         }
-        Err(e) => fail(&args, &e, out, err),
+        Err(e) => fail(args, &e, out, err),
     }
 }
 

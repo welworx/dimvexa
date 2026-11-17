@@ -66,6 +66,7 @@ error[usage]: expected VALUE FROM TO, got 2 argument(s); try 'dimvexa --help'
 
 Usage:
   dimvexa [convert] VALUE FROM TO [OPTIONS]
+  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--json]
   dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]

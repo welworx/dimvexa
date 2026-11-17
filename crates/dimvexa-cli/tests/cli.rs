@@ -207,6 +207,15 @@ fn every_error_code_has_a_cli_test() {
         (&["convert", "1", "degC/s", "K/s"], "refused", 1),
         (&["convert", "1", "ly3", "m3"], "overflow", 1),
         (&["convert", "1", "m"], "usage", 2),
+        // `calc` reaches the codes of a sum and a quotient (ADR-030)
+        (&["calc", "1 + pi"], "unrepresentable", 1),
+        (&["calc", "1 m / 0 s"], "division_by_zero", 1),
+        (&["calc", "1 m + 1 s"], "dimension_mismatch", 1),
+        (&["calc", "5 foo"], "unknown_unit", 1),
+        (&["calc", "1 +"], "parse_error", 1),
+        (&["calc", "(1 ly)^3"], "overflow", 1),
+        (&["calc", "tan(1 rad)"], "refused", 1),
+        (&["calc"], "usage", 2),
     ];
     for (args, code, exit) in cases {
         // text mode: message on stderr, nothing on stdout
@@ -244,15 +253,11 @@ fn every_error_code_has_a_cli_test() {
             "ambiguous_expression",
             "refused",
             "overflow",
+            "division_by_zero",
+            "unrepresentable",
         ];
         // Codes that need a malformed registry or internal state cannot be triggered from the CLI.
-        let not_reachable = [
-            "division_by_zero",
-            "length_mismatch",
-            "unrepresentable", // only a sum or an order of unlike exponents, never from the CLI
-            "invalid_definition",
-            "duplicate_symbol",
-        ];
+        let not_reachable = ["length_mismatch", "invalid_definition", "duplicate_symbol"];
         assert!(
             covered.contains(code) || not_reachable.contains(code),
             "uncovered error code {code}"
@@ -288,10 +293,39 @@ fn error_snapshots() {
     snapshot("errors.txt", &text);
 }
 
+/// A command line split into words like a shell does: on spaces, with `"` quoting a part of a
+/// word (`--var dp="50 kPa"` is two words). Enough for the examples of the help pages.
+fn shell_words(line: &str) -> Vec<String> {
+    let (mut words, mut word, mut quoted, mut started) = (Vec::new(), String::new(), false, false);
+    for c in line.chars() {
+        match c {
+            '"' => {
+                quoted = !quoted;
+                started = true;
+            }
+            c if c.is_whitespace() && !quoted => {
+                if started {
+                    words.push(std::mem::take(&mut word));
+                    started = false;
+                }
+            }
+            c => {
+                word.push(c);
+                started = true;
+            }
+        }
+    }
+    if started {
+        words.push(word);
+    }
+    words
+}
+
 /// The help pages: the overview and one per command, by every spelling that reaches them.
-const HELP_PAGES: [&[&str]; 6] = [
+const HELP_PAGES: [&[&str]; 7] = [
     &["--help"],
     &["convert", "--help"],
+    &["calc", "--help"],
     &["units", "--help"],
     &["configs", "--help"],
     &["constants", "--help"],
@@ -323,7 +357,7 @@ fn help_examples_run_from_an_empty_directory() {
             if line.starts_with("  dimvexa update") {
                 continue;
             }
-            let args: Vec<&str> = line.split_whitespace().skip(1).collect();
+            let args: Vec<String> = shell_words(line).into_iter().skip(1).collect();
             let out = Command::new(env!("CARGO_BIN_EXE_dimvexa"))
                 .args(&args)
                 .current_dir(&dir)
@@ -349,7 +383,7 @@ fn help_examples_run_from_an_empty_directory() {
 #[test]
 fn per_command_help() {
     let overview = dimvexa(&["--help"]).stdout;
-    for cmd in ["convert", "units", "configs", "constants", "update"] {
+    for cmd in ["convert", "calc", "units", "configs", "constants", "update"] {
         let page = dimvexa(&[cmd, "--help"]);
         assert_eq!(page.code, 0, "{cmd}");
         assert!(
@@ -1941,11 +1975,12 @@ fn outputs_validate_against_the_schema_files() {
         json::parse(&std::fs::read_to_string(repo_root().join("docs/schemas").join(name)).unwrap())
             .unwrap()
     };
-    let (convert, units, configs, constants) = (
+    let (convert, units, configs, constants, calc) = (
         schema("dimvexa.convert-3.schema.json"),
         schema("dimvexa.units-5.schema.json"),
         schema("dimvexa.configs-3.schema.json"),
         schema("dimvexa.constants-1.schema.json"),
+        schema("dimvexa.calc-1.schema.json"),
     );
     let cfg = config_file("schema_check.toml", TRADE);
     let w = ["--config", WATER_CFG, "--const", "water_20C"];
@@ -2052,6 +2087,39 @@ fn outputs_validate_against_the_schema_files() {
         (&constants, vec!["constants", "--json", "--config", "water"]),
         (&constants, vec!["constants", "nope", "--json"]),
         (&constants, vec!["constants", "a", "b", "--json"]),
+        // `calc`: exact, approximate, with names, with a config, and every kind of failure
+        (&calc, vec!["calc", "2 m * 3 m", "--json"]),
+        (&calc, vec!["calc", "sqrt(2 m2)", "--to", "cm", "--json"]),
+        (
+            &calc,
+            vec![
+                "calc",
+                "a * sqrt(2 * dp / rho)",
+                "--var",
+                "a=10 cm2",
+                "--var",
+                "dp=50 kPa",
+                "--var",
+                "rho=998 kg/m3",
+                "--to",
+                "L/s",
+                "--json",
+            ],
+        ),
+        (
+            &calc,
+            vec![
+                "calc",
+                "1 ton * 1 g_n",
+                "--json",
+                "--config",
+                "us-customary",
+            ],
+        ),
+        (&calc, vec!["calc", "1 m + 1 s", "--json"]),
+        (&calc, vec!["calc", "1 +", "--json"]),
+        (&calc, vec!["calc", "--json"]),
+        (&calc, vec!["calc", "1 m", "--var", "bad", "--json"]),
     ];
     for (schema, args) in cases {
         let r = dimvexa_at_root(&args);
@@ -3203,4 +3271,285 @@ fn json_output_lists_what_a_later_config_replaced() {
             .len(),
         0
     );
+}
+
+// ----- dimvexa calc (ADR-030) ---------------------------------------------------------------
+
+fn calc(args: &[&str]) -> Run {
+    let mut all = vec!["calc"];
+    all.extend_from_slice(args);
+    dimvexa(&all)
+}
+
+/// The result of an equation, exact when the mathematics is exact, with the unit asked for.
+#[test]
+fn calc_prints_an_exact_result_like_convert_and_an_approximate_one_with_a_sign() {
+    let r = calc(&["2 kip/ft * (20 ft)^2 / 8", "--to", "kN*m"]);
+    assert_eq!(
+        (r.code, r.stdout.as_str(), r.stderr.as_str()),
+        (0, "135.58179483314004 kN.m\n", "")
+    );
+    assert_eq!(calc(&["sqrt(9 m2)"]).stdout, "3 m\n");
+    assert_eq!(
+        calc(&["100 kg * 1 g_n * sin(30 deg)", "--to", "N"]).stdout,
+        "490.3325 N\n"
+    );
+    // not a fraction: approximate, and labelled
+    let r = calc(&["sqrt(2 m2)"]);
+    assert_eq!(r.stdout, "≈ 1.4142135623730951 m\n");
+    // a plain number has no unit to print
+    assert_eq!(calc(&["3 m / 2 m"]).stdout, "1.5\n");
+    assert_eq!(calc(&["20 degC + 5 K"]).stdout, "25 degC\n");
+    assert_eq!(calc(&["2 * pi * 1 rad", "--to", "deg"]).stdout, "360 deg\n");
+}
+
+/// Quantities written in the equation and the same equation over `--var` names agree, and
+/// several words are one expression.
+#[test]
+fn calc_inline_quantities_and_named_values_give_the_same_result() {
+    let inline = calc(&[
+        "0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)",
+        "--to",
+        "L/s",
+    ]);
+    let named = calc(&[
+        "Cd * A * sqrt(2 * dp / rho)",
+        "--var",
+        "Cd=0.61",
+        "--var",
+        "A=10 cm2",
+        "--var",
+        "dp=50 kPa",
+        "--var",
+        "rho=998 kg/m3",
+        "--to",
+        "L/s",
+    ]);
+    assert_eq!(inline.code, 0, "{}", inline.stderr);
+    assert_eq!(inline.stdout, "≈ 6.106109165276735 L/s\n");
+    assert_eq!(named.stdout, inline.stdout);
+    // `--var=NAME=VALUE`, a name used twice (the later wins) and a mix of both styles
+    let mixed = calc(&[
+        "Cd * 10 cm2 * sqrt(2 * dp / 998 kg/m3)",
+        "--var=Cd=0.61",
+        "--var",
+        "dp=1 kPa",
+        "--var",
+        "dp=50 kPa",
+        "--to",
+        "L/s",
+    ]);
+    assert_eq!(mixed.stdout, inline.stdout);
+    // words that the shell split are joined with spaces
+    assert_eq!(
+        dimvexa(&["calc", "2", "m", "*", "3", "m", "--to", "cm2"]).stdout,
+        "60000 cm^2\n"
+    );
+}
+
+#[test]
+fn calc_x_to_the_one_half_is_the_square_root() {
+    for expr in ["x^0.5", "x^(1/2)", "sqrt(x)"] {
+        let r = calc(&[expr, "--var", "x=9 m2"]);
+        assert_eq!(r.stdout, "3 m\n", "{expr}");
+    }
+    assert_eq!(calc(&["y^(1/3)", "--var", "y=8"]).stdout, "2\n");
+    assert_eq!(calc(&["y^(2/3)", "--var", "y=8"]).stdout, "4\n");
+}
+
+#[test]
+fn calc_exact_adds_the_fraction_of_an_exact_result() {
+    assert_eq!(
+        calc(&["1 m / 3", "--exact"]).stdout,
+        "1/3 = 0.3333333333333333 m\n"
+    );
+    assert_eq!(calc(&["3 m / 3", "--exact"]).stdout, "1 m\n");
+    // an approximate result has no fraction
+    assert_eq!(
+        calc(&["sqrt(2 m2)", "--exact"]).stdout,
+        "≈ 1.4142135623730951 m\n"
+    );
+}
+
+#[test]
+fn calc_json_has_the_documented_fields() {
+    let v = json::parse(&calc(&["sqrt(8 m2)", "--to", "cm", "--json"]).stdout).unwrap();
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.calc/1");
+    assert!(v.get("ok").unwrap().as_bool());
+    let result = v.get("result").unwrap();
+    assert!(!result.get("exact").unwrap().as_bool());
+    assert_eq!(result.get("fraction").unwrap(), &json::V::Null);
+    assert_eq!(result.get("unit").unwrap().as_str(), "cm");
+    assert_eq!(result.get("kind").unwrap().as_str(), "plain");
+    assert_eq!(result.get("dimension").unwrap().as_array().len(), 7);
+    // an exact result carries its fraction
+    let v = json::parse(&calc(&["1 m / 3", "--json"]).stdout).unwrap();
+    let result = v.get("result").unwrap();
+    assert!(result.get("exact").unwrap().as_bool());
+    assert_eq!(result.get("fraction").unwrap().as_str(), "1/3");
+    // the names are listed in the order given
+    let v = json::parse(&calc(&["a + b", "--var", "a=1 m", "--var", "b=2 m", "--json"]).stdout)
+        .unwrap();
+    let vars = v.get("variables").unwrap().as_array();
+    assert_eq!(vars.len(), 2);
+    assert_eq!(vars[0].get("name").unwrap().as_str(), "a");
+    assert_eq!(vars[1].get("value").unwrap().as_str(), "2 m");
+    assert_eq!(
+        v.get("result").unwrap().get("value").unwrap(),
+        &json::V::Num(3.0)
+    );
+    // --pretty is the same document, indented
+    let pretty = calc(&["1 m + 1 m", "--pretty"]);
+    assert_eq!(pretty.code, 0);
+    assert!(pretty.stdout.lines().count() > 5, "{}", pretty.stdout);
+}
+
+#[test]
+fn calc_failures_use_the_library_codes_and_exit_1() {
+    for (expr, code, needle) in [
+        ("1 m + 1 s", "dimension_mismatch", "cannot be converted"),
+        ("5 foo", "unknown_unit", "foo"),
+        ("nothing * 2", "parse_error", "unknown variable"),
+        ("1 +", "parse_error", "a value is expected"),
+        ("(1 ly)^3", "overflow", "overflow"),
+        ("1 + pi", "unrepresentable", "pi"),
+        ("1 m / 0 s", "division_by_zero", "division by zero"),
+        ("tan(1 rad)", "refused", "'tan' is not implemented"),
+        ("log(100)", "refused", "ambiguous"),
+        ("sqrt(4 m)", "refused", "KL-32"),
+        ("abs(-5 degC)", "kind_mismatch", "delta_degC"),
+        ("frobnicate(1)", "refused", "unknown function"),
+    ] {
+        let r = calc(&[expr]);
+        assert_eq!((r.code, r.stdout.as_str()), (1, ""), "{expr}");
+        assert!(
+            r.stderr.starts_with(&format!("error[{code}]: ")),
+            "{expr}: {}",
+            r.stderr
+        );
+        assert!(r.stderr.contains(needle), "{expr}: {}", r.stderr);
+    }
+    // a wrong unit for --to, and a wrong value for --var, say which option
+    let r = calc(&["1 m", "--to", "s"]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.contains("--to s: "), "{}", r.stderr);
+    let r = calc(&["1 m", "--var", "a=5 foo"]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.contains("--var a: "), "{}", r.stderr);
+}
+
+#[test]
+fn calc_usage_errors_exit_2() {
+    for (args, needle) in [
+        (vec!["calc"], "needs an EXPRESSION"),
+        (vec!["calc", "1 m", "--var"], "'--var' needs a value"),
+        (vec!["calc", "1 m", "--var", "novalue"], "takes NAME=VALUE"),
+        (vec!["calc", "1 m", "--var", "=5 m"], "takes NAME=VALUE"),
+        (vec!["calc", "1 m", "--var", "a b=5 m"], "takes NAME=VALUE"),
+        (vec!["calc", "1 m", "--var", "a="], "takes NAME=VALUE"),
+        (
+            vec!["calc", "1 m", "--to", "m", "--to", "cm"],
+            "given twice",
+        ),
+        (vec!["calc", "1 m", "--const", "x"], "takes only EXPRESSION"),
+        (vec!["calc", "1 m", "--groups"], "takes only EXPRESSION"),
+        (
+            vec!["convert", "1", "m", "km", "--var", "a=1 m"],
+            "only apply to 'calc'",
+        ),
+        (vec!["units", "--to", "m"], "only apply to 'calc'"),
+    ] {
+        let r = dimvexa(&args);
+        assert_eq!((r.code, r.stdout.as_str()), (2, ""), "{args:?}");
+        assert!(
+            r.stderr.starts_with("error[usage]: "),
+            "{args:?}: {}",
+            r.stderr
+        );
+        assert!(r.stderr.contains(needle), "{args:?}: {}", r.stderr);
+    }
+    // in JSON a usage error has the schema of the command
+    let v = json::parse(&dimvexa(&["calc", "--json"]).stdout).unwrap();
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.calc/1");
+    assert_eq!(
+        v.get("error").unwrap().get("code").unwrap().as_str(),
+        "usage"
+    );
+}
+
+/// A config adds the user's names and units to an equation, as for `convert`.
+#[test]
+fn calc_uses_the_configs_of_convert() {
+    // `ton` is ambiguous without a config
+    let r = calc(&["1 ton * 1 g_n", "--to", "N"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr.starts_with("error[ambiguous_symbol]"),
+        "{}",
+        r.stderr
+    );
+    let r = calc(&["1 ton * 1 g_n", "--to", "N", "--config", "us-customary"]);
+    assert_eq!(
+        (r.code, r.stdout.as_str()),
+        (0, "8896.443230521 N\n"),
+        "{}",
+        r.stderr
+    );
+    // a config file: the names of a design office
+    let r = dimvexa_at_root(&[
+        "calc",
+        "60 mph + 10 kph",
+        "--to",
+        "km/h",
+        "--config",
+        "examples/configs/engineering.toml",
+    ]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert_eq!(r.stdout, "106.56064 km/h\n", "{}", r.stdout);
+}
+
+/// Hostile text is an error, never a panic or a hang.
+#[test]
+fn calc_hostile_expressions_are_errors() {
+    let deep = format!("{}1{}", "(".repeat(5000), ")".repeat(5000));
+    let long = "1 + ".repeat(2000);
+    for expr in [
+        deep.as_str(),
+        long.as_str(),
+        "1e999999999 m",
+        "1 @ 2",
+        "sqrt(",
+        "((",
+        "))",
+    ] {
+        let r = calc(&[expr]);
+        assert_eq!(r.code, 1, "{}", &expr[..expr.len().min(20)]);
+        assert!(r.stderr.starts_with("error["), "{}", r.stderr);
+        assert!(!r.stderr.contains("panicked"), "{}", r.stderr);
+    }
+}
+
+/// The examples of the guide's `dimvexa calc` section print exactly what it says.
+#[test]
+fn guide_calc_examples_are_what_the_cli_prints() {
+    let section = readme_section(&guide(), "### Equations: `dimvexa calc`");
+    for (expr, args, out) in [
+        (
+            "2 kip/ft * (20 ft)^2 / 8",
+            vec!["--to", "kN*m"],
+            "135.58179483314004 kN.m",
+        ),
+        ("sqrt(9 m2)", vec![], "3 m"),
+        (
+            "100 kg * 1 g_n * sin(30 deg)",
+            vec!["--to", "N"],
+            "490.3325 N",
+        ),
+        ("sqrt(2 m2)", vec![], "≈ 1.4142135623730951 m"),
+    ] {
+        assert!(section.contains(&format!("{out}\n")), "{out}");
+        let mut a = vec![expr];
+        a.extend(args);
+        assert_eq!(calc(&a).stdout, format!("{out}\n"), "{expr}");
+    }
 }

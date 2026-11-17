@@ -179,12 +179,13 @@ pub fn f64_text(x: f64) -> String {
     }
 }
 
-/// The JSON schema id of a command: `dimvexa.convert/3`, `dimvexa.units/5`, `dimvexa.configs/3`, `dimvexa.constants/1`.
+/// The JSON schema id of a command: `dimvexa.convert/3`, `dimvexa.calc/1`, `dimvexa.units/5`, `dimvexa.configs/3`, `dimvexa.constants/1`.
 pub fn schema_id(command: &str) -> String {
     // One arm per command: `cargo xtask check-docs` reads the versions from these arms, so the
     // equal bodies of `configs` and the default (`convert`) stay separate.
     #[allow(clippy::match_same_arms)]
     let version = match command {
+        "calc" => 1,
         "constants" => 1,
         "configs" => 3,
         "units" => 5,

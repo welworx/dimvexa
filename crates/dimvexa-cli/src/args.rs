@@ -3,6 +3,8 @@
 // Private module: `pub` here is crate-visible, and the two visibility lints disagree about it.
 #![allow(unreachable_pub)]
 
+use crate::calc::CalcRequest;
+
 /// Parsed command line.
 pub struct Args {
     /// The density named or written with `--const`, if any.
@@ -40,6 +42,8 @@ pub enum Parsed {
         target: Option<String>,
         json: bool,
     },
+    /// `dimvexa calc EXPRESSION ...`.
+    Calc(CalcRequest),
     /// `dimvexa update [--check] [--yes]`.
     Update {
         check: bool,
@@ -69,6 +73,7 @@ pub fn command_schema(args: &[String]) -> &'static str {
         Some("units") => "units",
         Some("configs") => "configs",
         Some("constants") => "constants",
+        Some("calc") => "calc",
         _ => "convert",
     }
 }
@@ -77,14 +82,21 @@ pub fn command_schema(args: &[String]) -> &'static str {
 pub struct ValueOptions {
     pub configs: Vec<String>,
     pub density: Option<String>,
+    /// `--var NAME=VALUE` (repeatable), for `calc`.
+    pub vars: Vec<String>,
+    /// `--to UNIT`, for `calc`.
+    pub to: Option<String>,
 }
 
-/// Splits `--config NAME_OR_PATH` (repeatable) and `--const NAME_OR_VALUE`, also as
+/// Splits `--config NAME_OR_PATH` (repeatable), `--const NAME_OR_VALUE`, `--var NAME=VALUE`
+/// (repeatable) and `--to UNIT`, also as
 /// `--opt=value`.
 pub fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), UsageError> {
     let mut opts = ValueOptions {
         configs: Vec::new(),
         density: None,
+        vars: Vec::new(),
+        to: None,
     };
     let mut rest = Vec::new();
     let missing = |what: &str| UsageError {
@@ -96,11 +108,11 @@ pub fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), Usa
     let mut it = args.iter();
     while let Some(a) = it.next() {
         let (name, inline) = match a.split_once('=') {
-            Some((n @ ("--config" | "--const"), v)) => (n, Some(v.to_string())),
+            Some((n @ ("--config" | "--const" | "--var" | "--to"), v)) => (n, Some(v.to_string())),
             _ => (a.as_str(), None),
         };
         match name {
-            "--config" | "--const" => {
+            "--config" | "--const" | "--var" | "--to" => {
                 let value = match inline {
                     Some(v) => v,
                     // The next word must be a value, not another option (`--config --json`).
@@ -112,6 +124,15 @@ pub fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), Usa
                 };
                 if name == "--config" {
                     opts.configs.push(value);
+                } else if name == "--var" {
+                    opts.vars.push(value);
+                } else if name == "--to" {
+                    if opts.to.replace(value).is_some() {
+                        return Err(UsageError {
+                            message: "'--to' is given twice; give one unit".to_string(),
+                            ..missing(name)
+                        });
+                    }
                 } else if opts.density.replace(value).is_some() {
                     return Err(UsageError {
                         message: "'--const' is given twice; give one density".to_string(),
@@ -198,6 +219,56 @@ pub fn parse_constants(
             rest.len()
         ))),
     }
+}
+
+/// The rest of `dimvexa calc ...` after the command word: the expression (several words are
+/// joined with spaces, so an unquoted `dimvexa calc 2 m` still reads) and the `--var` list.
+pub fn parse_calc(
+    rest: &[&str],
+    misused: bool,
+    (exact, json): (bool, bool),
+    (vars, to): (Vec<String>, Option<String>),
+    configs: Vec<String>,
+    usage: &dyn Fn(String) -> UsageError,
+) -> Result<(Parsed, Vec<String>), UsageError> {
+    if misused {
+        return Err(usage(
+            "'calc' takes only EXPRESSION, --var, --to, --exact, --json and --config".to_string(),
+        ));
+    }
+    if rest.is_empty() {
+        return Err(usage(
+            "'calc' needs an EXPRESSION, for example: dimvexa calc \"2 m * 3 m\" --to cm2"
+                .to_string(),
+        ));
+    }
+    let mut named = Vec::new();
+    for spec in vars {
+        let valid = |name: &str| {
+            let mut chars = name.chars();
+            chars.next().is_some_and(|c| c.is_alphabetic() || c == '_')
+                && chars.all(|c| c.is_alphanumeric() || c == '_')
+        };
+        match spec.split_once('=') {
+            Some((name, value)) if valid(name) && !value.trim().is_empty() => {
+                named.push((name.to_string(), value.trim().to_string()));
+            }
+            _ => {
+                return Err(usage(format!(
+                    "'--var' takes NAME=VALUE with a name of letters, digits and '_' and a \
+                     quantity as value, for example --var dp=\"50 kPa\"; got '{spec}'"
+                )));
+            }
+        }
+    }
+    let request = CalcRequest {
+        expression: rest.join(" "),
+        vars: named,
+        to,
+        exact,
+        json,
+    };
+    Ok((Parsed::Calc(request), configs))
 }
 
 /// The rest of `dimvexa configs ...` after the command word.
@@ -367,12 +438,14 @@ pub fn help_topic(positional: &[&str]) -> Result<Option<&'static str>, String> {
     };
     if is_help_word && words.len() > 1 {
         return Err(
-            "'help' takes one command: convert, units, configs, constants or update".to_string(),
+            "'help' takes one command: convert, calc, units, configs, constants or update"
+                .to_string(),
         );
     }
     Ok(match words.first().copied() {
         None => None,
         Some("convert") => Some("convert"),
+        Some("calc") => Some("calc"),
         Some("units") => Some("units"),
         Some("configs") => Some("configs"),
         Some("constants") => Some("constants"),
@@ -381,7 +454,7 @@ pub fn help_topic(positional: &[&str]) -> Result<Option<&'static str>, String> {
         Some(_) if !is_help_word => Some("convert"),
         Some(other) => {
             return Err(format!(
-                "no help for '{other}'; commands: convert, units, configs, constants, update"
+                "no help for '{other}'; commands: convert, calc, units, configs, constants, update"
             ));
         }
     })
@@ -437,6 +510,21 @@ pub fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     if want_check || want_yes {
         return Err(usage("'--check' and '-y' only apply to 'update'".into()));
     }
+    let is_calc = positional.first() == Some(&"calc");
+    if !is_calc && (!opts.vars.is_empty() || opts.to.is_some()) {
+        return Err(usage("'--var' and '--to' only apply to 'calc'".into()));
+    }
+    if let Some((&"calc", rest)) = positional.split_first() {
+        let misused = want_groups || opts.density.is_some();
+        return parse_calc(
+            rest,
+            misused,
+            (exact, want_json),
+            (opts.vars, opts.to),
+            configs,
+            &usage,
+        );
+    }
     if let Some((&"units", rest)) = positional.split_first() {
         if exact {
             return Err(usage("'units' does not take --exact".to_string()));
@@ -464,7 +552,23 @@ pub fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     if want_groups {
         return Err(usage("'--groups' only applies to 'units'".to_string()));
     }
-    let density = opts.density;
+    parse_convert(
+        positional,
+        opts.density,
+        (exact, want_json),
+        configs,
+        &usage,
+    )
+}
+
+/// `[convert] VALUE FROM TO`.
+fn parse_convert(
+    mut positional: Vec<&str>,
+    density: Option<String>,
+    (exact, json): (bool, bool),
+    configs: Vec<String>,
+    usage: &dyn Fn(String) -> UsageError,
+) -> Result<(Parsed, Vec<String>), UsageError> {
     if positional.first() == Some(&"convert") {
         positional.remove(0);
     }
@@ -477,7 +581,7 @@ pub fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
                 from: from.clone(),
                 to: to.clone(),
                 exact,
-                json: want_json,
+                json,
             }),
             configs,
         )),

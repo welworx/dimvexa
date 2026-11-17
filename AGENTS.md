@@ -115,7 +115,7 @@ committed.
 | `crates/dimvexa-config` | user config files (ADR-009): `Config`, `apply`; the core only offers `Registry::add_alias` and the helpers `name_is_free`, `prefix_clash` |
 | `crates/dimvexa` | facade crate (re-exports core + data) |
 | `crates/dimvexa-calc` | exact calculation with core quantities (ADR-027): `Calc` add, sub, weighted_mean, pow, scale, eq, cmp, to_unit; temperature states and rises; beta; the core stays conversion-only; not re-exported by the facade |
-| `crates/dimvexa-cli` | `dimvexa convert`, `units`, `configs`, `constants`, `update` (self-update, ADR-015); no conversion logic of its own; one module per concern in `src/` (`args`, `help`, `json`, `color`, `load`, `convert`, `units`, `configs`, `constants`, `update`); snapshots in `tests/snapshots` |
+| `crates/dimvexa-cli` | `dimvexa convert`, `calc`, `units`, `configs`, `constants`, `update` (self-update, ADR-015); no conversion logic of its own; one module per concern in `src/` (`args`, `help`, `json`, `color`, `load`, `convert`, `calc`, `units`, `configs`, `constants`, `update`); snapshots in `tests/snapshots` |
 | `crates/dimvexa-testkit` | test helpers; differential, exact-path, property, overflow and zero-allocation tests |
 | `xtask` | `ci`, `check-docs`, `validate-data`, `update-data-hash`, `bench-check`, `bench-impact`, `bench-release`, `bench-matrix` |
 | `bindings/` | `python`, `wasm`, `excel`: thin wrappers with no conversion logic; versions equal (`scripts/check-versions.sh`) |
@@ -167,7 +167,7 @@ Read the matching skill in `skills/<name>/SKILL.md` (`.claude/skills` is a symli
   passes locally but fails in CI (a different toolchain, OS or lock state) means the local
   gate is missing something: add it to `cargo xtask ci` or the hook, not only a fix.
 * Keep error codes stable (`Error::ALL_CODES`); adding a field to the JSON schema is allowed
-  within the current schema version (`dimvexa.convert/3`, `dimvexa.units/5`, `dimvexa.configs/3`, `dimvexa.constants/1`);
+  within the current schema version (`dimvexa.convert/3`, `dimvexa.calc/1`, `dimvexa.units/5`, `dimvexa.configs/3`, `dimvexa.constants/1`);
   removing or renaming one needs a new version (ADR-014 did that for `/2`).
 * The CLI help is part of the interface. A new or changed command, option, config, JSON schema,
   exit code or error behaviour updates, in the same change: the overview (`HELP`) and the page

@@ -142,7 +142,7 @@ fn files_under(dir: &Path, out: &mut Vec<PathBuf>) {
 /// Schema ids such as `dimvexa.convert/3` named in a text, sorted and de-duplicated.
 fn schema_ids(text: &str) -> Vec<String> {
     let mut out = Vec::new();
-    for cmd in ["convert", "units", "configs", "constants"] {
+    for cmd in ["convert", "calc", "units", "configs", "constants"] {
         let head = format!("dimvexa.{cmd}/");
         for (at, _) in text.match_indices(&head) {
             let rest = text.get(at.saturating_add(head.len())..).unwrap_or("");

@@ -7,6 +7,7 @@
 pub const USAGE: &str = "\
 Usage:
   dimvexa [convert] VALUE FROM TO [OPTIONS]
+  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--json]
   dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]
@@ -20,13 +21,14 @@ Run 'dimvexa --help' for commands, options and examples.
 pub const HELP: &str = "\
 Usage:
   dimvexa [convert] VALUE FROM TO [OPTIONS]
+  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--json]
   dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]
   dimvexa update [--check] [-y]
 
 Converts VALUE from unit FROM to unit TO. Ambiguous input is an error.
-Run 'dimvexa COMMAND --help' (convert, units, configs, constants,
+Run 'dimvexa COMMAND --help' (convert, calc, units, configs, constants,
 update) for details.
 
 Examples:
@@ -37,6 +39,8 @@ Examples:
   dimvexa convert 1 ton kg --config us-customary
   dimvexa convert 1 L kg --config water --const water_25C
   dimvexa convert 1 L kg --const 998.2067kg/m3
+  dimvexa calc \"2 kip/ft * (20 ft)^2 / 8\" --to kN*m
+  dimvexa calc \"sqrt(2 * 50 kPa / 998 kg/m3)\" --to m/s
   dimvexa units volume
   dimvexa units psi
   dimvexa configs water
@@ -45,6 +49,8 @@ Examples:
 
 Commands:
   convert          convert VALUE from FROM to TO ('convert' may be left out)
+  calc             calculate with units, exact where possible: an equation
+                   such as \"2 m * 3 m\" or sqrt(2 * dp / rho) with --var
   units            list the units by quantity, and the ambiguous symbols refused
   units --groups   list only the groups (length, mass, volume, ...) and sizes
   units GROUP      list one group, for example: dimvexa units volume
@@ -67,7 +73,7 @@ Options:
                    or a power of ten when the value has one
                    (1/2 pi = 1.5707963267948966)
   --json           machine-readable output (schemas dimvexa.convert/3,
-                   dimvexa.units/5, dimvexa.configs/3,
+                   dimvexa.calc/1, dimvexa.units/5, dimvexa.configs/3,
                    dimvexa.constants/1)
   --pretty         --json, indented for reading (same fields, same order)
   --color WHEN     auto (default: a terminal, unless NO_COLOR is set), always
@@ -84,6 +90,9 @@ Options:
                    density for mass <-> volume: the name of a constant of a
                    density unit (--config water --const water_25C) or your own
                    number (--const 998.2067kg/m3). The assumption is printed
+  --var NAME=VALUE the value of a name in a calc expression, a quantity such
+                   as --var dp=\"50 kPa\"; repeatable
+  --to UNIT        the unit a calc result is shown in
   --version        print the version and the data table version
   -h, --help       print this help
 
@@ -140,6 +149,50 @@ Options:
   --color WHEN     auto, always or never (see: dimvexa --help)
 
 Exit codes: 0 success, 1 conversion refused or invalid input, 2 usage error.
+";
+
+/// `dimvexa calc --help`. Examples are run by a test, like those of `HELP`.
+pub const HELP_CALC: &str = "\
+dimvexa calc - calculate with units, exact where the mathematics is exact
+
+Usage:
+  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--exact]
+      [--json | --pretty] [--config NAME_OR_PATH]...
+
+EXPRESSION is an equation: numbers, quantities written with their unit
+(10 cm2, 998 kg/m3, 8.314 J/(mol*K), 20 degC), names given with --var, the
+constant pi, + - * / and parentheses, a power with a fraction as exponent
+(x^0.5, y^(1/2) and sqrt(x) agree; R^(2/3)) and the functions sqrt, cbrt,
+abs, hypot, min, max, ln, exp, log10 (lg), log2 (lb), log(x, base), sin,
+cos, sinh, cosh, tanh, asinh, acosh, atanh. Quote it, and put a space on
+both sides of an operator between quantities: a unit is the text after a
+number up to the next space, so 50 kPa / 998 kg/m3 is a quotient.
+
+The result is exact when the mathematics is exact (sqrt(9 m2) is 3 m,
+sin(30 deg) is 0.5) and starts with \u{2248} when it is not: an approximate f64,
+and so is everything computed from it. Without --to the unit is the one
+the arithmetic gave. A temperature point (20 degC) cannot be multiplied;
+tan, asin, atan2, floor and other functions are not implemented, and log(x)
+alone is ambiguous: write ln, lg or log10, lb or log2, or log(x, base).
+
+Examples:
+  dimvexa calc \"2 kip/ft * (20 ft)^2 / 8\" --to kN*m
+  dimvexa calc \"sqrt(2 * 50 kPa / 998 kg/m3)\" --to m/s
+  dimvexa calc \"sqrt(2 * dp / rho)\" --var dp=\"50 kPa\" --var rho=998kg/m3
+  dimvexa calc \"100 kg * 1 g_n * sin(30 deg)\" --to N
+  dimvexa calc \"20 degC + 5 K\" --json
+
+Options:
+  --var NAME=VALUE the value of a name, a quantity; repeatable
+  --to UNIT        show the result in UNIT (an exact result stays exact)
+  --exact          also print the exact fraction of an exact result
+  --json           machine-readable output (schema dimvexa.calc/1)
+  --pretty         --json, indented for reading
+  --config NAME_OR_PATH
+                   apply a config (your own units and names); repeatable
+  -h, --help       print this help
+
+Exit codes: 0 success, 1 the expression is refused or invalid, 2 usage error.
 ";
 
 /// `dimvexa units --help`.
@@ -290,6 +343,7 @@ pub fn about() -> String {
 /// The text of `dimvexa COMMAND --help`.
 pub fn command_help(topic: &str) -> &'static str {
     match topic {
+        "calc" => HELP_CALC,
         "units" => HELP_UNITS,
         "configs" => HELP_CONFIGS,
         "constants" => HELP_CONSTANTS,

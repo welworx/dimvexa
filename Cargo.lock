@@ -23,6 +23,7 @@ name = "dimvexa-cli"
 version = "0.10.0"
 dependencies = [
  "dimvexa",
+ "dimvexa-calc",
  "dimvexa-config",
  "dimvexa-core",
  "dimvexa-data",

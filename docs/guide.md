@@ -314,6 +314,32 @@ What a density does and does not do:
   added to `sources`.
 - `dimvexa units --config NAME_OR_PATH` lists the densities your configs define.
 
+### Equations: `dimvexa calc`
+
+`dimvexa calc` evaluates an equation with units (ADR-030). The result is exact when the
+mathematics is exact, and starts with `≈` when it is not:
+
+```console
+$ dimvexa calc "2 kip/ft * (20 ft)^2 / 8" --to kN*m
+135.58179483314004 kN.m
+$ dimvexa calc "sqrt(9 m2)"
+3 m
+$ dimvexa calc "100 kg * 1 g_n * sin(30 deg)" --to N
+490.3325 N
+$ dimvexa calc "sqrt(2 m2)"
+≈ 1.4142135623730951 m
+```
+
+Write the values in the equation (`0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)`) or name them
+with `--var` (`"Cd * A * sqrt(2 * dp / rho)" --var Cd=0.61 --var A="10 cm2" --var dp="50 kPa"
+--var rho="998 kg/m3"`); both give the same result. A unit is the text after a number up to the
+next space, so put a space on both sides of an operator between quantities. `x^0.5`, `x^(1/2)`
+and `sqrt(x)` are the same; `cbrt`, `abs`, `hypot`, `min`, `max`, `ln`, `exp`, `log10` (`lg`),
+`log2` (`lb`), `log(x, base)`, `sin`, `cos` and the hyperbolic functions exist. `log(x)` alone is
+refused (natural or decimal?); `tan`, `asin`, `atan2`, `floor` and others say they are not
+implemented. `--to UNIT` shows the result in a unit, `--exact` adds the fraction, `--json` uses
+the schema `dimvexa.calc/1`, and `--config` adds your own units as for `convert`.
+
 ### Constants: `dimvexa constants`
 
 A **constant** is a named, exact value of a unit with its conditions and its source (ADR-018).

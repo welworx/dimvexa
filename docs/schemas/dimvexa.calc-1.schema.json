@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dimvexa.calc/1",
+  "title": "dimvexa.calc/1",
+  "description": "Output of `dimvexa calc --json` (ADR-030): the result of an equation with units, or an error. An exact result is exact whenever the mathematics is exact (`fraction` is then its exact value); otherwise `exact` is false and `value` is an approximate f64 (ADR-029). Adding fields is allowed within a schema version; removing or changing them requires a new version.",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "ok",
+        "expression",
+        "variables",
+        "result",
+        "data_version",
+        "config",
+        "warnings"
+      ],
+      "properties": {
+        "schema": {
+          "const": "dimvexa.calc/1"
+        },
+        "ok": {
+          "const": true
+        },
+        "expression": {
+          "type": "string",
+          "description": "The equation as given."
+        },
+        "variables": {
+          "type": "array",
+          "description": "The `--var NAME=VALUE` options, in the order given.",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "value"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string",
+                "description": "The quantity as written."
+              }
+            }
+          }
+        },
+        "result": {
+          "type": "object",
+          "required": [
+            "value",
+            "unit",
+            "exact",
+            "fraction",
+            "dimension",
+            "kind"
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "description": "An exact result rounded once to the nearest f64 (0 ulp); an approximate result as computed."
+            },
+            "unit": {
+              "type": "string",
+              "description": "The unit of `value`: the `--to` unit, or the one the arithmetic gave. Empty for a plain number."
+            },
+            "exact": {
+              "type": "boolean",
+              "description": "True when the result is exact; false when it, or anything it was computed from, is approximate."
+            },
+            "fraction": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The exact value as a fraction, optionally followed by 10^k and pi^m (for example `662607015 10^-42`); null for an approximate result."
+            },
+            "dimension": {
+              "type": "array",
+              "description": "The exponents of kg, m, s, A, K, mol, cd.",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 7,
+              "maxItems": 7
+            },
+            "kind": {
+              "type": "string",
+              "description": "The quantity kind of the unit: plain, absolute_temperature, temperature_difference, angle or cycle."
+            }
+          }
+        },
+        "data_version": {
+          "type": "string"
+        },
+        "config": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "file",
+              "hash"
+            ],
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "hash": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "dimvexa.calc/1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "object",
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "type": "string",
+              "description": "One of the library's stable error codes, or `usage`."
+            },
+            "message": {
+              "type": "string"
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "suggestions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
