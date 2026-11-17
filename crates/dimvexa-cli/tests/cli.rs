@@ -3866,11 +3866,21 @@ fn calc_a_number_before_a_variable_multiplies_unless_the_name_is_a_unit() {
         "{}",
         r.stderr
     );
-    // the product binds tighter than the division around it
+    // after a division `2 r` has two readings: the user writes the operator or parentheses
+    let r = calc(&["10 m / 2 r", "--var", "r=3 s"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr.contains("can be read (a / 2) * r or a / (2 * r)"),
+        "{}",
+        r.stderr
+    );
     assert_eq!(
-        calc(&["10 m / 2 r", "--var", "r=3 s"]).stdout,
+        calc(&["10 m / (2 r)", "--var", "r=3 s"]).stdout,
         "1.6666666666666667… m/s\n"
     );
+    assert_eq!(calc(&["10 m / 2 * r", "--var", "r=3 s"]).stdout, "15 m.s\n");
+    assert_eq!(calc(&["10 m * 2 r", "--var", "r=3 s"]).stdout, "60 m.s\n");
+
     // no variable: an unknown unit, never a claim about a variable
     let r = calc(&["2 r"]);
     assert!(r.stderr.starts_with("error[parse_error]"), "{}", r.stderr);

@@ -972,6 +972,19 @@ impl<'r> Formula<'r> {
                 symbol.clear();
             }
             match rewrite {
+                Some(_) if matches!(out.last(), Some((_, Tok::Op('/')))) => {
+                    // `a / 2 r` is (a / 2) * r or a / (2 * r)
+                    return Err(parse_error(
+                        src,
+                        at,
+                        &format!(
+                            "a division followed by '{number} {unit}' can be read (a / {number}) \
+                             * {unit} or a / ({number} * {unit}): write the operator, \
+                             a / {number} * {unit}, for the first, or the parentheses, \
+                             a / ({number} {unit}), for the second"
+                        ),
+                    ));
+                }
                 Some(_) if matches!(out.last(), Some((_, Tok::Op('^')))) => {
                     // `x^2 n` would read `2 n` as the exponent, and `x^2 * n` is what is meant
                     return Err(parse_error(

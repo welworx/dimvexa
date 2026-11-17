@@ -366,7 +366,8 @@ config constant with the name of a built-in one replaces it, as for `dimvexa con
   is refused. `pi` is the exact constant: `2 pi`, `2 * pi * r` and `2 pi r` are the same
   (`pi` multiplies the names that follow it). After a division the form is ambiguous and refused:
   `10 m / 2 pi` is `(10 m / 2) * pi` or `10 m / (2 * pi)`, so write `10 m / (2 pi)` or
-  `10 m / 2 * pi`; the same for `Q / pi r^2`.
+  `10 m / 2 * pi`; the same for `Q / pi r^2`, and for a number and a variable after a division
+  (`10 m / 2 r`: write `10 m / 2 * r` or `10 m / (2 r)`).
 * **Spaces:** a space ends a unit. `1/2 m` is `1` divided by `2 m` (`0.5 1/m`), so write
   `(1/2) * 1 m` or `0.5 m`. Tabs, newlines and the no-break space are spaces. A comma separates
   arguments (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.
