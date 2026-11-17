@@ -580,9 +580,11 @@ impl<'r> Math<'r> {
         self.sqrt(&sum)
     }
 
-    /// The smaller of two numbers of one dimension, compared across units; the result keeps the
-    /// unit of the winner (the left one on a tie). Exact for two exact numbers; if either is
-    /// approximate the result is approximate.
+    /// The smaller of two numbers of one dimension, compared across units; the result is the
+    /// winner itself, in its own unit (the left one on a tie), so it stays exact when it is exact
+    /// (`max(10, 0.12343)` is exactly `10`, and so is `max(10, sqrt(2))`). The one exception is
+    /// an exact winner against an approximate number that is closer than one part in a billion:
+    /// then the choice cannot be certified and the result is approximate.
     ///
     /// # Errors
     ///
@@ -627,7 +629,24 @@ impl<'r> Math<'r> {
         Self::linear_only(&y.unit)?;
         let in_x = Conversion::between(&y.unit, &x.unit)?.apply_exact_f64(y.value)?;
         let ordering = x.value.partial_cmp(&in_x).unwrap_or(Ordering::Equal);
-        Ok(Number::Approx(if ordering == swap_on { y } else { x }))
+        let (winner, winner_number) = if ordering == swap_on {
+            (y, b)
+        } else {
+            (x.clone(), a)
+        };
+        // The winner is one of the operands, so an exact winner can stay exact, but only when an
+        // approximate loser cannot have changed the choice: the gap must be far above the error
+        // of a few approximate steps (KL-33 gives no bound; `DECISIVE` is about 10^7 ulps).
+        let scale = x.value.abs().max(in_x.abs());
+        let gap = if scale > 0.0 {
+            (x.value - in_x).abs() / scale
+        } else {
+            0.0
+        };
+        Ok(match winner_number {
+            Number::Exact(_) if gap > DECISIVE => winner_number.clone(),
+            _ => Number::Approx(winner),
+        })
     }
 
     // ----- hyperbolic functions --------------------------------------------------------------
@@ -949,6 +968,10 @@ impl<'r> Math<'r> {
         unity(if cos { f.cos() } else { f.sin() })
     }
 }
+
+/// How far apart two values must be, relative to the larger, for `min` and `max` to keep an
+/// exact winner when the loser is approximate.
+const DECISIVE: f64 = 1e-9;
 
 /// The base of a logarithm.
 #[derive(Clone, Copy)]

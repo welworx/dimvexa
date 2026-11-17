@@ -77,10 +77,13 @@ a `Quantity` holding the rational value of an `f64`: nothing would show that it 
 * `log(x)` with one argument is `refused` as ambiguous (natural or base 10, ADR-006): write
   `ln(x)`, `log10(x)` or `log(x, base)`. A logarithm is exact only for an integer result, so
   `log(2, 4)` is an approximate `0.5`.
-* `min` and `max` compare across units and keep the unit of the winner (the left one on a
-  tie); with an approximate operand the result is approximate, because the choice depended on
-  it. A temperature point is allowed in the exact tier (`min(20 degC, 70 degF)`), not in the
-  approximate one.
+* `min` and `max` compare across units and return the winner itself, in its own unit (the left
+  one on a tie), so an exact winner stays exact: `max(10, 0.12343)` is exactly `10`, and so is
+  `max(10, sqrt(2))`. Only an exact winner that is closer than one part in a billion to an
+  approximate loser is returned as approximate, because a rounding error could have decided
+  the choice (KL-33 gives no error bound; the threshold is about 10^7 ulps). An approximate
+  winner is approximate. A temperature point is allowed in the exact tier
+  (`min(20 degC, 70 degF)`), not in the approximate one.
 * Not done (OPEN, recommended default: later): implementing the functions above; error propagation
   (an interval type) for approximate values; the `kelvin(...)` function for computed
   temperatures (A4).

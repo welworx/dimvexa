@@ -430,7 +430,9 @@ multiple of $30^\circ$ when that number divided by 30 is an integer. A bare numb
 
 * **`cbrt`, `abs`, `hypot`, `min`, `max`.** `cbrt` is the power $\tfrac13$. $\operatorname{hypot}(a,b)=\sqrt{a^2+b^2}$ is built from the exact operations, so a 3-4-5 triangle gives exactly 5, and
   the two arguments must have one dimension. `min` and `max` compare across units and return the
-  winner in its own unit; if either argument is approximate the result is approximate.
+  winner itself, in its own unit, so an exact winner stays exact (`max(10, sqrt(2))` is exactly
+  `10`); an approximate winner is approximate, and so is an exact winner that is closer than one
+  part in a billion to an approximate loser, because a rounding error could have decided it.
 * **Logarithms to other bases.** $\log_b x$ is exact exactly when $x=b^{k}$ for an integer $k$:
   $\log_{10}1000=3$, $\log_{3}81=4$, $\log_{10}10^{-100}=-100$. The code finds the candidate
   $k=\operatorname{round}(\ln x/\ln b)$ in floating point and then **proves** it with the exact

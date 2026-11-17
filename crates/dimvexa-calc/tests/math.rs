@@ -566,20 +566,70 @@ fn min_and_max_of_temperatures_and_mixed_dimensions() {
 }
 
 #[test]
-fn min_and_max_with_an_approximate_value_are_approximate() {
+fn an_exact_winner_stays_exact_when_the_choice_is_clear() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    // both exact: exact, whatever the values are
+    assert_eq!(
+        m.max(&n(&reg, "10"), &n(&reg, "0.12343"))
+            .unwrap()
+            .to_string(),
+        "10 1"
+    );
+    assert_eq!(
+        m.min(&n(&reg, "10"), &n(&reg, "0.12343"))
+            .unwrap()
+            .to_string(),
+        "0.12343 1"
+    );
+    // an approximate loser far below: the exact winner is returned unchanged, exact
+    let root = m.sqrt(&n(&reg, "2")).unwrap(); // 1.414...
+    let high = m.max(&n(&reg, "10"), &root).unwrap();
+    assert!(high.is_exact(), "{high}");
+    assert_eq!(high.to_string(), "10 1");
+    let low = m.min(&root, &n(&reg, "10")).unwrap();
+    assert!(!low.is_exact());
+    // with units: the winner keeps its own unit
+    let r = m.sqrt(&n(&reg, "2 m^2")).unwrap();
+    let high = m.max(&r, &n(&reg, "1.5 km")).unwrap();
+    assert!(high.is_exact(), "{high}");
+    assert_eq!(high.to_string(), "1.5 km");
+}
+
+#[test]
+fn an_approximate_winner_is_approximate() {
     let reg = reg();
     let m = Math::new(&reg);
     let root = m.sqrt(&n(&reg, "2 m^2")).unwrap(); // 1.414 m
+    let high = m.max(&root, &n(&reg, "1 m")).unwrap();
+    assert!(!high.is_exact());
+    assert_eq!(m.to_f64_in(&high, "m").unwrap(), 2.0_f64.sqrt());
     let low = m.min(&root, &n(&reg, "1.5 m")).unwrap();
     assert!(!low.is_exact());
     assert_eq!(m.to_f64_in(&low, "m").unwrap(), 2.0_f64.sqrt());
-    // the exact operand wins, but it is still labelled approximate: the choice depended on ≈
-    let high = m.max(&root, &n(&reg, "1.5 m")).unwrap();
-    assert!(!high.is_exact());
-    assert_eq!(m.to_f64_in(&high, "m").unwrap(), 1.5);
-    // across units
-    let high = m.max(&root, &n(&reg, "1 km")).unwrap();
-    assert_eq!(m.to_f64_in(&high, "km").unwrap(), 1.0);
+}
+
+#[test]
+fn an_exact_winner_that_is_too_close_to_an_approximate_value_cannot_be_certified() {
+    // sqrt(2)^2 is 2.0000000000000004: against the exact 2 the choice rests on a rounding error
+    let reg = reg();
+    let m = Math::new(&reg);
+    let squared = m.pow(&m.sqrt(&n(&reg, "2")).unwrap(), 2).unwrap();
+    for pick in [
+        m.max(&n(&reg, "2"), &squared).unwrap(),
+        m.min(&squared, &n(&reg, "2")).unwrap(),
+    ] {
+        assert!(!pick.is_exact(), "{pick}");
+        assert_eq!(m.to_f64_in(&pick, "1").unwrap().round(), 2.0);
+    }
+    // a tie keeps the left operand, but as an approximate number
+    let tie = m.max(&n(&reg, "2"), &squared).unwrap();
+    assert!(!tie.is_exact());
+    // across units the comparison is still made in the same unit
+    let r = m.sqrt(&n(&reg, "2 m^2")).unwrap();
+    let low = m.min(&r, &n(&reg, "1 km")).unwrap();
+    assert!(!low.is_exact());
+    assert_eq!(m.to_f64_in(&low, "m").unwrap(), 2.0_f64.sqrt());
 }
 
 // ----- hyperbolic functions --------------------------------------------------------------------
