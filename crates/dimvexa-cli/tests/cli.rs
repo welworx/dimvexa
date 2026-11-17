@@ -3853,23 +3853,31 @@ fn calc_reads_config_constants_kelvin_pi_names_exponents_and_notation() {
     assert_eq!(calc(&["2 m\t*\n3 m"]).stdout, "6 m^2\n");
 }
 
-/// The error for `2 r` never calls a name a unit when it is not one.
+/// A number before a variable that is not a unit multiplies (`2 r`); before a name that is also
+/// a unit (`0.5 h`) it is refused, and the error only says "unit" when the name is one.
 #[test]
-fn calc_error_for_a_number_before_a_variable_only_says_unit_when_it_is() {
-    let r = calc(&["2 r", "--var", "r=3 m"]);
-    assert!(
-        r.stderr
-            .contains("'r' is a variable, not a unit: write 2 * r"),
-        "{}",
-        r.stderr
+fn calc_a_number_before_a_variable_multiplies_unless_the_name_is_a_unit() {
+    assert_eq!(calc(&["2 r", "--var", "r=3 m"]).stdout, "6 m\n");
+    assert_eq!(calc(&["2 r2", "--var", "r=3 m"]).stdout, "18 m^2\n");
+    assert_eq!(calc(&["2 r^2", "--var", "r=3 m"]).stdout, "18 m^2\n");
+    // the product binds tighter than the division around it
+    assert_eq!(
+        calc(&["10 m / 2 r", "--var", "r=3 s"]).stdout,
+        "1.6666666666666667… m/s\n"
     );
-    assert!(!r.stderr.contains("is also a unit"), "{}", r.stderr);
-    let r = calc(&["2 r2", "--var", "r=3 m"]);
-    assert!(r.stderr.contains("write 2 * r^2"), "{}", r.stderr);
+    // no variable: an unknown unit, never a claim about a variable
+    let r = calc(&["2 r"]);
+    assert!(r.stderr.starts_with("error[unknown_unit]"), "{}", r.stderr);
+    // a name that is also a unit is refused, and says so
     let r = calc(&["0.5 h", "--var", "h=3 m"]);
     assert!(
         r.stderr.contains("the name 'h' is also a unit"),
         "{}",
         r.stderr
+    );
+    assert!(
+        !calc(&["2 r", "--var", "r=3 m"])
+            .stderr
+            .contains("not a unit")
     );
 }

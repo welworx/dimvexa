@@ -769,8 +769,7 @@ impl<'r> Formula<'r> {
     /// operation that failed (`dimension_mismatch`, `overflow`, ...). An exact operation that
     /// fails is never answered with an approximate value.
     pub fn eval(&self, formula: &str) -> Result<Number> {
-        let toks = lex(formula)?;
-        self.refuse_names_used_as_units(&toks)?;
+        let toks = self.names_after_numbers(lex(formula)?)?;
         let mut p = Parser {
             src: formula,
             toks,
@@ -785,14 +784,20 @@ impl<'r> Formula<'r> {
         Ok(q)
     }
 
-    /// A name that is also written as a unit in the equation (`0.5 h` with a variable `h`) is
-    /// ambiguous: the reader sees one thing and the evaluator takes the other.
-    fn refuse_names_used_as_units(&self, toks: &[(usize, Tok)]) -> Result<()> {
-        for (_, tok) in toks {
-            let Tok::Qty(number, unit) = tok else {
+    /// What a name written after a number means. `2 r` with a variable `r` that is not a unit is
+    /// `2 * r` (the text becomes `(2 * r)`, so `10 m / 2 r` is `10 m / (2 r)`); a name that is
+    /// also a unit (`0.5 h` with a variable `h`) is ambiguous, because the reader sees one thing
+    /// and the evaluator would take the other, and is refused.
+    fn names_after_numbers(&self, toks: Vec<(usize, Tok)>) -> Result<Vec<(usize, Tok)>> {
+        let mut out = Vec::with_capacity(toks.len());
+        for (at, tok) in toks {
+            let Tok::Qty(number, unit) = &tok else {
+                out.push((at, tok));
                 continue;
             };
             let mut symbol = String::new();
+            let mut leading = true;
+            let mut rewrite: Option<String> = None;
             for c in unit.chars().chain(std::iter::once(' ')) {
                 if c.is_alphanumeric() || c == '_' {
                     symbol.push(c);
@@ -800,40 +805,49 @@ impl<'r> Formula<'r> {
                 }
                 // `m3` and `m^3` are the unit `m`: a name that equals the symbol or the symbol
                 // without its trailing digits collides
-                let bare = symbol.trim_end_matches(|d: char| d.is_ascii_digit());
-                if let Some((name, _)) = self
+                let bare = symbol
+                    .trim_end_matches(|d: char| d.is_ascii_digit())
+                    .to_owned();
+                let found = self
                     .vars
                     .iter()
-                    .find(|(n, _)| n != "pi" && !n.is_empty() && (*n == symbol || n == bare))
-                {
-                    let is_unit = self.reg.parse(&symbol).is_ok() || self.reg.parse(bare).is_ok();
-                    let message = if is_unit {
-                        format!(
-                            "the name '{name}' is also a unit in '{number} {unit}' of the \
-                             equation: rename the variable"
-                        )
-                    } else {
-                        let power = symbol.strip_prefix(bare).unwrap_or_default();
-                        let times = if power.is_empty() {
-                            name.clone()
+                    .map(|(n, _)| n)
+                    .find(|n| *n != "pi" && !n.is_empty() && (**n == symbol || **n == bare));
+                if let Some(name) = found {
+                    if self.reg.parse(&symbol).is_ok() || self.reg.parse(&bare).is_ok() {
+                        return Err(Error::InvalidDefinition {
+                            symbol: name.clone(),
+                            message: format!(
+                                "the name '{name}' is also a unit in '{number} {unit}' of the \
+                                 equation: rename the variable"
+                            ),
+                        });
+                    }
+                    if leading {
+                        let power = symbol.strip_prefix(&bare).unwrap_or_default();
+                        let tail = unit.get(symbol.len()..).unwrap_or_default();
+                        rewrite = Some(if **name == symbol || power.is_empty() {
+                            unit.clone()
                         } else {
-                            format!("{name}^{power}")
-                        };
-                        format!(
-                            "'{number} {unit}' reads '{symbol}' as a unit after the number, and \
-                             '{name}' is a variable, not a unit: write {number} * {times} to \
-                             multiply by the variable"
-                        )
-                    };
-                    return Err(Error::InvalidDefinition {
-                        symbol: name.clone(),
-                        message,
-                    });
+                            format!("{name}^{power}{tail}")
+                        });
+                    }
                 }
+                leading = false;
                 symbol.clear();
             }
+            match rewrite {
+                Some(text) => {
+                    out.push((at, Tok::Op('(')));
+                    out.push((at, Tok::Num(number.clone())));
+                    out.push((at, Tok::Op('*')));
+                    out.extend(lex(&text)?.into_iter().map(|(_, t)| (at, t)));
+                    out.push((at, Tok::Op(')')));
+                }
+                None => out.push((at, tok)),
+            }
         }
-        Ok(())
+        Ok(out)
     }
 
     /// Like [`eval`](Self::eval), but only an exact result is accepted.

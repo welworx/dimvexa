@@ -252,8 +252,11 @@ fn pi_after_a_number_and_before_a_name_multiplies() {
     assert_eq!(value(&reg, &[("r", "3 m")], "2 pi r", "m"), 6.0 * pi);
     assert_eq!(value(&reg, &[("r", "3 m")], "pi r^2", "m2"), 9.0 * pi);
     assert_eq!(value(&reg, &[], "2 pi", "1"), 2.0 * pi);
-    // `2 r` stays refused: the reader sees a number and a unit, the evaluator a name
-    assert_eq!(f.eval("2 r").unwrap_err().code(), "invalid_definition");
+    // a number before a variable that is not a unit multiplies
+    assert_eq!(value(&reg, &[("r", "3 m")], "2 r", "m"), 6.0);
+    // before a name that is also a unit it is refused
+    let g = Formula::new(&reg).var("h", "3 m").unwrap();
+    assert_eq!(g.eval("2 h").unwrap_err().code(), "invalid_definition");
 }
 
 /// An exponent may be a name or an expression, if it is an exact plain number.

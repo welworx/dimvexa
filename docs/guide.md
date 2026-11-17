@@ -336,9 +336,10 @@ Write the values in the equation (`0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)`
 with `--var` (`"Cd * A * sqrt(2 * dp / rho)" --var Cd=0.61 --var A="10 cm2" --var dp="50 kPa"
 --var rho="998 kg/m3"`); both give the same result. A name is letters, digits and `_`. It
 stands for its value wherever it is written alone (`h * 2` with `--var h="3 m"` is `6 m`; a name
-such as `m` has nothing to do with the metre). It must not also be a unit that the equation
-writes after a number: `0.5 h` with a variable `h` is an error (`invalid_definition`: rename
-the variable), because the reader would see hours and the evaluator a length. `pi` cannot be
+such as `m` has nothing to do with the metre). A number before a name that is not a unit
+multiplies: `2 r` with `--var r="3 m"` is `6 m` (and `2 r2` is `2 r^2`). A name that is also a
+unit must not follow a number: `0.5 h` with a variable `h` is an error (`invalid_definition`:
+rename the variable), because the reader would see hours and the evaluator a length. `pi` cannot be
 redefined, a repeated `--var` name keeps the last value (with a warning), and a name that is not
 used is ignored.
 
@@ -359,7 +360,7 @@ config constant with the name of a built-in one replaces it, as for `dimvexa con
   may also be a name or an expression, if it is an exact number without a unit (`x^n`,
   `2^(1+1)`, `x^(1/k)`); `2^3^2` is `2^(3^2)`, and an approximate exponent such as `2^sqrt(2)`
   is refused. `pi` is the exact constant: `2 pi`, `2 * pi * r` and `2 pi r` are the same
-  (`pi` multiplies the names that follow it; `2 r` stays refused, see above).
+  (`pi` multiplies the names that follow it).
 * **Spaces:** a space ends a unit. `1/2 m` is `1` divided by `2 m` (`0.5 1/m`), so write
   `(1/2) * 1 m` or `0.5 m`. Tabs, newlines and the no-break space are spaces. A comma separates
   arguments (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.
