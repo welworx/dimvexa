@@ -74,8 +74,10 @@ a `Quantity` holding the rational value of an `f64`: nothing would show that it 
   write it from the implemented functions where there is one. An unknown name says `unknown
   function`. No error code was added (rule 4: unsupported requests are errors with a stable
   code; `refused` is it).
-* `log(x)` with one argument is `refused` as ambiguous (natural or base 10, ADR-006): write
-  `ln(x)`, `log10(x)` or `log(x, base)`. A logarithm is exact only for an integer result, so
+* `log(x)` with one argument is `refused` as ambiguous (natural or base 10, ADR-006; owner
+  decision, 2026-11-17: keep it refused). The message names the ways to write it: `ln(x)`,
+  `lg(x)` or `log10(x)`, `lb(x)` or `log2(x)` (the ISO 80000-2 names `lg` and `lb` are aliases
+  in the equation helper) and `log(x, base)`. A logarithm is exact only for an integer result, so
   `log(2, 4)` is an approximate `0.5`.
 * `min` and `max` compare across units and return the winner itself, in its own unit (the left
   one on a tie), so an exact winner stays exact: `max(10, 0.12343)` is exactly `10`, and so is
@@ -83,7 +85,10 @@ a `Quantity` holding the rational value of an `f64`: nothing would show that it 
   approximate loser is returned as approximate, because a rounding error could have decided
   the choice (KL-33 gives no error bound; the threshold is about 10^7 ulps). An approximate
   winner is approximate. A temperature point is allowed in the exact tier
-  (`min(20 degC, 70 degF)`), not in the approximate one.
+  (`min(20 degC, 70 degF)`), not in the approximate one. `abs` and negation of a temperature
+  point stay refused with `kind_mismatch` and the delta unit as suggestion (ADR-027 decision 3,
+  confirmed by the owner, 2026-11-17: `abs(-5 degC)` is not `5 degC`); `abs(-5 delta_degC)` and
+  `abs(T1 - T2)` work.
 * Not done (OPEN, recommended default: later): implementing the functions above; error propagation
   (an interval type) for approximate values; the `kelvin(...)` function for computed
   temperatures (A4).

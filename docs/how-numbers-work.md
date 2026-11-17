@@ -437,7 +437,8 @@ multiple of $30^\circ$ when that number divided by 30 is an integer. A bare numb
   $\log_{10}1000=3$, $\log_{3}81=4$, $\log_{10}10^{-100}=-100$. The code finds the candidate
   $k=\operatorname{round}(\ln x/\ln b)$ in floating point and then **proves** it with the exact
   power $b^{k}=x$. A rational but non-integer result such as $\log_4 2=\tfrac12$ is approximate
-  (`≈ 0.5`). `log(x)` with one argument is refused: natural or base 10 is not guessed.
+  (`≈ 0.5`). `log(x)` with one argument is refused: natural or base 10 is not guessed, and the message
+  says to write `ln(x)`, `lg(x)` / `log10(x)`, `lb(x)` / `log2(x)` or `log(x, base)`.
 * **Hyperbolic functions.** One call of the platform's maths library each; exact only at their
   rational points ($\sinh0=0,\ \cosh0=1,\ \tanh0=0,\ \operatorname{asinh}0=0,\
   \operatorname{acosh}1=0,\ \operatorname{atanh}0=0$), by the same transcendence argument as

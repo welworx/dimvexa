@@ -96,8 +96,21 @@ fn log_of_one_argument_is_ambiguous_and_refused() {
     let f = Formula::new(&reg).var("x", "100").unwrap();
     let err = f.eval("log(x)").unwrap_err();
     assert_eq!(err.code(), "refused");
-    assert!(err.to_string().contains("ambiguous"), "{err}");
-    assert!(err.suggestions().contains(&"log10".to_owned()));
+    let msg = err.to_string();
+    for name in [
+        "ln(x)",
+        "lg(x)",
+        "log10(x)",
+        "lb(x)",
+        "log2(x)",
+        "log(x, base)",
+    ] {
+        assert!(msg.contains(name), "{name} missing in {msg}");
+    }
+    assert!(msg.contains("ambiguous"), "{msg}");
+    for name in ["ln", "lg", "log10", "lb", "log2"] {
+        assert!(err.suggestions().contains(&name.to_owned()), "{name}");
+    }
     assert_eq!(f.eval_exact("log(x, 10)").unwrap().to_string(), "2 1");
 }
 
@@ -132,4 +145,57 @@ fn min_and_max_take_any_number_of_arguments() {
     assert_eq!(f.eval_exact("min(a, b, c)").unwrap().to_string(), "0.5 mi");
     assert_eq!(f.eval_exact("max(a, b, c)").unwrap().to_string(), "1 km");
     assert_eq!(f.eval_exact("max(b, a)").unwrap().to_string(), "1 km");
+}
+
+/// ISO 80000-2 names: `lg` is the base 10 logarithm and `lb` the base 2 one.
+#[test]
+fn lg_and_lb_are_log10_and_log2() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("a", "1000")
+        .unwrap()
+        .var("b", "8")
+        .unwrap()
+        .var("c", "3")
+        .unwrap();
+    assert_eq!(f.eval_exact("lg(a)").unwrap().to_string(), "3 1");
+    assert_eq!(f.eval_exact("lb(b)").unwrap().to_string(), "3 1");
+    assert_eq!(
+        f.eval("lg(c)").unwrap().to_string(),
+        f.eval("log10(c)").unwrap().to_string()
+    );
+    assert_eq!(
+        f.eval("lb(c)").unwrap().to_string(),
+        f.eval("log2(c)").unwrap().to_string()
+    );
+}
+
+/// The absolute value and the negation of a temperature point mean nothing: `-5 degC` and
+/// `5 degC` are different states. A temperature difference is fine, and so is `abs(T1 - T2)`.
+#[test]
+fn the_absolute_value_of_a_temperature_point_is_refused_and_names_the_delta_unit() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("T", "-5 degC")
+        .unwrap()
+        .var("T1", "20 degC")
+        .unwrap()
+        .var("T2", "80 degC")
+        .unwrap()
+        .var("d", "-5 delta_degC")
+        .unwrap();
+    for call in ["abs(T)", "-T"] {
+        let err = f.eval(call).unwrap_err();
+        assert_eq!(err.code(), "kind_mismatch", "{call}");
+        assert_eq!(err.suggestions(), ["delta_degC".to_owned()], "{call}");
+        assert!(
+            err.to_string().contains("for a difference use delta_degC"),
+            "{err}"
+        );
+    }
+    assert_eq!(f.eval_exact("abs(d)").unwrap().to_string(), "5 delta_degC");
+    assert_eq!(
+        f.eval_exact("abs(T1 - T2)").unwrap().to_string(),
+        "60 delta_degC"
+    );
 }

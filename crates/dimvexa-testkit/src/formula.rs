@@ -23,7 +23,7 @@
 //! Grammar: numbers (`2`, `0.5`, `1e-3`), variables, `+ - * /`, a unary minus, parentheses, a
 //! power with an integer, a decimal or a fraction as exponent (`L^4`, `v^-2`, `x^0.5`,
 //! `R^(2/3)`), and the functions `sqrt`, `cbrt`, `abs`, `hypot(x, y)`, `min(x, y, ...)`,
-//! `max(x, y, ...)`, `ln`, `exp`, `log10`, `log2`, `log(x, base)`, `sin`, `cos`, `sinh`, `cosh`,
+//! `max(x, y, ...)`, `ln`, `exp`, `log10` (`lg`), `log2` (`lb`), `log(x, base)`, `sin`, `cos`, `sinh`, `cosh`,
 //! `tanh`, `asinh`, `acosh` and `atanh` (`log(x)` alone is ambiguous and refused). Any other function is a
 //! `refused` error that says `'tan' is not implemented` (and how to write it, where there is a
 //! way: `sin(x) / cos(x)`), an unknown name says `unknown function`. Every step is an
@@ -103,7 +103,7 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
 
 /// The functions the evaluator implements (ADR-029), with the number of arguments: `0` means
 /// two or more (`min`, `max`).
-const IMPLEMENTED: [(&str, usize); 19] = [
+const IMPLEMENTED: [(&str, usize); 21] = [
     ("sqrt", 1),
     ("cbrt", 1),
     ("abs", 1),
@@ -113,7 +113,9 @@ const IMPLEMENTED: [(&str, usize); 19] = [
     ("ln", 1),
     ("exp", 1),
     ("log10", 1),
+    ("lg", 1),
     ("log2", 1),
+    ("lb", 1),
     ("log", 2),
     ("sin", 1),
     ("cos", 1),
@@ -345,7 +347,8 @@ impl Parser<'_, '_> {
         if wrong {
             // `log(x)` is the one name that is ambiguous in itself: natural or base 10?
             let reason = if name == "log" && args.len() == 1 {
-                "log(x) is ambiguous (natural or base 10?): write ln(x), log10(x) or log(x, base)"
+                "log(x) is ambiguous (natural or base 10?): write ln(x) for the natural logarithm, \
+                 lg(x) or log10(x) for base 10, lb(x) or log2(x) for base 2, or log(x, base)"
                     .to_owned()
             } else {
                 format!(
@@ -361,7 +364,9 @@ impl Parser<'_, '_> {
             return Err(if name == "log" && args.len() == 1 {
                 Error::Refused {
                     reason,
-                    suggestions: ["ln", "log10", "log"].map(str::to_owned).to_vec(),
+                    suggestions: ["ln", "lg", "log10", "lb", "log2", "log"]
+                        .map(str::to_owned)
+                        .to_vec(),
                 }
             } else {
                 parse_error(self.src, at, &reason)
@@ -378,8 +383,8 @@ impl Parser<'_, '_> {
             ("abs", _) => math.abs(one),
             ("ln", _) => math.ln(one),
             ("exp", _) => math.exp(one),
-            ("log10", _) => math.log10(one),
-            ("log2", _) => math.log2(one),
+            ("log10" | "lg", _) => math.log10(one),
+            ("log2" | "lb", _) => math.log2(one),
             ("sin", _) => math.sin(one),
             ("cos", _) => math.cos(one),
             ("sinh", _) => math.sinh(one),
