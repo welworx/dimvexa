@@ -63,8 +63,22 @@ assert_eq!(r.to_string(), "≈ 1.4142135623730951 m");               // labelled
 and the arithmetic on `Number`. An approximate value spreads to everything computed from it and never turns back into
 an exact one; an exact failure such as an `overflow` is never answered with an `f64`. A root
 needs integer dimension exponents (`sqrt(m)` is refused, KL-32) and returns SI base units;
-approximate values have no tracked error bound (KL-33). `dimvexa_testkit::formula::Formula`
-reads such equations as text (`"Cd * A * sqrt(2 * dp / rho)"`).
+approximate values have no tracked error bound (KL-33). `Formula` reads equations as text
+(ADR-030), with quantities written in them (`"0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)"`) or
+named values (`"Cd * A * sqrt(2 * dp / rho)"`):
+
+```rust
+use dimvexa_calc::Formula;
+
+let reg = dimvexa::registry()?;
+let f = Formula::new(&reg);
+let q = f.eval("0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)")?;
+println!("{:.4} L/s", f.f64_in(&q, "L/s")?);
+# Ok::<(), dimvexa_core::Error>(())
+```
+
+A unit is the text after a number up to a space, so write spaces around the operators between
+quantities and none inside a unit (`J/(mol*K)`).
 
 Operations: `add`, `sub`, `weighted_mean`, `neg`, `abs`, `pow`, `scale`, `div_scalar`, `eq`,
 `cmp`, `to_unit`, `to_f64_in`. Multiplication and division are the core's `Quantity::checked_mul` and
