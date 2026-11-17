@@ -1165,10 +1165,10 @@ impl<'r> Math<'r> {
                 if bounded && x.abs() > 1.0 {
                     return Err(refused(format!("{name} needs a value between -1 and 1")));
                 }
-                for (n, d, pn, pd) in exact {
+                for (n, d, pi_n, pi_d) in exact {
                     let at = Ratio::new(*n, *d)?;
                     let mirrored = at.checked_mul(Ratio::from_int(-1))?;
-                    let angle = Ratio::new(*pn, *pd)?.with_exponents(0, 1);
+                    let angle = Ratio::new(*pi_n, *pi_d)?.with_exponents(0, 1);
                     if r.checked_eq(at)? {
                         return Ok(Number::Exact(Quantity::new(angle, rad)));
                     }
