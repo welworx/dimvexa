@@ -247,7 +247,6 @@ fn superscripts_dots_and_whitespace_are_read_in_equations() {
 #[test]
 fn pi_after_a_number_and_before_a_name_multiplies() {
     let reg = registry().unwrap();
-    let f = Formula::new(&reg).var("r", "3 m").unwrap();
     let pi = std::f64::consts::PI;
     assert_eq!(value(&reg, &[("r", "3 m")], "2 pi r", "m"), 6.0 * pi);
     assert_eq!(value(&reg, &[("r", "3 m")], "pi r^2", "m2"), 9.0 * pi);
