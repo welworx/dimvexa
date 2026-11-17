@@ -62,6 +62,15 @@ a `Quantity` holding the rational value of an `f64`: nothing would show that it 
   rises); a difference (`delta_K`) works.
 * No change to the exact core, the CLI, the JSON schemas or the bindings. The bindings do not
   expose `Math` yet; that is a separate change.
-* Not done (OPEN, recommended default: later): `tan`, `asin`/`acos`/`atan`, `log10`, `sinh`,
-  `pow` with a non-rational exponent; error propagation (an interval type) for approximate
-  values; the `kelvin(...)` function for computed temperatures (A4).
+* **A function that is not implemented is an error that says so.** In the equation helper,
+  `tan`, `asin`, `acos`, `atan`, `atan2`, `sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh`,
+  `log`, `log10`, `log2`, `cbrt`, `pow`, `hypot`, `floor` and `round` fail with `refused` and
+  the wording of the other unsupported requests: `'tan' is not implemented (the functions are
+  sqrt, ln, exp, sin and cos, ADR-029); write sin(x) / cos(x)`. The name is checked before the
+  argument is read, so `atan2(y, x)` is not a syntax error, and the message gives the way to
+  write it from the implemented functions where there is one. An unknown name says `unknown
+  function`. No error code was added (rule 4: unsupported requests are errors with a stable
+  code; `refused` is it).
+* Not done (OPEN, recommended default: later): implementing those functions; error propagation
+  (an interval type) for approximate values; the `kelvin(...)` function for computed
+  temperatures (A4).

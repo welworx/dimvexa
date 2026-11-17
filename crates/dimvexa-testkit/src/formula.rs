@@ -22,7 +22,9 @@
 //!
 //! Grammar: numbers (`2`, `0.5`, `1e-3`), variables, `+ - * /`, a unary minus, parentheses, a
 //! power with an integer, a decimal or a fraction as exponent (`L^4`, `v^-2`, `x^0.5`,
-//! `R^(2/3)`), and the functions `sqrt`, `ln`, `exp`, `sin` and `cos`. Every step is an
+//! `R^(2/3)`), and the functions `sqrt`, `ln`, `exp`, `sin` and `cos`. Any other function is a
+//! `refused` error that says `'tan' is not implemented` (and how to write it, where there is a
+//! way: `sin(x) / cos(x)`), an unknown name says `unknown function`. Every step is an
 //! operation of [`Math`] or of the core, so a result is exact whenever the mathematics is exact
 //! and an explicitly approximate [`Number`] otherwise (ADR-029). Read it in a unit with
 //! [`Formula::f64_in`] or [`Formula::to_unit`]; [`Formula::eval_exact`] refuses an approximate
@@ -95,6 +97,53 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
         }
     }
     Ok(out)
+}
+
+/// The functions the evaluator implements (ADR-029).
+const IMPLEMENTED: [&str; 5] = ["sqrt", "ln", "exp", "sin", "cos"];
+
+/// Well-known functions that are **not implemented**, each with the way to write it from the
+/// ones that are (empty where there is none). Using one is an error, never a guess.
+const NOT_IMPLEMENTED: [(&str, &str); 19] = [
+    ("tan", "sin(x) / cos(x)"),
+    ("asin", ""),
+    ("acos", ""),
+    ("atan", ""),
+    ("atan2", ""),
+    ("sinh", "(exp(x) - exp(-x)) / 2"),
+    ("cosh", "(exp(x) + exp(-x)) / 2"),
+    ("tanh", "(exp(x) - exp(-x)) / (exp(x) + exp(-x))"),
+    ("asinh", ""),
+    ("acosh", ""),
+    ("atanh", ""),
+    ("log", "ln(x) / ln(base)"),
+    ("log10", "ln(x) / ln(10)"),
+    ("log2", "ln(x) / ln(2)"),
+    ("cbrt", "x^(1/3)"),
+    ("pow", "x^p"),
+    ("hypot", "sqrt(x^2 + y^2)"),
+    ("floor", ""),
+    ("round", ""),
+];
+
+fn function_list() -> String {
+    "sqrt, ln, exp, sin and cos".to_owned()
+}
+
+/// `refused`, in the wording of the other unsupported requests (`'psig' is not implemented`).
+fn not_implemented(name: &str, hint: &str) -> Error {
+    let how = if hint.is_empty() {
+        String::new()
+    } else {
+        format!("; write {hint}")
+    };
+    Error::Refused {
+        reason: format!(
+            "'{name}' is not implemented (the functions are {}, ADR-029){how}",
+            function_list()
+        ),
+        suggestions: IMPLEMENTED.map(str::to_owned).to_vec(),
+    }
 }
 
 struct Parser<'a, 'r> {
@@ -246,6 +295,20 @@ impl Parser<'_, '_> {
 
     /// `name(argument)`.
     fn call(&mut self, name: &str) -> Result<Number> {
+        // the name decides before the argument is read: `atan2(y, x)` must say that it is not
+        // implemented, not complain about the comma
+        if let Some((_, hint)) = NOT_IMPLEMENTED.iter().find(|(n, _)| *n == name) {
+            return Err(not_implemented(name, hint));
+        }
+        if !IMPLEMENTED.contains(&name) {
+            return Err(Error::Refused {
+                reason: format!(
+                    "unknown function '{name}' (the functions are {})",
+                    function_list()
+                ),
+                suggestions: IMPLEMENTED.map(str::to_owned).to_vec(),
+            });
+        }
         self.pos += 1; // the '('
         let arg = self.expr()?;
         if !self.eat(')') {
@@ -257,13 +320,7 @@ impl Parser<'_, '_> {
             "ln" => math.ln(&arg),
             "exp" => math.exp(&arg),
             "sin" => math.sin(&arg),
-            "cos" => math.cos(&arg),
-            _ => Err(Error::Refused {
-                reason: format!("the function '{name}' is not available"),
-                suggestions: ["sqrt", "ln", "exp", "sin", "cos"]
-                    .map(str::to_owned)
-                    .to_vec(),
-            }),
+            _ => math.cos(&arg),
         }
     }
 }
