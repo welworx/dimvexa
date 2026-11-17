@@ -353,7 +353,10 @@ their unit, and their names say what they are: `planck_constant`, `elementary_ch
 J/(mol.K)), besides `pi`. The energy of a 500 nm photon is
 `planck_constant * speed_of_light / 500 nm` (`--to J`), and `p V = n R T` reads
 `n * molar_gas_constant * T / V`. Short symbols such as `c`, `e` or `R` are yours to define: a
-`[[constant]]` in a config (`dimvexa constants --config mine.toml`) or a `--var`. A `--var` with
+`[[constant]]` in a config (`dimvexa constants --config mine.toml`) or a `--var`.
+`examples/configs/engineering.toml` defines `R`, `c`, `k_B`, `N_A`, `h_P` and `q_e` with the exact
+values of the built-in ones, so `n * R * T.to(K) / V --config examples/configs/engineering.toml`
+reads as an engineer writes it. A `--var` with
 the name of a built-in constant replaces it, with a warning (on stderr, and in `warnings` of the
 JSON), so it is never silent. The constants of the configs in effect are names too
 (`dimvexa constants --config water` lists them): `1 L * water_25C --config water --to kg` is
@@ -380,7 +383,7 @@ JSON), so it is never silent. The constants of the configs in effect are names t
   `1 kg·m/s²`; a space before the superscript is ignored, `2 m ²` is `2 m²`); error positions count the characters after this rewrite.
 * **Functions:** `sqrt`, `cbrt`, `abs`, `hypot`, `min`, `max`, `ln`, `exp`, `log10` (`lg`), `log2`
   (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`,
-  `tanh`, `asinh`, `acosh`, `atanh`, `to`. The inverse functions return an angle in `rad` (`atan2(1 m, 1 m)
+  `tanh`, `asinh`, `acosh`, `atanh`. The inverse functions return an angle in `rad` (`atan2(1 m, 1 m)
   --to deg` is `45 deg`); they are exact at the special values (`atan(1)` is exactly pi/4,
   `acos(0.5)` is pi/3, `tan(45 deg)` is `1`), and otherwise approximate.
   `min` and `max` need one dimension (`4 m` and `4 km` work, `4 m` and `3 L` do not) and return
@@ -437,14 +440,14 @@ answered with an approximate number.
 * **Temperatures:** a point (`20 degC`, `-40 degC`) can be compared and shifted by a difference,
   not multiplied or negated (`-40 degC` is the point itself, `-(20 degC)` is refused); `degC + degC` adds two points (`20 degC + 30 degC` is `50 degC`) while
   `degC - degC` is a difference (`delta_degC`) and a point minus a kelvin is refused (ADR-027).
-  `to(x, UNIT)` converts a value to another unit inside the equation, so you decide where the
-  conversion happens and the units are checked against it: `to(20 degC, K)` is `293.15 K`,
-  `to(3 m, ft)`, `to(10 kW * 2 h, kW*h)`; a wrong dimension is an error (`to(5 m, K)`). So
-  `p V = n R T` with `T` in degrees Celsius is `n * molar_gas_constant * to(T, K) / V`. A
-  computed temperature (`p * V / (n * R)`, dimension K) converts to `K`, `degC` and `degF` too,
-  also with `--to`. A kelvin value scales (`2 * to(20 degC, K)` is `586.3 K`); a Celsius or
-  Fahrenheit point does not (`2 * 20 degC` is refused). A temperature difference is not a
-  temperature (`to(5 delta_K, K)` is refused).
+  `x.to(UNIT)` converts a value to another unit inside the equation, so you decide where the
+  conversion happens and the units are checked against it: `20 degC.to(K)` is `293.15 K`,
+  `3 m.to(ft)`, `(10 kW * 2 h).to(kW*h)`, `(a + b).to(cm)`; a wrong dimension is an error
+  (`5 m.to(K)`). It binds tighter than `*` and `/`, so `n * molar_gas_constant * T.to(K) / V`
+  is `p V = n R T` with `T` in degrees Celsius. A computed temperature (`p * V / (n * R)`,
+  dimension K) converts to `K`, `degC` and `degF` too, also with `--to`. A kelvin value scales
+  (`2 * 20 degC.to(K)` is `586.3 K`); a Celsius or Fahrenheit point does not (`2 * 20 degC` is
+  refused). A temperature difference is not a temperature (`5 delta_K.to(K)` is refused).
 * **Not units of every trade:** names that mean different things (`ton`, `gpm`, `mph`, `rpm`) are
   errors until a config chooses (`--config us-customary`, or your own, see
   `examples/configs/engineering.toml`). A space between two units is not a product: write

@@ -3847,7 +3847,7 @@ fn calc_c_is_the_speed_of_light() {
     );
 }
 
-/// Config constants are names in equations; `to(x, UNIT)` converts inside an equation; `2 pi r`, `x^n`
+/// Config constants are names in equations; `x.to(UNIT)` converts inside an equation; `2 pi r`, `x^n`
 /// and the engineer's notation are read.
 #[test]
 fn calc_reads_config_constants_to_pi_names_exponents_and_notation() {
@@ -3862,7 +3862,7 @@ fn calc_reads_config_constants_to_pi_names_exponents_and_notation() {
     assert_eq!(calc(&["water_25C"]).code, 1);
     // pV = nRT with T in degrees Celsius
     let r = calc(&[
-        "n * molar_gas_constant * to(T, K) / V",
+        "n * molar_gas_constant * T.to(K) / V",
         "--var",
         "n=2 mol",
         "--var",
@@ -3874,8 +3874,8 @@ fn calc_reads_config_constants_to_pi_names_exponents_and_notation() {
     ]);
     assert_eq!(r.code, 0, "{}", r.stderr);
     assert!(r.stdout.starts_with("97.4953886604649"), "{}", r.stdout);
-    assert_eq!(calc(&["to(68 degF, K)"]).stdout, "293.15 K\n");
-    assert_eq!(calc(&["to(5 m, K)"]).code, 1);
+    assert_eq!(calc(&["68 degF.to(K)"]).stdout, "293.15 K\n");
+    assert_eq!(calc(&["5 m.to(K)"]).code, 1);
     // pi after a number and before a name
     assert_eq!(
         calc(&["2 pi r", "--var", "r=3 m"]).stdout,
@@ -4081,11 +4081,11 @@ fn calc_a_division_before_an_implicit_pi_product_is_refused() {
 /// superscript belongs to the unit before it.
 #[test]
 fn calc_a_converted_kelvin_scales_and_a_spaced_superscript_is_part_of_the_unit() {
-    assert_eq!(calc(&["2 * to(20 degC, K)"]).stdout, "586.3 K\n");
-    assert_eq!(calc(&["to(20 degC, K) * 2"]).stdout, "586.3 K\n");
-    assert_eq!(calc(&["to(20 degC, K) / 2"]).stdout, "146.575 K\n");
+    assert_eq!(calc(&["2 * 20 degC.to(K)"]).stdout, "586.3 K\n");
+    assert_eq!(calc(&["20 degC.to(K) * 2"]).stdout, "586.3 K\n");
+    assert_eq!(calc(&["20 degC.to(K) / 2"]).stdout, "146.575 K\n");
     assert_eq!(
-        calc(&["molar_gas_constant * to(20 degC, K) * 2"]).stdout,
+        calc(&["molar_gas_constant * 20 degC.to(K) * 2"]).stdout,
         "4874.769433023244… J/mol\n"
     );
     assert_eq!(calc(&["2 * 300 K"]).stdout, "600 K\n");
@@ -4096,18 +4096,23 @@ fn calc_a_converted_kelvin_scales_and_a_spaced_superscript_is_part_of_the_unit()
     }
 }
 
-/// `to(x, UNIT)` converts inside an equation; the dimension must match, and a computed
+/// `x.to(UNIT)` converts inside an equation; the dimension must match, and a computed
 /// temperature converts to K and degC, also with `--to`.
 #[test]
-fn calc_to_converts_inside_an_equation_and_checks_the_dimension() {
+fn calc_dot_to_converts_inside_an_equation_and_checks_the_dimension() {
     for (expr, text) in [
-        ("to(20 degC, K)", "293.15 K\n"),
-        ("to(20 °C, K)", "293.15 K\n"),
-        ("to(68 degF, degC)", "20 degC\n"),
-        ("to(3 m, ft)", "9.84251968503937… ft\n"),
-        ("to(10 kW * 2 h, kW*h)", "20 kW.h\n"),
-        ("to(1000 kg/m3, g/cm3)", "1 g/cm^3\n"),
-        ("to(2 pi * 1 rad, deg)", "360 deg\n"),
+        ("20 degC.to(K)", "293.15 K\n"),
+        ("(20 degC).to(K)", "293.15 K\n"),
+        ("(5 m + 3 ft).to(cm)", "591.44 cm\n"),
+        ("-40 degC.to(K)", "233.15 K\n"),
+        ("20 degC.to(K).to(degF)", "68 degF\n"),
+        ("5 N.m.to(J)", "5 J\n"),
+        ("20 °C.to(K)", "293.15 K\n"),
+        ("68 degF.to(degC)", "20 degC\n"),
+        ("3 m.to(ft)", "9.84251968503937… ft\n"),
+        ("(10 kW * 2 h).to(kW*h)", "20 kW.h\n"),
+        ("1000 kg/m3.to(g/cm3)", "1 g/cm^3\n"),
+        ("(2 pi * 1 rad).to(deg)", "360 deg\n"),
     ] {
         assert_eq!(calc(&[expr]).stdout, text, "{expr}");
     }
@@ -4115,14 +4120,14 @@ fn calc_to_converts_inside_an_equation_and_checks_the_dimension() {
     let gas = "1 atm * 22.414 L / (1 mol * molar_gas_constant)";
     assert_eq!(calc(&[gas, "--to", "K"]).stdout, "273.1503711426203… K\n");
     assert_eq!(
-        calc(&[&format!("to({gas}, degC)")]).stdout,
+        calc(&[&format!("({gas}).to(degC)")]).stdout,
         calc(&[gas, "--to", "degC"]).stdout
     );
     // the units are checked against what the user wrote
     for (expr, code) in [
-        ("to(5 m, K)", "dimension_mismatch"),
-        ("to(5 delta_K, K)", "kind_mismatch"),
-        ("to(3 m, foo)", "unknown_unit"),
+        ("5 m.to(K)", "dimension_mismatch"),
+        ("5 delta_K.to(K)", "kind_mismatch"),
+        ("3 m.to(foo)", "unknown_unit"),
     ] {
         let r = calc(&[expr]);
         assert!(
@@ -4131,7 +4136,7 @@ fn calc_to_converts_inside_an_equation_and_checks_the_dimension() {
             r.stderr
         );
     }
-    for expr in ["to(3 m)", "to(3 m, )", "to()"] {
+    for expr in ["3 m.to()", "3 m.to( )"] {
         let r = calc(&[expr]);
         assert!(
             r.stderr.starts_with("error[parse_error]"),
@@ -4139,4 +4144,50 @@ fn calc_to_converts_inside_an_equation_and_checks_the_dimension() {
             r.stderr
         );
     }
+    // the old function form says how to write it now
+    let r = calc(&["to(3 m, ft)"]);
+    assert!(r.stderr.starts_with("error[refused]"), "{}", r.stderr);
+    assert!(r.stderr.contains("write x.to(UNIT)"), "{}", r.stderr);
+}
+
+/// The short constant symbols of `examples/configs/engineering.toml` equal the built-in constants
+/// exactly, and the equation reads as an engineer writes it.
+#[test]
+fn engineering_config_short_symbols_equal_the_built_in_constants() {
+    let config = ["--config", "examples/configs/engineering.toml"];
+    for (short, long) in [
+        ("R", "molar_gas_constant"),
+        ("c", "speed_of_light"),
+        ("k_B", "boltzmann_constant"),
+        ("N_A", "avogadro_constant"),
+        ("h_P", "planck_constant"),
+        ("q_e", "elementary_charge"),
+    ] {
+        let mut a = vec!["--exact", short];
+        let mut b = vec!["--exact", long];
+        a.splice(0..0, ["calc"]);
+        b.splice(0..0, ["calc"]);
+        a.extend(config);
+        b.extend(config);
+        // the same exact value and unit, character for character
+        let (x, y) = (dimvexa_at_root(&a), dimvexa_at_root(&b));
+        assert_eq!((x.code, y.code), (0, 0), "{short}: {}", x.stderr);
+        assert_eq!(x.stdout, y.stdout, "{short} vs {long}");
+    }
+    let r = dimvexa_at_root(&[
+        "calc",
+        "n * R * T.to(K) / V",
+        "--var",
+        "n=2 mol",
+        "--var",
+        "T=20 degC",
+        "--var",
+        "V=50 L",
+        "--to",
+        "kPa",
+        "--config",
+        "examples/configs/engineering.toml",
+    ]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(r.stdout.starts_with("97.4953886604649"), "{}", r.stdout);
 }

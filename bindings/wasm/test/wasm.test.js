@@ -119,7 +119,7 @@ assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", 
   assert.strictEqual(d.calc("atan2(1 m, 100 cm)", [], "deg", "", []).text, "45 deg");
   assert.strictEqual(d.calc("1 m * 1 m", [], "", "", []).unit, "m^2");
   assert.strictEqual(d.calc("1 L * water_25C", [], "kg", "water", []).text, "0.99704702 kg");
-  assert.ok(d.calc("n * molar_gas_constant * to(T, K) / V", ["n=2 mol", "T=20 degC", "V=50 L"], "kPa", "", []).text.startsWith("97.4953886604649"));
+  assert.ok(d.calc("n * molar_gas_constant * T.to(K) / V", ["n=2 mol", "T=20 degC", "V=50 L"], "kPa", "", []).text.startsWith("97.4953886604649"));
   assert.strictEqual(d.calc("2 pi r", ["r=3 m"], "", "", []).text, "18.84955592153876… m");
   assert.strictEqual(d.calc("x^n", ["x=9 m2", "n=0.5"], "", "", []).text, "3 m");
   assert.strictEqual(d.calc("10 m² · 3 m", [], "", "", []).text, "30 m^3");

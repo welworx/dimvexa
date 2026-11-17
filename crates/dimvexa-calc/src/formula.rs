@@ -33,7 +33,7 @@
 //!   `m²`, `m³`, `s⁻¹`, `·`, `×`, `÷`, `−`, tabs and newlines are read.
 //! * The functions `sqrt`, `cbrt`, `abs`, `hypot(x, y)`, `min(x, y, ...)`, `max(x, y, ...)`,
 //!   `ln`, `exp`, `log10` (`lg`), `log2` (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`,
-//!   `acos`, `atan`, `atan2(y, x)`, `to(x, UNIT)` (convert: `to(20 degC, K)`), `sinh`, `cosh`,
+//!   `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`,
 //!   `tanh`, `asinh`, `acosh` and `atanh`.
 //!   `log(x)` alone is ambiguous and refused. Any other well-known function (`pow`, `floor`,
 //!   `round`) is a `refused` error that says `'floor' is not implemented`, and how to write it
@@ -138,6 +138,11 @@ fn starts_unit(c: char) -> bool {
     c.is_alphabetic() || c == '_' || c == '°'
 }
 
+/// Whether `.to(` starts at `dot`: the conversion `value.to(UNIT)`.
+fn conversion_follows(chars: &[char], dot: usize) -> bool {
+    chars.get(dot.saturating_add(1)..dot.saturating_add(4)) == Some(&['t', 'o', '('][..])
+}
+
 /// The end of the unit that starts at `start`: symbols, digits (`m3`), `^` powers, `.`, and a
 /// `*` or `/` only when a unit symbol follows it; parentheses must balance. A space ends it.
 fn scan_unit(chars: &[char], start: usize) -> usize {
@@ -161,7 +166,8 @@ fn scan_unit(chars: &[char], start: usize) -> usize {
                 }
             }
             '*' | '/' => atom(following),
-            '.' => following.is_some_and(starts_unit),
+            // `20 degC.to(K)`: the dot before `to(` is the conversion, not a product of units
+            '.' => following.is_some_and(starts_unit) && !conversion_follows(chars, j),
             '^' => following.is_some_and(|n| n.is_ascii_digit() || n == '-'),
             '-' => j > start && chars.get(j.saturating_sub(1)) == Some(&'^'),
             _ => false,
@@ -224,7 +230,9 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
         let start = i;
         if c.is_whitespace() {
             i = next(i);
-        } else if c.is_ascii_digit() || c == '.' {
+        } else if c.is_ascii_digit()
+            || (c == '.' && chars.get(next(i)).is_some_and(char::is_ascii_digit))
+        {
             i = scan_number(&chars, i);
             let number = text(&chars, start, i);
             let mut after = i;
@@ -264,7 +272,7 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
                 i = next(i);
             }
             out.push((start, Tok::Id(text(&chars, start, i))));
-        } else if "+-*/^(),".contains(c) {
+        } else if "+-*/^(),.".contains(c) {
             out.push((start, Tok::Op(c)));
             i = next(i);
         } else {
@@ -276,7 +284,7 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
 
 /// The functions the evaluator implements (ADR-029), with the number of arguments: `0` means
 /// two or more (`min`, `max`).
-const IMPLEMENTED: [(&str, usize); 27] = [
+const IMPLEMENTED: [(&str, usize); 26] = [
     ("sqrt", 1),
     ("cbrt", 1),
     ("abs", 1),
@@ -292,7 +300,6 @@ const IMPLEMENTED: [(&str, usize); 27] = [
     ("log", 2),
     ("sin", 1),
     ("cos", 1),
-    ("to", 2),
     ("tan", 1),
     ("asin", 1),
     ("acos", 1),
@@ -308,7 +315,12 @@ const IMPLEMENTED: [(&str, usize); 27] = [
 
 /// Well-known functions that are **not implemented**, each with the way to write it from the
 /// ones that are (empty where there is none). Using one is an error, never a guess.
-const NOT_IMPLEMENTED: [(&str, &str); 3] = [("pow", "x^p"), ("floor", ""), ("round", "")];
+const NOT_IMPLEMENTED: [(&str, &str); 4] = [
+    ("to", "x.to(UNIT), for example 20 degC.to(K)"),
+    ("pow", "x^p"),
+    ("floor", ""),
+    ("round", ""),
+];
 
 fn function_list() -> String {
     let names: Vec<&str> = IMPLEMENTED.iter().map(|(name, _)| *name).collect();
@@ -483,7 +495,7 @@ impl Parser<'_, '_> {
                             Error::Parse { .. } => parse_error(self.src, at, "a value is expected"),
                             other => other,
                         })?;
-                    let mut value = negative;
+                    let mut value = self.conversions(negative)?;
                     for _ in 1..minus {
                         value = self.f.math.neg(&value)?;
                     }
@@ -562,6 +574,11 @@ impl Parser<'_, '_> {
     }
 
     fn atom(&mut self) -> Result<Number> {
+        let value = self.value()?;
+        self.conversions(value)
+    }
+
+    fn value(&mut self) -> Result<Number> {
         let at = self.here();
         match self.peek().cloned() {
             Some(Tok::Num(text)) => {
@@ -656,52 +673,51 @@ impl Parser<'_, '_> {
         }
     }
 
-    /// `to(value, UNIT)`: the value in another unit. The unit is written as it is everywhere
-    /// else (`K`, `degC`, `kW*h`, `J/(mol*K)`), not as an expression. The dimension must match,
-    /// so the user decides what the conversion is and the units are checked against it.
-    fn convert_call(&mut self) -> Result<Number> {
-        let at = self.here();
-        self.advance(); // the '('
-        self.enter()?;
-        let value = self.expr()?;
-        if !self.eat(',') {
-            return Err(parse_error(
-                self.src,
-                self.here(),
-                "to takes a value and a unit: to(20 degC, K)",
-            ));
-        }
-        let start = self.pos;
-        let mut depth = 0_usize;
-        while let Some(tok) = self.peek() {
-            match tok {
-                Tok::Op('(') => depth = next(depth),
-                Tok::Op(')') if depth == 0 => break,
-                Tok::Op(')') => depth = depth.saturating_sub(1),
-                _ => {}
+    /// `value.to(UNIT)`, repeated: the value in another unit. The unit is written as it is
+    /// everywhere else (`K`, `degC`, `kW*h`, `J/(mol*K)`), not as an expression. The dimension
+    /// must match, so the user decides what the conversion is and the units are checked
+    /// against it.
+    fn conversions(&mut self, mut value: Number) -> Result<Number> {
+        while self.peek() == Some(&Tok::Op('.')) {
+            let named = matches!(self.toks.get(next(self.pos)), Some((_, Tok::Id(n))) if n == "to")
+                && matches!(self.toks.get(next(next(self.pos))), Some((_, Tok::Op('('))));
+            if !named {
+                return Ok(value);
             }
-            self.advance();
+            let at = self.here();
+            self.advance(); // the '.'
+            self.advance(); // `to`
+            self.advance(); // the '('
+            let start = self.pos;
+            let mut depth = 0_usize;
+            while let Some(tok) = self.peek() {
+                match tok {
+                    Tok::Op('(') => depth = next(depth),
+                    Tok::Op(')') if depth == 0 => break,
+                    Tok::Op(')') => depth = depth.saturating_sub(1),
+                    _ => {}
+                }
+                self.advance();
+            }
+            let from = self.toks.get(start).map(|(p, _)| *p);
+            let to = self.toks.get(self.pos).map(|(p, _)| *p);
+            let unit: String = match (from, to) {
+                (Some(from), Some(to)) => {
+                    self.norm.get(from..to).unwrap_or_default().iter().collect()
+                }
+                _ => String::new(),
+            };
+            if unit.trim().is_empty() {
+                return Err(parse_error(
+                    self.src,
+                    at,
+                    "to takes a unit: 20 degC.to(K), (a + b).to(ft)",
+                ));
+            }
+            self.advance(); // the ')'
+            value = self.f.math.to_unit(&value, unit.trim())?;
         }
-        let from = self.toks.get(start).map(|(p, _)| *p);
-        let to = self.toks.get(self.pos).map(|(p, _)| *p);
-        let (Some(from), Some(to)) = (from, to) else {
-            return Err(parse_error(
-                self.src,
-                at,
-                "to takes a value and a unit: to(20 degC, K)",
-            ));
-        };
-        let unit: String = self.norm.get(from..to).unwrap_or_default().iter().collect();
-        self.leave();
-        self.advance(); // the ')'
-        if unit.trim().is_empty() {
-            return Err(parse_error(
-                self.src,
-                at,
-                "to takes a value and a unit: to(20 degC, K)",
-            ));
-        }
-        self.f.math.to_unit(&value, unit.trim())
+        Ok(value)
     }
 
     /// `name(argument, ...)`.
@@ -710,9 +726,6 @@ impl Parser<'_, '_> {
         // implemented, not complain about the comma
         if let Some((_, hint)) = NOT_IMPLEMENTED.iter().find(|(n, _)| *n == name) {
             return Err(not_implemented(name, hint));
-        }
-        if name == "to" {
-            return self.convert_call();
         }
         let Some((_, arity)) = IMPLEMENTED.iter().find(|(n, _)| *n == name) else {
             return Err(Error::Refused {

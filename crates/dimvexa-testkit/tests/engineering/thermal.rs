@@ -298,11 +298,11 @@ fn thermal_the_lower_of_two_temperature_limits() {
 }
 
 #[test]
-fn to_converts_degrees_celsius_inside_a_product() {
+fn dot_to_converts_degrees_celsius_inside_a_product() {
     // p = n R T / V with T given in degrees Celsius: 2 mol at 20 degC in 50 L
     check(
         &[("n", "2 mol"), ("V", "50 L"), ("T", "20 degC")],
-        "n * molar_gas_constant * to(T, K) / V",
+        "n * molar_gas_constant * T.to(K) / V",
         "kPa",
         2.0 * 8.314_462_618_153_24 * 293.15 / 0.05 / 1000.0,
     );

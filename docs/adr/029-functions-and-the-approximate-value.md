@@ -90,5 +90,5 @@ a `Quantity` holding the rational value of an `f64`: nothing would show that it 
   confirmed by the owner, 2026-11-17: `abs(-5 degC)` is not `5 degC`); `abs(-5 delta_degC)` and
   `abs(T1 - T2)` work.
 * Not done (OPEN, recommended default: later): implementing the functions above; error propagation
-  (an interval type) for approximate values; the `to(x, K)` conversion for computed
+  (an interval type) for approximate values; the `x.to(K)` conversion for computed
   temperatures (A4).
