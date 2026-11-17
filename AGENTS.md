@@ -115,7 +115,7 @@ committed.
 | `crates/dimvexa-config` | user config files (ADR-009): `Config`, `apply`; the core only offers `Registry::add_alias` and the helpers `name_is_free`, `prefix_clash` |
 | `crates/dimvexa` | facade crate (re-exports core + data) |
 | `crates/dimvexa-calc` | exact calculation with core quantities (ADR-027): `Calc` add, sub, weighted_mean, pow, scale, eq, cmp, to_unit; temperature states and rises; beta; the core stays conversion-only; not re-exported by the facade |
-| `crates/dimvexa-cli` | `dimvexa convert`, `units`, `configs`, `constants`, `update` (self-update, ADR-015); no conversion logic of its own; snapshots in `tests/snapshots` |
+| `crates/dimvexa-cli` | `dimvexa convert`, `units`, `configs`, `constants`, `update` (self-update, ADR-015); no conversion logic of its own; one module per concern in `src/` (`args`, `help`, `json`, `color`, `load`, `convert`, `units`, `configs`, `constants`, `update`); snapshots in `tests/snapshots` |
 | `crates/dimvexa-testkit` | test helpers; differential, exact-path, property, overflow and zero-allocation tests |
 | `xtask` | `ci`, `check-docs`, `validate-data`, `update-data-hash`, `bench-check`, `bench-impact`, `bench-release`, `bench-matrix` |
 | `bindings/` | `python`, `wasm`, `excel`: thin wrappers with no conversion logic; versions equal (`scripts/check-versions.sh`) |
@@ -172,7 +172,7 @@ Read the matching skill in `skills/<name>/SKILL.md` (`.claude/skills` is a symli
 * The CLI help is part of the interface. A new or changed command, option, config, JSON schema,
   exit code or error behaviour updates, in the same change: the overview (`HELP`) and the page
   of that command (`HELP_CONVERT`, `HELP_UNITS`, `HELP_CONFIGS`, `HELP_CONSTANTS`, `HELP_UPDATE`) in
-  `crates/dimvexa-cli/src/lib.rs`, its `Examples:` and `docs/guide.md`. A new command also needs a
+  `crates/dimvexa-cli/src/help.rs`, its `Examples:` and `docs/guide.md`. A new command also needs a
   page, an entry in `HELP_PAGES` in `crates/dimvexa-cli/tests/cli.rs` and a line in the overview.
   Help lines stay within 80 columns and every example must run as typed from an empty
   directory (tests enforce both); colour wraps text only (`colorize_text`) and a test checks that
