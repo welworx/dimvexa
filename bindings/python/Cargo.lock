@@ -17,6 +17,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dimvexa-calc"
+version = "0.10.0"
+dependencies = [
+ "dimvexa-core",
+]
+
+[[package]]
 name = "dimvexa-config"
 version = "0.10.0"
 dependencies = [
@@ -39,6 +46,7 @@ name = "dimvexa-python"
 version = "0.10.0"
 dependencies = [
  "dimvexa",
+ "dimvexa-calc",
  "dimvexa-config",
  "numpy",
  "pyo3",

@@ -56,6 +56,14 @@ def quantity(
     configs: list[str] | None = None,
     config_texts: list[str] | None = None,
 ) -> Quantity: ...
+def calc(
+    expression: str,
+    *,
+    vars: dict[str, str] | None = None,
+    to: str | None = None,
+    configs: list[str] | None = None,
+    config_texts: list[str] | None = None,
+) -> dict[str, Any]: ...
 def units(
     *, configs: list[str] | None = None, config_texts: list[str] | None = None
 ) -> list[str]: ...

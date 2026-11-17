@@ -28,6 +28,8 @@ dimvexa.convert(1.0, "L", "kg", density="998.2067kg/m3")  # never assumed, only 
 dimvexa.convert(1.0, "L", "kg", configs=["water"], density="water_25C")
 dimvexa.constants(config_texts=[toml_text])  # pi, h_P, e, k_B, N_A, then your own
 dimvexa.quantity("1 L", density="998.2067kg/m3").to("kg")  # exact; quantity() takes the same options
+dimvexa.calc("sqrt(9 m2)")  # {"value": 3.0, "unit": "m", "exact": True, "text": "3 m"}
+dimvexa.calc("sqrt(2 * dp / rho)", vars={"dp": "50 kPa", "rho": "998 kg/m3"}, to="m/s")  # exact when the mathematics is, "≈ ..." when not
 dimvexa.units(configs=["us-customary"]), dimvexa.unit_info("bbl_oil", config_texts=[toml_text])  # config units too
 ```
 

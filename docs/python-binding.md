@@ -6,7 +6,7 @@ Decision record: [ADR-012](adr/012-python-binding.md). Code: `bindings/python`.
 
 * PyO3 + maturin crate (own Cargo workspace, `abi3-py39`), package `dimvexa`, extension
   `dimvexa._dimvexa`, type stubs and `py.typed`.
-* API: `convert`, `conversion`, `quantity`, `units`, `unit_info`, `data_version`, `DimvexaError`.
+* API: `convert`, `conversion`, `quantity`, `calc` (equations with units, ADR-030; needs a release of `dimvexa-calc` with `Formula` on crates.io before the wheels can build), `units`, `unit_info`, `data_version`, `DimvexaError`.
 * 14 pytest tests. Local checks that pass today: `maturin develop && pytest`, `ruff check`,
   `ruff format --check`, `mypy` (strict), `cargo clippy`, `cargo fmt`.
 * Lint and type configuration is in `bindings/python/pyproject.toml` (ruff: E, F, W, I, B, UP, N,

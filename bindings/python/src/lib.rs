@@ -10,6 +10,7 @@ use std::sync::{Arc, OnceLock};
 use ::dimvexa::{
     CONSTANTS, Conversion as CoreConversion, Quantity as CoreQuantity, Ratio, Registry,
 };
+use dimvexa_calc::{Formula, Number};
 use numpy::{PyArrayDyn, PyArrayMethods, PyReadonlyArrayDyn, PyUntypedArrayMethods};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -494,6 +495,68 @@ fn quantity(
     })
 }
 
+/// Calculate an equation with units (ADR-030): `calc("sqrt(2 * dp / rho)", vars={"dp": "50 kPa",
+/// "rho": "998 kg/m3"}, to="m/s")`, or with the quantities written in the equation
+/// (`calc("2 m * 3 m")`). Returns a dict with `value` (float; an exact result is rounded once),
+/// `unit`, `exact` (False when the result is an approximate `f64`) and `text` (what
+/// `dimvexa calc` prints, `≈ ` first when approximate). `to` is the unit of the result; without
+/// it the unit the arithmetic gave. Options as in `convert`.
+#[pyfunction]
+#[pyo3(signature = (expression, *, vars = None, to = None, configs = None, config_texts = None))]
+fn calc<'py>(
+    py: Python<'py>,
+    expression: &str,
+    vars: Option<std::collections::BTreeMap<String, String>>,
+    to: Option<&str>,
+    configs: Option<Vec<String>>,
+    config_texts: Option<Vec<String>>,
+) -> PyResult<Bound<'py, PyDict>> {
+    let loaded = load(
+        &configs.unwrap_or_default(),
+        &config_texts.unwrap_or_default(),
+    )?;
+    let mut formula = Formula::new(&loaded.reg);
+    for (name, value) in vars.unwrap_or_default() {
+        formula = formula.var(&name, &value).map_err(|e| to_py(&e))?;
+    }
+    let mut number = formula.eval(expression).map_err(|e| to_py(&e))?;
+    if let Some(unit) = to.map(str::trim).filter(|u| !u.is_empty()) {
+        number = formula.to_unit(&number, unit).map_err(|e| to_py(&e))?;
+    }
+    let value = match &number {
+        Number::Exact(q) => q.value().to_f64().map_err(|e| to_py(&e))?,
+        Number::Approx(a) => a.value(),
+    };
+    let unit = if number.unit().is_unity() {
+        String::new()
+    } else {
+        number.unit().to_string()
+    };
+    let exact = number.is_exact();
+    // The number as `dimvexa calc` prints it: plain, or scientific outside 1e-4 .. 1e16.
+    let digits = if value != 0.0 && !(1e-4..1e16).contains(&value.abs()) {
+        format!("{value:e}")
+    } else {
+        format!("{value}")
+    };
+    let shown = if exact {
+        digits
+    } else {
+        format!("≈ {digits}")
+    };
+    let text = if unit.is_empty() {
+        shown
+    } else {
+        format!("{shown} {unit}")
+    };
+    let out = PyDict::new(py);
+    out.set_item("value", value)?;
+    out.set_item("unit", unit)?;
+    out.set_item("exact", exact)?;
+    out.set_item("text", text)?;
+    Ok(out)
+}
+
 /// All unit symbols in the table, and those of the `configs` / `config_texts` if given.
 #[pyfunction]
 #[pyo3(signature = (*, configs = None, config_texts = None))]
@@ -572,6 +635,7 @@ fn _dimvexa(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(conversion, m)?)?;
     m.add_function(wrap_pyfunction!(constants, m)?)?;
     m.add_function(wrap_pyfunction!(quantity, m)?)?;
+    m.add_function(wrap_pyfunction!(calc, m)?)?;
     m.add_function(wrap_pyfunction!(units, m)?)?;
     m.add_function(wrap_pyfunction!(unit_info, m)?)?;
     m.add_function(wrap_pyfunction!(data_version, m)?)?;

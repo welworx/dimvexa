@@ -79,5 +79,31 @@ assert.strictEqual(d.convertExactWith("1", "ton", "kg", "", "us-customary", []),
 assert.strictEqual(code(() => d.convertExactWith("pi", "degC", "degF", "", "", [])), "refused");
 assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", [])), "ambiguous_expression");
 
+// calc (ADR-030): exact when the mathematics is, with the unit; named values or inline quantities
+{
+  const r = d.calc("sqrt(9 m2)", [], "", "", []);
+  assert.deepStrictEqual({ ...r }, { value: 3, unit: "m", exact: true, text: "3 m" });
+  assert.strictEqual(d.calc("100 kg * 1 g_n * sin(30 deg)", [], "N", "", []).text, "490.3325 N");
+  const inline = d.calc("0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)", [], "L/s", "", []);
+  const named = d.calc("Cd * A * sqrt(2 * dp / rho)",
+    ["Cd=0.61", "A=10 cm2", "dp=50 kPa", "rho=998 kg/m3"], "L/s", "", []);
+  assert.strictEqual(inline.text, "≈ 6.106109165276735 L/s");
+  assert.deepStrictEqual({ ...named }, { ...inline });
+  assert.strictEqual(inline.exact, false);
+  for (const e of ["x^0.5", "x^(1/2)", "sqrt(x)"]) assert.strictEqual(d.calc(e, ["x=9 m2"], "", "", []).text, "3 m");
+  // min and max: one dimension, the winner keeps its unit
+  assert.strictEqual(d.calc("min(3 ft, 4 m)", [], "", "", []).text, "3 ft");
+  assert.strictEqual(d.calc("max(4 m, 4 km)", [], "", "", []).text, "4 km");
+  assert.strictEqual(code(() => d.calc("min(4 m, 3 L)", [], "", "", [])), "dimension_mismatch");
+  // failures carry the stable codes
+  assert.strictEqual(code(() => d.calc("1 m + 1 s", [], "", "", [])), "dimension_mismatch");
+  assert.strictEqual(code(() => d.calc("tan(1 rad)", [], "", "", [])), "refused");
+  assert.strictEqual(code(() => d.calc("log(100)", [], "", "", [])), "refused");
+  assert.strictEqual(code(() => d.calc("1 +", [], "", "", [])), "parse_error");
+  assert.strictEqual(code(() => d.calc("1 m", ["novalue"], "", "", [])), "invalid_definition");
+  assert.strictEqual(code(() => d.calc("1 ton * 1 g_n", [], "N", "", [])), "ambiguous_symbol");
+  assert.strictEqual(d.calc("1 ton * 1 g_n", [], "N", "us-customary", []).text, "8896.443230521 N");
+}
+
 console.warn = realWarn;
 console.log("wasm: ok");

@@ -249,6 +249,8 @@ If a spilled result shows `#SPILL!` (German `#ÜBERLAUF!`), a cell in the way is
 
 ## Status
 
+`dimvexa calc` (equations, ADR-030) is in the Python and WebAssembly bindings (`calc`) but not yet a worksheet function: a gap, recorded here.
+
 | Check | Result |
 |---|---|
 | Real WASM through the functions, Excel runtime mocked (`node test/functions.test.js`) | passes |

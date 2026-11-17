@@ -16,6 +16,9 @@ const d = require('@dimvexa/wasm');   // after `npm install @dimvexa/wasm`; loca
 d.convert(212, 'degF', 'degC');            // 100  (fast path, f64)
 d.convertExact('98.6', 'degF', 'degC');    // 37   (exact rational, rounded once)
 d.convertQuantity('5 ft', 'm');            // "1.524 m"
+// An equation with units (ADR-030): exact when the mathematics is, `≈` when it is not
+d.calc('sqrt(9 m2)', [], '', '', []);       // { value: 3, unit: 'm', exact: true, text: '3 m' }
+d.calc('Cd * A * sqrt(2 * dp / rho)', ['Cd=0.61', 'A=10 cm2', 'dp=50 kPa', 'rho=998 kg/m3'], 'L/s', '', []).text; // "≈ 6.106109165276735 L/s"
 d.convertExactWith('4pi', 'rad', 'deg', '', '', []); // 720, with density/config/config texts
 d.convertExact('4pi', 'rad', 'deg');      // 720   (pi stays exact; also 'pi/2', '2*pi^2')
 d.convertWith(1, 'ton', 'kg', '', 'us', []);   // 907.18474 (a shipped config resolves the ambiguous name)

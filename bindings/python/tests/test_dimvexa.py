@@ -236,3 +236,59 @@ def test_pi_into_an_offset_unit_is_refused() -> None:
     with pytest.raises(dimvexa.DimvexaError) as e:
         dimvexa.convert("pi", "degC", "degF")
     assert e.value.code == "refused"
+
+
+def test_calc_is_exact_when_the_mathematics_is() -> None:
+    r = dimvexa.calc("sqrt(9 m2)")
+    assert r == {"value": 3.0, "unit": "m", "exact": True, "text": "3 m"}
+    assert dimvexa.calc("100 kg * 1 g_n * sin(30 deg)", to="N")["text"] == "490.3325 N"
+    # a plain number has no unit
+    assert dimvexa.calc("3 m / 2 m") == {"value": 1.5, "unit": "", "exact": True, "text": "1.5"}
+
+
+def test_calc_approximate_results_say_so() -> None:
+    r = dimvexa.calc("sqrt(2 m2)")
+    assert r["exact"] is False
+    assert r["text"] == "≈ 1.4142135623730951 m"
+
+
+def test_calc_named_values_equal_inline_quantities() -> None:
+    inline = dimvexa.calc("0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)", to="L/s")
+    named = dimvexa.calc(
+        "Cd * A * sqrt(2 * dp / rho)",
+        vars={"Cd": "0.61", "A": "10 cm2", "dp": "50 kPa", "rho": "998 kg/m3"},
+        to="L/s",
+    )
+    assert inline == named
+    assert inline["text"] == "≈ 6.106109165276735 L/s"
+    # x^0.5, y^(1/2) and sqrt(x) agree
+    for e in ("x^0.5", "x^(1/2)", "sqrt(x)"):
+        assert dimvexa.calc(e, vars={"x": "9 m2"})["text"] == "3 m"
+
+
+def test_calc_min_max_need_one_dimension_and_keep_the_winners_unit() -> None:
+    assert dimvexa.calc("min(3 ft, 4 m)")["text"] == "3 ft"
+    assert dimvexa.calc("max(4 m, 4 km)")["text"] == "4 km"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("min(4 m, 3 L)")
+    assert e.value.code == "dimension_mismatch"
+
+
+def test_calc_errors_carry_codes_and_configs_apply() -> None:
+    for expr, code in [
+        ("1 m + 1 s", "dimension_mismatch"),
+        ("tan(1 rad)", "refused"),
+        ("log(100)", "refused"),
+        ("1 +", "parse_error"),
+    ]:
+        with pytest.raises(dimvexa.DimvexaError) as e:
+            dimvexa.calc(expr)
+        assert e.value.code == code, expr
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("1 m", to="s")
+    assert e.value.code == "dimension_mismatch"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("1 ton * 1 g_n", to="N")
+    assert e.value.code == "ambiguous_symbol"
+    r = dimvexa.calc("1 ton * 1 g_n", to="N", configs=["us-customary"])
+    assert r["text"] == "8896.443230521 N"

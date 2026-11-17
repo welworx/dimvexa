@@ -18,6 +18,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 dimvexa = "0.10.0"
+dimvexa-calc = "0.10.0"
 dimvexa-config = "0.10.0"
 pyo3 = { version = "0.30", features = ["abi3-py39", "extension-module"] }
 numpy = "0.30"

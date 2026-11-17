@@ -14,6 +14,7 @@ use std::rc::Rc;
 use std::sync::OnceLock;
 
 use dimvexa::{Conversion, Error, Registry, UnitExpr};
+use dimvexa_calc::{Formula, Number};
 use dimvexa_config::{Density, DensityError};
 use js_sys::{Array, Float64Array, Reflect};
 use wasm_bindgen::prelude::*;
@@ -396,6 +397,86 @@ pub fn convert_quantity(quantity: &str, to: &str) -> Result<String, JsValue> {
         .map_err(|e| fail(&e))?;
     let target = reg.parse(to).map_err(|e| fail(&e))?;
     Ok(q.to_unit(&target).map_err(|e| fail(&e))?.to_string())
+}
+
+/// Calculates an equation with units (ADR-030): `"sqrt(2 * dp / rho)"` with
+/// `vars = ["dp=50 kPa", "rho=998 kg/m3"]`, or with the quantities written in the equation
+/// (`"2 m * 3 m"`, `vars = []`). `to` is the unit of the result (empty: the unit the arithmetic
+/// gave). `config` and `config_texts` are as for `convertWith`.
+///
+/// Returns `{ value, unit, exact, text }`: `value` is the result as a number (an exact result
+/// rounded once), `exact` says whether the mathematics was exact, and `text` is what
+/// `dimvexa calc` prints (`3 m`, `≈ 1.4142135623730951 m`).
+///
+/// # Errors
+///
+/// Throws a `DimvexaError` with a stable `code`; a bad `vars` entry says which name.
+#[wasm_bindgen]
+pub fn calc(
+    expression: &str,
+    vars: Vec<String>,
+    to: &str,
+    config: &str,
+    config_texts: Vec<String>,
+) -> Result<JsValue, JsValue> {
+    let loaded = load_config(config, &config_texts)?;
+    let mut formula = Formula::new(&loaded.reg);
+    for entry in &vars {
+        let (name, value) = entry
+            .split_once('=')
+            .filter(|(n, v)| !n.trim().is_empty() && !v.trim().is_empty())
+            .ok_or_else(|| {
+                invalid(
+                    "vars",
+                    format!("'{entry}' is not NAME=VALUE (for example dp=50 kPa)"),
+                )
+            })?;
+        formula = formula
+            .var(name.trim(), value.trim())
+            .map_err(|e| fail(&e))?;
+    }
+    let mut number = formula.eval(expression).map_err(|e| fail(&e))?;
+    let to = to.trim();
+    if !to.is_empty() {
+        number = formula.to_unit(&number, to).map_err(|e| fail(&e))?;
+    }
+    let value = match &number {
+        Number::Exact(q) => q.value().to_f64().map_err(|e| fail(&e))?,
+        Number::Approx(a) => a.value(),
+    };
+    let unit = if number.unit().is_unity() {
+        String::new()
+    } else {
+        number.unit().to_string()
+    };
+    let exact = number.is_exact();
+    // The number as `dimvexa calc` prints it: plain, or scientific outside 1e-4 .. 1e16.
+    let digits = if value != 0.0 && !(1e-4..1e16).contains(&value.abs()) {
+        format!("{value:e}")
+    } else {
+        format!("{value}")
+    };
+    let shown = if exact {
+        digits
+    } else {
+        format!("≈ {digits}")
+    };
+    let text = if unit.is_empty() {
+        shown
+    } else {
+        format!("{shown} {unit}")
+    };
+    let out = js_sys::Object::new();
+    for (key, v) in [
+        ("value", JsValue::from_f64(value)),
+        ("unit", JsValue::from_str(&unit)),
+        ("exact", JsValue::from_bool(exact)),
+        ("text", JsValue::from_str(&text)),
+    ] {
+        // Setting a property on a fresh object cannot fail.
+        let _ = Reflect::set(&out, &key.into(), &v);
+    }
+    Ok(out.into())
 }
 
 /// Number of units in the table.
