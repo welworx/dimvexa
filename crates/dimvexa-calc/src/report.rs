@@ -21,6 +21,15 @@ pub fn format_f64(x: f64) -> String {
     }
 }
 
+/// How the number of a text result is written.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Notation {
+    /// `1500`, `0.0025`.
+    Plain,
+    /// `1.5e3`, `2.5e-3`: all the digits that read back, or that many significant digits.
+    Scientific(Option<usize>),
+}
+
 /// A calculated [`Number`] in the form every front end shows.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Report {
@@ -133,6 +142,25 @@ impl Report {
             (Some(f), None) if show_fraction => format!("{f} = {body}{more}"),
             (Some(_), _) => format!("{body}{more}"),
             (None, _) => format!("≈ {body}"),
+        }
+    }
+
+    /// The number in the given notation: [`number_text`](Self::number_text) or
+    /// [`number_text_scientific`](Self::number_text_scientific).
+    #[must_use]
+    pub fn number_text_in(&self, show_fraction: bool, notation: Notation) -> String {
+        match notation {
+            Notation::Plain => self.number_text(show_fraction),
+            Notation::Scientific(digits) => self.number_text_scientific(show_fraction, digits),
+        }
+    }
+
+    /// What `dimvexa calc` prints, in the given notation.
+    #[must_use]
+    pub fn text_in(&self, show_fraction: bool, notation: Notation) -> String {
+        match notation {
+            Notation::Plain => self.text(show_fraction),
+            Notation::Scientific(digits) => self.text_scientific(show_fraction, digits),
         }
     }
 

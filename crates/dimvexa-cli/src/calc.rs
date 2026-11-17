@@ -9,7 +9,7 @@
 use std::io::Write;
 
 use dimvexa::Error;
-use dimvexa_calc::{Formula, Report};
+use dimvexa_calc::{Formula, Notation, Report};
 
 use crate::color::{BOLD_GREEN, CYAN, RESET};
 use crate::json::{configs_json, f64_text, json_error, json_string, schema_id, warnings_json};
@@ -31,15 +31,6 @@ pub struct CalcRequest {
     pub notation: Notation,
     /// `--autoprefix`: the SI prefix that puts the number between 1 and 1000 (`1.5 km`).
     pub autoprefix: bool,
-}
-
-/// How the number of a text result is written.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Notation {
-    /// `1500`, `0.0025`.
-    Plain,
-    /// `1.5e3`, `2.5e-3`: all digits that read back, or that many significant digits.
-    Scientific(Option<usize>),
 }
 
 /// An error and what to say before its message (`--var dp: `).
@@ -71,13 +62,10 @@ fn evaluate(req: &CalcRequest, loaded: &Loaded) -> Result<(Report, Vec<String>),
 }
 
 fn render_text(r: &Report, exact: bool, notation: Notation, color: bool) -> String {
-    let (value, text) = match notation {
-        Notation::Plain => (r.number_text(exact), r.text(exact)),
-        Notation::Scientific(digits) => (
-            r.number_text_scientific(exact, digits),
-            r.text_scientific(exact, digits),
-        ),
-    };
+    let (value, text) = (
+        r.number_text_in(exact, notation),
+        r.text_in(exact, notation),
+    );
     match (color, r.unit.is_empty()) {
         (true, true) => format!("{BOLD_GREEN}{value}{RESET}"),
         (true, false) => format!("{BOLD_GREEN}{value}{RESET} {CYAN}{}{RESET}", r.unit),

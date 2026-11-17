@@ -32,6 +32,31 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
   assert.strictEqual(await associated.CONVERT(100, "degC", "K"), 373.15);
   assert.match(await associated.VERSION(), /units/);
 
+  // CALC and CALCTEXT: an equation with units; the unit of CALC is required and checked
+  assert.strictEqual(await associated.CALC("sqrt(9 m2)", "m"), 3);
+  assert.strictEqual(await associated.CALC("2 m * 3 m", "cm2"), 60000);
+  assert.ok(Math.abs(await associated.CALC("Cd * A * sqrt(2 * dp / rho)", "L/s",
+    "Cd=0.61; A=10 cm2; dp=50 kPa; rho=998 kg/m3") - 6.106109165276735) < 1e-12);
+  assert.strictEqual(await associated.CALC("1 ton * 1 g_n", "N", "", "us-customary"), 8896.443230521);
+  assert.strictEqual(await associated.CALCTEXT("sqrt(9 m2)"), "3 m");
+  assert.strictEqual(await associated.CALCTEXT("sqrt(2 m2)"), "≈ 1.4142135623730951 m");
+  assert.strictEqual(await associated.CALCTEXT("1500 m", "", "", "", "autoprefix"), "1.5 km");
+  assert.strictEqual(await associated.CALCTEXT("1500 m", "", "", "", "sci=3"), "1.50e3 m");
+  assert.strictEqual(await associated.CALCTEXT("1 m / 3", "", "", "", "sci=4 exact"), "1/3 = 3.333e-1 m");
+  const pressure = await associated.CALCTEXT("n * molar_gas_constant * T.to(K) / V", "kPa",
+    "n=2 mol; T=20 degC; V=50 L");
+  assert.ok(pressure.startsWith("97.49538"), pressure);
+  for (const bad of [
+    () => associated.CALC("1 m", ""),                    // the unit is required
+    () => associated.CALC("1 m", "s"),                   // wrong dimension
+    () => associated.CALC("1 m +", "m"),                 // syntax
+    () => associated.CALC("1e300 m * 1e300", "m"),       // beyond a number
+    () => associated.CALCTEXT("1 m", "", "", "", "nope"),
+    () => associated.CALCTEXT("1 m", "", "", "", "sci=0"),
+  ]) {
+    await assert.rejects(Promise.resolve().then(bad), (e) => /dimvexa (invalid_number|invalid_definition|dimension_mismatch|parse_error|overflow)/.test(e.message), String(bad));
+  }
+
   // CONVERTEXACT: the value is text, pi stays exact
   assert.strictEqual(await associated.CONVERTEXACT("4pi", "rad", "deg"), 720);
   assert.strictEqual(await associated.CONVERTEXACT("pi/2", "rad", "deg"), 90);

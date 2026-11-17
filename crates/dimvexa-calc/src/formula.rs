@@ -1129,6 +1129,37 @@ impl<'r> Formula<'r> {
         self.math.to_unit(n, unit)
     }
 
+    /// Evaluates `expression` and describes the result, the whole of what `dimvexa calc` does:
+    /// [`eval_strict`](Self::eval_strict), then the conversion to `to` (a unit symbol) or the
+    /// SI prefix that suits the number when `autoprefix` is set (the two exclude each other).
+    ///
+    /// # Errors
+    ///
+    /// The errors of `eval_strict`, [`to_unit`](Self::to_unit) and
+    /// [`autoprefix`](Self::autoprefix), and `refused` when both `to` and `autoprefix` are given.
+    pub fn calculate(
+        &self,
+        expression: &str,
+        to: Option<&str>,
+        autoprefix: bool,
+    ) -> Result<crate::Report> {
+        let to = to.map(str::trim).filter(|u| !u.is_empty());
+        if autoprefix && to.is_some() {
+            return Err(Error::Refused {
+                reason: "autoprefix chooses the unit, so it cannot be used with a target unit"
+                    .to_owned(),
+                suggestions: Vec::new(),
+            });
+        }
+        let mut number = self.eval_strict(expression)?;
+        if let Some(unit) = to {
+            number = self.to_unit(&number, unit)?;
+        } else if autoprefix {
+            number = self.autoprefix(&number)?;
+        }
+        crate::Report::new(&number)
+    }
+
     /// `n` with the SI prefix that puts its number between 1 and 1000 (`1500 m` is `1.5 km`).
     ///
     /// # Errors

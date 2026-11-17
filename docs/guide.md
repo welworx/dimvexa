@@ -467,7 +467,7 @@ answered with an approximate number.
   `N*m` or `N·m`, not `N m`.
 * **Size:** an equation has at most 4096 characters, 64 levels of parentheses and 512 names.
 
-#### In Python and JavaScript
+#### In Python, JavaScript and Excel
 
 The same calculation, the same fields as `--json` and the same text:
 
@@ -475,13 +475,19 @@ The same calculation, the same fields as `--json` and the same text:
 dimvexa.calc("sqrt(2 * dp / rho)", vars={"dp": "50 kPa", "rho": "998 kg/m3"}, to="m/s")
 # {'value': 10.01001502504383, 'unit': 'm/s', 'exact': False, 'rounded': False, 'fraction': None,
 #  'dimension': [0, 1, -1, 0, 0, 0, 0], 'kind': 'plain', 'text': '≈ 10.01001502504383 m/s'}
+dimvexa.calc("1500 m", autoprefix=True)["text"]   # '1.5 km'
 ```
 
 ```js
 calc("sqrt(2 * dp / rho)", ["dp=50 kPa", "rho=998 kg/m3"], "m/s", "", []);  // an object, same fields
+calc("1500 m", [], "", "", [], { autoprefix: true }).text;                  // "1.5 km"
 ```
 
-`dimension` is the exponents of kg, m, s, A, K, mol, cd. The Excel add-in has no `calc` yet.
+The options of the command line are the keyword arguments of Python (`exact`, `sci` as `True` or
+1 to 17 digits, `autoprefix`) and the optional `options` object of JavaScript. They change `text`
+(and, for `autoprefix`, the unit and value), never the type of the number. `dimension` is the
+exponents of kg, m, s, A, K, mol, cd. In Excel, `DIMVEXA.CALC(expression, to, [variables],
+[config])` returns the number in the unit you give and `DIMVEXA.CALCTEXT(...)` the text (`excel.md`).
 
 ### Constants: `dimvexa constants`
 

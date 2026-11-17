@@ -3,7 +3,8 @@
 // Private module: `pub` here is crate-visible, and the two visibility lints disagree about it.
 #![allow(unreachable_pub)]
 
-use crate::calc::{CalcRequest, Notation};
+use crate::calc::CalcRequest;
+use dimvexa_calc::Notation;
 
 /// Parsed command line.
 pub struct Args {

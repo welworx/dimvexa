@@ -73,6 +73,9 @@ def calc(
     to: str | None = None,
     configs: list[str] | None = None,
     config_texts: list[str] | None = None,
+    exact: bool = False,
+    sci: bool | int | None = None,
+    autoprefix: bool = False,
 ) -> CalcResult: ...
 def units(
     *, configs: list[str] | None = None, config_texts: list[str] | None = None

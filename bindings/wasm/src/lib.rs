@@ -14,7 +14,7 @@ use std::rc::Rc;
 use std::sync::OnceLock;
 
 use dimvexa::{Conversion, Error, Registry, UnitExpr};
-use dimvexa_calc::{Formula, Report};
+use dimvexa_calc::{Formula, Notation};
 use dimvexa_config::{Density, DensityError};
 use js_sys::{Array, Float64Array, Reflect};
 use wasm_bindgen::prelude::*;
@@ -413,8 +413,14 @@ pub fn convert_quantity(quantity: &str, to: &str) -> Result<String, JsValue> {
 ///
 /// # Errors
 ///
-/// Throws a `DimvexaError` with a stable `code`; a `vars` entry that is not `NAME=VALUE` is
-/// `invalid_definition` and says which entry. An empty `to` means the unit the arithmetic gave.
+/// `options` is optional: `{ exact: true }` adds the fraction of an exact result to `text`,
+/// `{ sci: true }` or `{ sci: 4 }` writes the number of `text` in scientific notation (all
+/// digits, or 1 to 17 significant digits), `{ autoprefix: true }` chooses the SI prefix
+/// (`1500 m` is `1.5 km`; not together with `to`). The `value` stays a number.
+///
+/// Throws a `DimvexaError` with a stable `code`; a `vars` entry that is not `NAME=VALUE`, or a
+/// bad option, is `invalid_definition` and says which. An empty `to` means the unit the
+/// arithmetic gave.
 #[wasm_bindgen]
 pub fn calc(
     expression: &str,
@@ -422,7 +428,9 @@ pub fn calc(
     to: &str,
     config: &str,
     config_texts: Vec<String>,
+    options: JsValue,
 ) -> Result<JsValue, JsValue> {
+    let (exact, notation, autoprefix) = calc_options(&options)?;
     let loaded = load_config(config, &config_texts)?;
     let mut formula = Formula::from_loaded(&loaded);
     for entry in &vars {
@@ -439,15 +447,12 @@ pub fn calc(
             .var(name.trim(), value.trim())
             .map_err(|e| fail(&e))?;
     }
-    let mut number = formula.eval_strict(expression).map_err(|e| fail(&e))?;
-    let to = to.trim();
-    if !to.is_empty() {
-        number = formula.to_unit(&number, to).map_err(|e| fail(&e))?;
-    }
+    let r = formula
+        .calculate(expression, Some(to), autoprefix)
+        .map_err(|e| fail(&e))?;
     for w in formula.warnings() {
         warn(w);
     }
-    let r = Report::new(&number).map_err(|e| fail(&e))?;
     let fraction = r
         .fraction
         .as_deref()
@@ -466,12 +471,51 @@ pub fn calc(
         ("fraction", fraction),
         ("dimension", dimension.into()),
         ("kind", JsValue::from_str(&r.kind)),
-        ("text", JsValue::from_str(&r.text(false))),
+        ("text", JsValue::from_str(&r.text_in(exact, notation))),
     ] {
         // Setting a property on a fresh object cannot fail.
         let _ = Reflect::set(&out, &key.into(), &v);
     }
     Ok(out.into())
+}
+
+/// The `exact`, `sci` and `autoprefix` options of [`calc`]; `undefined` or `null` is none.
+fn calc_options(options: &JsValue) -> Result<(bool, Notation, bool), JsValue> {
+    if options.is_undefined() || options.is_null() {
+        return Ok((false, Notation::Plain, false));
+    }
+    let get = |name: &str| Reflect::get(options, &name.into()).unwrap_or(JsValue::UNDEFINED);
+    let flag = |name: &str| -> Result<bool, JsValue> {
+        let v = get(name);
+        if v.is_undefined() || v.is_null() {
+            return Ok(false);
+        }
+        v.as_bool()
+            .ok_or_else(|| invalid("options", format!("{name} is true or false")))
+    };
+    let sci = get("sci");
+    let notation = if sci.is_undefined() || sci.is_null() {
+        Notation::Plain
+    } else if let Some(on) = sci.as_bool() {
+        if on {
+            Notation::Scientific(None)
+        } else {
+            Notation::Plain
+        }
+    } else {
+        match sci.as_f64() {
+            Some(n) if n.fract() == 0.0 && (1.0..=17.0).contains(&n) => {
+                Notation::Scientific(Some(format!("{n}").parse().unwrap_or(17)))
+            }
+            _ => {
+                return Err(invalid(
+                    "options",
+                    "sci is true, or a number of significant digits from 1 to 17".to_string(),
+                ));
+            }
+        }
+    };
+    Ok((flag("exact")?, notation, flag("autoprefix")?))
 }
 
 /// Number of units in the table.

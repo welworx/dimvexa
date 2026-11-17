@@ -30,6 +30,7 @@ dimvexa.constants(config_texts=[toml_text])  # pi, planck_constant, elementary_c
 dimvexa.quantity("1 L", density="998.2067kg/m3").to("kg")  # exact; quantity() takes the same options
 dimvexa.calc("sqrt(9 m2)")  # {"value": 3.0, "unit": "m", "exact": True, "text": "3 m"}
 dimvexa.calc("sqrt(2 * dp / rho)", vars={"dp": "50 kPa", "rho": "998 kg/m3"}, to="m/s")  # exact when the mathematics is, "≈ ..." when not
+dimvexa.calc("1500 m", autoprefix=True)["text"]  # "1.5 km"; sci=True or sci=4 for 1.5e3 / 1.500e3; exact=True adds the fraction
 dimvexa.units(configs=["us-customary"]), dimvexa.unit_info("bbl_oil", config_texts=[toml_text])  # config units too
 ```
 

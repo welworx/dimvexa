@@ -423,3 +423,25 @@ def test_calc_pow_floor_ceil_round() -> None:
     assert dimvexa.calc("pow(2, 10)")["text"] == "1024"
     assert dimvexa.calc("pow(9 m2, 0.5)")["text"] == "3 m"
     assert dimvexa.calc("floor(sqrt(2) * 10 m)")["exact"] is False
+
+
+def test_calc_sci_autoprefix_and_exact_options() -> None:
+    assert dimvexa.calc("1500 m", sci=True)["text"] == "1.5e3 m"
+    assert dimvexa.calc("1500 m", sci=3)["text"] == "1.50e3 m"
+    assert dimvexa.calc("1500 m", sci=False)["text"] == "1500 m"
+    assert dimvexa.calc("1500 m", sci=None)["text"] == "1500 m"
+    assert dimvexa.calc("1 m / 3", sci=4, exact=True)["text"] == "1/3 = 3.333e-1 m"
+    assert dimvexa.calc("1 m / 3", exact=True)["text"] == "1/3 = 0.3333333333333333… m"
+    r = dimvexa.calc("1500 m", autoprefix=True)
+    assert (r["text"], r["unit"], r["value"]) == ("1.5 km", "km", 1.5)
+    assert dimvexa.calc("0.0025 m", autoprefix=True)["text"] == "2.5 mm"
+    assert dimvexa.calc("3 m/s", autoprefix=True)["text"] == "3 m/s"
+    assert dimvexa.calc("1500 m", autoprefix=True, sci=True)["text"] == "1.5e0 km"
+    # the number in the dict stays a number; only text follows sci
+    assert dimvexa.calc("1500 m", sci=3)["value"] == 1500.0
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("1500 m", autoprefix=True, to="cm")
+    assert e.value.code == "refused"
+    for bad in (0, 18, -1, "x", 2.5):
+        with pytest.raises(ValueError, match="significant digits"):
+            dimvexa.calc("1 m", sci=bad)  # type: ignore[arg-type]

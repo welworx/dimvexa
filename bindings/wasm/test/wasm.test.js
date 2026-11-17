@@ -129,6 +129,21 @@ assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", 
   assert.strictEqual(code(() => d.calc("2 r", [], "", "", [])), "parse_error");
   assert.strictEqual(d.calc("2 r", ["r=3 m"], "", "", []).text, "6 m");
   assert.strictEqual(d.calc("-40 degC", [], "", "", []).text, "-40 degC");
+  // options: sci, autoprefix, exact (undefined or null is none)
+  assert.strictEqual(d.calc("1500 m", [], "", "", [], { sci: true }).text, "1.5e3 m");
+  assert.strictEqual(d.calc("1500 m", [], "", "", [], { sci: 3 }).text, "1.50e3 m");
+  assert.strictEqual(d.calc("1500 m", [], "", "", [], { sci: false }).text, "1500 m");
+  assert.strictEqual(d.calc("1500 m", [], "", "", [], null).text, "1500 m");
+  assert.strictEqual(d.calc("1 m / 3", [], "", "", [], { sci: 4, exact: true }).text, "1/3 = 3.333e-1 m");
+  const km = d.calc("1500 m", [], "", "", [], { autoprefix: true });
+  assert.deepStrictEqual([km.text, km.unit, km.value], ["1.5 km", "km", 1.5]);
+  assert.strictEqual(d.calc("3 m/s", [], "", "", [], { autoprefix: true }).text, "3 m/s");
+  assert.strictEqual(d.calc("1500 m", [], "", "", [], { autoprefix: true, sci: true }).text, "1.5e0 km");
+  assert.strictEqual(d.calc("1500 m", [], "", "", [], { sci: 3 }).value, 1500);
+  assert.strictEqual(code(() => d.calc("1500 m", [], "cm", "", [], { autoprefix: true })), "refused");
+  for (const bad of [{ sci: 0 }, { sci: 18 }, { sci: "x" }, { sci: 2.5 }, { exact: "yes" }, { autoprefix: 1 }]) {
+    assert.strictEqual(code(() => d.calc("1 m", [], "", "", [], bad)), "invalid_definition", JSON.stringify(bad));
+  }
   assert.strictEqual(d.calc("floor(7.8 m)", [], "", "", []).text, "7 m");
   assert.strictEqual(d.calc("round(-2.5 m)", [], "", "", []).text, "-3 m");
   assert.strictEqual(d.calc("pow(2, 10)", [], "", "", []).text, "1024");

@@ -193,6 +193,54 @@ function convertRangeNow(values, from, to, density, config) {
   }
 }
 
+// `calc`: the equation is text; the values are "name=value" entries separated by `;`
+// (`dp=50 kPa; rho=998 kg/m3`). The binding only splits the text and calls the library.
+function variables(arg) {
+  return text(arg).split(";").map((v) => v.trim()).filter((v) => v !== "");
+}
+
+// The words of the optional `format` of CALCTEXT, as the options of the WASM `calc`:
+// `sci`, `sci=4`, `autoprefix`, `exact`, separated by spaces.
+function calcOptions(arg) {
+  const options = {};
+  for (const word of text(arg).split(/\s+/).filter((w) => w !== "")) {
+    if (word === "sci") options.sci = true;
+    else if (word.startsWith("sci=")) options.sci = Number(word.slice(4));
+    else if (word === "autoprefix") options.autoprefix = true;
+    else if (word === "exact") options.exact = true;
+    else throw rangeError("format is sci, sci=N, autoprefix or exact (separated by spaces), not '" + word + "'");
+  }
+  return options;
+}
+
+/** @customfunction CALC */
+function calc(expression, to, vars, config) {
+  return whenReady(() => {
+    try {
+      // The unit is required: a number without its unit would hide what the equation gave, and
+      // a unit that does not fit the equation is a dimension error.
+      if (!given(to)) throw rangeError("the unit of the result is required, for example \"kPa\"");
+      const r = wasm_bindgen.calc(String(expression), variables(vars), unit(to), text(config), [], undefined);
+      if (r.value === null || !Number.isFinite(r.value)) throw overflowError();
+      return r.value;
+    } catch (e) {
+      throw toExcelError(e);
+    }
+  });
+}
+
+/** @customfunction CALCTEXT */
+function calcText(expression, to, vars, config, format) {
+  return whenReady(() => {
+    try {
+      return wasm_bindgen.calc(
+        String(expression), variables(vars), unit(to), text(config), [], calcOptions(format)).text;
+    } catch (e) {
+      throw toExcelError(e);
+    }
+  });
+}
+
 /** @customfunction VERSION */
 function version() {
   return whenReady(
@@ -203,4 +251,6 @@ function version() {
 CustomFunctions.associate("CONVERT", convert);
 CustomFunctions.associate("CONVERTEXACT", convertExact);
 CustomFunctions.associate("CONVERTRANGE", convertRange);
+CustomFunctions.associate("CALC", calc);
+CustomFunctions.associate("CALCTEXT", calcText);
 CustomFunctions.associate("VERSION", version);
