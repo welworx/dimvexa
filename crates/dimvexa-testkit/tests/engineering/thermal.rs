@@ -198,7 +198,7 @@ fn thermal_hvac_ton_of_refrigeration_is_12000_btu_per_hour() {
 }
 
 #[test]
-/// A4 (fixed with `kelvin(...)`): a temperature that an equation computed is read as kelvin.
+/// A4 (fixed): a temperature that an equation computed converts to kelvin.
 fn a4_ideal_gas_temperature_in_kelvin() {
     check(
         &[
@@ -207,14 +207,14 @@ fn a4_ideal_gas_temperature_in_kelvin() {
             ("n", "1 mol"),
             ("R", "8.314462618 J/(mol*K)"),
         ],
-        "kelvin(p * V / (n * R))",
+        "p * V / (n * R)",
         "K",
         101_325.0 * 0.022_414 / 8.314_462_618,
     );
 }
 
 #[test]
-/// A4 (fixed with `kelvin(...)`): and shown in degrees Celsius.
+/// A4 (fixed): and to degrees Celsius.
 fn a4_ideal_gas_temperature_in_celsius() {
     check(
         &[
@@ -223,7 +223,7 @@ fn a4_ideal_gas_temperature_in_celsius() {
             ("n", "1 mol"),
             ("R", "8.314462618 J/(mol*K)"),
         ],
-        "kelvin(p * V / (n * R))",
+        "p * V / (n * R)",
         "degC",
         101_325.0 * 0.024_055 / 8.314_462_618 - 273.15,
     );
@@ -298,11 +298,11 @@ fn thermal_the_lower_of_two_temperature_limits() {
 }
 
 #[test]
-fn kelvin_reads_degrees_celsius_into_a_product() {
+fn to_converts_degrees_celsius_inside_a_product() {
     // p = n R T / V with T given in degrees Celsius: 2 mol at 20 degC in 50 L
     check(
         &[("n", "2 mol"), ("V", "50 L"), ("T", "20 degC")],
-        "n * molar_gas_constant * kelvin(T) / V",
+        "n * molar_gas_constant * to(T, K) / V",
         "kPa",
         2.0 * 8.314_462_618_153_24 * 293.15 / 0.05 / 1000.0,
     );

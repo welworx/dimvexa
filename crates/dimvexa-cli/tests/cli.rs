@@ -3847,10 +3847,10 @@ fn calc_c_is_the_speed_of_light() {
     );
 }
 
-/// Config constants are names in equations; `kelvin` reads a temperature as K; `2 pi r`, `x^n`
+/// Config constants are names in equations; `to(x, UNIT)` converts inside an equation; `2 pi r`, `x^n`
 /// and the engineer's notation are read.
 #[test]
-fn calc_reads_config_constants_kelvin_pi_names_exponents_and_notation() {
+fn calc_reads_config_constants_to_pi_names_exponents_and_notation() {
     let r = calc(&["1 L * water_25C", "--config", "water", "--to", "kg"]);
     assert_eq!(
         (r.code, r.stdout.as_str()),
@@ -3862,7 +3862,7 @@ fn calc_reads_config_constants_kelvin_pi_names_exponents_and_notation() {
     assert_eq!(calc(&["water_25C"]).code, 1);
     // pV = nRT with T in degrees Celsius
     let r = calc(&[
-        "n * molar_gas_constant * kelvin(T) / V",
+        "n * molar_gas_constant * to(T, K) / V",
         "--var",
         "n=2 mol",
         "--var",
@@ -3874,8 +3874,8 @@ fn calc_reads_config_constants_kelvin_pi_names_exponents_and_notation() {
     ]);
     assert_eq!(r.code, 0, "{}", r.stderr);
     assert!(r.stdout.starts_with("97.4953886604649"), "{}", r.stdout);
-    assert_eq!(calc(&["kelvin(68 degF)"]).stdout, "293.15 K\n");
-    assert_eq!(calc(&["kelvin(5 m)"]).code, 1);
+    assert_eq!(calc(&["to(68 degF, K)"]).stdout, "293.15 K\n");
+    assert_eq!(calc(&["to(5 m, K)"]).code, 1);
     // pi after a number and before a name
     assert_eq!(
         calc(&["2 pi r", "--var", "r=3 m"]).stdout,
@@ -4080,12 +4080,12 @@ fn calc_a_division_before_an_implicit_pi_product_is_refused() {
 /// A kelvin value scales by a plain number (both orders); a Celsius point does not; a spaced
 /// superscript belongs to the unit before it.
 #[test]
-fn calc_kelvin_scales_and_a_spaced_superscript_is_part_of_the_unit() {
-    assert_eq!(calc(&["2 * kelvin(20 degC)"]).stdout, "586.3 K\n");
-    assert_eq!(calc(&["kelvin(20 degC) * 2"]).stdout, "586.3 K\n");
-    assert_eq!(calc(&["kelvin(20 degC) / 2"]).stdout, "146.575 K\n");
+fn calc_a_converted_kelvin_scales_and_a_spaced_superscript_is_part_of_the_unit() {
+    assert_eq!(calc(&["2 * to(20 degC, K)"]).stdout, "586.3 K\n");
+    assert_eq!(calc(&["to(20 degC, K) * 2"]).stdout, "586.3 K\n");
+    assert_eq!(calc(&["to(20 degC, K) / 2"]).stdout, "146.575 K\n");
     assert_eq!(
-        calc(&["molar_gas_constant * kelvin(20 degC) * 2"]).stdout,
+        calc(&["molar_gas_constant * to(20 degC, K) * 2"]).stdout,
         "4874.769433023244… J/mol\n"
     );
     assert_eq!(calc(&["2 * 300 K"]).stdout, "600 K\n");
@@ -4093,5 +4093,50 @@ fn calc_kelvin_scales_and_a_spaced_superscript_is_part_of_the_unit() {
     // 2 m ², 2 m² and 2m2 are one quantity
     for expr in ["2 m ²", "2 m²", "2m2", "2 m^2"] {
         assert_eq!(calc(&[expr]).stdout, "2 m^2\n", "{expr}");
+    }
+}
+
+/// `to(x, UNIT)` converts inside an equation; the dimension must match, and a computed
+/// temperature converts to K and degC, also with `--to`.
+#[test]
+fn calc_to_converts_inside_an_equation_and_checks_the_dimension() {
+    for (expr, text) in [
+        ("to(20 degC, K)", "293.15 K\n"),
+        ("to(20 °C, K)", "293.15 K\n"),
+        ("to(68 degF, degC)", "20 degC\n"),
+        ("to(3 m, ft)", "9.84251968503937… ft\n"),
+        ("to(10 kW * 2 h, kW*h)", "20 kW.h\n"),
+        ("to(1000 kg/m3, g/cm3)", "1 g/cm^3\n"),
+        ("to(2 pi * 1 rad, deg)", "360 deg\n"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, text, "{expr}");
+    }
+    // a computed temperature converts directly, with --to and with to()
+    let gas = "1 atm * 22.414 L / (1 mol * molar_gas_constant)";
+    assert_eq!(calc(&[gas, "--to", "K"]).stdout, "273.1503711426203… K\n");
+    assert_eq!(
+        calc(&[&format!("to({gas}, degC)")]).stdout,
+        calc(&[gas, "--to", "degC"]).stdout
+    );
+    // the units are checked against what the user wrote
+    for (expr, code) in [
+        ("to(5 m, K)", "dimension_mismatch"),
+        ("to(5 delta_K, K)", "kind_mismatch"),
+        ("to(3 m, foo)", "unknown_unit"),
+    ] {
+        let r = calc(&[expr]);
+        assert!(
+            r.stderr.starts_with(&format!("error[{code}]")),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+    for expr in ["to(3 m)", "to(3 m, )", "to()"] {
+        let r = calc(&[expr]);
+        assert!(
+            r.stderr.starts_with("error[parse_error]"),
+            "{expr}: {}",
+            r.stderr
+        );
     }
 }

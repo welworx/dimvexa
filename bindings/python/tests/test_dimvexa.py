@@ -377,7 +377,7 @@ def test_calc_config_constants_kelvin_pi_names_and_notation() -> None:
     r = dimvexa.calc("1 L * water_25C", to="kg", configs=["water"])
     assert r["text"] == "0.99704702 kg"
     gas = dimvexa.calc(
-        "n * molar_gas_constant * kelvin(T) / V",
+        "n * molar_gas_constant * to(T, K) / V",
         vars={"n": "2 mol", "T": "20 degC", "V": "50 L"},
         to="kPa",
     )

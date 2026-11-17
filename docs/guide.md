@@ -380,7 +380,7 @@ JSON), so it is never silent. The constants of the configs in effect are names t
   `1 kg·m/s²`; a space before the superscript is ignored, `2 m ²` is `2 m²`); error positions count the characters after this rewrite.
 * **Functions:** `sqrt`, `cbrt`, `abs`, `hypot`, `min`, `max`, `ln`, `exp`, `log10` (`lg`), `log2`
   (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`,
-  `tanh`, `asinh`, `acosh`, `atanh`, `kelvin`. The inverse functions return an angle in `rad` (`atan2(1 m, 1 m)
+  `tanh`, `asinh`, `acosh`, `atanh`, `to`. The inverse functions return an angle in `rad` (`atan2(1 m, 1 m)
   --to deg` is `45 deg`); they are exact at the special values (`atan(1)` is exactly pi/4,
   `acos(0.5)` is pi/3, `tan(45 deg)` is `1`), and otherwise approximate.
   `min` and `max` need one dimension (`4 m` and `4 km` work, `4 m` and `3 L` do not) and return
@@ -437,12 +437,14 @@ answered with an approximate number.
 * **Temperatures:** a point (`20 degC`, `-40 degC`) can be compared and shifted by a difference,
   not multiplied or negated (`-40 degC` is the point itself, `-(20 degC)` is refused); `degC + degC` adds two points (`20 degC + 30 degC` is `50 degC`) while
   `degC - degC` is a difference (`delta_degC`) and a point minus a kelvin is refused (ADR-027).
-  `kelvin(x)` reads a temperature as absolute kelvin: a point (`kelvin(20 degC)` is `293.15 K`)
-  or a value whose dimension is a temperature (`kelvin(p * V / (n * R))`). So `p V = n R T`
-  with `T` in degrees Celsius is `n * R * kelvin(T) / V`, and a computed temperature is shown
-  in degC with `kelvin(...) --to degC`. A temperature difference is not a temperature
-  (`kelvin(5 delta_K)` is refused). A kelvin value scales: `2 * kelvin(20 degC)` is `586.3 K`,
-  `kelvin(T) / 2` halves it; a Celsius or Fahrenheit point does not (`2 * 20 degC` is refused).
+  `to(x, UNIT)` converts a value to another unit inside the equation, so you decide where the
+  conversion happens and the units are checked against it: `to(20 degC, K)` is `293.15 K`,
+  `to(3 m, ft)`, `to(10 kW * 2 h, kW*h)`; a wrong dimension is an error (`to(5 m, K)`). So
+  `p V = n R T` with `T` in degrees Celsius is `n * molar_gas_constant * to(T, K) / V`. A
+  computed temperature (`p * V / (n * R)`, dimension K) converts to `K`, `degC` and `degF` too,
+  also with `--to`. A kelvin value scales (`2 * to(20 degC, K)` is `586.3 K`); a Celsius or
+  Fahrenheit point does not (`2 * 20 degC` is refused). A temperature difference is not a
+  temperature (`to(5 delta_K, K)` is refused).
 * **Not units of every trade:** names that mean different things (`ton`, `gpm`, `mph`, `rpm`) are
   errors until a config chooses (`--config us-customary`, or your own, see
   `examples/configs/engineering.toml`). A space between two units is not a product: write

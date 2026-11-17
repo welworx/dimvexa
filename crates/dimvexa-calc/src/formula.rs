@@ -33,7 +33,7 @@
 //!   `m²`, `m³`, `s⁻¹`, `·`, `×`, `÷`, `−`, tabs and newlines are read.
 //! * The functions `sqrt`, `cbrt`, `abs`, `hypot(x, y)`, `min(x, y, ...)`, `max(x, y, ...)`,
 //!   `ln`, `exp`, `log10` (`lg`), `log2` (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`,
-//!   `acos`, `atan`, `atan2(y, x)`, `kelvin` (a temperature as absolute kelvin), `sinh`, `cosh`,
+//!   `acos`, `atan`, `atan2(y, x)`, `to(x, UNIT)` (convert: `to(20 degC, K)`), `sinh`, `cosh`,
 //!   `tanh`, `asinh`, `acosh` and `atanh`.
 //!   `log(x)` alone is ambiguous and refused. Any other well-known function (`pow`, `floor`,
 //!   `round`) is a `refused` error that says `'floor' is not implemented`, and how to write it
@@ -256,10 +256,10 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
             } else {
                 out.push((start, Tok::Num(number)));
             }
-        } else if c.is_alphabetic() || c == '_' {
+        } else if c.is_alphabetic() || c == '_' || c == '°' {
             while chars
                 .get(i)
-                .is_some_and(|d| d.is_alphanumeric() || *d == '_')
+                .is_some_and(|d| d.is_alphanumeric() || *d == '_' || *d == '°')
             {
                 i = next(i);
             }
@@ -292,7 +292,7 @@ const IMPLEMENTED: [(&str, usize); 27] = [
     ("log", 2),
     ("sin", 1),
     ("cos", 1),
-    ("kelvin", 1),
+    ("to", 2),
     ("tan", 1),
     ("asin", 1),
     ("acos", 1),
@@ -346,6 +346,8 @@ struct Parser<'a, 'r> {
     f: &'a Formula<'r>,
     /// The names the equation read.
     used: Vec<String>,
+    /// The text the token positions index (the input after `normalise`).
+    norm: Vec<char>,
 }
 
 impl Parser<'_, '_> {
@@ -654,12 +656,63 @@ impl Parser<'_, '_> {
         }
     }
 
+    /// `to(value, UNIT)`: the value in another unit. The unit is written as it is everywhere
+    /// else (`K`, `degC`, `kW*h`, `J/(mol*K)`), not as an expression. The dimension must match,
+    /// so the user decides what the conversion is and the units are checked against it.
+    fn convert_call(&mut self) -> Result<Number> {
+        let at = self.here();
+        self.advance(); // the '('
+        self.enter()?;
+        let value = self.expr()?;
+        if !self.eat(',') {
+            return Err(parse_error(
+                self.src,
+                self.here(),
+                "to takes a value and a unit: to(20 degC, K)",
+            ));
+        }
+        let start = self.pos;
+        let mut depth = 0_usize;
+        while let Some(tok) = self.peek() {
+            match tok {
+                Tok::Op('(') => depth = next(depth),
+                Tok::Op(')') if depth == 0 => break,
+                Tok::Op(')') => depth = depth.saturating_sub(1),
+                _ => {}
+            }
+            self.advance();
+        }
+        let from = self.toks.get(start).map(|(p, _)| *p);
+        let to = self.toks.get(self.pos).map(|(p, _)| *p);
+        let (Some(from), Some(to)) = (from, to) else {
+            return Err(parse_error(
+                self.src,
+                at,
+                "to takes a value and a unit: to(20 degC, K)",
+            ));
+        };
+        let unit: String = self.norm.get(from..to).unwrap_or_default().iter().collect();
+        self.leave();
+        self.advance(); // the ')'
+        if unit.trim().is_empty() {
+            return Err(parse_error(
+                self.src,
+                at,
+                "to takes a value and a unit: to(20 degC, K)",
+            ));
+        }
+        self.f.math.to_unit(&value, unit.trim())
+    }
+
     /// `name(argument, ...)`.
     fn call(&mut self, name: &str) -> Result<Number> {
         // the name decides before the arguments are read: `atan2(y, x)` must say that it is not
         // implemented, not complain about the comma
         if let Some((_, hint)) = NOT_IMPLEMENTED.iter().find(|(n, _)| *n == name) {
             return Err(not_implemented(name, hint));
+        }
+        if name == "to" {
+            return self.convert_call();
         }
         let Some((_, arity)) = IMPLEMENTED.iter().find(|(n, _)| *n == name) else {
             return Err(Error::Refused {
@@ -727,7 +780,6 @@ impl Parser<'_, '_> {
             ("log2" | "lb", _) => math.log2(one),
             ("sin", _) => math.sin(one),
             ("cos", _) => math.cos(one),
-            ("kelvin", _) => math.kelvin(one),
             ("tan", _) => math.tan(one),
             ("asin", _) => math.asin(one),
             ("acos", _) => math.acos(one),
@@ -920,6 +972,7 @@ impl<'r> Formula<'r> {
             depth: 0,
             f: self,
             used: Vec::new(),
+            norm: normalise(formula),
         };
         let q = p.expr()?;
         if p.pos < p.toks.len() {

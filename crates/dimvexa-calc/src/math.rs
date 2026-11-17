@@ -378,6 +378,16 @@ impl<'r> Math<'r> {
     /// The errors of [`Calc::to_unit`]; for an approximate number [`Error::DimensionMismatch`],
     /// [`Error::KindMismatch`] and [`Error::Refused`] for a temperature point.
     pub fn to_unit(&self, a: &Number, unit: &str) -> Result<Number> {
+        // a computed temperature (`p V / (n R)`, dimension K, kind plain) converts to `K`,
+        // `degC` and `degF`: the dimension says what it is
+        let target = self.reg().parse(unit)?;
+        let converted;
+        let a = if target.kind() == Kind::AbsoluteTemperature && target.dim() == Dim::K {
+            converted = self.computed_kelvin(a)?;
+            &converted
+        } else {
+            a
+        };
         match a {
             Number::Exact(q) => self.calc.to_unit(q, unit).map(Number::Exact),
             Number::Approx(x) => {
@@ -393,50 +403,24 @@ impl<'r> Math<'r> {
         }
     }
 
-    /// A temperature as absolute kelvin: a point (`20 degC`, `68 degF`) converted to `K`, or a
-    /// plain value whose dimension is temperature (the `K` that `p V / (n R)` comes out in)
-    /// read as kelvin. It is how a temperature that a calculation produced, or that was given
-    /// in degrees Celsius, enters a product such as `n R T`.
-    ///
-    /// # Errors
-    ///
-    /// [`Error::Refused`] for a value that is not a temperature (another dimension, or a
-    /// temperature difference: a difference of `5 delta_K` is not a temperature).
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use dimvexa_calc::{Math, Number};
-    /// # let reg = dimvexa::registry()?;
-    /// # let math = Math::new(&reg);
-    /// let q = |s: &str| reg.quantity(s).map(Number::from);
-    /// assert_eq!(math.kelvin(&q("20 degC")?)?.to_string(), "293.15 K");
-    /// assert_eq!(math.kelvin(&q("300 K")?)?.to_string(), "300 K");
-    /// assert_eq!(math.kelvin(&q("5 m")?).unwrap_err().code(), "refused");
-    /// # Ok::<(), dimvexa_core::Error>(())
-    /// ```
-    pub fn kelvin(&self, a: &Number) -> Result<Number> {
+    /// A computed temperature (a plain value whose dimension is temperature, such as the `K`
+    /// that `p V / (n R)` comes out in) read as kelvin, so it converts to `K`, `degC` and
+    /// `degF` like any temperature. Any other value is returned as it is.
+    fn computed_kelvin(self, a: &Number) -> Result<Number> {
         let unit = a.unit();
-        match unit.kind() {
-            Kind::AbsoluteTemperature => self.to_unit(a, "K"),
-            Kind::Plain if unit.dim() == Dim::K && unit.offset().is_zero() => {
-                let kelvin = self.reg().parse("K")?;
-                Ok(match a {
-                    Number::Exact(q) => {
-                        Number::Exact(Quantity::new(q.value().checked_mul(unit.factor())?, kelvin))
-                    }
-                    Number::Approx(x) => Number::Approx(Approx {
-                        value: finite(x.value * unit.factor().to_f64()?, "kelvin")?,
-                        unit: kelvin,
-                    }),
-                })
-            }
-            _ => Err(refused(format!(
-                "kelvin needs a temperature (20 degC, 300 K, or a value whose dimension is a \
-                 temperature), not {unit} (kind {})",
-                unit.kind().name()
-            ))),
+        if unit.kind() != Kind::Plain || unit.dim() != Dim::K || !unit.offset().is_zero() {
+            return Ok(a.clone());
         }
+        let kelvin = self.reg().parse("K")?;
+        Ok(match a {
+            Number::Exact(q) => {
+                Number::Exact(Quantity::new(q.value().checked_mul(unit.factor())?, kelvin))
+            }
+            Number::Approx(x) => Number::Approx(Approx {
+                value: finite(x.value * unit.factor().to_f64()?, "kelvin")?,
+                unit: kelvin,
+            }),
+        })
     }
 
     /// The value in `unit` as an `f64`: an exact number rounds once, an approximate number is
