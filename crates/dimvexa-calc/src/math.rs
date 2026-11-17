@@ -192,6 +192,18 @@ impl<'r> Math<'r> {
         }
     }
 
+    /// A unit with an offset (`degC`, `degF`) cannot be multiplied or divided, exact or not.
+    fn no_offset(unit: &UnitExpr) -> Result<()> {
+        if unit.offset().is_zero() {
+            Ok(())
+        } else {
+            Err(refused(
+                "a temperature point cannot be multiplied or divided; use a difference \
+                 (delta_degC) or K, for example 20 degC.to(K)",
+            ))
+        }
+    }
+
     fn linear_only(unit: &UnitExpr) -> Result<()> {
         if !unit.offset().is_zero() || unit.kind() == Kind::AbsoluteTemperature {
             return Err(refused(
@@ -257,6 +269,8 @@ impl<'r> Math<'r> {
             return x.checked_mul(y).map(Number::Exact);
         }
         let (x, y) = (Self::approx_of(a)?, Self::approx_of(b)?);
+        Self::no_offset(&x.unit)?;
+        Self::no_offset(&y.unit)?;
         Ok(Number::Approx(Approx {
             value: finite(x.value * y.value, "approximate product")?,
             unit: x.unit.mul(&y.unit)?,
@@ -276,6 +290,8 @@ impl<'r> Math<'r> {
             return x.checked_div(y).map(Number::Exact);
         }
         let (x, y) = (Self::approx_of(a)?, Self::approx_of(b)?);
+        Self::no_offset(&x.unit)?;
+        Self::no_offset(&y.unit)?;
         if is_zero_f64(y.value) {
             return Err(Error::DivisionByZero);
         }
@@ -322,16 +338,24 @@ impl<'r> Math<'r> {
             };
             return Ok(Some(Number::Exact(Quantity::new(value, t.unit().clone()))));
         }
-        let (t, s) = (Self::approx_of(temperature)?, Self::approx_of(scalar)?);
-        let s = s.value * factor.to_f64()?;
+        let t = Self::raw_f64(temperature)?;
+        let s = Self::raw_f64(scalar)? * factor.to_f64()?;
         if divide && is_zero_f64(s) {
             return Err(Error::DivisionByZero);
         }
-        let value = if divide { t.value / s } else { t.value * s };
+        let value = if divide { t / s } else { t * s };
         Ok(Some(Number::Approx(Approx {
             value: finite(value, "approximate product")?,
-            unit: t.unit,
+            unit: temperature.unit().clone(),
         })))
+    }
+
+    /// The number of a kelvin or plain value as an `f64`, in the unit it is written in.
+    fn raw_f64(n: &Number) -> Result<f64> {
+        match n {
+            Number::Exact(q) => q.value().to_f64(),
+            Number::Approx(x) => Ok(x.value),
+        }
     }
 
     /// A plain number divided by a kelvin value (`2 / 300 K`): one over kelvin, as in a
@@ -346,12 +370,12 @@ impl<'r> Math<'r> {
             let value = s.value().checked_mul(factor)?.checked_div(t.value())?;
             return Ok(Number::Exact(Quantity::new(value, per_kelvin)));
         }
-        let (s, t) = (Self::approx_of(scalar)?, Self::approx_of(temperature)?);
-        if is_zero_f64(t.value) {
+        let (s, t) = (Self::raw_f64(scalar)?, Self::raw_f64(temperature)?);
+        if is_zero_f64(t) {
             return Err(Error::DivisionByZero);
         }
         Ok(Number::Approx(Approx {
-            value: finite(s.value * factor.to_f64()? / t.value, "approximate quotient")?,
+            value: finite(s * factor.to_f64()? / t, "approximate quotient")?,
             unit: per_kelvin,
         }))
     }
@@ -417,8 +441,8 @@ impl<'r> Math<'r> {
             Number::Exact(q) => self.calc.to_unit(q, unit).map(Number::Exact),
             Number::Approx(x) => {
                 let target = self.reg().parse(unit)?;
-                Self::linear_only(&x.unit)?;
-                Self::linear_only(&target)?;
+                // a conversion is well defined for a temperature too (`Conversion` checks the
+                // kinds and applies the offset exactly), unlike a sum of approximate points
                 let value = Conversion::between(&x.unit, &target)?.apply_exact_f64(x.value)?;
                 Ok(Number::Approx(Approx {
                     value,

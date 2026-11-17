@@ -4353,3 +4353,41 @@ fn calc_autoprefix_chooses_the_si_prefix() {
         2
     );
 }
+
+/// Found while testing `--autoprefix`: an approximate number scaled a Celsius point silently
+/// (`sqrt(2) * 20 degC`), and an approximate kelvin value could not be converted.
+#[test]
+fn calc_approximate_temperatures_follow_the_exact_rules() {
+    for expr in [
+        "sqrt(2) * 20 degC",
+        "20 degC / sqrt(2)",
+        "sqrt(2) * 68 degF",
+    ] {
+        let r = calc(&[expr]);
+        assert!(
+            r.stderr.starts_with("error[refused]"),
+            "{expr}: {}",
+            r.stderr
+        );
+        assert!(
+            r.stderr.contains("cannot be multiplied or divided"),
+            "{}",
+            r.stderr
+        );
+    }
+    // a kelvin value scales and converts, approximate or not
+    assert_eq!(
+        calc(&["sqrt(2) * 300 K", "--to", "K"]).stdout,
+        "≈ 424.26406871192853 K\n"
+    );
+    assert_eq!(
+        calc(&["(sqrt(2) * 300 K).to(mK)"]).stdout,
+        "≈ 424264.06871192856 mK\n"
+    );
+    assert!(
+        calc(&["sqrt(2) * 20 degC.to(K)", "--to", "degC"])
+            .stdout
+            .starts_with("≈ 141.4267")
+    );
+    assert_eq!(calc(&["sqrt(2) * 20 delta_degC"]).code, 0);
+}

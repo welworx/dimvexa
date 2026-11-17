@@ -1106,3 +1106,235 @@ fn atan2_takes_two_values_of_one_dimension() {
         "refused"
     );
 }
+
+// ----- autoprefix, whole numbers, kelvin scaling, approximate paths ---------------------------
+
+#[test]
+fn autoprefix_picks_a_power_of_1000_at_the_boundaries() {
+    let reg = registry().unwrap();
+    let math = Math::new(&reg);
+    for (text, want) in [
+        ("1000 m", "1 km"),
+        ("999.9999 m", "999.9999 m"),
+        ("1 m", "1 m"),
+        ("0.001 m", "1 mm"),
+        ("0.0009 m", "900 \u{b5}m"),
+        ("1e9 m^3", "1 km^3"),
+        ("999999999 m^3", "999999999 m^3"),
+        ("1e31 m", "10 Qm"),
+        ("1e-35 m", "0.00001 qm"),
+        ("1000000 g", "1000 kg"),
+        ("1000 g", "1 kg"),
+        ("1 Mm", "1 Mm"),
+        ("1500 km", "1.5 Mm"),
+    ] {
+        let r = math.autoprefix(&num(&reg, text)).unwrap();
+        assert!(r.is_exact(), "{text}");
+        assert_eq!(r.to_string(), want, "{text}");
+    }
+    // unchanged: compound, powers below 1, no prefixes, temperatures, zero
+    for text in [
+        "3 m/s", "5 m^-1", "5000 ft", "5 min", "20 degC", "300 K", "0 m", "1500 kg",
+    ] {
+        let r = math.autoprefix(&num(&reg, text)).unwrap();
+        assert_eq!(r.to_string(), num(&reg, text).to_string(), "{text}");
+    }
+    // an approximate number is prefixed too and stays approximate
+    let approx = math.sqrt(&num(&reg, "4000000 m2")).unwrap();
+    let r = math.autoprefix(&approx).unwrap();
+    assert_eq!(r.to_string(), "2 km");
+    let r = math
+        .autoprefix(&math.sqrt(&num(&reg, "2e6 m2")).unwrap())
+        .unwrap();
+    assert!(!r.is_exact() && r.to_string().ends_with(" km"), "{r}");
+}
+
+#[test]
+fn floor_ceil_and_round_on_exact_approximate_and_far_values() {
+    let reg = registry().unwrap();
+    let math = Math::new(&reg);
+    for (text, floor, ceil, round) in [
+        ("7.5 m", "7 m", "8 m", "8 m"),
+        ("-7.5 m", "-8 m", "-7 m", "-8 m"),
+        ("7 m", "7 m", "7 m", "7 m"),
+        ("0.4999 m", "0 m", "1 m", "0 m"),
+        (
+            "1e30 m",
+            "1000000000000000000000000000000 m",
+            "1000000000000000000000000000000 m",
+            "1000000000000000000000000000000 m",
+        ),
+        ("1e50 m", "10^50 m", "10^50 m", "10^50 m"),
+    ] {
+        let q = num(&reg, text);
+        assert_eq!(math.floor(&q).unwrap().to_string(), floor, "floor {text}");
+        assert_eq!(math.ceil(&q).unwrap().to_string(), ceil, "ceil {text}");
+        assert_eq!(math.round(&q).unwrap().to_string(), round, "round {text}");
+    }
+    // beyond the digits: a whole value stays, a tiny one is 0 or 1 by sign, a fraction overflows
+    for (text, floor, ceil) in [("1e-400", "0 1", "1 1"), ("-1e-400", "-1 1", "0 1")] {
+        let q = num(&reg, text);
+        assert_eq!(math.floor(&q).unwrap().to_string(), floor, "{text}");
+        assert_eq!(math.ceil(&q).unwrap().to_string(), ceil, "{text}");
+    }
+    // an approximate value stays approximate
+    let s = math.sqrt(&num(&reg, "2 m2")).unwrap();
+    assert!(!math.floor(&s).unwrap().is_exact());
+}
+
+#[test]
+fn a_kelvin_value_scales_and_one_over_kelvin_works() {
+    let reg = registry().unwrap();
+    let math = Math::new(&reg);
+    let k = num(&reg, "300 K");
+    let two = num(&reg, "2");
+    assert_eq!(math.mul(&two, &k).unwrap().to_string(), "600 K");
+    assert_eq!(math.mul(&k, &two).unwrap().to_string(), "600 K");
+    assert_eq!(math.div(&k, &two).unwrap().to_string(), "150 K");
+    assert!(math.div(&two, &k).unwrap().to_string().ends_with("1/K"));
+    assert_eq!(
+        math.div(&two, &num(&reg, "0 K")).unwrap_err().code(),
+        "division_by_zero"
+    );
+    assert_eq!(
+        math.div(&k, &num(&reg, "0")).unwrap_err().code(),
+        "division_by_zero"
+    );
+    // a Celsius point does not scale
+    assert_eq!(
+        math.mul(&two, &num(&reg, "20 degC")).unwrap_err().code(),
+        "kind_mismatch"
+    );
+    // approximate kelvin values scale too, and stay approximate
+    let root_two = math.sqrt(&num(&reg, "2 1")).unwrap();
+    let hot = math.mul(&root_two, &k).unwrap();
+    assert!(!hot.is_exact() && hot.to_string().ends_with(" K"), "{hot}");
+    close(
+        math.to_f64_in(&hot, "K").unwrap(),
+        300.0 * 2.0_f64.sqrt(),
+        1e-14,
+    );
+    let half = math.div(&hot, &two).unwrap();
+    close(
+        math.to_f64_in(&half, "K").unwrap(),
+        150.0 * 2.0_f64.sqrt(),
+        1e-14,
+    );
+    let per_kelvin = math.div(&two, &hot).unwrap();
+    assert!(!per_kelvin.is_exact());
+    close(
+        math.to_f64_in(&per_kelvin, "1/K").unwrap(),
+        2.0 / (300.0 * 2.0_f64.sqrt()),
+        1e-14,
+    );
+}
+
+#[test]
+fn trigonometry_on_approximate_angles_and_odd_quarter_turns() {
+    let reg = registry().unwrap();
+    let math = Math::new(&reg);
+    // an approximate angle (from sqrt) goes through the f64 path
+    let angle = math
+        .mul(&math.sqrt(&num(&reg, "2 1")).unwrap(), &num(&reg, "1 rad"))
+        .unwrap();
+    for f in [Math::sin, Math::cos, Math::tan] {
+        let r = f(&math, &angle).unwrap();
+        assert!(!r.is_exact());
+    }
+    close(
+        math.to_f64_in(&math.sin(&angle).unwrap(), "1").unwrap(),
+        2.0_f64.sqrt().sin(),
+        1e-14,
+    );
+    // tan at odd multiples of a quarter turn is undefined, at even ones exact
+    assert!(math.tan(&num(&reg, "270 deg")).is_err());
+    assert_eq!(math.tan(&num(&reg, "360 deg")).unwrap().to_string(), "0 1");
+    // inverse functions on an approximate argument
+    let half = math
+        .div(&math.sqrt(&num(&reg, "2 1")).unwrap(), &num(&reg, "4 1"))
+        .unwrap();
+    let a = math.asin(&half).unwrap();
+    assert!(!a.is_exact());
+    close(
+        math.to_f64_in(&a, "rad").unwrap(),
+        (2.0_f64.sqrt() / 4.0).asin(),
+        1e-14,
+    );
+    assert_eq!(
+        math.asin(&math.mul(&half, &num(&reg, "10")).unwrap())
+            .unwrap_err()
+            .code(),
+        "refused"
+    );
+}
+
+#[test]
+fn autoprefix_keeps_the_value_and_lands_between_1_and_1000() {
+    let reg = registry().unwrap();
+    let math = Math::new(&reg);
+    let calc = dimvexa_calc::Calc::new(&reg);
+    // every mantissa at every power of ten the prefixes cover, in several units and with powers
+    for unit in ["m", "g", "Pa", "s", "m^2", "m^3", "W"] {
+        for exp in -28..=28_i32 {
+            for mantissa in ["1", "2.5", "9.99", "999"] {
+                let text = format!("{mantissa}e{exp} {unit}");
+                let original = num(&reg, &text);
+                let shown = math.autoprefix(&original).unwrap();
+                assert!(shown.is_exact(), "{text}");
+                // same quantity: converting back to the unit gives the same exact value
+                let Number::Exact(back) = math.to_unit(&shown, unit).unwrap() else {
+                    panic!("{text} is exact");
+                };
+                let Number::Exact(orig) = &original else {
+                    panic!("{text}")
+                };
+                assert!(calc.eq(&back, orig).unwrap(), "{text} -> {shown}");
+                // the number is below 1000^power (above 1 except below the smallest prefix and
+                // for grams, which stop at kilo)
+                let power: i32 = unit
+                    .rsplit('^')
+                    .next()
+                    .and_then(|p| p.parse().ok())
+                    .unwrap_or(1);
+                let in_shown = shown.to_string();
+                let magnitude: f64 = in_shown.split(' ').next().unwrap().parse().unwrap();
+                let limit = 1000_f64.powi(power);
+                let grams: f64 = format!("{mantissa}e{exp}").parse().unwrap();
+                let capped = unit == "g" && grams >= 1e6;
+                assert!(magnitude < limit || capped, "{text} -> {in_shown}");
+            }
+        }
+    }
+}
+
+#[test]
+fn an_approximate_temperature_converts_and_is_never_scaled_as_a_point() {
+    let reg = registry().unwrap();
+    let math = Math::new(&reg);
+    let root_two = math.sqrt(&num(&reg, "2 1")).unwrap();
+    // a Celsius point is not scaled by an approximate number either (as with an exact one)
+    for (a, b) in [
+        (&root_two, &num(&reg, "20 degC")),
+        (&num(&reg, "20 degC"), &root_two),
+    ] {
+        assert_eq!(math.mul(a, b).unwrap_err().code(), "refused");
+    }
+    assert_eq!(
+        math.div(&num(&reg, "20 degC"), &root_two)
+            .unwrap_err()
+            .code(),
+        "refused"
+    );
+    // a conversion of an approximate kelvin value is fine, to K, mK and degC
+    let hot = math.mul(&root_two, &num(&reg, "300 K")).unwrap();
+    close(
+        math.to_f64_in(&hot, "mK").unwrap(),
+        300_000.0 * 2.0_f64.sqrt(),
+        1e-14,
+    );
+    close(
+        math.to_f64_in(&hot, "degC").unwrap(),
+        300.0_f64.mul_add(2.0_f64.sqrt(), -273.15),
+        1e-13,
+    );
+}
