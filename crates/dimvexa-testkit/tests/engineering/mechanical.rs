@@ -114,3 +114,32 @@ fn mechanical_projectile_range_at_fifteen_degrees_is_exact() {
     let got = f.f64_in(&range, "m").unwrap();
     assert!(((got - want) / want).abs() < 1e-12, "{got} vs {want}");
 }
+
+/// The size of a speed difference, `abs(v1 - v2)`, in the unit of the first speed.
+#[test]
+fn mechanical_the_size_of_a_speed_difference() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("v1", "50 km/h")
+        .unwrap()
+        .var("v2", "80 km/h")
+        .unwrap();
+    assert_eq!(f.eval_exact("abs(v1 - v2)").unwrap().to_string(), "30 km/h");
+}
+
+/// The allowable load is the smaller of the buckling limit and 90 percent of the yield load.
+#[test]
+fn mechanical_the_allowable_load_is_the_smaller_of_two_limits() {
+    check(
+        &[("Fcr", "120 kN"), ("Fy", "150 kN")],
+        "min(Fcr, 0.9 * Fy)",
+        "kN",
+        120.0,
+    );
+    check(
+        &[("Fcr", "120 kN"), ("Fy", "120 kN")],
+        "min(Fcr, 0.9 * Fy)",
+        "kN",
+        108.0,
+    );
+}

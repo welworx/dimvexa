@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! Mathematical functions with an explicit approximate value (ADR-029): `sqrt`, fractional
-//! powers, `ln`, `exp`, `sin` and `cos`.
+//! Mathematical functions with an explicit approximate value (ADR-029): `sqrt`, `cbrt`,
+//! fractional powers, `abs`, `hypot`, `min`, `max`, `ln`, `exp`, `log10`, `log2`, `log`, `sin`,
+//! `cos` and the hyperbolic functions.
 //!
 //! The exact tier ([`Calc`](crate::Calc)) never rounds. These functions mostly cannot be exact:
 //! `sqrt(2)` has no fraction. So a [`Number`] is either
@@ -23,6 +24,7 @@
 //! Dimensions have integer exponents, so a root needs a result whose exponents are integers:
 //! `sqrt(m^2)` is `m`, `sqrt(m)` is refused (KL-32). The result of a root is in SI base units.
 
+use core::cmp::Ordering;
 use core::fmt;
 use core::num::FpCategory;
 
@@ -512,6 +514,317 @@ impl<'r> Math<'r> {
         self.reg().parse(&parts.join("."))
     }
 
+    // ----- more roots, absolute value, extremes ----------------------------------------------
+
+    /// Cube root: [`root`](Self::root) with the power `1/3`. Exact for a perfect cube.
+    ///
+    /// # Errors
+    ///
+    /// As [`root`](Self::root).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dimvexa_calc::{Math, Number};
+    /// # let reg = dimvexa::registry()?;
+    /// # let math = Math::new(&reg);
+    /// let q = |s: &str| reg.quantity(s).map(Number::from);
+    /// // the edge of a cube of 27 litres: 0.027 m^3 is exactly 0.3 m
+    /// assert_eq!(math.cbrt(&q("27 L")?)?.to_string(), "0.3 m");
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn cbrt(&self, a: &Number) -> Result<Number> {
+        self.root(a, 1, 3)
+    }
+
+    /// Absolute value, in the unit of the argument. Exact for an exact number.
+    ///
+    /// # Errors
+    ///
+    /// The errors of [`Calc::abs`] (a temperature point is refused: `abs(-5 degC)` has no
+    /// meaning), [`Error::Refused`] for an approximate temperature point.
+    pub fn abs(&self, a: &Number) -> Result<Number> {
+        match a {
+            Number::Exact(q) => self.calc.abs(q).map(Number::Exact),
+            Number::Approx(x) => {
+                Self::linear_only(&x.unit)?;
+                Ok(Number::Approx(Approx {
+                    value: x.value.abs(),
+                    unit: x.unit.clone(),
+                }))
+            }
+        }
+    }
+
+    /// `sqrt(a^2 + b^2)`: the length of the resultant of two perpendicular quantities of one
+    /// dimension, in SI base units. Exact when the sum of squares is a perfect square (a 3-4-5
+    /// triangle gives `5 m`).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::DimensionMismatch`] if `a` and `b` do not share a dimension, and the errors of
+    /// [`pow`](Self::pow), [`add`](Self::add) and [`sqrt`](Self::sqrt).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dimvexa_calc::{Math, Number};
+    /// # let reg = dimvexa::registry()?;
+    /// # let math = Math::new(&reg);
+    /// let q = |s: &str| reg.quantity(s).map(Number::from);
+    /// assert_eq!(math.hypot(&q("30 kN")?, &q("40000 N")?)?.to_string(), "50000 kg.m.s^-2");
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn hypot(&self, a: &Number, b: &Number) -> Result<Number> {
+        let sum = self.add(&self.pow(a, 2)?, &self.pow(b, 2)?)?;
+        self.sqrt(&sum)
+    }
+
+    /// The smaller of two numbers of one dimension, compared across units; the result keeps the
+    /// unit of the winner (the left one on a tie). Exact for two exact numbers; if either is
+    /// approximate the result is approximate.
+    ///
+    /// # Errors
+    ///
+    /// The errors of [`Calc::cmp`] for exact numbers (a dimension or kind mismatch), the errors
+    /// of [`add`](Self::add) for an approximate one.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dimvexa_calc::{Math, Number};
+    /// # let reg = dimvexa::registry()?;
+    /// # let math = Math::new(&reg);
+    /// let q = |s: &str| reg.quantity(s).map(Number::from);
+    /// assert_eq!(math.min(&q("1 km")?, &q("900 m")?)?.to_string(), "900 m");
+    /// assert_eq!(math.max(&q("1 km")?, &q("900 m")?)?.to_string(), "1 km");
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn min(&self, a: &Number, b: &Number) -> Result<Number> {
+        self.extremum(a, b, Ordering::Greater)
+    }
+
+    /// The larger of two numbers. See [`min`](Self::min).
+    ///
+    /// # Errors
+    ///
+    /// As [`min`](Self::min).
+    pub fn max(&self, a: &Number, b: &Number) -> Result<Number> {
+        self.extremum(a, b, Ordering::Less)
+    }
+
+    /// `b` when `a.cmp(b)` is `swap_on`, otherwise `a`.
+    fn extremum(self, a: &Number, b: &Number, swap_on: Ordering) -> Result<Number> {
+        if let (Number::Exact(x), Number::Exact(y)) = (a, b) {
+            return Ok(if self.calc.cmp(x, y)? == swap_on {
+                b.clone()
+            } else {
+                a.clone()
+            });
+        }
+        let (x, y) = (Self::approx_of(a)?, Self::approx_of(b)?);
+        Self::linear_only(&x.unit)?;
+        Self::linear_only(&y.unit)?;
+        let in_x = Conversion::between(&y.unit, &x.unit)?.apply_exact_f64(y.value)?;
+        let ordering = x.value.partial_cmp(&in_x).unwrap_or(Ordering::Equal);
+        Ok(Number::Approx(if ordering == swap_on { y } else { x }))
+    }
+
+    // ----- hyperbolic functions --------------------------------------------------------------
+
+    /// Hyperbolic sine of a dimensionless value. Exact only at 0.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] for a value with a dimension, [`Error::Overflow`] for a result that
+    /// is not finite.
+    pub fn sinh(&self, a: &Number) -> Result<Number> {
+        Self::elementary(a, f64::sinh, |_| true, "", &[(0, 0)])
+    }
+
+    /// Hyperbolic cosine. Exact only at 0 (`cosh 0 = 1`).
+    ///
+    /// # Errors
+    ///
+    /// As [`sinh`](Self::sinh).
+    pub fn cosh(&self, a: &Number) -> Result<Number> {
+        Self::elementary(a, f64::cosh, |_| true, "", &[(0, 1)])
+    }
+
+    /// Hyperbolic tangent. Exact only at 0.
+    ///
+    /// # Errors
+    ///
+    /// As [`sinh`](Self::sinh).
+    pub fn tanh(&self, a: &Number) -> Result<Number> {
+        Self::elementary(a, f64::tanh, |_| true, "", &[(0, 0)])
+    }
+
+    /// Inverse hyperbolic sine. Exact only at 0.
+    ///
+    /// # Errors
+    ///
+    /// As [`sinh`](Self::sinh).
+    pub fn asinh(&self, a: &Number) -> Result<Number> {
+        Self::elementary(a, f64::asinh, |_| true, "", &[(0, 0)])
+    }
+
+    /// Inverse hyperbolic cosine, for a value of at least 1. Exact only at 1.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] for a value below 1, and as [`sinh`](Self::sinh).
+    pub fn acosh(&self, a: &Number) -> Result<Number> {
+        Self::elementary(
+            a,
+            f64::acosh,
+            |x| x >= 1.0,
+            "acosh needs a value of at least 1",
+            &[(1, 0)],
+        )
+    }
+
+    /// Inverse hyperbolic tangent, for a value strictly between -1 and 1. Exact only at 0.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] outside that range, and as [`sinh`](Self::sinh).
+    pub fn atanh(&self, a: &Number) -> Result<Number> {
+        Self::elementary(
+            a,
+            f64::atanh,
+            |x| x.abs() < 1.0,
+            "atanh needs a value strictly between -1 and 1",
+            &[(0, 0)],
+        )
+    }
+
+    /// A function of a dimensionless value with a domain and a few exact points
+    /// (`exact` lists `(input, output)` integers).
+    fn elementary(
+        a: &Number,
+        f: fn(f64) -> f64,
+        allowed: fn(f64) -> bool,
+        domain: &str,
+        exact: &[(i32, i32)],
+    ) -> Result<Number> {
+        let x = match Self::dimensionless(a)? {
+            Si::Exact(r) => {
+                let x = r.to_f64()?;
+                if !allowed(x) {
+                    return Err(refused(domain));
+                }
+                for (input, output) in exact {
+                    if r.checked_eq(Ratio::from_int(i128::from(*input)))? {
+                        return Ok(Number::Exact(Quantity::new(
+                            Ratio::from_int(i128::from(*output)),
+                            UnitExpr::unity(),
+                        )));
+                    }
+                }
+                x
+            }
+            Si::Approx(x) => {
+                if !allowed(x) {
+                    return Err(refused(domain));
+                }
+                x
+            }
+        };
+        unity(f(x))
+    }
+
+    // ----- logarithms of other bases ---------------------------------------------------------
+
+    /// Logarithm to base 10 of a positive dimensionless value. Exact when the value is an
+    /// integer power of ten (`log10(1000) = 3`, `log10(0.001) = -3`).
+    ///
+    /// # Errors
+    ///
+    /// As [`ln`](Self::ln).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dimvexa_calc::{Math, Number};
+    /// # let reg = dimvexa::registry()?;
+    /// # let math = Math::new(&reg);
+    /// let q = |s: &str| reg.quantity(s).map(Number::from);
+    /// assert_eq!(math.log10(&q("1000")?)?.to_string(), "3 1");
+    /// assert!(!math.log10(&q("2")?)?.is_exact());
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn log10(&self, a: &Number) -> Result<Number> {
+        Self::logarithm(a, Base::Ten)
+    }
+
+    /// Logarithm to base 2. Exact when the value is an integer power of two.
+    ///
+    /// # Errors
+    ///
+    /// As [`ln`](Self::ln).
+    pub fn log2(&self, a: &Number) -> Result<Number> {
+        Self::logarithm(a, Base::Two)
+    }
+
+    /// Logarithm of `a` to the base `base` (a positive dimensionless value other than 1).
+    /// Exact when `a` is an integer power of `base` (`log(81, 3) = 4`), also approximate
+    /// where the exact result is a fraction (`log(2, 4)` is `1/2`).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] for a value or base that is not positive, a base of 1, or a value or
+    /// base with a dimension.
+    pub fn log(&self, a: &Number, base: &Number) -> Result<Number> {
+        Self::logarithm(a, Base::Other(base))
+    }
+
+    fn logarithm(value: &Number, base: Base<'_>) -> Result<Number> {
+        let positive = || refused("the logarithm of a value that is not positive");
+        let arg = Self::dimensionless(value)?;
+        let (base_exact, base_f) = match &base {
+            Base::Ten => (Some(Ratio::from_int(10)), 10.0),
+            Base::Two => (Some(Ratio::from_int(2)), 2.0),
+            Base::Other(other) => match Self::dimensionless(other)? {
+                Si::Exact(r) => {
+                    let real = r.to_f64()?;
+                    (Some(r), real)
+                }
+                Si::Approx(real) => (None, real),
+            },
+        };
+        if base_f <= 0.0 || base_f.to_bits() == 1.0_f64.to_bits() {
+            return Err(refused(
+                "the base of a logarithm must be positive and not 1",
+            ));
+        }
+        let x_f = match &arg {
+            Si::Exact(r) => {
+                if r.num() <= 0 {
+                    return Err(positive());
+                }
+                if let Some(radix) = base_exact {
+                    if let Some(power) = exact_log(*r, radix) {
+                        return Ok(Number::Exact(Quantity::new(
+                            Ratio::from_int(i128::from(power)),
+                            UnitExpr::unity(),
+                        )));
+                    }
+                }
+                r.to_f64()?
+            }
+            Si::Approx(real) => *real,
+        };
+        if x_f <= 0.0 {
+            return Err(positive());
+        }
+        unity(match base {
+            Base::Ten => x_f.log10(),
+            Base::Two => x_f.log2(),
+            Base::Other(_) => x_f.log(base_f),
+        })
+    }
+
     // ----- logarithm, exponential, trigonometry ----------------------------------------------
 
     /// Natural logarithm of a dimensionless value (a ratio such as `d1 / d2`). Exact only for
@@ -635,6 +948,24 @@ impl<'r> Math<'r> {
         };
         unity(if cos { f.cos() } else { f.sin() })
     }
+}
+
+/// The base of a logarithm.
+#[derive(Clone, Copy)]
+enum Base<'a> {
+    Ten,
+    Two,
+    Other(&'a Number),
+}
+
+/// The integer `k` with `base^k == x`, if there is one (`|k| <= 10 000`).
+fn exact_log(x: Ratio, base: Ratio) -> Option<i32> {
+    let ratio = x.to_f64().ok()?.log(base.to_f64().ok()?);
+    if !ratio.is_finite() || ratio.abs() > 10_000.0 {
+        return None;
+    }
+    let k: i32 = format!("{ratio:.0}").parse().ok()?;
+    base.checked_pow(k).ok()?.checked_eq(x).ok()?.then_some(k)
 }
 
 fn unity(value: f64) -> Result<Number> {

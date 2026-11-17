@@ -460,3 +460,338 @@ fn the_root_of_a_perfect_power_is_always_exact() {
     }
     assert!(checked > 15_000, "{checked}");
 }
+
+// ----- cbrt, abs, hypot ------------------------------------------------------------------------
+
+#[test]
+fn the_cube_root_is_exact_for_a_perfect_cube() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    assert_eq!(m.cbrt(&n(&reg, "27 m^3")).unwrap().to_string(), "3 m");
+    // 27 litres are 0.027 m^3
+    assert_eq!(m.cbrt(&n(&reg, "27 L")).unwrap().to_string(), "0.3 m");
+    assert_eq!(m.cbrt(&n(&reg, "-8")).unwrap().to_string(), "-2 1");
+    let r = m.cbrt(&n(&reg, "2 m^3")).unwrap();
+    assert!(!r.is_exact());
+    assert_eq!(m.to_f64_in(&r, "m").unwrap(), 2.0_f64.cbrt());
+    assert_eq!(code(m.cbrt(&n(&reg, "2 m^2"))), "refused");
+}
+
+#[test]
+fn the_absolute_value_keeps_the_unit_and_the_exactness() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    assert_eq!(m.abs(&n(&reg, "-3 m")).unwrap().to_string(), "3 m");
+    assert_eq!(
+        m.abs(&n(&reg, "-0.5 km/h")).unwrap().to_string(),
+        "0.5 km/h"
+    );
+    let root = m.neg(&m.sqrt(&n(&reg, "2 m^2")).unwrap()).unwrap();
+    let r = m.abs(&root).unwrap();
+    assert!(!r.is_exact());
+    assert_eq!(m.to_f64_in(&r, "m").unwrap(), 2.0_f64.sqrt());
+    // the absolute value of a temperature point means nothing; a difference is fine
+    assert_eq!(code(m.abs(&n(&reg, "-5 degC"))), "kind_mismatch");
+    assert_eq!(
+        m.abs(&n(&reg, "-5 delta_K")).unwrap().to_string(),
+        "5 delta_K"
+    );
+}
+
+#[test]
+fn the_resultant_of_two_perpendicular_quantities() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    // 3-4-5, across units: exact
+    let r = m.hypot(&n(&reg, "30 kN"), &n(&reg, "40000 N")).unwrap();
+    assert!(r.is_exact(), "{r}");
+    assert_eq!(m.to_f64_in(&r, "kN").unwrap(), 50.0);
+    // 1 m and 1 km: 1 000 001 m^2, not a perfect square
+    let r = m.hypot(&n(&reg, "1 m"), &n(&reg, "1 km")).unwrap();
+    assert!(!r.is_exact());
+    close(m.to_f64_in(&r, "m").unwrap(), 1_000_001.0_f64.sqrt(), 1e-15);
+    assert_eq!(
+        code(m.hypot(&n(&reg, "1 m"), &n(&reg, "1 s"))),
+        "dimension_mismatch"
+    );
+}
+
+// ----- min and max -----------------------------------------------------------------------------
+
+#[test]
+fn min_and_max_compare_across_units_and_keep_the_unit_of_the_winner() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    let (km, metres) = (n(&reg, "1 km"), n(&reg, "900 m"));
+    assert_eq!(m.min(&km, &metres).unwrap().to_string(), "900 m");
+    assert_eq!(m.max(&km, &metres).unwrap().to_string(), "1 km");
+    assert_eq!(m.min(&metres, &km).unwrap().to_string(), "900 m");
+    // a tie keeps the left operand, with its unit
+    assert_eq!(
+        m.min(&n(&reg, "1 km"), &n(&reg, "1000 m"))
+            .unwrap()
+            .to_string(),
+        "1 km"
+    );
+    assert_eq!(
+        m.max(&n(&reg, "1000 m"), &n(&reg, "1 km"))
+            .unwrap()
+            .to_string(),
+        "1000 m"
+    );
+    assert!(m.min(&km, &metres).unwrap().is_exact());
+}
+
+#[test]
+fn min_and_max_of_temperatures_and_mixed_dimensions() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    // 70 degF is 21.1 degC: states compare across scales, exactly
+    assert_eq!(
+        m.min(&n(&reg, "20 degC"), &n(&reg, "70 degF"))
+            .unwrap()
+            .to_string(),
+        "20 degC"
+    );
+    assert_eq!(
+        m.max(&n(&reg, "20 degC"), &n(&reg, "70 degF"))
+            .unwrap()
+            .to_string(),
+        "70 degF"
+    );
+    assert_eq!(
+        code(m.min(&n(&reg, "1 m"), &n(&reg, "1 s"))),
+        "dimension_mismatch"
+    );
+}
+
+#[test]
+fn min_and_max_with_an_approximate_value_are_approximate() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    let root = m.sqrt(&n(&reg, "2 m^2")).unwrap(); // 1.414 m
+    let low = m.min(&root, &n(&reg, "1.5 m")).unwrap();
+    assert!(!low.is_exact());
+    assert_eq!(m.to_f64_in(&low, "m").unwrap(), 2.0_f64.sqrt());
+    // the exact operand wins, but it is still labelled approximate: the choice depended on ≈
+    let high = m.max(&root, &n(&reg, "1.5 m")).unwrap();
+    assert!(!high.is_exact());
+    assert_eq!(m.to_f64_in(&high, "m").unwrap(), 1.5);
+    // across units
+    let high = m.max(&root, &n(&reg, "1 km")).unwrap();
+    assert_eq!(m.to_f64_in(&high, "km").unwrap(), 1.0);
+}
+
+// ----- hyperbolic functions --------------------------------------------------------------------
+
+type Call<'a> = Box<dyn Fn(&Number) -> Result<Number, Error> + 'a>;
+
+/// One hyperbolic function, its exact point and a point that is not exact.
+struct Hyperbolic<'a> {
+    name: &'static str,
+    call: Call<'a>,
+    exact_input: &'static str,
+    exact_output: &'static str,
+    other_input: f64,
+    std: fn(f64) -> f64,
+}
+
+#[test]
+fn hyperbolic_functions_are_exact_at_their_exact_points_and_approximate_elsewhere() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    let row = |name, call, exact_input, exact_output, other_input, std| Hyperbolic {
+        name,
+        call,
+        exact_input,
+        exact_output,
+        other_input,
+        std,
+    };
+    let table = [
+        row(
+            "sinh",
+            Box::new(|x: &Number| m.sinh(x)) as _,
+            "0",
+            "0 1",
+            1.0,
+            f64::sinh as fn(f64) -> f64,
+        ),
+        row(
+            "cosh",
+            Box::new(|x: &Number| m.cosh(x)) as _,
+            "0",
+            "1 1",
+            1.0,
+            f64::cosh,
+        ),
+        row(
+            "tanh",
+            Box::new(|x: &Number| m.tanh(x)) as _,
+            "0",
+            "0 1",
+            0.5,
+            f64::tanh,
+        ),
+        row(
+            "asinh",
+            Box::new(|x: &Number| m.asinh(x)) as _,
+            "0",
+            "0 1",
+            2.0,
+            f64::asinh,
+        ),
+        row(
+            "acosh",
+            Box::new(|x: &Number| m.acosh(x)) as _,
+            "1",
+            "0 1",
+            2.0,
+            f64::acosh,
+        ),
+        row(
+            "atanh",
+            Box::new(|x: &Number| m.atanh(x)) as _,
+            "0",
+            "0 1",
+            0.5,
+            f64::atanh,
+        ),
+    ];
+    for h in table {
+        let exact = (h.call)(&n(&reg, h.exact_input)).unwrap();
+        assert_eq!(exact.to_string(), h.exact_output, "{}", h.name);
+        let approx = (h.call)(&n(&reg, &h.other_input.to_string())).unwrap();
+        assert!(!approx.is_exact(), "{}", h.name);
+        assert_eq!(
+            m.to_f64_in(&approx, "1").unwrap(),
+            (h.std)(h.other_input),
+            "{}",
+            h.name
+        );
+    }
+}
+
+#[test]
+fn hyperbolic_functions_refuse_their_domain_edges_and_units() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    assert_eq!(code(m.acosh(&n(&reg, "0.5"))), "refused");
+    assert_eq!(code(m.atanh(&n(&reg, "1"))), "refused");
+    assert_eq!(code(m.atanh(&n(&reg, "-1"))), "refused");
+    assert_eq!(code(m.atanh(&n(&reg, "2"))), "refused");
+    assert_eq!(code(m.sinh(&n(&reg, "1 m"))), "refused");
+    assert_eq!(code(m.cosh(&n(&reg, "1000"))), "overflow");
+    // the same on an approximate argument
+    let x = m.sqrt(&n(&reg, "0.5")).unwrap(); // 0.707
+    assert_eq!(code(m.acosh(&x)), "refused");
+    assert!(m.atanh(&x).is_ok());
+}
+
+// ----- logarithms of other bases ---------------------------------------------------------------
+
+#[test]
+fn the_logarithm_to_base_10_and_2_is_exact_for_powers_of_the_base() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    let l10 = |s: &str| m.log10(&n(&reg, s)).unwrap().to_string();
+    let l2 = |s: &str| m.log2(&n(&reg, s)).unwrap().to_string();
+    assert_eq!(l10("1000"), "3 1");
+    assert_eq!(l10("0.001"), "-3 1");
+    assert_eq!(l10("1"), "0 1");
+    assert_eq!(l10("1e-100"), "-100 1"); // ADR-028: a stored power of ten
+    assert_eq!(l10("1e100"), "100 1");
+    assert_eq!(l2("8"), "3 1");
+    assert_eq!(l2("0.25"), "-2 1");
+    assert_eq!(l2("1"), "0 1");
+    // 1000 mm per m is exactly 1000 / 1000 = 1
+    assert_eq!(m.log10(&n(&reg, "1000 mm/m")).unwrap().to_string(), "0 1");
+}
+
+#[test]
+fn the_other_logarithms_are_approximate() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    let r = m.log10(&n(&reg, "2")).unwrap();
+    assert!(!r.is_exact());
+    assert_eq!(m.to_f64_in(&r, "1").unwrap(), 2.0_f64.log10());
+    let r = m.log2(&n(&reg, "3")).unwrap();
+    assert_eq!(m.to_f64_in(&r, "1").unwrap(), 3.0_f64.log2());
+    // 20 log10(2): the voltage gain of a factor of 2 is about 6.02 dB
+    let gain = m
+        .mul(&n(&reg, "20"), &m.log10(&n(&reg, "2")).unwrap())
+        .unwrap();
+    close(
+        m.to_f64_in(&gain, "1").unwrap(),
+        6.020_599_913_279_624,
+        1e-15,
+    );
+}
+
+#[test]
+fn the_logarithm_to_any_base() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    let log = |x: &str, base: &str| m.log(&n(&reg, x), &n(&reg, base)).unwrap();
+    assert_eq!(log("81", "3").to_string(), "4 1");
+    assert_eq!(log("1", "7").to_string(), "0 1");
+    assert_eq!(log("0.125", "2").to_string(), "-3 1");
+    assert_eq!(log("0.01", "0.1").to_string(), "2 1"); // a base below 1
+    // log_4(2) is 1/2 but only whole numbers are exact: approximate, and right
+    let half = log("2", "4");
+    assert!(!half.is_exact());
+    assert_eq!(m.to_f64_in(&half, "1").unwrap(), 0.5);
+    let r = log("10", "3");
+    close(m.to_f64_in(&r, "1").unwrap(), 10.0_f64.log(3.0_f64), 1e-15);
+}
+
+#[test]
+fn the_domain_of_a_logarithm() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    assert_eq!(code(m.log10(&n(&reg, "0"))), "refused");
+    assert_eq!(code(m.log10(&n(&reg, "-1"))), "refused");
+    assert_eq!(code(m.log2(&n(&reg, "2 m"))), "refused");
+    assert_eq!(code(m.log(&n(&reg, "8"), &n(&reg, "1"))), "refused");
+    assert_eq!(code(m.log(&n(&reg, "8"), &n(&reg, "0"))), "refused");
+    assert_eq!(code(m.log(&n(&reg, "8"), &n(&reg, "-2"))), "refused");
+    assert_eq!(code(m.log(&n(&reg, "8"), &n(&reg, "2 m"))), "refused");
+}
+
+#[test]
+fn hostile_arguments_to_the_new_functions_never_panic() {
+    let reg = reg();
+    let m = Math::new(&reg);
+    let values = [
+        "0",
+        "1",
+        "-1",
+        "2",
+        "0.5",
+        "1e-100",
+        "1e100",
+        "1e-9999",
+        "1e9999",
+        "170141183460469231731687303715884105727",
+        "4 m^2",
+        "1 ly",
+        "3 deg",
+        "20 degC",
+        "5 delta_K",
+    ];
+    for a in values {
+        let x = n(&reg, a);
+        let _ = (m.cbrt(&x), m.abs(&x), m.sinh(&x), m.cosh(&x), m.tanh(&x));
+        let _ = (
+            m.asinh(&x),
+            m.acosh(&x),
+            m.atanh(&x),
+            m.log10(&x),
+            m.log2(&x),
+        );
+        for b in values {
+            let y = n(&reg, b);
+            let _ = (m.hypot(&x, &y), m.min(&x, &y), m.max(&x, &y), m.log(&x, &y));
+        }
+    }
+}

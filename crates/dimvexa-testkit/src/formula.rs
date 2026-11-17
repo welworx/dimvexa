@@ -22,7 +22,9 @@
 //!
 //! Grammar: numbers (`2`, `0.5`, `1e-3`), variables, `+ - * /`, a unary minus, parentheses, a
 //! power with an integer, a decimal or a fraction as exponent (`L^4`, `v^-2`, `x^0.5`,
-//! `R^(2/3)`), and the functions `sqrt`, `ln`, `exp`, `sin` and `cos`. Any other function is a
+//! `R^(2/3)`), and the functions `sqrt`, `cbrt`, `abs`, `hypot(x, y)`, `min(x, y, ...)`,
+//! `max(x, y, ...)`, `ln`, `exp`, `log10`, `log2`, `log(x, base)`, `sin`, `cos`, `sinh`, `cosh`,
+//! `tanh`, `asinh`, `acosh` and `atanh` (`log(x)` alone is ambiguous and refused). Any other function is a
 //! `refused` error that says `'tan' is not implemented` (and how to write it, where there is a
 //! way: `sin(x) / cos(x)`), an unknown name says `unknown function`. Every step is an
 //! operation of [`Math`] or of the core, so a result is exact whenever the mathematics is exact
@@ -99,35 +101,53 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
     Ok(out)
 }
 
-/// The functions the evaluator implements (ADR-029).
-const IMPLEMENTED: [&str; 5] = ["sqrt", "ln", "exp", "sin", "cos"];
+/// The functions the evaluator implements (ADR-029), with the number of arguments: `0` means
+/// two or more (`min`, `max`).
+const IMPLEMENTED: [(&str, usize); 19] = [
+    ("sqrt", 1),
+    ("cbrt", 1),
+    ("abs", 1),
+    ("hypot", 2),
+    ("min", 0),
+    ("max", 0),
+    ("ln", 1),
+    ("exp", 1),
+    ("log10", 1),
+    ("log2", 1),
+    ("log", 2),
+    ("sin", 1),
+    ("cos", 1),
+    ("sinh", 1),
+    ("cosh", 1),
+    ("tanh", 1),
+    ("asinh", 1),
+    ("acosh", 1),
+    ("atanh", 1),
+];
 
 /// Well-known functions that are **not implemented**, each with the way to write it from the
 /// ones that are (empty where there is none). Using one is an error, never a guess.
-const NOT_IMPLEMENTED: [(&str, &str); 19] = [
+const NOT_IMPLEMENTED: [(&str, &str); 8] = [
     ("tan", "sin(x) / cos(x)"),
     ("asin", ""),
     ("acos", ""),
     ("atan", ""),
     ("atan2", ""),
-    ("sinh", "(exp(x) - exp(-x)) / 2"),
-    ("cosh", "(exp(x) + exp(-x)) / 2"),
-    ("tanh", "(exp(x) - exp(-x)) / (exp(x) + exp(-x))"),
-    ("asinh", ""),
-    ("acosh", ""),
-    ("atanh", ""),
-    ("log", "ln(x) / ln(base)"),
-    ("log10", "ln(x) / ln(10)"),
-    ("log2", "ln(x) / ln(2)"),
-    ("cbrt", "x^(1/3)"),
     ("pow", "x^p"),
-    ("hypot", "sqrt(x^2 + y^2)"),
     ("floor", ""),
     ("round", ""),
 ];
 
 fn function_list() -> String {
-    "sqrt, ln, exp, sin and cos".to_owned()
+    let names: Vec<&str> = IMPLEMENTED.iter().map(|(name, _)| *name).collect();
+    names.join(", ")
+}
+
+fn implemented_names() -> Vec<String> {
+    IMPLEMENTED
+        .iter()
+        .map(|(name, _)| (*name).to_owned())
+        .collect()
 }
 
 /// `refused`, in the wording of the other unsupported requests (`'psig' is not implemented`).
@@ -142,7 +162,7 @@ fn not_implemented(name: &str, hint: &str) -> Error {
             "'{name}' is not implemented (the functions are {}, ADR-029){how}",
             function_list()
         ),
-        suggestions: IMPLEMENTED.map(str::to_owned).to_vec(),
+        suggestions: implemented_names(),
     }
 }
 
@@ -293,34 +313,99 @@ impl Parser<'_, '_> {
         }
     }
 
-    /// `name(argument)`.
+    /// `name(argument, ...)`.
     fn call(&mut self, name: &str) -> Result<Number> {
-        // the name decides before the argument is read: `atan2(y, x)` must say that it is not
+        // the name decides before the arguments are read: `atan2(y, x)` must say that it is not
         // implemented, not complain about the comma
         if let Some((_, hint)) = NOT_IMPLEMENTED.iter().find(|(n, _)| *n == name) {
             return Err(not_implemented(name, hint));
         }
-        if !IMPLEMENTED.contains(&name) {
+        let Some((_, arity)) = IMPLEMENTED.iter().find(|(n, _)| *n == name) else {
             return Err(Error::Refused {
                 reason: format!(
                     "unknown function '{name}' (the functions are {})",
                     function_list()
                 ),
-                suggestions: IMPLEMENTED.map(str::to_owned).to_vec(),
+                suggestions: implemented_names(),
             });
-        }
+        };
+        let at = self.here();
         self.pos += 1; // the '('
-        let arg = self.expr()?;
+        let mut args = vec![self.expr()?];
+        while self.eat(',') {
+            args.push(self.expr()?);
+        }
         if !self.eat(')') {
             return Err(parse_error(self.src, self.here(), "')' is expected"));
         }
+        let wrong = match arity {
+            0 => args.len() < 2,
+            n => args.len() != *n,
+        };
+        if wrong {
+            // `log(x)` is the one name that is ambiguous in itself: natural or base 10?
+            let reason = if name == "log" && args.len() == 1 {
+                "log(x) is ambiguous (natural or base 10?): write ln(x), log10(x) or log(x, base)"
+                    .to_owned()
+            } else {
+                format!(
+                    "{name} takes {} argument(s), not {}",
+                    if *arity == 0 {
+                        "two or more".to_owned()
+                    } else {
+                        arity.to_string()
+                    },
+                    args.len()
+                )
+            };
+            return Err(if name == "log" && args.len() == 1 {
+                Error::Refused {
+                    reason,
+                    suggestions: ["ln", "log10", "log"].map(str::to_owned).to_vec(),
+                }
+            } else {
+                parse_error(self.src, at, &reason)
+            });
+        }
         let math = self.f.math;
-        match name {
-            "sqrt" => math.sqrt(&arg),
-            "ln" => math.ln(&arg),
-            "exp" => math.exp(&arg),
-            "sin" => math.sin(&arg),
-            _ => math.cos(&arg),
+        let one = args
+            .first()
+            .ok_or_else(|| parse_error(self.src, at, "an argument is expected"))?;
+        let two = args.get(1);
+        match (name, two) {
+            ("sqrt", _) => math.sqrt(one),
+            ("cbrt", _) => math.cbrt(one),
+            ("abs", _) => math.abs(one),
+            ("ln", _) => math.ln(one),
+            ("exp", _) => math.exp(one),
+            ("log10", _) => math.log10(one),
+            ("log2", _) => math.log2(one),
+            ("sin", _) => math.sin(one),
+            ("cos", _) => math.cos(one),
+            ("sinh", _) => math.sinh(one),
+            ("cosh", _) => math.cosh(one),
+            ("tanh", _) => math.tanh(one),
+            ("asinh", _) => math.asinh(one),
+            ("acosh", _) => math.acosh(one),
+            ("atanh", _) => math.atanh(one),
+            ("hypot", Some(other)) => math.hypot(one, other),
+            ("log", Some(base)) => math.log(one, base),
+            ("min" | "max", _) => {
+                let mut acc = one.clone();
+                for next in args.iter().skip(1) {
+                    acc = if name == "min" {
+                        math.min(&acc, next)?
+                    } else {
+                        math.max(&acc, next)?
+                    };
+                }
+                Ok(acc)
+            }
+            _ => Err(parse_error(
+                self.src,
+                at,
+                "the function is not available here",
+            )),
         }
     }
 }

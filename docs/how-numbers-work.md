@@ -426,7 +426,23 @@ angle $\theta=\tfrac{n}{d}10^{k}\pi$ is $\theta/\text{deg}=\tfrac{n}{d}10^{k}\cd
 multiple of $30^\circ$ when that number divided by 30 is an integer. A bare number is refused:
 `sin(0.5)` could be radians or degrees, and the library does not guess.
 
-### 9.4 What "approximate" means here
+### 9.4 The other functions
+
+* **`cbrt`, `abs`, `hypot`, `min`, `max`.** `cbrt` is the power $\tfrac13$. $\operatorname{hypot}(a,b)=\sqrt{a^2+b^2}$ is built from the exact operations, so a 3-4-5 triangle gives exactly 5, and
+  the two arguments must have one dimension. `min` and `max` compare across units and return the
+  winner in its own unit; if either argument is approximate the result is approximate.
+* **Logarithms to other bases.** $\log_b x$ is exact exactly when $x=b^{k}$ for an integer $k$:
+  $\log_{10}1000=3$, $\log_{3}81=4$, $\log_{10}10^{-100}=-100$. The code finds the candidate
+  $k=\operatorname{round}(\ln x/\ln b)$ in floating point and then **proves** it with the exact
+  power $b^{k}=x$. A rational but non-integer result such as $\log_4 2=\tfrac12$ is approximate
+  (`≈ 0.5`). `log(x)` with one argument is refused: natural or base 10 is not guessed.
+* **Hyperbolic functions.** One call of the platform's maths library each; exact only at their
+  rational points ($\sinh0=0,\ \cosh0=1,\ \tanh0=0,\ \operatorname{asinh}0=0,\
+  \operatorname{acosh}1=0,\ \operatorname{atanh}0=0$), by the same transcendence argument as
+  for $e^{x}$. The domain is checked: $\operatorname{acosh}x$ needs $x\ge1$ and
+  $\operatorname{atanh}x$ needs $|x|<1$.
+
+### 9.5 What "approximate" means here
 
 An approximate value is an `f64` with its unit. It is made only when the exact result does not
 exist. From then on:
@@ -438,7 +454,8 @@ exist. From then on:
 * **A function that does not exist is an error that says so.** `tan`, `asin`, `log10`, `atan2`,
   `hypot` and the others that are not implemented fail with `'tan' is not implemented` (code
   `refused`, as for the other unsupported requests) and, where there is a way, how to write
-  them from the functions that are there: `sin(x) / cos(x)`, `ln(x) / ln(10)`, `x^(1/3)`.
+  them from the functions that are there: `sin(x) / cos(x)`, `x^p`. Not implemented today:
+  `tan`, `asin`, `acos`, `atan`, `atan2`, `pow`, `floor`, `round`.
 * **Accuracy is stated, not promised.** Arithmetic and `sqrt` are IEEE operations (at most half
   a unit in the last place per step), a unit conversion uses the correctly rounded exact factor,
   and `ln`, `exp`, `sin`, `cos` and general powers come from the platform's maths library, which

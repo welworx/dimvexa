@@ -16,7 +16,8 @@
 //!
 //! # Functions: `sqrt`, powers, `ln`, `sin`
 //!
-//! [`Math`] adds `sqrt`, fractional powers, `ln`, `exp`, `sin` and `cos` over [`Number`]: exact
+//! [`Math`] adds `sqrt`, `cbrt`, fractional powers, `abs`, `hypot`, `min`, `max`, `ln`, `exp`,
+//! `log10`, `log2`, `log`, `sin`, `cos` and the hyperbolic functions over [`Number`]: exact
 //! when the mathematics is exact (`sqrt(4 m^2)`, `sin(30 deg)`), otherwise an explicitly labelled
 //! [`Approx`] that spreads to everything computed from it (ADR-029).
 //!

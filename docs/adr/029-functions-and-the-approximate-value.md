@@ -24,12 +24,16 @@ a `Quantity` holding the rational value of an `f64`: nothing would show that it 
 1. **A new type `Number` in `dimvexa-calc`** is either `Exact(Quantity)` or `Approx(Approx)`, where
    `Approx` is an `f64` with its `UnitExpr`, printed with `≈`. The functions live on a new
    calculator `Math` (built on `Calc`): `add`, `sub`, `mul`, `div`, `neg`, `pow`, `sqrt`,
-   `root(x, p, q)` (the power `p/q`), `ln`, `exp`, `sin`, `cos`, `to_unit`, `to_f64_in`.
+   `root(x, p, q)` (the power `p/q`), `cbrt`, `abs`, `hypot`, `min`, `max`, `ln`, `exp`,
+   `log10`, `log2`, `log(x, base)`, `sin`, `cos`, `sinh`, `cosh`, `tanh`, `asinh`, `acosh`,
+   `atanh`, `to_unit`, `to_f64_in`.
 2. **Exact whenever the mathematics is exact.** `sqrt(9 m^2)` is `3 m`, `8^(1/3)` is `2`,
    `(1/8)^(1/3)` is `1/2`, `1e-100^(1/2)` is `1e-50` (a perfect root of the digits, and a power
    of ten or of pi divisible by the index), `ln(1)` is `0`, `exp(0)` is `1`, and `sin` and `cos`
-   of a multiple of 30 degrees are `0`, `1/2`, `1` or their negatives. Everything else is
-   approximate.
+   of a multiple of 30 degrees are `0`, `1/2`, `1` or their negatives, `log10(1000)` is `3`
+   (a logarithm is exact when the value is an integer power of the base), `cosh(0)` is `1`,
+   `hypot(3 m, 4 m)` is `5 m`, and `min` and `max` of exact numbers are exact. Everything else
+   is approximate.
 3. **The approximate tier spreads and does not come back.** An operation with an approximate
    operand is approximate. An approximate value is never turned into an exact one.
 4. **Exact failures stay failures.** Exact arithmetic that overflows (KL-31), has a dimension
@@ -63,14 +67,20 @@ a `Quantity` holding the rational value of an `f64`: nothing would show that it 
 * No change to the exact core, the CLI, the JSON schemas or the bindings. The bindings do not
   expose `Math` yet; that is a separate change.
 * **A function that is not implemented is an error that says so.** In the equation helper,
-  `tan`, `asin`, `acos`, `atan`, `atan2`, `sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh`,
-  `log`, `log10`, `log2`, `cbrt`, `pow`, `hypot`, `floor` and `round` fail with `refused` and
+  `tan`, `asin`, `acos`, `atan`, `atan2`, `pow`, `floor` and `round` fail with `refused` and
   the wording of the other unsupported requests: `'tan' is not implemented (the functions are
-  sqrt, ln, exp, sin and cos, ADR-029); write sin(x) / cos(x)`. The name is checked before the
+  sqrt, cbrt, abs, ..., ADR-029); write sin(x) / cos(x)`. The name is checked before the
   argument is read, so `atan2(y, x)` is not a syntax error, and the message gives the way to
   write it from the implemented functions where there is one. An unknown name says `unknown
   function`. No error code was added (rule 4: unsupported requests are errors with a stable
   code; `refused` is it).
-* Not done (OPEN, recommended default: later): implementing those functions; error propagation
+* `log(x)` with one argument is `refused` as ambiguous (natural or base 10, ADR-006): write
+  `ln(x)`, `log10(x)` or `log(x, base)`. A logarithm is exact only for an integer result, so
+  `log(2, 4)` is an approximate `0.5`.
+* `min` and `max` compare across units and keep the unit of the winner (the left one on a
+  tie); with an approximate operand the result is approximate, because the choice depended on
+  it. A temperature point is allowed in the exact tier (`min(20 degC, 70 degF)`), not in the
+  approximate one.
+* Not done (OPEN, recommended default: later): implementing the functions above; error propagation
   (an interval type) for approximate values; the `kelvin(...)` function for computed
   temperatures (A4).

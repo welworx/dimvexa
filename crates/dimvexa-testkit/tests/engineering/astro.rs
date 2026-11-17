@@ -57,3 +57,18 @@ fn astro_circular_orbit_speed() {
         (6.6743e-11 * 5.972e24 / 6.771e6_f64).sqrt() / 1000.0,
     );
 }
+
+/// The magnitude difference of two stars, `dm = -2.5 log10(F1 / F2)`: a flux ratio of 1/100 is
+/// exactly 5 magnitudes.
+#[test]
+fn astro_magnitude_difference_for_a_hundredfold_flux_ratio_is_exact() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("F1", "1 W/m^2")
+        .unwrap()
+        .var("F2", "100 W/m^2")
+        .unwrap();
+    let dm = f.eval("-2.5 * log10(F1 / F2)").unwrap();
+    assert!(dm.is_exact(), "{dm}");
+    assert_eq!(f.f64_in(&dm, "1").unwrap(), 5.0);
+}

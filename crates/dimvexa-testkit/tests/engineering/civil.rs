@@ -92,3 +92,54 @@ fn civil_radius_of_gyration_of_a_section() {
         (8000.0_f64 / 25.0).sqrt(),
     );
 }
+
+/// The edge of a cube from its volume: 27 litres are exactly 0.3 m on a side.
+#[test]
+fn civil_edge_of_a_cube_from_its_volume_is_exact() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg).var("V", "27 L").unwrap();
+    let edge = f.eval("cbrt(V)").unwrap();
+    assert!(edge.is_exact(), "{edge}");
+    assert_eq!(f.f64_in(&edge, "dm").unwrap(), 3.0);
+}
+
+/// The resultant of two perpendicular forces, `F = hypot(Fx, Fy)`: 30 kN and 40 kN make 50 kN,
+/// exactly, with the forces in different units.
+#[test]
+fn civil_resultant_of_two_perpendicular_forces() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("Fx", "30 kN")
+        .unwrap()
+        .var("Fy", "40000 N")
+        .unwrap();
+    let resultant = f.eval("hypot(Fx, Fy)").unwrap();
+    assert!(resultant.is_exact());
+    assert_eq!(f.f64_in(&resultant, "kN").unwrap(), 50.0);
+}
+
+/// The sag of a hanging cable, `y = a (cosh(x / a) - 1)`, a catenary with a = 100 m and
+/// x = 50 m.
+#[test]
+fn civil_catenary_sag_uses_the_hyperbolic_cosine() {
+    check(
+        &[("a", "100 m"), ("x", "50 m")],
+        "a * (cosh(x / a) - 1)",
+        "m",
+        100.0 * ((0.5_f64).cosh() - 1.0),
+    );
+}
+
+/// The governing load case: the larger of a dead-plus-live load in kip/ft and a load in kN/m.
+#[test]
+fn civil_the_governing_load_is_the_larger_one_in_its_own_unit() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("w1", "2 kip/ft")
+        .unwrap()
+        .var("w2", "25 kN/m")
+        .unwrap();
+    // 2 kip/ft is 29.19 kN/m
+    assert_eq!(f.eval_exact("max(w1, w2)").unwrap().to_string(), "2 kip/ft");
+    assert_eq!(f.eval_exact("min(w1, w2)").unwrap().to_string(), "25 kN/m");
+}

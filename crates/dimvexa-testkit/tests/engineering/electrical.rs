@@ -81,3 +81,42 @@ fn electrical_peak_voltage_from_rms() {
         230.0 * 2.0_f64.sqrt(),
     );
 }
+
+/// The voltage gain in decibels, `20 log10(Vout / Vin)`: a factor of 1000 is exactly 60 dB.
+#[test]
+fn electrical_gain_in_decibels_is_exact_for_a_power_of_ten() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("Vout", "10 V")
+        .unwrap()
+        .var("Vin", "10 mV")
+        .unwrap();
+    let gain = f.eval("20 * log10(Vout / Vin)").unwrap();
+    assert!(gain.is_exact(), "{gain}");
+    assert_eq!(f.f64_in(&gain, "1").unwrap(), 60.0);
+}
+
+/// A gain that is not a power of ten is approximate: 20 log10(2) is about 6.02 dB.
+#[test]
+fn electrical_gain_of_a_factor_of_two() {
+    check(
+        &[("Vout", "2 V"), ("Vin", "1 V")],
+        "20 * log10(Vout / Vin)",
+        "1",
+        20.0 * 2.0_f64.log10(),
+    );
+}
+
+/// The apparent power `S = hypot(P, Q)` of 3 kW real and 4 kW reactive power is exactly 5 kW.
+#[test]
+fn electrical_apparent_power_of_a_three_four_five_load() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("P", "3 kW")
+        .unwrap()
+        .var("Q", "4000 W")
+        .unwrap();
+    let s = f.eval("hypot(P, Q)").unwrap();
+    assert!(s.is_exact());
+    assert_eq!(f.f64_in(&s, "kW").unwrap(), 5.0);
+}

@@ -62,3 +62,17 @@ fn chemistry_arrhenius_rate_constant() {
         1e10 * (-50_000.0 / (8.314_462_618 * 300.0_f64)).exp(),
     );
 }
+
+/// `pH = -log10(c / 1 mol/L)`: a concentration of 0.001 mol/L is exactly pH 3.
+#[test]
+fn chemistry_ph_of_a_power_of_ten_is_exact() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("c", "0.001 mol/L")
+        .unwrap()
+        .var("c0", "1 mol/L")
+        .unwrap();
+    let ph = f.eval("-log10(c / c0)").unwrap();
+    assert!(ph.is_exact(), "{ph}");
+    assert_eq!(f.f64_in(&ph, "1").unwrap(), 3.0);
+}

@@ -143,3 +143,14 @@ fn fluids_torricelli_outflow_speed() {
         (2.0 * G_N * 10.0_f64).sqrt(),
     );
 }
+
+/// The flow that limits a branch is the smaller of the pump flow and the pipe capacity.
+#[test]
+fn fluids_the_limiting_flow_is_the_smaller_of_two_flows() {
+    check(
+        &[("Qpump", "500 gal_us/min"), ("Qpipe", "100 m^3/h")],
+        "min(Qpump, Qpipe)",
+        "m^3/h",
+        100.0,
+    );
+}

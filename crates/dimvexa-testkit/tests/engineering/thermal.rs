@@ -271,3 +271,28 @@ fn thermal_newton_cooling_time_uses_a_logarithm_of_temperature_differences() {
         120.0 * 3.5_f64.ln(),
     );
 }
+
+/// The efficiency of a straight fin, `eta = tanh(m L) / (m L)`, with m = 20 per metre and
+/// L = 7.5 cm, so `m L = 1.5`.
+#[test]
+fn thermal_fin_efficiency_uses_the_hyperbolic_tangent() {
+    check(
+        &[("m", "20 1/m"), ("L", "7.5 cm")],
+        "tanh(m * L) / (m * L)",
+        "1",
+        1.5_f64.tanh() / 1.5,
+    );
+}
+
+/// The largest allowed temperature rise is the smaller of two limits, compared across scales.
+#[test]
+fn thermal_the_lower_of_two_temperature_limits() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("a", "80 degC")
+        .unwrap()
+        .var("b", "170 degF")
+        .unwrap();
+    // 170 degF is 76.7 degC
+    assert_eq!(f.eval_exact("min(a, b)").unwrap().to_string(), "170 degF");
+}

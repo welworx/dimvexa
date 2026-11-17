@@ -32,10 +32,7 @@ fn functions_that_are_not_implemented_say_so() {
         .unwrap()
         .var("y", "2")
         .unwrap();
-    for name in [
-        "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "log",
-        "log10", "log2", "cbrt", "floor", "round",
-    ] {
+    for name in ["tan", "asin", "acos", "atan", "floor", "round"] {
         let err = f.eval(&format!("{name}(x)")).unwrap_err();
         assert_eq!(err.code(), "refused", "{name}");
         let msg = err.to_string();
@@ -46,13 +43,7 @@ fn functions_that_are_not_implemented_say_so() {
         assert!(err.suggestions().contains(&"sqrt".to_owned()), "{name}");
     }
     // more than one argument: the name decides, not the comma
-    for call in [
-        "atan2(x, y)",
-        "hypot(x, y)",
-        "pow(x, y)",
-        "log(x, y)",
-        "tan(",
-    ] {
+    for call in ["atan2(x, y)", "pow(x, y)", "tan("] {
         let err = f.eval(call).unwrap_err();
         assert_eq!(err.code(), "refused", "{call}");
         assert!(
@@ -68,20 +59,20 @@ fn a_function_that_is_not_implemented_says_how_to_write_it() {
     let f = Formula::new(&reg);
     let hint = |call: &str| f.eval(call).unwrap_err().to_string();
     assert!(hint("tan(0.5 rad)").contains("write sin(x) / cos(x)"));
-    assert!(hint("log10(100)").contains("write ln(x) / ln(10)"));
-    assert!(hint("cbrt(8)").contains("write x^(1/3)"));
-    assert!(hint("hypot(3, 4)").contains("write sqrt(x^2 + y^2)"));
+    assert!(hint("pow(2, 3)").contains("write x^p"));
     // no way to write it from the implemented ones: no hint
     assert!(!hint("atan(1)").contains("write"));
 }
 
 #[test]
-fn the_ways_to_write_the_missing_functions_give_the_right_numbers() {
+fn the_way_to_write_tan_gives_the_right_number() {
     check(&[("a", "45 deg")], "sin(a) / cos(a)", "1", 1.0);
-    check(&[("x", "1000")], "ln(x) / ln(10)", "1", 3.0);
-    check(&[("x", "27")], "x^(1/3)", "1", 3.0);
-    check(&[("x", "3"), ("y", "4")], "sqrt(x^2 + y^2)", "1", 5.0);
-    check(&[("x", "1")], "(exp(x) - exp(-x)) / 2", "1", 1.0_f64.sinh());
+    check(
+        &[("a", "30 deg")],
+        "sin(a) / cos(a)",
+        "1",
+        30.0_f64.to_radians().tan(),
+    );
 }
 
 #[test]
@@ -95,4 +86,50 @@ fn an_unknown_function_name_is_refused_as_unknown() {
         "{err}"
     );
     assert!(!err.to_string().contains("is not implemented"), "{err}");
+}
+
+/// `log(x)` alone could be natural or base 10: not guessed (ADR-006); the base is a second
+/// argument.
+#[test]
+fn log_of_one_argument_is_ambiguous_and_refused() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg).var("x", "100").unwrap();
+    let err = f.eval("log(x)").unwrap_err();
+    assert_eq!(err.code(), "refused");
+    assert!(err.to_string().contains("ambiguous"), "{err}");
+    assert!(err.suggestions().contains(&"log10".to_owned()));
+    assert_eq!(f.eval_exact("log(x, 10)").unwrap().to_string(), "2 1");
+}
+
+#[test]
+fn a_function_with_the_wrong_number_of_arguments_is_a_syntax_error() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg).var("x", "4").unwrap();
+    for call in [
+        "sqrt(x, x)",
+        "hypot(x)",
+        "min(x)",
+        "hypot(x, x, x)",
+        "log(x, x, x)",
+        "ln()",
+    ] {
+        let err = f.eval(call).unwrap_err();
+        assert_eq!(err.code(), "parse_error", "{call}: {err}");
+    }
+}
+
+/// `min` and `max` take two or more arguments.
+#[test]
+fn min_and_max_take_any_number_of_arguments() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("a", "1 km")
+        .unwrap()
+        .var("b", "900 m")
+        .unwrap()
+        .var("c", "0.5 mi")
+        .unwrap();
+    assert_eq!(f.eval_exact("min(a, b, c)").unwrap().to_string(), "0.5 mi");
+    assert_eq!(f.eval_exact("max(a, b, c)").unwrap().to_string(), "1 km");
+    assert_eq!(f.eval_exact("max(b, a)").unwrap().to_string(), "1 km");
 }
