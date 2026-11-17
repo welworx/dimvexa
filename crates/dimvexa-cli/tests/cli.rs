@@ -4143,10 +4143,34 @@ fn calc_dot_to_converts_inside_an_equation_and_checks_the_dimension() {
             r.stderr
         );
     }
-    // the old function form says how to write it now
+    // there is no function `to`: a conversion is written `x.to(UNIT)`
     let r = calc(&["to(3 m, ft)"]);
-    assert!(r.stderr.starts_with("error[refused]"), "{}", r.stderr);
-    assert!(r.stderr.contains("write x.to(UNIT)"), "{}", r.stderr);
+    assert!(
+        r.stderr
+            .starts_with("error[refused]: refused: unknown function 'to'"),
+        "{}",
+        r.stderr
+    );
+}
+
+/// `2^3 m` is `(2^3) m`: the exponent is the number, the unit multiplies the power.
+#[test]
+fn calc_a_unit_after_an_exponent_multiplies_the_power() {
+    for (expr, text) in [
+        ("2^3 m", "8 m\n"),
+        ("2^3 m^2", "8 m^2\n"),
+        ("2^-1 m", "0.5 m\n"),
+        ("2^3^2 m", "512 m\n"),
+        ("-2^3 m", "-8 m\n"),
+        ("10 m / 2^3 m", "1.25\n"),
+        ("2^3 * 4 m", "32 m\n"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, text, "{expr}");
+    }
+    assert_eq!(calc(&["x^2 m", "--var", "x=3"]).stdout, "9 m\n");
+    // a name could be the exponent (`x^(2 n)`), so it stays refused
+    let r = calc(&["x^2 n", "--var", "x=3", "--var", "n=2 m"]);
+    assert!(r.stderr.contains("after '^' is ambiguous"), "{}", r.stderr);
 }
 
 /// The short constant symbols of `examples/configs/engineering.toml` equal the built-in constants

@@ -12,18 +12,38 @@ fn b2_power_zero_is_dimensionless() {
     assert_eq!(one.to_string(), "1 1");
 }
 
-/// The old function form of a conversion is refused with the way to write it now; it is never a
-/// wrong number or a syntax error. Every other well-known function is implemented.
+/// A function that does not exist is a `refused` error that lists the ones that do; there is no
+/// function `to` (a conversion is `x.to(UNIT)`).
 #[test]
-fn the_old_function_form_of_a_conversion_says_how_to_write_it() {
+fn an_unknown_function_lists_the_known_ones() {
     let reg = registry().unwrap();
     let f = Formula::new(&reg).var("x", "0.5").unwrap();
-    for call in ["to(x, K)", "to(20 degC, K)", "to("] {
+    for call in ["to(x, K)", "to(20 degC, K)", "frobnicate(1)", "to("] {
         let err = f.eval(call).unwrap_err();
         assert_eq!(err.code(), "refused", "{call}");
         let msg = err.to_string();
-        assert!(msg.contains("'to' is not implemented"), "{call}: {msg}");
-        assert!(msg.contains("write x.to(UNIT)"), "{call}: {msg}");
+        assert!(msg.contains("unknown function"), "{call}: {msg}");
+        assert!(msg.contains("sqrt"), "{call}: {msg}");
+    }
+}
+
+/// `2^3 m` is `(2^3) m`: a unit cannot be part of an exponent, so it multiplies the power.
+#[test]
+fn a_unit_after_an_exponent_multiplies_the_power() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg).var("x", "3").unwrap();
+    for (text, unit, want) in [
+        ("2^3 m", "m", 8.0),
+        ("2^3 m^2", "m2", 8.0),
+        ("2^3^2 m", "m", 512.0),
+        ("2^-2 m", "m", 0.25),
+        ("x^2 m", "m", 9.0),
+    ] {
+        assert_eq!(
+            f.f64_in(&f.eval(text).unwrap(), unit).unwrap(),
+            want,
+            "{text}"
+        );
     }
 }
 

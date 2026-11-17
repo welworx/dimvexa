@@ -318,10 +318,6 @@ const IMPLEMENTED: [(&str, usize); 30] = [
     ("atanh", 1),
 ];
 
-/// Well-known functions that are **not implemented**, each with the way to write it from the
-/// ones that are (empty where there is none). Using one is an error, never a guess.
-const NOT_IMPLEMENTED: [(&str, &str); 1] = [("to", "x.to(UNIT), for example 20 degC.to(K)")];
-
 fn function_list() -> String {
     let names: Vec<&str> = IMPLEMENTED.iter().map(|(name, _)| *name).collect();
     names.join(", ")
@@ -334,22 +330,6 @@ fn implemented_names() -> Vec<String> {
         .collect()
 }
 
-/// `refused`, in the wording of the other unsupported requests (`'psig' is not implemented`).
-fn not_implemented(name: &str, hint: &str) -> Error {
-    let how = if hint.is_empty() {
-        String::new()
-    } else {
-        format!("; write {hint}")
-    };
-    Error::Refused {
-        reason: format!(
-            "'{name}' is not implemented (the functions are {}, ADR-029){how}",
-            function_list()
-        ),
-        suggestions: implemented_names(),
-    }
-}
-
 struct Parser<'a, 'r> {
     src: &'a str,
     toks: Vec<(usize, Tok)>,
@@ -360,6 +340,10 @@ struct Parser<'a, 'r> {
     used: Vec<String>,
     /// The text the token positions index (the input after `normalise`).
     norm: Vec<char>,
+    /// How many powers are being read (`2^3^2` is two).
+    pow_depth: usize,
+    /// The unit written after the exponent of the outermost power (`2^3 m`), with its position.
+    tail_unit: Option<(String, usize)>,
 }
 
 impl Parser<'_, '_> {
@@ -434,8 +418,7 @@ impl Parser<'_, '_> {
                         self.here(),
                         "a division followed by a product written with `pi` and no operator \
                          (`a / 2 pi`) can be read (a / 2) * pi or a / (2 * pi): write the \
-                         operator, a / 2 * pi, for the first, or the parentheses, a / (2 pi), \
-                         for the second",
+                         parentheses, a / (2 pi) or (a / 2) * pi",
                     ));
                 }
                 if self.peek() == Some(&Tok::Implicit) {
@@ -516,7 +499,18 @@ impl Parser<'_, '_> {
     fn exponent(&mut self) -> Result<(i32, i32)> {
         let at = self.here();
         let negative = self.eat('-');
-        let value = self.power()?;
+        let value = if let Some(Tok::Qty(number, unit)) = self.peek().cloned() {
+            // `2^3 m` is `(2^3) m`: the exponent is the number, the unit belongs to the power
+            // (a unit cannot be part of an exponent, so there is no other reading)
+            self.advance();
+            self.tail_unit = Some((unit, at));
+            self.f
+                .reg
+                .quantity(&format!("{number} 1"))
+                .map(Number::from)?
+        } else {
+            self.power()?
+        };
         let (num, den) = self.exponent_parts(&value, at)?;
         Ok((if negative { num.saturating_neg() } else { num }, den))
     }
@@ -569,14 +563,25 @@ impl Parser<'_, '_> {
         if !self.eat('^') {
             return Ok(base);
         }
+        self.pow_depth = next(self.pow_depth);
         self.enter()?;
-        let (num, den) = self.exponent()?;
+        let exponent = self.exponent();
         self.leave();
-        if den == 1 {
-            self.f.math.pow(&base, num)
+        self.pow_depth = self.pow_depth.saturating_sub(1);
+        let (num, den) = exponent?;
+        let power = if den == 1 {
+            self.f.math.pow(&base, num)?
         } else {
-            self.f.math.root(&base, num, den)
+            self.f.math.root(&base, num, den)?
+        };
+        // the unit after the exponent of the outermost power multiplies the whole power
+        if self.pow_depth == 0 {
+            if let Some((unit, at)) = self.tail_unit.take() {
+                let one = self.quantity_of("1", &unit, at)?;
+                return self.f.math.mul(&power, &one);
+            }
         }
+        Ok(power)
     }
 
     fn atom(&mut self) -> Result<Number> {
@@ -593,59 +598,7 @@ impl Parser<'_, '_> {
             }
             Some(Tok::Qty(number, unit)) => {
                 self.advance();
-                self.f
-                    .reg
-                    .quantity(&format!("{number} {unit}"))
-                    .map(Number::from)
-                    .map_err(|e| match e {
-                        // a name with no close unit is most likely a variable that was not
-                        // defined: say what it is not, never only "unknown unit"
-                        Error::UnknownUnit {
-                            symbol,
-                            suggestions,
-                        } => {
-                            // as written: `r2`, not the `r` the unit parser stripped it to
-                            let written = unit
-                                .split(|c: char| !(c.is_alphanumeric() || c == '_'))
-                                .find(|run| run.starts_with(symbol.as_str()))
-                                .map_or_else(|| symbol.clone(), str::to_owned);
-                            if self.f.vars.iter().any(|(n, _)| *n == written) {
-                                // the name is defined: the unit text swallowed it (`2 m/r`)
-                                let spaced = if unit.starts_with('(') {
-                                    format!("{number} * {unit}")
-                                } else {
-                                    format!(
-                                        "{number} {}",
-                                        unit.replace('/', " / ").replace('*', " * ")
-                                    )
-                                };
-                                return parse_error(
-                                    self.src,
-                                    at,
-                                    &format!(
-                                        "'{written}' is a variable, not part of the unit in \
-                                         '{number} {unit}': write the operator with spaces, \
-                                         as in '{spaced}'"
-                                    ),
-                                );
-                            }
-                            let did_you_mean = if suggestions.is_empty() {
-                                String::new()
-                            } else {
-                                format!(" (did you mean the unit {}?)", suggestions.join(" or "))
-                            };
-                            parse_error(
-                                self.src,
-                                at,
-                                &format!(
-                                    "'{written}' in '{number} {unit}' is not a unit and not a \
-                                     variable{did_you_mean}; a variable is defined with \
-                                     --var {written}=VALUE"
-                                ),
-                            )
-                        }
-                        other => other,
-                    })
+                self.quantity_of(&number, &unit, at)
             }
             Some(Tok::Id(name)) => {
                 self.advance();
@@ -677,6 +630,61 @@ impl Parser<'_, '_> {
             }
             _ => Err(parse_error(self.src, at, "a value is expected")),
         }
+    }
+
+    /// The quantity `number unit`. A unit that does not exist is most likely a variable that was
+    /// not defined: the error says what the text is not, never only "unknown unit".
+    fn quantity_of(&self, number: &str, unit: &str, at: usize) -> Result<Number> {
+        self.f
+            .reg
+            .quantity(&format!("{number} {unit}"))
+            .map(Number::from)
+            .map_err(|e| match e {
+                // a name with no close unit is most likely a variable that was not
+                // defined: say what it is not, never only "unknown unit"
+                Error::UnknownUnit {
+                    symbol,
+                    suggestions,
+                } => {
+                    // as written: `r2`, not the `r` the unit parser stripped it to
+                    let written = unit
+                        .split(|c: char| !(c.is_alphanumeric() || c == '_'))
+                        .find(|run| run.starts_with(symbol.as_str()))
+                        .map_or_else(|| symbol.clone(), str::to_owned);
+                    if self.f.vars.iter().any(|(n, _)| *n == written) {
+                        // the name is defined: the unit text swallowed it (`2 m/r`)
+                        let spaced = if unit.starts_with('(') {
+                            format!("{number} * {unit}")
+                        } else {
+                            format!("{number} {}", unit.replace('/', " / ").replace('*', " * "))
+                        };
+                        return parse_error(
+                            self.src,
+                            at,
+                            &format!(
+                                "'{written}' is a variable, not part of the unit in \
+                                         '{number} {unit}': write the operator with spaces, \
+                                         as in '{spaced}'"
+                            ),
+                        );
+                    }
+                    let did_you_mean = if suggestions.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" (did you mean the unit {}?)", suggestions.join(" or "))
+                    };
+                    parse_error(
+                        self.src,
+                        at,
+                        &format!(
+                            "'{written}' in '{number} {unit}' is not a unit and not a \
+                                     variable{did_you_mean}; a variable is defined with \
+                                     --var {written}=VALUE"
+                        ),
+                    )
+                }
+                other => other,
+            })
     }
 
     /// `value.to(UNIT)`, repeated: the value in another unit. The unit is written as it is
@@ -728,11 +736,6 @@ impl Parser<'_, '_> {
 
     /// `name(argument, ...)`.
     fn call(&mut self, name: &str) -> Result<Number> {
-        // the name decides before the arguments are read: `atan2(y, x)` must say that it is not
-        // implemented, not complain about the comma
-        if let Some((_, hint)) = NOT_IMPLEMENTED.iter().find(|(n, _)| *n == name) {
-            return Err(not_implemented(name, hint));
-        }
         let Some((_, arity)) = IMPLEMENTED.iter().find(|(n, _)| *n == name) else {
             return Err(Error::Refused {
                 reason: format!(
@@ -1005,6 +1008,8 @@ impl<'r> Formula<'r> {
             f: self,
             used: Vec::new(),
             norm: normalise(formula),
+            pow_depth: 0,
+            tail_unit: None,
         };
         let q = p.expr()?;
         if p.pos < p.toks.len() {
@@ -1071,9 +1076,8 @@ impl<'r> Formula<'r> {
                         at,
                         &format!(
                             "a division followed by '{number} {unit}' can be read (a / {number}) \
-                             * {unit} or a / ({number} * {unit}): write the operator, \
-                             a / {number} * {unit}, for the first, or the parentheses, \
-                             a / ({number} {unit}), for the second"
+                             * {unit} or a / ({number} * {unit}): write the parentheses, \
+                             a / ({number} {unit}) or (a / {number}) * {unit}"
                         ),
                     ));
                 }

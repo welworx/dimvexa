@@ -373,9 +373,10 @@ JSON), so it is never silent. The constants of the configs in effect are names t
   refused as ambiguous (write `x^2 * n` or `x^(2 n)`), and an approximate exponent such as `2^sqrt(2)`
   is refused. `pi` is the exact constant: `2 pi`, `2 * pi * r` and `2 pi r` are the same
   (`pi` multiplies the names that follow it). After a division the form is ambiguous and refused:
-  `10 m / 2 pi` is `(10 m / 2) * pi` or `10 m / (2 * pi)`, so write `10 m / (2 pi)` or
-  `10 m / 2 * pi`; the same for `Q / pi r^2`, and for a number and a variable after a division
-  (`10 m / 2 r`: write `10 m / 2 * r` or `10 m / (2 r)`).
+  `10 m / 2 pi` is `(10 m / 2) * pi` or `10 m / (2 * pi)`, so write the parentheses,
+  `10 m / (2 pi)` or `(10 m / 2) * pi`; the same for `Q / pi r^2`, and for a number and a variable
+  after a division (`10 m / 2 r`: write `10 m / (2 r)`). A unit after an exponent multiplies the
+  power: `2^3 m` is `(2^3) m`, `8 m`, because a unit cannot be part of an exponent.
 * **Spaces:** a space ends a unit. `1/2 m` is `1` divided by `2 m` (`0.5 1/m`), so write
   `(1/2) * 1 m` or `0.5 m`. Tabs, newlines and the no-break space are spaces. A comma separates
   arguments (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.
