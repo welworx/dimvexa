@@ -302,7 +302,7 @@ fn kelvin_reads_degrees_celsius_into_a_product() {
     // p = n R T / V with T given in degrees Celsius: 2 mol at 20 degC in 50 L
     check(
         &[("n", "2 mol"), ("V", "50 L"), ("T", "20 degC")],
-        "n * R * kelvin(T) / V",
+        "n * molar_gas_constant * kelvin(T) / V",
         "kPa",
         2.0 * 8.314_462_618_153_24 * 293.15 / 0.05 / 1000.0,
     );

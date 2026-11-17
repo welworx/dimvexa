@@ -250,6 +250,9 @@ impl<'r> Math<'r> {
     /// The errors of `Quantity::checked_mul`, and [`Error::Overflow`] for a result that is not
     /// finite.
     pub fn mul(&self, a: &Number, b: &Number) -> Result<Number> {
+        if let Some(scaled) = Self::scale_kelvin(a, b, false)? {
+            return Ok(scaled);
+        }
         if let (Number::Exact(x), Number::Exact(y)) = (a, b) {
             return x.checked_mul(y).map(Number::Exact);
         }
@@ -266,6 +269,9 @@ impl<'r> Math<'r> {
     ///
     /// The errors of `Quantity::checked_div`, [`Error::DivisionByZero`] and [`Error::Overflow`].
     pub fn div(&self, a: &Number, b: &Number) -> Result<Number> {
+        if let Some(scaled) = Self::scale_kelvin(a, b, true)? {
+            return Ok(scaled);
+        }
         if let (Number::Exact(x), Number::Exact(y)) = (a, b) {
             return x.checked_div(y).map(Number::Exact);
         }
@@ -277,6 +283,52 @@ impl<'r> Math<'r> {
             value: finite(x.value / y.value, "approximate quotient")?,
             unit: x.unit.div(&y.unit)?,
         }))
+    }
+
+    /// A temperature in a unit without an offset (`K`, `degR`) times or divided by a plain number
+    /// (`2 * kelvin(20 degC)`, `kelvin(T) / 2`): the unit stays, the number scales. The point
+    /// and the difference readings give the same number, so nothing is guessed; a unit with an
+    /// offset (`degC`, `degF`) is still refused by the core. `None` when the pair is not this
+    /// case.
+    fn scale_kelvin(a: &Number, b: &Number, divide: bool) -> Result<Option<Number>> {
+        let is_kelvin = |n: &Number| {
+            let u = n.unit();
+            u.kind() == Kind::AbsoluteTemperature && u.offset().is_zero() && u.dim() == Dim::K
+        };
+        let is_scalar = |n: &Number| {
+            let u = n.unit();
+            u.kind() == Kind::Plain && u.dim().is_dimensionless() && u.offset().is_zero()
+        };
+        let (temperature, scalar) = if is_kelvin(a) && is_scalar(b) {
+            (a, b)
+        } else if !divide && is_scalar(a) && is_kelvin(b) {
+            (b, a)
+        } else {
+            return Ok(None);
+        };
+        let factor = scalar.unit().factor();
+        if let (Number::Exact(t), Number::Exact(s)) = (temperature, scalar) {
+            let scaled = s.value().checked_mul(factor)?;
+            let value = if divide {
+                if scaled.is_zero() {
+                    return Err(Error::DivisionByZero);
+                }
+                t.value().checked_div(scaled)?
+            } else {
+                t.value().checked_mul(scaled)?
+            };
+            return Ok(Some(Number::Exact(Quantity::new(value, t.unit().clone()))));
+        }
+        let (t, s) = (Self::approx_of(temperature)?, Self::approx_of(scalar)?);
+        let s = s.value * factor.to_f64()?;
+        if divide && is_zero_f64(s) {
+            return Err(Error::DivisionByZero);
+        }
+        let value = if divide { t.value / s } else { t.value * s };
+        Ok(Some(Number::Approx(Approx {
+            value: finite(value, "approximate product")?,
+            unit: t.unit,
+        })))
     }
 
     /// Negation.

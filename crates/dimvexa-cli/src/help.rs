@@ -45,7 +45,7 @@ Examples:
   dimvexa units psi
   dimvexa configs water
   dimvexa constants
-  dimvexa constants k_B
+  dimvexa constants boltzmann_constant
 
 Commands:
   convert          convert VALUE from FROM to TO ('convert' may be left out)
@@ -60,7 +60,7 @@ Commands:
                    their conditions and sources; a path shows your own file
   constants        list the constants: name, exact value, unit, conditions and
                    source (built in, plus those of any --config)
-  constants NAME   show one constant, for example: dimvexa constants h_P
+  constants NAME   show one constant: dimvexa constants speed_of_light
   update           replace this binary with the latest GitHub release (needs
                    curl and tar; checks the published SHA-256 first; see
                    docs/adr/015-update-command.md)
@@ -165,14 +165,14 @@ constant pi, + - * / and parentheses, a power with a fraction as exponent
 (x^0.5, y^(1/2) and sqrt(x) agree; R^(2/3)) and the functions sqrt, cbrt,
 abs, hypot, min, max, ln, exp, log10 (lg), log2 (lb), log(x, base), sin,
 cos, tan, asin, acos, atan, atan2(y, x), sinh, cosh, tanh, asinh, acosh,
-atanh, kelvin (a temperature as K: kelvin(20 degC)); the names pi, h_P, e,
-k_B, N_A, c, R and the constants of the --config files ('dimvexa constants';
---var may replace one, with a warning). Exponents may be names or sums
-(x^n, 2^(1+1)); 2 pi r and m² or N·m are read. Quote it, and
-put a space on both sides of an operator between quantities (write --
-before an expression that starts like an option, such as -h): a unit is the
-text after a number up to the next space, so 50 kPa / 998 kg/m3 is a
-quotient.
+atanh, kelvin (a temperature as K: kelvin(20 degC)); the names pi and the
+constants of 'dimvexa constants' and of the --config files (speed_of_light,
+boltzmann_constant, molar_gas_constant, ...; --var may replace one, with a
+warning). Exponents may be names or sums (x^n, 2^(1+1)); 2 pi r and m² or
+N·m are read. Quote it, and put a space on both sides of an operator
+between quantities (write -- before an expression that starts like an option,
+such as -h): a unit is the text after a number up to the next space, so
+50 kPa / 998 kg/m3 is a quotient.
 
 The result is exact when the mathematics is exact (sqrt(9 m2) is 3 m,
 sin(30 deg) is 0.5) and starts with \u{2248} when it is not: an approximate f64,
@@ -281,14 +281,15 @@ Usage:
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json | --pretty]
 
 A constant is an exact value of a unit with its conditions and source; nothing
-is rounded and nothing is applied unless you ask. The built-in ones (pi, h_P,
-e, k_B, N_A, c, R) cannot be redefined by a config. A config adds its own with
-[[constant]]; a constant of a density unit is what --const uses for mass <->
-volume.
+is rounded and nothing is applied unless you ask. The built-in ones (pi,
+planck_constant, elementary_charge, boltzmann_constant, avogadro_constant,
+speed_of_light, molar_gas_constant) cannot be redefined by a config. A config
+adds its own with [[constant]]; a constant of a density unit is what --const
+uses for mass <-> volume.
 
 Examples:
   dimvexa constants
-  dimvexa constants k_B
+  dimvexa constants boltzmann_constant
   dimvexa constants --config water --json
 
 Forms:

@@ -118,7 +118,7 @@ def test_density_and_configs_like_the_cli() -> None:
     with pytest.raises(dimvexa.DimvexaError) as err:
         dimvexa.convert(1.0, "L", "kg")
     assert err.value.code == "dimension_mismatch"
-    for bad in ("nope", "h_P"):  # unknown, and a constant that is not a density
+    for bad in ("nope", "planck_constant"):  # unknown, and a constant that is not a density
         with pytest.raises(dimvexa.DimvexaError):
             dimvexa.convert(1.0, "L", "kg", density=bad)
     with pytest.raises(dimvexa.DimvexaError):
@@ -127,7 +127,15 @@ def test_density_and_configs_like_the_cli() -> None:
 
 def test_constants_table() -> None:
     names = [c["id"] for c in dimvexa.constants()]
-    assert names == ["pi", "h_P", "e", "k_B", "N_A", "c", "R"]
+    assert names == [
+        "pi",
+        "planck_constant",
+        "elementary_charge",
+        "boltzmann_constant",
+        "avogadro_constant",
+        "speed_of_light",
+        "molar_gas_constant",
+    ]
     h = dimvexa.constants()[1]
     assert h["name"] == "Planck constant"
     assert (h["value"], h["value_text"], h["unit"]) == ("662607015 10^-42", "6.62607015e-34", "J.s")
@@ -221,7 +229,7 @@ def test_a_string_value_may_contain_pi_and_stays_exact() -> None:
     ("value", "code"),
     [
         ("1/2pi", "ambiguous_expression"),
-        ("2*h_P", "refused"),
+        ("2*planck_constant", "refused"),
         ("tau", "invalid_number"),
         ("1/0", "division_by_zero"),
     ],
@@ -354,19 +362,24 @@ def test_calc_marks_rounding_prints_beyond_f64_and_refuses_ambiguous_names() -> 
 
 
 def test_calc_knows_the_constants_tan_atan2_and_merges_units() -> None:
-    assert dimvexa.calc("k_B * 300 K")["text"] == "4.141947e-21 J"
+    assert dimvexa.calc("boltzmann_constant * 300 K")["text"] == "4.141947e-21 J"
     assert dimvexa.calc("tan(45 deg)")["text"] == "1"
     assert dimvexa.calc("atan2(1 m, 100 cm)", to="deg")["text"] == "45 deg"
     assert dimvexa.calc("1 m * 1 m")["unit"] == "m^2"
     with pytest.warns(UserWarning, match="replaces the built-in constant"):
-        assert dimvexa.calc("e * 2", vars={"e": "3 C"})["text"] == "6 C"
+        assert (
+            dimvexa.calc("elementary_charge * 2", vars={"elementary_charge": "3 C"})["text"]
+            == "6 C"
+        )
 
 
 def test_calc_config_constants_kelvin_pi_names_and_notation() -> None:
     r = dimvexa.calc("1 L * water_25C", to="kg", configs=["water"])
     assert r["text"] == "0.99704702 kg"
     gas = dimvexa.calc(
-        "n * R * kelvin(T) / V", vars={"n": "2 mol", "T": "20 degC", "V": "50 L"}, to="kPa"
+        "n * molar_gas_constant * kelvin(T) / V",
+        vars={"n": "2 mol", "T": "20 degC", "V": "50 L"},
+        to="kPa",
     )
     assert gas["text"].startswith("97.4953886604649")
     assert dimvexa.calc("2 pi r", vars={"r": "3 m"})["text"] == "18.84955592153876… m"

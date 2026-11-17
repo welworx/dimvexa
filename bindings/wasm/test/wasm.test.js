@@ -30,7 +30,7 @@ assert.strictEqual(d.convertWith(1, "L", "kg", "rho", "", [constant("rho", "0.99
 
 // constants: the built-in ones first, then the configs'
 const names = (c, t) => d.constants(c, t).map((x) => x.id);
-assert.deepStrictEqual(names("", []), ["pi", "h_P", "e", "k_B", "N_A", "c", "R"]);
+assert.deepStrictEqual(names("", []), ["pi", "planck_constant", "elementary_charge", "boltzmann_constant", "avogadro_constant", "speed_of_light", "molar_gas_constant"]);
 const h = d.constants("", [])[1];
 assert.strictEqual(h.name, "Planck constant");
 assert.deepStrictEqual(
@@ -41,7 +41,7 @@ assert.deepStrictEqual(names("water", [constant("rho", "1")]).slice(-3), ["water
 
 // refusals: a built-in name, a constant that is not a density, an unknown unit or name
 assert.strictEqual(code(() => d.constants("", [constant("pi", "3", "1")])), "invalid_definition");
-assert.strictEqual(code(() => d.convertWith(1, "L", "kg", "h_P", "", [])), "invalid_definition");
+assert.strictEqual(code(() => d.convertWith(1, "L", "kg", "planck_constant", "", [])), "invalid_definition");
 assert.strictEqual(code(() => d.constants("", [constant("x", "1", "Zorp")])), "invalid_definition");
 assert.strictEqual(code(() => d.constants("nope", [])), "invalid_definition");
 
@@ -71,7 +71,7 @@ assert.strictEqual(code(() => d.convertWith(1, "foo", "m", "", "", [a + "\0" + b
 assert.strictEqual(d.convertExact("4pi", "rad", "deg"), 720);
 assert.strictEqual(d.convertQuantity("pi/2 rad", "deg"), "90 deg");
 assert.strictEqual(code(() => d.convertExact("1/2pi", "rad", "deg")), "ambiguous_expression");
-assert.strictEqual(code(() => d.convertExact("2*h_P", "rad", "deg")), "refused");
+assert.strictEqual(code(() => d.convertExact("2*planck_constant", "rad", "deg")), "refused");
 assert.strictEqual(code(() => d.convertExact("tau", "rad", "deg")), "invalid_number");
 
 assert.strictEqual(d.convertExactWith("4pi", "rad", "deg", "", "", []), 720);
@@ -114,12 +114,12 @@ assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", 
   // failures carry the stable codes
   assert.strictEqual(code(() => d.calc("1 m + 1 s", [], "", "", [])), "dimension_mismatch");
   assert.strictEqual(code(() => d.calc("floor(1.5 m)", [], "", "", [])), "refused");
-  assert.strictEqual(d.calc("k_B * 300 K", [], "", "", []).text, "4.141947e-21 J");
+  assert.strictEqual(d.calc("boltzmann_constant * 300 K", [], "", "", []).text, "4.141947e-21 J");
   assert.strictEqual(d.calc("tan(45 deg)", [], "", "", []).text, "1");
   assert.strictEqual(d.calc("atan2(1 m, 100 cm)", [], "deg", "", []).text, "45 deg");
   assert.strictEqual(d.calc("1 m * 1 m", [], "", "", []).unit, "m^2");
   assert.strictEqual(d.calc("1 L * water_25C", [], "kg", "water", []).text, "0.99704702 kg");
-  assert.ok(d.calc("n * R * kelvin(T) / V", ["n=2 mol", "T=20 degC", "V=50 L"], "kPa", "", []).text.startsWith("97.4953886604649"));
+  assert.ok(d.calc("n * molar_gas_constant * kelvin(T) / V", ["n=2 mol", "T=20 degC", "V=50 L"], "kPa", "", []).text.startsWith("97.4953886604649"));
   assert.strictEqual(d.calc("2 pi r", ["r=3 m"], "", "", []).text, "18.84955592153876… m");
   assert.strictEqual(d.calc("x^n", ["x=9 m2", "n=0.5"], "", "", []).text, "3 m");
   assert.strictEqual(d.calc("10 m² · 3 m", [], "", "", []).text, "30 m^3");

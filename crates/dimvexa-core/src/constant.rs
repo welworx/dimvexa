@@ -16,7 +16,7 @@ use crate::ratio::Ratio;
 /// ```
 /// use dimvexa_core::{ConstantDef, Exactness, Ratio};
 /// let h = ConstantDef {
-///     id: "h_P",
+///     id: "planck_constant",
 ///     name: "Planck constant",
 ///     value: (662_607_015, 1),
 ///     value_exp: (-42, 0),
@@ -32,7 +32,7 @@ use crate::ratio::Ratio;
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ConstantDef {
-    /// The identifier the user selects, for example `k_B`. Never also a unit's name.
+    /// The identifier the user selects, for example `boltzmann_constant`. Never also a unit's name.
     pub id: &'static str,
     /// The full name, for example `Boltzmann constant`.
     pub name: &'static str,

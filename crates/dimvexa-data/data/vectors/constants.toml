@@ -12,37 +12,37 @@ expect = "pi"
 source = "ISO 80000-2:2019, mathematical constants (pi; kept symbolic, not a decimal)"
 
 [[constant_vector]]
-constant = "h_P"
+constant = "planck_constant"
 dim = [1, 2, -1, 0, 0, 0, 0]
 expect = "6.62607015 10^-34"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: h = 6.626 070 15 x 10^-34 J s"
 
 [[constant_vector]]
-constant = "e"
+constant = "elementary_charge"
 dim = [0, 0, 1, 1, 0, 0, 0]
 expect = "1.602176634 10^-19"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: e = 1.602 176 634 x 10^-19 C"
 
 [[constant_vector]]
-constant = "k_B"
+constant = "boltzmann_constant"
 dim = [1, 2, -2, 0, -1, 0, 0]
 expect = "1.380649 10^-23"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: k = 1.380 649 x 10^-23 J K^-1"
 
 [[constant_vector]]
-constant = "N_A"
+constant = "avogadro_constant"
 dim = [0, 0, 0, 0, 0, -1, 0]
 expect = "6.02214076 10^23"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: N_A = 6.022 140 76 x 10^23 mol^-1"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: avogadro_constant = 6.022 140 76 x 10^23 mol^-1"
 
 [[constant_vector]]
-constant = "c"
+constant = "speed_of_light"
 dim = [0, 1, -1, 0, 0, 0, 0]
 expect = "299792458"
 source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: c = 299 792 458 m s^-1"
 
 [[constant_vector]]
-constant = "R"
+constant = "molar_gas_constant"
 dim = [1, 2, -2, 0, -1, -1, 0]
 expect = "8.31446261815324"
-source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: R = N_A k_B = 8.314 462 618 153 24 J mol^-1 K^-1"
+source = "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1: R = avogadro_constant boltzmann_constant = 8.314 462 618 153 24 J mol^-1 K^-1"

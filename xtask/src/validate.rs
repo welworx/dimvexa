@@ -823,9 +823,12 @@ mod tests {
     #[test]
     fn detects_a_constant_without_a_vector() {
         let e = errors_after("cvec", "vectors/constants.toml", |t| {
-            t.replacen("constant = \"h_P\"", "constant = \"pi\"", 1)
+            t.replacen("constant = \"planck_constant\"", "constant = \"pi\"", 1)
         });
-        assert!(has(&e, "constant 'h_P' has no golden vector"), "{e:?}");
+        assert!(
+            has(&e, "constant 'planck_constant' has no golden vector"),
+            "{e:?}"
+        );
         assert!(has(&e, "constant 'pi' has two vectors"), "{e:?}");
     }
 
@@ -840,7 +843,7 @@ mod tests {
     #[test]
     fn detects_a_constant_named_like_a_unit() {
         let e = errors_after("cname", "constants/si.toml", |t| {
-            t.replacen("id = \"h_P\"", "id = \"h\"", 1)
+            t.replacen("id = \"planck_constant\"", "id = \"h\"", 1)
         });
         assert!(has(&e, "the id is also a unit"), "{e:?}");
     }

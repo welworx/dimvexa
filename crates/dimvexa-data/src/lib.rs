@@ -38,7 +38,7 @@ pub use generated::{AMBIGUOUS, CONSTANTS, DATA_HASH, DATA_VERSION, PACKS, UNITS}
 /// The built-in constant with the identifier `id`, if there is one (ADR-018).
 ///
 /// ```
-/// let h = dimvexa_data::constant("h_P").expect("built in");
+/// let h = dimvexa_data::constant("planck_constant").expect("built in");
 /// assert_eq!(h.unit, "J.s");
 /// assert!(dimvexa_data::constant("nope").is_none());
 /// ```
@@ -79,7 +79,15 @@ mod tests {
     #[test]
     fn constants_load_with_a_source_and_a_unit_that_parses() {
         let reg = registry().unwrap();
-        for name in ["pi", "h_P", "e", "k_B", "N_A", "c", "R"] {
+        for name in [
+            "pi",
+            "planck_constant",
+            "elementary_charge",
+            "boltzmann_constant",
+            "avogadro_constant",
+            "speed_of_light",
+            "molar_gas_constant",
+        ] {
             let c = constant(name).unwrap_or_else(|| panic!("{name} missing"));
             assert!(!c.source.is_empty() && !c.conditions.is_empty(), "{name}");
             assert!(c.value().is_ok(), "{name}");

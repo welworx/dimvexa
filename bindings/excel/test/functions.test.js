@@ -42,7 +42,7 @@ for (const f of ["dimvexa-glue.js", "dimvexa-wasm-b64.js", "functions.js"]) {
   assert.strictEqual(await associated.CONVERTEXACT(0.1, "m", "mm"), 100);
   assert.strictEqual(await associated.CONVERTEXACT("98.6", "degF", "degC"), 37);
   assert.strictEqual(await associated.CONVERTEXACT(1, "ton", "kg", "", "us-customary"), 907.18474);
-  for (const [v, code] of [["1/2pi", "ambiguous_expression"], ["2*h_P", "refused"],
+  for (const [v, code] of [["1/2pi", "ambiguous_expression"], ["2*planck_constant", "refused"],
     ["tau", "invalid_number"], ["", "invalid_number"], [undefined, "invalid_number"]]) {
     await assert.rejects(async () => associated.CONVERTEXACT(v, "rad", "deg"), (e) => {
       assert.match(e.message, new RegExp("^dimvexa " + code + ":"), String(v));

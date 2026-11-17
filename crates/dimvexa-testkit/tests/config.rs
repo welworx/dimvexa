@@ -724,7 +724,7 @@ fn a_constant_is_a_density_only_if_its_unit_is_one() {
 #[test]
 fn a_config_cannot_redefine_a_built_in_constant() {
     let builtin: Vec<&str> = dimvexa_data::CONSTANTS.iter().map(|c| c.id).collect();
-    assert!(builtin.contains(&"pi") && builtin.contains(&"N_A"));
+    assert!(builtin.contains(&"pi") && builtin.contains(&"avogadro_constant"));
     for name in &builtin {
         let c = cfg(&WATER.replace("water_20C", name), "mine.toml");
         let err = dimvexa_config::reject_builtin_constants(&c, &builtin).unwrap_err();
@@ -745,7 +745,16 @@ fn load_builds_the_constants_and_densities_in_one_place() {
     let names: Vec<&str> = loaded.constants.iter().map(|c| c.id.as_str()).collect();
     assert_eq!(
         names,
-        ["pi", "h_P", "e", "k_B", "N_A", "c", "R", "water_20C"]
+        [
+            "pi",
+            "planck_constant",
+            "elementary_charge",
+            "boltzmann_constant",
+            "avogadro_constant",
+            "speed_of_light",
+            "molar_gas_constant",
+            "water_20C"
+        ]
     );
     assert_eq!(loaded.densities.len(), 1);
     // A named density, a literal, and the two refusals.

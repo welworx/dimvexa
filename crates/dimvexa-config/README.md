@@ -24,7 +24,7 @@ A `[[unit]]` defines your own unit as an exact multiple of an existing one (`bbl
 A `[[constant]]` holds a named, exact number you supply, with a `unit`, an `exactness`,
 `conditions` and a `source` (ADR-018). One of a density unit is what a conversion the core
 refuses needs, such as the density of water for litres to kilograms, and the result is marked
-with the constant's exactness. A built-in constant name (`pi`, `h_P`, ...) cannot be redefined. See `examples/configs/water.toml`. `Density::density_from_text`
+with the constant's exactness. A built-in constant name (`pi`, `planck_constant`, ...) cannot be redefined. See `examples/configs/water.toml`. `Density::density_from_text`
 reads a density the caller writes (`998.2067kg/m3`).
 
 Configs also ship inside the crate: `us-customary`, `us-survey`, `imperial`, `metric-trade`, `year-julian`, `year-civil` and

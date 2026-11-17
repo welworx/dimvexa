@@ -2083,7 +2083,7 @@ fn outputs_validate_against_the_schema_files() {
         (&configs, vec!["configs", "nope", "--json"]),
         (&configs, vec!["configs", "a", "b", "--json"]),
         (&constants, vec!["constants", "--json"]),
-        (&constants, vec!["constants", "h_P", "--json"]),
+        (&constants, vec!["constants", "planck_constant", "--json"]),
         (&constants, vec!["constants", "--json", "--config", "water"]),
         (&constants, vec!["constants", "nope", "--json"]),
         (&constants, vec!["constants", "a", "b", "--json"]),
@@ -2463,11 +2463,11 @@ fn a_value_with_a_bad_constant_or_operator_is_loud() {
         ("pi/", "invalid_number"),
         ("(pi", "invalid_number"),
         ("pi/0", "division_by_zero"),
-        ("2*h_P", "refused"),
+        ("2*planck_constant", "refused"),
         ("1/2pi", "ambiguous_expression"),
         ("1/2 pi", "ambiguous_expression"),
         ("2e", "invalid_number"),
-        ("2*k_B", "refused"),
+        ("2*boltzmann_constant", "refused"),
     ] {
         let r = dimvexa(&["convert", value, "rad", "deg"]);
         assert_eq!(r.code, 1, "{value}");
@@ -2993,22 +2993,33 @@ fn constants_lists_the_built_in_table_with_exact_values_units_and_sources() {
         .map(|l| l.split('\t').collect())
         .collect();
     let names: Vec<&str> = rows.iter().map(|c| c[0]).collect();
-    assert_eq!(names, ["pi", "h_P", "e", "k_B", "N_A", "c", "R"]);
+    assert_eq!(
+        names,
+        [
+            "pi",
+            "planck_constant",
+            "elementary_charge",
+            "boltzmann_constant",
+            "avogadro_constant",
+            "speed_of_light",
+            "molar_gas_constant"
+        ]
+    );
     snapshot("constants.txt", &r.stdout);
     snapshot("constants.json", &dimvexa(&["constants", "--json"]).stdout);
     let get = |n: &str| rows.iter().find(|c| c[0] == n).unwrap().clone();
     // id, name, value, unit, exactness, conditions, source, origin
     assert_eq!(get("pi")[1..5], ["Pi", "pi", "1", "defined"]);
     assert_eq!(
-        get("h_P")[1..5],
+        get("planck_constant")[1..5],
         ["Planck constant", "6.62607015e-34", "J.s", "defined"]
     );
-    assert_eq!(get("e")[2..4], ["1.602176634e-19", "C"]);
+    assert_eq!(get("elementary_charge")[2..4], ["1.602176634e-19", "C"]);
     assert_eq!(
-        get("k_B")[1..4],
+        get("boltzmann_constant")[1..4],
         ["Boltzmann constant", "1.380649e-23", "J/K"]
     );
-    assert_eq!(get("N_A")[2..4], ["6.02214076e23", "1/mol"]);
+    assert_eq!(get("avogadro_constant")[2..4], ["6.02214076e23", "1/mol"]);
     for c in &rows {
         assert_eq!(c.len(), 8, "{c:?}");
         assert_eq!(c[5], "none (defined)", "{}", c[0]);
@@ -3024,11 +3035,11 @@ fn constants_lists_the_built_in_table_with_exact_values_units_and_sources() {
 
 #[test]
 fn constants_shows_one_constant_with_its_note_and_refuses_an_unknown_name() {
-    let r = dimvexa(&["constants", "h_P"]);
+    let r = dimvexa(&["constants", "planck_constant"]);
     assert_eq!(r.code, 0);
     assert!(
         r.stdout
-            .contains("h_P\tPlanck constant\t6.62607015e-34\tJ.s"),
+            .contains("planck_constant\tPlanck constant\t6.62607015e-34\tJ.s"),
         "{}",
         r.stdout
     );
@@ -3037,12 +3048,12 @@ fn constants_shows_one_constant_with_its_note_and_refuses_an_unknown_name() {
         "{}",
         r.stdout
     );
-    assert!(!r.stdout.contains("k_B"), "{}", r.stdout);
+    assert!(!r.stdout.contains("boltzmann_constant"), "{}", r.stdout);
     let r = dimvexa(&["constants", "nope"]);
     assert_eq!(r.code, 2);
     assert!(
         r.stderr
-            .contains("no constant named 'nope'; known: pi, h_P, e, k_B, N_A, c, R"),
+            .contains("no constant named 'nope'; known: pi, planck_constant, elementary_charge, boltzmann_constant, avogadro_constant, speed_of_light, molar_gas_constant"),
         "{}",
         r.stderr
     );
@@ -3053,7 +3064,7 @@ fn constants_shows_one_constant_with_its_note_and_refuses_an_unknown_name() {
 
 #[test]
 fn constants_json_carries_the_exact_value_as_a_string() {
-    let r = dimvexa(&["constants", "h_P", "--json"]);
+    let r = dimvexa(&["constants", "planck_constant", "--json"]);
     let v = json::parse(&r.stdout).unwrap();
     assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.constants/1");
     let c = &v.get("constants").unwrap().as_array()[0];
@@ -3077,12 +3088,12 @@ fn constants_lists_those_of_a_config_after_the_built_in_ones() {
         names,
         [
             "pi",
-            "h_P",
-            "e",
-            "k_B",
-            "N_A",
-            "c",
-            "R",
+            "planck_constant",
+            "elementary_charge",
+            "boltzmann_constant",
+            "avogadro_constant",
+            "speed_of_light",
+            "molar_gas_constant",
             "water_25C",
             "water_max_density"
         ]
@@ -3098,7 +3109,15 @@ fn constants_lists_those_of_a_config_after_the_built_in_ones() {
 /// `pi` cannot be redefined by a config: a user-defined pi would silently change every angle.
 #[test]
 fn a_config_cannot_redefine_a_built_in_constant() {
-    for name in ["pi", "h_P", "e", "k_B", "N_A", "c", "R"] {
+    for name in [
+        "pi",
+        "planck_constant",
+        "elementary_charge",
+        "boltzmann_constant",
+        "avogadro_constant",
+        "speed_of_light",
+        "molar_gas_constant",
+    ] {
         let cfg = config_file(
             &format!("redefine_{name}.toml"),
             &format!(
@@ -3151,7 +3170,7 @@ fn a_config_constant_of_any_unit_is_listed_but_only_a_density_feeds_const() {
         r.stdout
     );
     // --const supplies a density; a constant of another dimension is refused, not guessed.
-    for name in ["gas_R", "h_P"] {
+    for name in ["gas_R", "planck_constant"] {
         let r = dimvexa(&["convert", "1", "L", "kg", "--config", &cfg, "--const", name]);
         assert_eq!(r.code, 2, "{name}");
         assert!(r.stderr.contains("not a density"), "{name}: {}", r.stderr);
@@ -3699,25 +3718,37 @@ fn calc_refuses_a_name_that_is_also_a_unit_in_the_equation() {
 /// The SI constants are names in every equation; a `--var` that replaces one is warned about.
 #[test]
 fn calc_knows_the_si_constants_and_warns_when_a_name_replaces_one() {
-    assert_eq!(calc(&["k_B * 300 K"]).stdout, "4.141947e-21 J\n");
     assert_eq!(
-        calc(&["h_P * c / 500 nm", "--to", "J"]).stdout,
+        calc(&["boltzmann_constant * 300 K"]).stdout,
+        "4.141947e-21 J\n"
+    );
+    assert_eq!(
+        calc(&["planck_constant * speed_of_light / 500 nm", "--to", "J"]).stdout,
         "3.972891714297857e-19… J\n",
     );
     assert_eq!(
-        calc(&["R", "--to", "J/(mol*K)"]).stdout,
+        calc(&["molar_gas_constant", "--to", "J/(mol*K)"]).stdout,
         "8.31446261815324 J/(mol.K)\n"
     );
-    let r = calc(&["e * 2", "--var", "e=3 C"]);
+    let r = calc(&["elementary_charge * 2", "--var", "elementary_charge=3 C"]);
     assert_eq!((r.code, r.stdout.as_str()), (0, "6 C\n"));
     assert_eq!(
         r.stderr,
-        "warning: the name 'e' replaces the built-in constant e; the value you gave is used\n"
+        "warning: the name 'elementary_charge' replaces the built-in constant elementary_charge; the value you gave is used\n"
     );
     let r = calc(&["x", "--var", "x=1 m", "--var", "x=2 m"]);
     assert_eq!(r.stdout, "2 m\n");
     assert!(r.stderr.contains("'x' is given twice"), "{}", r.stderr);
-    let v = json::parse(&calc(&["e", "--var", "e=3 C", "--json"]).stdout).unwrap();
+    let v = json::parse(
+        &calc(&[
+            "elementary_charge",
+            "--var",
+            "elementary_charge=3 C",
+            "--json",
+        ])
+        .stdout,
+    )
+    .unwrap();
     assert_eq!(v.get("warnings").unwrap().as_array().len(), 1);
     // pi cannot be replaced
     assert_eq!(calc(&["pi", "--var", "pi=3"]).code, 1);
@@ -3770,22 +3801,32 @@ fn calc_merges_and_cancels_the_unit_but_never_renames_it() {
     }
 }
 
-/// `R` is exactly `N_A * k_B`, and the ideal gas law reads as written.
+/// `molar_gas_constant` is exactly `avogadro_constant * boltzmann_constant`, and the ideal gas law reads as written.
 #[test]
 fn calc_ideal_gas_constant_is_n_a_times_k_b_and_runs_the_gas_law() {
     assert_eq!(
-        calc(&["N_A * k_B - R", "--to", "J/(mol*K)"]).stdout,
+        calc(&[
+            "avogadro_constant * boltzmann_constant - molar_gas_constant",
+            "--to",
+            "J/(mol*K)"
+        ])
+        .stdout,
         "0 J/(mol.K)\n"
     );
     // p = n R T / V: 1 mol at 273.15 K in 22.414 L
-    let r = calc(&["1 mol * R * 273.15 K / 22.414 L", "--to", "kPa"]);
+    let r = calc(&[
+        "1 mol * molar_gas_constant * 273.15 K / 22.414 L",
+        "--to",
+        "kPa",
+    ]);
     assert_eq!(r.code, 0, "{}", r.stderr);
     assert!(r.stdout.starts_with("101.32"), "{}", r.stdout);
     // a radius called R replaces the constant, with a warning
-    let r = calc(&["2 * R", "--var", "R=3 m"]);
+    let r = calc(&["2 * molar_gas_constant", "--var", "molar_gas_constant=3 m"]);
     assert_eq!(r.stdout, "6 m\n");
     assert!(
-        r.stderr.contains("replaces the built-in constant R"),
+        r.stderr
+            .contains("replaces the built-in constant molar_gas_constant"),
         "{}",
         r.stderr
     );
@@ -3793,12 +3834,15 @@ fn calc_ideal_gas_constant_is_n_a_times_k_b_and_runs_the_gas_law() {
 
 #[test]
 fn calc_c_is_the_speed_of_light() {
-    assert_eq!(calc(&["c", "--to", "km/s"]).stdout, "299792.458 km/s\n");
+    assert_eq!(
+        calc(&["speed_of_light", "--to", "km/s"]).stdout,
+        "299792.458 km/s\n"
+    );
     // E = m c^2 is exact (89875517873681764 J); the f64 shown is marked as rounded
-    let r = calc(&["1 kg * c^2", "--to", "J", "--exact"]);
+    let r = calc(&["1 kg * speed_of_light^2", "--to", "J", "--exact"]);
     assert_eq!(r.stdout, "89875517873681764 J\n");
     assert_eq!(
-        calc(&["1 kg * c^2", "--to", "J"]).stdout,
+        calc(&["1 kg * speed_of_light^2", "--to", "J"]).stdout,
         "8.987551787368176e16… J\n"
     );
 }
@@ -3818,7 +3862,7 @@ fn calc_reads_config_constants_kelvin_pi_names_exponents_and_notation() {
     assert_eq!(calc(&["water_25C"]).code, 1);
     // pV = nRT with T in degrees Celsius
     let r = calc(&[
-        "n * R * kelvin(T) / V",
+        "n * molar_gas_constant * kelvin(T) / V",
         "--var",
         "n=2 mol",
         "--var",
@@ -4031,4 +4075,23 @@ fn calc_a_division_before_an_implicit_pi_product_is_refused() {
         calc(&["2 pi r", "--var", "r=3 m"]).stdout,
         "18.84955592153876… m\n"
     );
+}
+
+/// A kelvin value scales by a plain number (both orders); a Celsius point does not; a spaced
+/// superscript belongs to the unit before it.
+#[test]
+fn calc_kelvin_scales_and_a_spaced_superscript_is_part_of_the_unit() {
+    assert_eq!(calc(&["2 * kelvin(20 degC)"]).stdout, "586.3 K\n");
+    assert_eq!(calc(&["kelvin(20 degC) * 2"]).stdout, "586.3 K\n");
+    assert_eq!(calc(&["kelvin(20 degC) / 2"]).stdout, "146.575 K\n");
+    assert_eq!(
+        calc(&["molar_gas_constant * kelvin(20 degC) * 2"]).stdout,
+        "4874.769433023244… J/mol\n"
+    );
+    assert_eq!(calc(&["2 * 300 K"]).stdout, "600 K\n");
+    assert_eq!(calc(&["2 * 20 degC"]).code, 1);
+    // 2 m ², 2 m² and 2m2 are one quantity
+    for expr in ["2 m ²", "2 m²", "2m2", "2 m^2"] {
+        assert_eq!(calc(&[expr]).stdout, "2 m^2\n", "{expr}");
+    }
 }

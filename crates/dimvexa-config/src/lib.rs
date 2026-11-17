@@ -23,7 +23,7 @@
 //! `conditions` and `source`, and, for a CODATA value, the pinned `codata` edition. A constant
 //! of a density unit is what a conversion the core refuses (ADR-001) needs, such as litres to
 //! kilograms; the library multiplies by it and never derives it from temperature or pressure.
-//! The names of the built-in constants (`pi`, `h_P`, ...) cannot be redefined.
+//! The names of the built-in constants (`pi`, `planck_constant`, ...) cannot be redefined.
 //!
 //! ```text
 //! [[constant]]
@@ -123,7 +123,7 @@ pub struct ConfigUnit {
 /// travels without the assumption behind it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Constant {
-    /// The identifier selected with `--const`, for example `water_20C` or `k_B`. Never also a
+    /// The identifier selected with `--const`, for example `water_20C` or `boltzmann_constant`. Never also a
     /// unit's name.
     pub id: String,
     /// The full name, for example `Boltzmann constant`. Never empty.
@@ -649,12 +649,12 @@ impl Constant {
     /// use dimvexa_config::Constant;
     /// use dimvexa_core::{ConstantDef, Exactness};
     /// let def = ConstantDef {
-    ///     id: "h_P", name: "Planck constant", value: (662_607_015, 1), value_exp: (-42, 0), unit: "J.s",
+    ///     id: "planck_constant", name: "Planck constant", value: (662_607_015, 1), value_exp: (-42, 0), unit: "J.s",
     ///     exactness: Exactness::Defined, codata: "", conditions: "none (defined)",
     ///     source: "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1", note: "",
     /// };
     /// let h = Constant::from_def(&def)?;
-    /// assert_eq!((h.id.as_str(), h.name.as_str(), h.unit.as_str()), ("h_P", "Planck constant", "J.s"));
+    /// assert_eq!((h.id.as_str(), h.name.as_str(), h.unit.as_str()), ("planck_constant", "Planck constant", "J.s"));
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     pub fn from_def(def: &ConstantDef) -> Result<Self> {
@@ -787,7 +787,7 @@ pub const BUILT_IN: &str = "built-in";
 /// Refuses a config that defines a constant with the name of a built-in one.
 ///
 /// A built-in constant cannot be redefined by a config: a user-defined `pi` would silently
-/// change the meaning of every angle (ADR-018), and the same holds for `h_P` or `N_A`.
+/// change the meaning of every angle (ADR-018), and the same holds for `planck_constant` or `avogadro_constant`.
 ///
 /// # Errors
 ///
@@ -802,7 +802,7 @@ pub const BUILT_IN: &str = "built-in";
 ///      conditions = \"none (defined)\"\nsource = \"s\"\n",
 ///     "mine.toml",
 /// )?;
-/// let err = reject_builtin_constants(&cfg, &["pi", "h_P"]).unwrap_err();
+/// let err = reject_builtin_constants(&cfg, &["pi", "planck_constant"]).unwrap_err();
 /// assert!(err.to_string().contains("cannot be redefined"));
 /// # Ok::<(), dimvexa_core::Error>(())
 /// ```

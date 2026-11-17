@@ -182,6 +182,12 @@ fn normalise(input: &str) -> Vec<char> {
     let mut out = Vec::new();
     let mut chars = input.chars().peekable();
     while let Some(c) = chars.next() {
+        // a superscript belongs to what stands before it, spaces or not: `2 m ²` is `2 m²`
+        if matches!(c, '²' | '³' | '⁻') {
+            while out.last() == Some(&' ') {
+                out.pop();
+            }
+        }
         match c {
             '\t' | '\n' | '\r' | '\u{a0}' | '\u{2009}' | '\u{202f}' => out.push(' '),
             '·' | '⋅' | '×' => out.push('*'),
@@ -757,7 +763,8 @@ impl Parser<'_, '_> {
 
 impl<'r> Formula<'r> {
     /// An evaluator with the built-in names: `pi` and the constants of `dimvexa constants`
-    /// (`h_P`, `e`, `k_B`, `N_A`, `c`, `R`), each with its unit, exact.
+    /// (`planck_constant`, `elementary_charge`, `boltzmann_constant`, `avogadro_constant`,
+    /// `speed_of_light`, `molar_gas_constant`), each with its unit, exact.
     #[must_use]
     pub fn new(reg: &'r Registry) -> Self {
         let pi = Number::from(Quantity::new(Ratio::PI, UnitExpr::unity()));

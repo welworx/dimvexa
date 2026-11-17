@@ -218,7 +218,7 @@ and source. `oz` stays refused in `us` and `imperial` because it means a mass or
 `--config us-customary --config ./mine.toml` starts from the US names and adds yours. Replacing is allowed
 but never silent: every name, unit or constant that replaces one of an earlier config prints
 `warning: constant 'water_25C' (./mine.toml:3) replaces the one from bundled:water:7` on stderr, and in `--json` output as a `warnings` array (empty when nothing was replaced).
-The built-in constants (`pi`, `h_P`, ...) and the units of the table cannot be replaced.
+The built-in constants (`pi`, `planck_constant`, ...) and the units of the table cannot be replaced.
 
 Your own file is the same format:
 
@@ -347,13 +347,18 @@ unused value is most likely a typo in the equation or the name; the built-in con
 be used. A repeated `--var` name keeps the last value (with a warning).
 
 The SI constants of `dimvexa constants` are built-in names in every equation, exact and with
-their unit: `h_P`, `e` (the elementary charge), `k_B`, `N_A`, `c` (the speed of light, 299792458 m/s) and `R` (the molar gas constant,
-exactly `N_A * k_B`, 8.31446261815324 J/(mol.K)), besides `pi`. The energy of a 500 nm photon
-is `h_P * c / 500 nm` (`--to J`), and `p V = n R T` reads `n * R * T / V`. A `--var` with the same name replaces the constant, with a warning (on stderr, and
-in `warnings` of the JSON), so a variable `e` or `R` (a radius) for your own purpose still
-works but is never silent. The constants of the configs in effect are names too (`dimvexa constants
---config water` lists them): `1 L * water_25C --config water --to kg` is `0.99704702 kg`. A
-config constant with the name of a built-in one replaces it, as for `dimvexa constants`.
+their unit, and their names say what they are: `planck_constant`, `elementary_charge`,
+`boltzmann_constant`, `avogadro_constant`, `speed_of_light` (299792458 m/s) and
+`molar_gas_constant` (exactly `avogadro_constant * boltzmann_constant`, 8.31446261815324
+J/(mol.K)), besides `pi`. The energy of a 500 nm photon is
+`planck_constant * speed_of_light / 500 nm` (`--to J`), and `p V = n R T` reads
+`n * molar_gas_constant * T / V`. Short symbols such as `c`, `e` or `R` are yours to define: a
+`[[constant]]` in a config (`dimvexa constants --config mine.toml`) or a `--var`. A `--var` with
+the name of a built-in constant replaces it, with a warning (on stderr, and in `warnings` of the
+JSON), so it is never silent. The constants of the configs in effect are names too
+(`dimvexa constants --config water` lists them): `1 L * water_25C --config water --to kg` is
+`0.99704702 kg`. A config constant with the name of a built-in one replaces it, as for
+`dimvexa constants`.
 
 * **Numbers and units:** `10 cm2`, `998 kg/m3`, `8.314 J/(mol*K)`, `20 degC`, `1.5e-3 m`. A unit
   is the text after a number up to the next space, so put a space on both sides of an operator
@@ -372,7 +377,7 @@ config constant with the name of a built-in one replaces it, as for `dimvexa con
   `(1/2) * 1 m` or `0.5 m`. Tabs, newlines and the no-break space are spaces. A comma separates
   arguments (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.
 * **Notation:** `m²`, `m³`, `s⁻¹`, `·`, `×`, `÷` and the minus sign `−` are read (`10 m² · 3 m`,
-  `1 kg·m/s²`); error positions count the characters after this rewrite.
+  `1 kg·m/s²`; a space before the superscript is ignored, `2 m ²` is `2 m²`); error positions count the characters after this rewrite.
 * **Functions:** `sqrt`, `cbrt`, `abs`, `hypot`, `min`, `max`, `ln`, `exp`, `log10` (`lg`), `log2`
   (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`,
   `tanh`, `asinh`, `acosh`, `atanh`, `kelvin`. The inverse functions return an angle in `rad` (`atan2(1 m, 1 m)
@@ -427,7 +432,7 @@ answered with an approximate number.
 * **Result units are merged and cancelled, never renamed:** `1 m * 1 m` is `1 m^2`,
   `10 kWh/100km * 250 km` is `25 kWh` and `8.314 J/(mol*K) * 300 K * 1 mol / 1 m3` is
   `2494.2 J/m^3`. A different symbol stays as it is: `1 J / 1 N` is `J/N`, `km * m` stays
-  `km.m`, and `h_P * c / 500 nm` keeps `J.m/nm`. Give `--to` (`--to J`, `--to Pa`) for the unit you
+  `km.m`, and `planck_constant * c / 500 nm` keeps `J.m/nm`. Give `--to` (`--to J`, `--to Pa`) for the unit you
   want; a wrong dimension is an error.
 * **Temperatures:** a point (`20 degC`, `-40 degC`) can be compared and shifted by a difference,
   not multiplied or negated (`-40 degC` is the point itself, `-(20 degC)` is refused); `degC + degC` adds two points (`20 degC + 30 degC` is `50 degC`) while
@@ -436,7 +441,8 @@ answered with an approximate number.
   or a value whose dimension is a temperature (`kelvin(p * V / (n * R))`). So `p V = n R T`
   with `T` in degrees Celsius is `n * R * kelvin(T) / V`, and a computed temperature is shown
   in degC with `kelvin(...) --to degC`. A temperature difference is not a temperature
-  (`kelvin(5 delta_K)` is refused).
+  (`kelvin(5 delta_K)` is refused). A kelvin value scales: `2 * kelvin(20 degC)` is `586.3 K`,
+  `kelvin(T) / 2` halves it; a Celsius or Fahrenheit point does not (`2 * 20 degC` is refused).
 * **Not units of every trade:** names that mean different things (`ton`, `gpm`, `mph`, `rpm`) are
   errors until a config chooses (`--config us-customary`, or your own, see
   `examples/configs/engineering.toml`). A space between two units is not a product: write
@@ -462,14 +468,15 @@ calc("sqrt(2 * dp / rho)", ["dp=50 kPa", "rho=998 kg/m3"], "m/s", "", []);  // a
 ### Constants: `dimvexa constants`
 
 A **constant** is a named, exact value of a unit with its conditions and its source (ADR-018).
-The built-in ones are the mathematical constant `pi`, the SI defining constants `h_P`, `e`, `k_B`,
-`N_A` and `c`, and the molar gas constant `R` (their product `N_A * k_B`); since 2019 their values
-are exact by definition:
+The built-in ones are the mathematical constant `pi`, the SI defining constants `planck_constant`,
+`elementary_charge`, `boltzmann_constant`, `avogadro_constant` and `speed_of_light`, and the
+`molar_gas_constant` (their product `avogadro_constant * boltzmann_constant`); since 2019 their
+values are exact by definition:
 
 ```console
-$ dimvexa constants k_B
+$ dimvexa constants boltzmann_constant
 # columns: id, name, value, unit, exactness, conditions, source, origin
-k_B	Boltzmann constant	1.380649e-23	J/K	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): k = 1.380 649e-23 J/K	built-in
+boltzmann_constant	Boltzmann constant	1.380649e-23	J/K	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): k = 1.380 649e-23 J/K	built-in
 # exact by the 2019 SI redefinition
 ```
 
@@ -481,7 +488,7 @@ redefined: a user-defined `pi` would silently change every angle. A constant is 
 silently; today `--const` is the only way to use one, and only a constant of a density unit (a
 density) works there: it is the one constant that bridges mass and volume. Constants inside a
 value (`2 pi rad`) work for the dimensionless constants (`pi`), see "Angles and pi"; a constant
-that has a unit (`h_P`) cannot be written in a value.
+that has a unit (`planck_constant`) cannot be written in a value.
 
 ### Example: a unit of your own
 
@@ -617,7 +624,7 @@ What to know:
    `2*pi^2` and `1/(2*pi)` are all values; so are `4 pi rad deg` and `2 * pi rad deg` written
    with spaces. A value may use `*`, `/`, an integer power `^`, a leading sign and parentheses.
    There is no addition and no other function, and only a constant without a unit (`pi`) can be
-   written in a value: `2*h_P` is refused (`refused`), an unknown name such as `tau` is
+   written in a value: `2*planck_constant` is refused (`refused`), an unknown name such as `tau` is
    `invalid_number`. A constant right after a quotient (`1/2 pi`, `1/2pi`) is
    `ambiguous_expression`: it could be `pi/2` or `1/(2 pi)`, so write `pi/2` or `1/(2*pi)`. Pi stays symbolic, so nothing is rounded on the way in:
 
