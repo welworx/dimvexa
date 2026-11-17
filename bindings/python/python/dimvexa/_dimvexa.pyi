@@ -1,6 +1,15 @@
-from typing import Any
+from typing import Any, TypedDict
 
 __version__: str
+
+class CalcResult(TypedDict):
+    value: float
+    unit: str
+    exact: bool
+    fraction: str | None
+    dimension: list[int]
+    kind: str
+    text: str
 
 class DimvexaError(ValueError):
     code: str
@@ -63,7 +72,7 @@ def calc(
     to: str | None = None,
     configs: list[str] | None = None,
     config_texts: list[str] | None = None,
-) -> dict[str, Any]: ...
+) -> CalcResult: ...
 def units(
     *, configs: list[str] | None = None, config_texts: list[str] | None = None
 ) -> list[str]: ...

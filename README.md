@@ -19,6 +19,8 @@
 
 **Exact factors. Loud failures. Zero guessing.**
 
+Website: [dimvexa.com](https://dimvexa.com). Documentation: the [user guide](docs/guide.md).
+
 Dimvexa converts units. Every factor is an exact fraction with a cited source, and anything
 ambiguous is an error instead of a guess. It is a Rust library with a command-line tool and
 Python and JavaScript (WASM) bindings.
@@ -91,6 +93,26 @@ $ dimvexa convert 1 L kg --const 998.2067kg/m3
 0.9982067 kg
 note: used density --const (998.2067 kg/m3; supplied by the caller on the command line; the conditions are not known; source: none: supplied by the caller; --const)
 ```
+
+## Equations with units: `dimvexa calc`
+
+`dimvexa calc` evaluates an equation with units, exact where the mathematics is exact, and says
+so when it is not (`≈`). The unit of the result is worked out for you:
+
+```console
+$ dimvexa calc "2 kip/ft * (20 ft)^2 / 8" --to kN*m
+135.58179483314004 kN.m
+$ dimvexa calc "sqrt(9 m2)"
+3 m
+$ dimvexa calc "sqrt(2 m2)"
+≈ 1.4142135623730951 m
+```
+
+Write the values in the equation or name them with `--var`; `x^0.5`, `x^(1/2)` and `sqrt(x)`
+are the same. `sqrt`, `cbrt`, `ln`, `exp`, `log10`, `log2`, `sin`, `cos`, `min`, `max`, `abs` and
+more work; the rest say "not implemented", never a guess. The same calculation is
+`dimvexa.calc(...)` in Python and `calc(...)` in JavaScript. What it supports, and its limits, is
+in the [user guide](docs/guide.md#equations-dimvexa-calc).
 
 The [user guide](docs/guide.md) has the full unit list, configs and densities, units of your
 own, the angle limitations and self-update. The Python and WASM bindings have their own

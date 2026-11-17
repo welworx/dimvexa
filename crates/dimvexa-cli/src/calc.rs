@@ -8,8 +8,8 @@
 
 use std::io::Write;
 
-use dimvexa::{Error, UnitExpr};
-use dimvexa_calc::{Formula, Number};
+use dimvexa::Error;
+use dimvexa_calc::{Formula, Report};
 
 use crate::color::{BOLD_GREEN, CYAN, RESET};
 use crate::json::{configs_json, f64_text, json_error, json_string, schema_id, warnings_json};
@@ -32,14 +32,7 @@ pub struct CalcRequest {
 /// An error and what to say before its message (`--var dp: `).
 type Failure = (Error, String);
 
-/// The result of the equation in the unit it is shown in.
-struct Computed {
-    number: Number,
-    /// The value rounded once to the nearest `f64` (an exact result) or the `f64` itself.
-    value: f64,
-}
-
-fn evaluate(req: &CalcRequest, loaded: &Loaded) -> Result<Computed, Failure> {
+fn evaluate(req: &CalcRequest, loaded: &Loaded) -> Result<Report, Failure> {
     let mut formula = Formula::new(&loaded.lib.reg);
     for (name, value) in &req.vars {
         formula = formula
@@ -54,51 +47,19 @@ fn evaluate(req: &CalcRequest, loaded: &Loaded) -> Result<Computed, Failure> {
             .to_unit(&number, unit)
             .map_err(|e| (e, format!("--to {unit}: ")))?;
     }
-    let value = match &number {
-        Number::Exact(q) => q.value().to_f64().map_err(|e| (e, String::new()))?,
-        Number::Approx(a) => a.value(),
-    };
-    Ok(Computed { number, value })
+    Report::new(&number).map_err(|e| (e, String::new()))
 }
 
-/// The unit as shown: nothing for the plain number `1`.
-fn unit_text(unit: &UnitExpr) -> String {
-    if unit.is_unity() {
-        String::new()
-    } else {
-        unit.to_string()
-    }
-}
-
-/// The value as shown: the exact result rounded once, `--exact` adds the fraction; an
-/// approximate result starts with `≈`.
-fn value_text(c: &Computed, exact: bool) -> String {
-    match &c.number {
-        Number::Exact(q) if exact => {
-            let r = q.value();
-            match r.folded() {
-                Ok(w) if w.is_integer() && !w.has_exponents() => w.num().to_string(),
-                _ => format!("{} = {}", r.to_fraction_string(), f64_text(c.value)),
-            }
-        }
-        Number::Exact(_) => f64_text(c.value),
-        Number::Approx(_) => format!("≈ {}", f64_text(c.value)),
-    }
-}
-
-fn render_text(c: &Computed, exact: bool, color: bool) -> String {
-    let value = value_text(c, exact);
-    let unit = unit_text(c.number.unit());
-    match (color, unit.is_empty()) {
+fn render_text(r: &Report, exact: bool, color: bool) -> String {
+    let value = r.number_text(exact);
+    match (color, r.unit.is_empty()) {
         (true, true) => format!("{BOLD_GREEN}{value}{RESET}"),
-        (true, false) => format!("{BOLD_GREEN}{value}{RESET} {CYAN}{unit}{RESET}"),
-        (false, true) => value,
-        (false, false) => format!("{value} {unit}"),
+        (true, false) => format!("{BOLD_GREEN}{value}{RESET} {CYAN}{}{RESET}", r.unit),
+        (false, _) => r.text(exact),
     }
 }
 
-fn render_json(req: &CalcRequest, c: &Computed, loaded: &Loaded) -> String {
-    let unit = c.number.unit();
+fn render_json(req: &CalcRequest, r: &Report, loaded: &Loaded) -> String {
     let variables: Vec<String> = req
         .vars
         .iter()
@@ -110,16 +71,11 @@ fn render_json(req: &CalcRequest, c: &Computed, loaded: &Loaded) -> String {
             )
         })
         .collect();
-    let dims: Vec<String> = unit
-        .dim()
-        .exponents()
-        .iter()
-        .map(ToString::to_string)
-        .collect();
-    let fraction = match &c.number {
-        Number::Exact(q) => json_string(&q.value().to_fraction_string()),
-        Number::Approx(_) => "null".to_string(),
-    };
+    let dims: Vec<String> = r.dimension.iter().map(ToString::to_string).collect();
+    let fraction = r
+        .fraction
+        .as_deref()
+        .map_or_else(|| "null".to_string(), json_string);
     format!(
         "{{\"schema\":{},\"ok\":true,\"expression\":{},\"variables\":[{}],\
 \"result\":{{\"value\":{},\"unit\":{},\"exact\":{},\"fraction\":{},\"dimension\":[{}],\"kind\":{}}},\
@@ -127,12 +83,12 @@ fn render_json(req: &CalcRequest, c: &Computed, loaded: &Loaded) -> String {
         json_string(&schema_id("calc")),
         json_string(&req.expression),
         variables.join(","),
-        f64_text(c.value),
-        json_string(&unit_text(unit)),
-        c.number.is_exact(),
+        f64_text(r.value),
+        json_string(&r.unit),
+        r.exact,
         fraction,
         dims.join(","),
-        json_string(unit.kind().name()),
+        json_string(&r.kind),
         json_string(&dimvexa::data_version()),
         configs_json(&loaded.configs),
         warnings_json(&loaded.lib.warnings),

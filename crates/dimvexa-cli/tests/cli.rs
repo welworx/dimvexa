@@ -3577,3 +3577,34 @@ fn calc_double_dash_lets_an_expression_start_like_an_option() {
     let r = dimvexa(&["calc", "1 m", "--to", ""]);
     assert_eq!(r.code, 2, "{}", r.stderr);
 }
+
+/// The README's `dimvexa calc` examples print what it says.
+#[test]
+fn readme_calc_examples_are_what_the_cli_prints() {
+    let readme =
+        std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../README.md"))
+            .unwrap();
+    for expr in [
+        "2 kip/ft * (20 ft)^2 / 8 --to kN*m",
+        "sqrt(9 m2)",
+        "sqrt(2 m2)",
+    ] {
+        let (e, to) = expr
+            .split_once(" --to ")
+            .map_or((expr, None), |(e, t)| (e, Some(t)));
+        let mut args = vec!["calc", e];
+        if let Some(t) = to {
+            args.extend(["--to", t]);
+        }
+        let r = dimvexa(&args);
+        assert_eq!(r.code, 0, "{expr}: {}", r.stderr);
+        assert!(
+            readme.contains(&format!("{}\n", r.stdout.trim_end())),
+            "{expr}"
+        );
+        assert!(
+            readme.contains(&format!("$ dimvexa calc \"{e}\"")),
+            "{expr}"
+        );
+    }
+}

@@ -330,15 +330,74 @@ $ dimvexa calc "sqrt(2 m2)"
 ≈ 1.4142135623730951 m
 ```
 
+#### Writing an equation
+
 Write the values in the equation (`0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)`) or name them
 with `--var` (`"Cd * A * sqrt(2 * dp / rho)" --var Cd=0.61 --var A="10 cm2" --var dp="50 kPa"
---var rho="998 kg/m3"`); both give the same result. A unit is the text after a number up to the
-next space, so put a space on both sides of an operator between quantities. `x^0.5`, `x^(1/2)`
-and `sqrt(x)` are the same; `cbrt`, `abs`, `hypot`, `min`, `max`, `ln`, `exp`, `log10` (`lg`),
-`log2` (`lb`), `log(x, base)`, `sin`, `cos` and the hyperbolic functions exist. `log(x)` alone is
-refused (natural or decimal?); `tan`, `asin`, `atan2`, `floor` and others say they are not
-implemented. `--to UNIT` shows the result in a unit, `--exact` adds the fraction, `--json` uses
-the schema `dimvexa.calc/1`, and `--config` adds your own units as for `convert`.
+--var rho="998 kg/m3"`); both give the same result. A name is whatever you write after
+`--var`, so it may also be the symbol of a unit (`--var m="3 kg"` fills `m` in the equation and
+has nothing to do with the metre); `pi` cannot be redefined.
+
+* **Numbers and units:** `10 cm2`, `998 kg/m3`, `8.314 J/(mol*K)`, `20 degC`, `1.5e-3 m`. A unit
+  is the text after a number up to the next space, so put a space on both sides of an operator
+  between quantities: `50 kPa / 998 kg/m3` is a quotient.
+* **Operators:** `+ - * /`, parentheses and `^`. The exponent may be an integer, a decimal or a
+  fraction: `x^2`, `x^0.5`, `y^(1/2)` and `sqrt(y)` are the same, `R^(2/3)` works. `pi` is the
+  exact constant.
+* **Functions:** `sqrt`, `cbrt`, `abs`, `hypot`, `min`, `max`, `ln`, `exp`, `log10` (`lg`), `log2`
+  (`lb`), `log(x, base)`, `sin`, `cos`, `sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh`.
+  `min` and `max` need one dimension (`4 m` and `4 km` work, `4 m` and `3 L` do not) and return
+  the winner in its own unit, exact. `abs` of a temperature point is refused.
+* **Options:** `--to UNIT` shows the result in a unit, `--exact` adds the fraction of an exact
+  result (`1/3 = 0.3333333333333333 m`), `--json` or `--pretty` print the schema
+  `dimvexa.calc/1`, `--config` adds your own units as for `convert`. An expression that starts
+  like an option is written after `--` (`dimvexa calc --var h="3 m" -- -h`).
+
+#### Exact, or approximate and labelled
+
+Every step is exact while it can be: `sqrt(9 m2)` is `3 m`, `8^(1/3)` is `2`, `sin(30 deg)` is
+`0.5`, `log10(1000)` is `3`, `ln(1)` is `0`, `max(10, sqrt(2))` is exactly `10`. When the
+mathematics is not exact (`sqrt(2)`, `sin(1 rad)`), the result is an `f64` with `≈` in front, and
+so is everything computed from it afterwards; an exact step that fails (an overflow) is never
+answered with an approximate number. A result in `f64` is rounded once, to the nearest `f64`.
+
+#### Limitations
+
+* **Digit width (KL-31).** Exact arithmetic holds numbers of about 38 digits. Equations that
+  need more, such as `(1 ly)^3` or a product of the SI constants entered as numbers
+  (`k^4 / (h^3 c^2)`), fail with `overflow`. Powers of ten
+  do not count against this (`1e-34` to `1e10000` are fine).
+* **Roots need whole exponents of units (KL-32):** `sqrt(4 m)` is refused, `sqrt(4 m2)` is `2 m`.
+  A root is shown in SI base units.
+* **No error bound (KL-33):** an approximate result is the `f64` nearest to the computed value;
+  how far that is from the true value is not stated.
+* **Not implemented** (they fail with `refused`, "'tan' is not implemented"): `tan`, `asin`,
+  `acos`, `atan`, `atan2`, `pow`, `floor`, `round`. `log(x)` alone is refused as ambiguous: write
+  `ln`, `lg` or `log10`, `lb` or `log2`, or `log(x, base)`.
+* **Temperatures:** a point (`20 degC`) can be compared and shifted by a difference, not
+  multiplied; a temperature that an equation computes is a plain value in `K`, not a point on a
+  scale (in `p V = n R T`, give `T` in `K`).
+* **Not units of every trade:** names that mean different things (`ton`, `gpm`, `mph`, `rpm`) are
+  errors until a config chooses (`--config us-customary`, or your own, see
+  `examples/configs/engineering.toml`). Notation such as `m³` or `N m` is not read: write `m3`,
+  `N*m`.
+* **Size:** an equation has at most 4096 characters, 64 levels of parentheses and 512 names.
+
+#### In Python and JavaScript
+
+The same calculation, the same fields as `--json` and the same text:
+
+```python
+dimvexa.calc("sqrt(2 * dp / rho)", vars={"dp": "50 kPa", "rho": "998 kg/m3"}, to="m/s")
+# {'value': 10.01001502504383, 'unit': 'm/s', 'exact': False, 'fraction': None,
+#  'dimension': [0, 1, -1, 0, 0, 0, 0], 'kind': 'plain', 'text': '≈ 10.01001502504383 m/s'}
+```
+
+```js
+calc("sqrt(2 * dp / rho)", ["dp=50 kPa", "rho=998 kg/m3"], "m/s", "", []);  // an object, same fields
+```
+
+`dimension` is the exponents of kg, m, s, A, K, mol, cd. The Excel add-in has no `calc` yet.
 
 ### Constants: `dimvexa constants`
 

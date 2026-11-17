@@ -74,9 +74,11 @@ use core::cmp::Ordering;
 
 mod formula;
 mod math;
+mod report;
 
 pub use formula::{Formula, MAX_EQUATION_CHARS, MAX_VARS};
 pub use math::{Approx, Math, Number};
+pub use report::{Report, format_f64};
 
 use dimvexa_core::{Dim, Error, Kind, Quantity, Ratio, Registry, Result, UnitExpr};
 

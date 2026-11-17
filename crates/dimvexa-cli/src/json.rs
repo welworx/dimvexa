@@ -168,15 +168,10 @@ pub fn json_string(s: &str) -> String {
     out
 }
 
-/// Formats an `f64` as the shortest text that reads back, switching to exponent form for
-/// very large and very small magnitudes. The output is valid JSON as well.
+/// An `f64` as text (`dimvexa_calc::format_f64`, shared with the bindings): the shortest text
+/// that reads back, exponent form for very large and very small magnitudes; valid JSON.
 pub fn f64_text(x: f64) -> String {
-    let a = x.abs();
-    if a != 0.0 && !(1e-4..1e16).contains(&a) {
-        format!("{x:e}")
-    } else {
-        format!("{x}")
-    }
+    dimvexa_calc::format_f64(x)
 }
 
 /// The JSON schema id of a command: `dimvexa.convert/3`, `dimvexa.calc/1`, `dimvexa.units/5`, `dimvexa.configs/3`, `dimvexa.constants/1`.

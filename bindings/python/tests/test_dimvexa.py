@@ -152,7 +152,9 @@ def test_a_config_cannot_redefine_a_builtin_constant() -> None:
 
 def test_replacing_an_entry_of_an_earlier_config_warns() -> None:
     mine = WATER_TEXT.replace("rho", "water_25C")
-    with pytest.warns(UserWarning, match="constant 'water_25C'.*replaces the one from bundled:water"):
+    with pytest.warns(
+        UserWarning, match="constant 'water_25C'.*replaces the one from bundled:water"
+    ):
         dimvexa.constants(configs=["water"], config_texts=[mine])
 
 
@@ -163,9 +165,7 @@ def test_config_files_must_be_regular_files_and_an_empty_density_is_none(tmp_pat
     assert dimvexa.convert(1.0, "m", "km", density="") == 0.001
 
 
-UNIT_TEXT = (
-    '[[unit]]\nid = "blob"\nbase = "g"\nfactor = "7"\nexactness = "defined"\nsource = "s"\n'
-)
+UNIT_TEXT = '[[unit]]\nid = "blob"\nbase = "g"\nfactor = "7"\nexactness = "defined"\nsource = "s"\n'
 
 
 def test_quantity_takes_configs_and_density() -> None:
@@ -240,15 +240,31 @@ def test_pi_into_an_offset_unit_is_refused() -> None:
 
 def test_calc_is_exact_when_the_mathematics_is() -> None:
     r = dimvexa.calc("sqrt(9 m2)")
-    assert r == {"value": 3.0, "unit": "m", "exact": True, "text": "3 m"}
+    assert r == {
+        "value": 3.0,
+        "unit": "m",
+        "exact": True,
+        "fraction": "3/1",
+        "dimension": [0, 1, 0, 0, 0, 0, 0],
+        "kind": "plain",
+        "text": "3 m",
+    }
     assert dimvexa.calc("100 kg * 1 g_n * sin(30 deg)", to="N")["text"] == "490.3325 N"
     # a plain number has no unit
-    assert dimvexa.calc("3 m / 2 m") == {"value": 1.5, "unit": "", "exact": True, "text": "1.5"}
+    plain = dimvexa.calc("3 m / 2 m")
+    assert (plain["value"], plain["unit"], plain["fraction"], plain["text"]) == (
+        1.5,
+        "",
+        "3/2",
+        "1.5",
+    )
+    assert plain["dimension"] == [0] * 7
 
 
 def test_calc_approximate_results_say_so() -> None:
     r = dimvexa.calc("sqrt(2 m2)")
     assert r["exact"] is False
+    assert r["fraction"] is None
     assert r["text"] == "≈ 1.4142135623730951 m"
 
 
@@ -299,3 +315,21 @@ def test_calc_refuses_bad_names_and_pi() -> None:
         with pytest.raises(dimvexa.DimvexaError) as e:
             dimvexa.calc("1 m", vars={name: "3 m"})
         assert e.value.code == "invalid_definition", name
+
+
+def test_calc_number_text_is_the_text_of_the_command_line() -> None:
+    # the same forms as format_f64 in dimvexa-calc, which the CLI prints too
+    for expr, text in [
+        ("1 m / 3", "0.3333333333333333 m"),
+        ("1e15 m", "1000000000000000 m"),
+        ("1e16 m", "1e16 m"),
+        ("0.0001 m", "0.0001 m"),
+        ("0.00001 m", "1e-5 m"),
+        ("2 m - 2 m", "0 m"),
+        ("-0.5 m", "-0.5 m"),
+        ("sqrt(1e40 m2)", "1e20 m"),
+        ("sqrt(2e-10 m2)", "≈ 1.4142135623730951e-5 m"),
+    ]:
+        assert dimvexa.calc(expr)["text"] == text, expr
+    t = dimvexa.calc("20 degC + 5 K")
+    assert (t["text"], t["kind"]) == ("25 degC", "absolute_temperature")
