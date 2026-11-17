@@ -128,6 +128,11 @@ assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", 
   assert.strictEqual(code(() => d.calc("2 r2", ["r=3 m", "r2=5 m"], "", "", [])), "invalid_definition");
   assert.strictEqual(code(() => d.calc("2 r", [], "", "", [])), "parse_error");
   assert.strictEqual(d.calc("2 r", ["r=3 m"], "", "", []).text, "6 m");
+  assert.strictEqual(d.calc("-40 degC", [], "", "", []).text, "-40 degC");
+  assert.strictEqual(d.calc("10^-400", [], "", "", []).text, "1e-400");
+  assert.strictEqual(d.calc("sin(179.9999999 deg)", [], "", "", []).text, "≈ 1.7453292519943295e-9");
+  assert.strictEqual(code(() => d.calc("x^2 n", ["x=10 m", "n=2"], "", "", [])), "parse_error");
+  assert.strictEqual(code(() => d.calc("1 m", ["2x=1 m"], "", "", [])), "invalid_definition");
   assert.strictEqual(code(() => d.calc("log(100)", [], "", "", [])), "refused");
   assert.strictEqual(code(() => d.calc("1 +", [], "", "", [])), "parse_error");
   assert.strictEqual(code(() => d.calc("1 m", ["novalue"], "", "", [])), "invalid_definition");

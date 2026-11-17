@@ -189,13 +189,42 @@ fn shown_exactly(r: Ratio, v: f64) -> bool {
         .unwrap_or(false)
 }
 
-/// An exact value outside the range of `f64`: `1e600` for a power of ten, else the fraction.
+/// An exact value outside the range of `f64`: the digits and a power of ten (`1e600`, `-2.5e-400`
+/// written as `-25e-401`) when the fraction ends in decimal digits, else the fraction.
 fn beyond_f64_text(r: Ratio) -> String {
-    if r.den() == 1 && r.pi_exp() == 0 && r.ten_exp() != 0 {
-        format!("{}e{}", r.num(), r.ten_exp())
-    } else {
-        r.to_fraction_string()
+    if r.pi_exp() == 0 {
+        if let Some((digits, ten)) = decimal_digits(r.num(), r.den(), r.ten_exp()) {
+            return if ten == 0 {
+                digits
+            } else {
+                format!("{digits}e{ten}")
+            };
+        }
     }
+    r.to_fraction_string()
+}
+
+/// `num / den * 10^ten` as whole digits and a power of ten, when `den` has only the factors 2
+/// and 5 and the digits fit.
+fn decimal_digits(num: i128, den: i128, ten: i32) -> Option<(String, i32)> {
+    let (mut rest, mut twos, mut fives) = (den.checked_abs()?, 0_u32, 0_u32);
+    while rest % 2 == 0 {
+        rest /= 2;
+        twos = twos.checked_add(1)?;
+    }
+    while rest % 5 == 0 {
+        rest /= 5;
+        fives = fives.checked_add(1)?;
+    }
+    if rest != 1 {
+        return None;
+    }
+    let k = twos.max(fives);
+    let digits = num
+        .checked_mul(2_i128.checked_pow(k.checked_sub(twos)?)?)?
+        .checked_mul(5_i128.checked_pow(k.checked_sub(fives)?)?)?;
+    let ten = ten.checked_sub(i32::try_from(k).ok()?)?;
+    Some((digits.to_string(), ten))
 }
 
 #[cfg(test)]

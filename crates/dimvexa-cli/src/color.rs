@@ -20,6 +20,12 @@ pub fn take_color_option(args: &mut Vec<String>) -> Result<Option<ColorWhen>, St
     let mut rest = Vec::with_capacity(args.len());
     let mut it = std::mem::take(args).into_iter();
     while let Some(a) = it.next() {
+        if a == "--" {
+            // after `--` everything is text, including a word that looks like an option
+            rest.push(a);
+            rest.extend(it.by_ref());
+            break;
+        }
         let value = if a == "--color" {
             it.next().filter(|v| !v.starts_with("--"))
         } else if let Some(v) = a.strip_prefix("--color=") {

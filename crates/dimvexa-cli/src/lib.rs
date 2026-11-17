@@ -39,7 +39,7 @@ mod update;
 
 pub use color::Color;
 
-use crate::args::{Args, Parsed, UsageError, command_schema, parse_args};
+use crate::args::{Args, Parsed, UsageError, command_schema, options_of, parse_args};
 use crate::calc::run_calc;
 use crate::color::{ColorWhen, TextKind, colorize_diagnostics, paint_with, take_color_option};
 use crate::configs::run_configs;
@@ -84,7 +84,10 @@ where
         }
         Ok(None) => {}
         Err(message) => {
-            if args.iter().any(|a| a == "--json" || a == "--pretty") {
+            if options_of(&args)
+                .iter()
+                .any(|a| a == "--json" || a == "--pretty")
+            {
                 let line = json_error(command_schema(&args), "usage", &message, &[], &[]);
                 let _ = writeln!(out, "{line}");
             } else {
@@ -93,12 +96,15 @@ where
             return 2;
         }
     }
-    if args.iter().any(|a| a == "--pretty") {
-        // `--pretty` is `--json` with indentation.
+    if options_of(&args).iter().any(|a| a == "--pretty") {
+        // `--pretty` is `--json` with indentation; both are options, so they come before `--`
+        let end = args.iter().position(|a| a == "--").unwrap_or(args.len());
+        let mut rest = args.split_off(end);
         args.retain(|a| a != "--pretty");
         if !args.iter().any(|a| a == "--json") {
             args.push("--json".to_string());
         }
+        args.append(&mut rest);
         let mut buffered = Vec::new();
         let code = run_with(args, &mut buffered, err, color);
         let text = String::from_utf8_lossy(&buffered);

@@ -431,6 +431,38 @@ impl Parser<'_, '_> {
         while self.eat('-') {
             minus = next(minus);
         }
+        // `-40 degC` is the point minus forty degrees Celsius, not the negation of a point
+        if minus > 0 {
+            if let Some(Tok::Qty(number, unit)) = self.peek().cloned() {
+                let at = self.here();
+                let positive = self
+                    .f
+                    .reg
+                    .quantity(&format!("{number} {unit}"))
+                    .map(Number::from)
+                    .ok();
+                let point = positive
+                    .as_ref()
+                    .is_some_and(|p| !p.unit().offset().is_zero());
+                if point && !matches!(self.toks.get(next(self.pos)), Some((_, Tok::Op('^')))) {
+                    self.advance();
+                    let negative = self
+                        .f
+                        .reg
+                        .quantity(&format!("-{number} {unit}"))
+                        .map(Number::from)
+                        .map_err(|e| match e {
+                            Error::Parse { .. } => parse_error(self.src, at, "a value is expected"),
+                            other => other,
+                        })?;
+                    let mut value = negative;
+                    for _ in 1..minus {
+                        value = self.f.math.neg(&value)?;
+                    }
+                    return Ok(value);
+                }
+            }
+        }
         let mut value = self.power()?;
         for _ in 0..minus {
             value = self.f.math.neg(&value)?;
@@ -520,18 +552,44 @@ impl Parser<'_, '_> {
                         Error::UnknownUnit {
                             symbol,
                             suggestions,
-                        } if suggestions.is_empty() => {
+                        } => {
                             // as written: `r2`, not the `r` the unit parser stripped it to
                             let written = unit
                                 .split(|c: char| !(c.is_alphanumeric() || c == '_'))
                                 .find(|run| run.starts_with(symbol.as_str()))
                                 .map_or_else(|| symbol.clone(), str::to_owned);
+                            if self.f.vars.iter().any(|(n, _)| *n == written) {
+                                // the name is defined: the unit text swallowed it (`2 m/r`)
+                                let spaced = if unit.starts_with('(') {
+                                    format!("{number} * {unit}")
+                                } else {
+                                    format!(
+                                        "{number} {}",
+                                        unit.replace('/', " / ").replace('*', " * ")
+                                    )
+                                };
+                                return parse_error(
+                                    self.src,
+                                    at,
+                                    &format!(
+                                        "'{written}' is a variable, not part of the unit in \
+                                         '{number} {unit}': write the operator with spaces, \
+                                         as in '{spaced}'"
+                                    ),
+                                );
+                            }
+                            let did_you_mean = if suggestions.is_empty() {
+                                String::new()
+                            } else {
+                                format!(" (did you mean the unit {}?)", suggestions.join(" or "))
+                            };
                             parse_error(
                                 self.src,
                                 at,
                                 &format!(
                                     "'{written}' in '{number} {unit}' is not a unit and not a \
-                                     variable (a variable is defined with --var {written}=VALUE)"
+                                     variable{did_you_mean}; a variable is defined with \
+                                     --var {written}=VALUE"
                                 ),
                             )
                         }
@@ -827,7 +885,7 @@ impl<'r> Formula<'r> {
     }
 
     fn run(&self, formula: &str) -> Result<(Number, Vec<String>)> {
-        let toks = self.names_after_numbers(lex(formula)?)?;
+        let toks = self.names_after_numbers(formula, lex(formula)?)?;
         let mut p = Parser {
             src: formula,
             toks,
@@ -847,8 +905,8 @@ impl<'r> Formula<'r> {
     /// `2 * r` (the text becomes `(2 * r)`, so `10 m / 2 r` is `10 m / (2 r)`); a name that is
     /// also a unit (`0.5 h` with a variable `h`) is ambiguous, because the reader sees one thing
     /// and the evaluator would take the other, and is refused.
-    fn names_after_numbers(&self, toks: Vec<(usize, Tok)>) -> Result<Vec<(usize, Tok)>> {
-        let mut out = Vec::with_capacity(toks.len());
+    fn names_after_numbers(&self, src: &str, toks: Vec<(usize, Tok)>) -> Result<Vec<(usize, Tok)>> {
+        let mut out: Vec<(usize, Tok)> = Vec::with_capacity(toks.len());
         for (at, tok) in toks {
             let Tok::Qty(number, unit) = &tok else {
                 out.push((at, tok));
@@ -894,6 +952,17 @@ impl<'r> Formula<'r> {
                 symbol.clear();
             }
             match rewrite {
+                Some(_) if matches!(out.last(), Some((_, Tok::Op('^')))) => {
+                    // `x^2 n` would read `2 n` as the exponent, and `x^2 * n` is what is meant
+                    return Err(parse_error(
+                        src,
+                        at,
+                        &format!(
+                            "'{number} {unit}' after '^' is ambiguous: write ^{number} * {unit} \
+                             for the power times {unit}, or ^({number} {unit}) for the exponent"
+                        ),
+                    ));
+                }
                 Some(text) => {
                     out.push((at, Tok::Op('(')));
                     out.push((at, Tok::Num(number.clone())));

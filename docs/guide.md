@@ -361,7 +361,8 @@ config constant with the name of a built-in one replaces it, as for `dimvexa con
 * **Operators:** `+ - * /`, parentheses and `^`. The exponent may be an integer, a decimal or a
   fraction: `x^2`, `x^0.5`, `y^(1/2)` and `sqrt(y)` are the same, `R^(2/3)` works. The exponent
   may also be a name or an expression, if it is an exact number without a unit (`x^n`,
-  `2^(1+1)`, `x^(1/k)`); `2^3^2` is `2^(3^2)`, and an approximate exponent such as `2^sqrt(2)`
+  `2^(1+1)`, `x^(1/k)`); `2^3^2` is `2^(3^2)`, a name after a number right after `^` (`x^2 n`) is
+  refused as ambiguous (write `x^2 * n` or `x^(2 n)`), and an approximate exponent such as `2^sqrt(2)`
   is refused. `pi` is the exact constant: `2 pi`, `2 * pi * r` and `2 pi r` are the same
   (`pi` multiplies the names that follow it).
 * **Spaces:** a space ends a unit. `1/2 m` is `1` divided by `2 m` (`0.5 1/m`), so write
@@ -379,9 +380,10 @@ config constant with the name of a built-in one replaces it, as for `dimvexa con
   take one angle unit (`30 deg`, `0.5 rad`, `pi/6 * 1 rad`), not a bare number and not
   `deg*deg` or `1/rad`.
 * **Options:** `--to UNIT` shows the result in a unit, `--exact` adds the fraction of an exact
-  result (`1/3 = 0.3333333333333333 m`), `--json` or `--pretty` print the schema
+  result (`1/3 = 0.3333333333333333… m`), `--json` or `--pretty` print the schema
   `dimvexa.calc/1`, `--config` adds your own units as for `convert`. An expression that starts
-  like an option is written after `--` (`dimvexa calc --var h="3 m" -- -h`).
+  like an option is written after `--`, and the options before it (`dimvexa calc --var h="3 m" -- -h`;
+  after `--` everything is the expression, so `--var` and `--pretty` there are text).
 
 #### Exact, or approximate and labelled
 
@@ -398,7 +400,11 @@ answered with an approximate number.
   value (`1e300 m * 1e300` is `1e600 m`, `value` is `null`, `fraction` is `10^600`).
 * An **approximate** result (`≈`) is computed in `f64`: the function results are within an ulp
   or two of the true value, and each following step can add to that (`sqrt(2)^2` is
-  `2.0000000000000004`). It is not the nearest `f64` and carries no error bound (KL-33).
+  `2.0000000000000004`). `sin`, `cos` and `tan` of an angle in degrees, gon or turns reduce the
+  exact angle to within 45 degrees of a quarter turn before the one rounding, so
+  `sin(179.9999999 deg)` keeps all its digits; an angle given in `rad` as a plain number has no
+  exact multiple of pi to reduce by, so near a multiple of pi its digits are limited by the `f64`
+  of the angle. It is not the nearest `f64` and carries no error bound (KL-33).
   A result outside the range of `f64` is an `overflow` error, never infinity.
 
 #### Limitations
@@ -406,7 +412,8 @@ answered with an approximate number.
 * **Digit width (KL-31).** Exact arithmetic holds numbers of about 38 digits. Equations that
   need more, such as `(1 ly)^3` or a product of the SI constants entered as numbers
   (`k^4 / (h^3 c^2)`), fail with `overflow`. Powers of ten
-  do not count against this (`1e-34` to `1e10000` are fine).
+  do not count against this (a number may be written from `1e-10000` to `1e10000`, and a result
+  beyond the range of `f64` is printed from its exact value: `10^-400` is `1e-400`).
 * **Roots need whole exponents of units (KL-32):** `sqrt(4 m)` is refused, `sqrt(4 m2)` is `2 m`.
   A root is shown in SI base units.
 * **No error bound (KL-33):** an approximate result is the `f64` nearest to the computed value;
@@ -419,8 +426,8 @@ answered with an approximate number.
   `2494.2 J/m^3`. A different symbol stays as it is: `1 J / 1 N` is `J/N`, `km * m` stays
   `km.m`, and `h_P * c / 500 nm` keeps `J.m/nm`. Give `--to` (`--to J`, `--to Pa`) for the unit you
   want; a wrong dimension is an error.
-* **Temperatures:** a point (`20 degC`) can be compared and shifted by a difference, not
-  multiplied; `degC + degC` adds two points (`20 degC + 30 degC` is `50 degC`) while
+* **Temperatures:** a point (`20 degC`, `-40 degC`) can be compared and shifted by a difference,
+  not multiplied or negated (`-40 degC` is the point itself, `-(20 degC)` is refused); `degC + degC` adds two points (`20 degC + 30 degC` is `50 degC`) while
   `degC - degC` is a difference (`delta_degC`) and a point minus a kelvin is refused (ADR-027).
   `kelvin(x)` reads a temperature as absolute kelvin: a point (`kelvin(20 degC)` is `293.15 K`)
   or a value whose dimension is a temperature (`kelvin(p * V / (n * R))`). So `p V = n R T`

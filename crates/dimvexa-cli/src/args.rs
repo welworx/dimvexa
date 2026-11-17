@@ -91,6 +91,12 @@ pub struct ValueOptions {
 /// Splits `--config NAME_OR_PATH` (repeatable), `--const NAME_OR_VALUE`, `--var NAME=VALUE`
 /// (repeatable) and `--to UNIT`, also as
 /// `--opt=value`.
+/// The words before a lone `--`: after it everything is text (an expression such as `-h`).
+pub fn options_of(args: &[String]) -> &[String] {
+    let end = args.iter().position(|a| a == "--").unwrap_or(args.len());
+    args.get(..end).unwrap_or(args)
+}
+
 pub fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), UsageError> {
     let mut opts = ValueOptions {
         configs: Vec::new(),
@@ -101,7 +107,7 @@ pub fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), Usa
     let mut rest = Vec::new();
     let missing = |what: &str| UsageError {
         message: format!("'{what}' needs a value"),
-        json: args.iter().any(|x| x == "--json"),
+        json: options_of(args).iter().any(|x| x == "--json"),
         schema: command_schema(args),
         suggestions: Vec::new(),
     };
@@ -255,19 +261,16 @@ pub fn parse_calc(
     }
     let mut named = Vec::new();
     for spec in vars {
-        let valid = |name: &str| {
-            let mut chars = name.chars();
-            chars.next().is_some_and(|c| c.is_alphabetic() || c == '_')
-                && chars.all(|c| c.is_alphanumeric() || c == '_')
-        };
+        // the shape only; whether the name is allowed is `Formula::var`'s rule, the same in the
+        // CLI, Python and WebAssembly
         match spec.split_once('=') {
-            Some((name, value)) if valid(name) && !value.trim().is_empty() => {
+            Some((name, value)) if !name.is_empty() && !value.trim().is_empty() => {
                 named.push((name.to_string(), value.trim().to_string()));
             }
             _ => {
                 return Err(usage(format!(
-                    "'--var' takes NAME=VALUE with a name of letters, digits and '_' and a \
-                     quantity as value, for example --var dp=\"50 kPa\"; got '{spec}'"
+                    "'--var' takes NAME=VALUE with a quantity as value, for example \
+                     --var dp=\"50 kPa\"; got '{spec}'"
                 )));
             }
         }
@@ -475,7 +478,7 @@ pub fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
     let (opts, args) = split_options(all)?;
     let configs = opts.configs;
     let args = args.as_slice();
-    let json = args.iter().any(|a| a == "--json");
+    let json = options_of(args).iter().any(|a| a == "--json");
     let schema = command_schema(args);
     let usage = |message: String| UsageError {
         message,

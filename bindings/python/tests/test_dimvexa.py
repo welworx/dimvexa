@@ -387,3 +387,17 @@ def test_calc_r_and_r2_are_two_names_and_an_unknown_name_is_said_so() -> None:
     assert e.value.code == "parse_error"
     assert "not a unit and not a variable" in str(e.value)
     assert dimvexa.calc("2 r", vars={"r": "3 m"})["text"] == "6 m"
+
+
+def test_calc_review_round_three_cases() -> None:
+    assert dimvexa.calc("-40 degC")["text"] == "-40 degC"
+    assert dimvexa.calc("10^-400")["text"] == "1e-400"
+    assert dimvexa.calc("1^128")["text"] == "1"
+    assert dimvexa.calc("sin(179.9999999 deg)")["text"] == "≈ 1.7453292519943295e-9"
+    for expr in ("x^2 n",):
+        with pytest.raises(dimvexa.DimvexaError) as e:
+            dimvexa.calc(expr, vars={"x": "10 m", "n": "2"})
+        assert e.value.code == "parse_error"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("1 m", vars={"2x": "1 m"})
+    assert e.value.code == "invalid_definition"

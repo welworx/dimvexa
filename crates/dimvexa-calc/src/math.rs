@@ -494,16 +494,20 @@ impl<'r> Math<'r> {
             }
             return Ok(Number::Exact(Quantity::new(Ratio::ZERO, unit)));
         }
-        let real = match si {
+        let value = match si {
             Si::Exact(r) => {
                 if let Some(exact) = exact_root(r, num, den)? {
                     return Ok(Number::Exact(Quantity::new(exact, unit)));
                 }
-                r.to_f64()?
+                match r.to_f64() {
+                    Ok(real) => approx_root(real, num, den),
+                    // beyond the range of f64 (hypot(1e200, 1e200) squares to 2e400): take a
+                    // power of ten out of the root exactly, then round
+                    Err(e) => scaled_root(r, num, den).ok_or(e)?,
+                }
             }
-            Si::Approx(real) => real,
+            Si::Approx(real) => approx_root(real, num, den),
         };
-        let value = approx_root(real, num, den);
         Ok(Number::Approx(Approx {
             value: finite(value, "approximate root")?,
             unit,
@@ -1020,7 +1024,7 @@ impl<'r> Math<'r> {
     /// ```
     pub fn tan(&self, a: &Number) -> Result<Number> {
         let unit = Self::angle_unit(a, "tan")?;
-        let f = match a {
+        let value = match a {
             Number::Exact(q) => {
                 let radians = q.value().checked_mul(unit.factor())?;
                 if radians.is_zero() {
@@ -1048,11 +1052,11 @@ impl<'r> Math<'r> {
                         }
                     }
                 }
-                radians_for_trig(radians)?
+                trig_of_exact_angle(radians, Trig::Tan)?
             }
-            Number::Approx(x) => Self::approx_radians(x.value, unit)?,
+            Number::Approx(x) => Trig::Tan.of(Self::approx_radians(x.value, unit)?),
         };
-        unity(f.tan())
+        unity(value)
     }
 
     /// Arc sine of a dimensionless value in `[-1, 1]`, an angle in `rad`. Exact at `0`, `±1/2`
@@ -1269,18 +1273,108 @@ impl<'r> Math<'r> {
 
     fn trig(a: &Number, cos: bool) -> Result<Number> {
         let unit = Self::angle_unit(a, if cos { "cos" } else { "sin" })?;
-        let f = match a {
+        let which = if cos { Trig::Cos } else { Trig::Sin };
+        let value = match a {
             Number::Exact(q) => {
                 let radians = q.value().checked_mul(unit.factor())?;
                 if let Some(exact) = special_angle(radians, cos)? {
                     return Ok(Number::Exact(Quantity::new(exact, UnitExpr::unity())));
                 }
-                radians_for_trig(radians)?
+                trig_of_exact_angle(radians, which)?
             }
-            Number::Approx(x) => Self::approx_radians(x.value, unit)?,
+            Number::Approx(x) => which.of(Self::approx_radians(x.value, unit)?),
         };
-        unity(if cos { f.cos() } else { f.sin() })
+        unity(value)
     }
+}
+
+#[derive(Clone, Copy)]
+enum Trig {
+    Sin,
+    Cos,
+    Tan,
+}
+
+impl Trig {
+    fn of(self, x: f64) -> f64 {
+        match self {
+            Self::Sin => x.sin(),
+            Self::Cos => x.cos(),
+            Self::Tan => x.tan(),
+        }
+    }
+
+    /// The function of `k` quarter turns (mod 4) plus the small angle `r`, by symmetry.
+    fn of_quarter_turns(self, k: i64, r: f64) -> f64 {
+        match (self, k) {
+            (Self::Sin, 0) | (Self::Cos, 3) => r.sin(),
+            (Self::Sin, 1) | (Self::Cos, 0) => r.cos(),
+            (Self::Sin, 2) | (Self::Cos, 1) => -r.sin(),
+            (Self::Sin | Self::Cos, _) => -r.cos(),
+            (Self::Tan, k) if k % 2 == 0 => r.tan(),
+            (Self::Tan, _) => -1.0 / r.tan(),
+        }
+    }
+}
+
+/// For an angle that is `pi` times a rational: its number of quarter turns (mod 4) and the
+/// remaining angle in radians, at most `pi/4` in size. The reduction is exact (the rounding to
+/// `f64` happens once, on the small remainder), so `sin(179.9999999 deg)` keeps its digits
+/// instead of losing them in a radian value near `pi`.
+fn quarter_turns(radians: Ratio) -> Option<(i64, f64)> {
+    if radians.pi_exp() != 1 {
+        return None;
+    }
+    // quarter turns a/b, in lowest terms
+    let turns = radians
+        .with_exponents(radians.ten_exp(), 0)
+        .checked_mul(Ratio::from_int(2))
+        .and_then(Ratio::folded)
+        .ok()?;
+    let (a, b) = (turns.num(), turns.den());
+    // the nearest whole number k of quarter turns: floor((2a + b) / 2b)
+    let k = a
+        .checked_mul(2)?
+        .checked_add(b)?
+        .div_euclid(b.checked_mul(2)?);
+    let rest = a.checked_sub(k.checked_mul(b)?)?;
+    // (rest / b) quarter turns = rest / (2 b) * pi radians
+    let remainder = Ratio::new(rest, b.checked_mul(2)?)
+        .ok()?
+        .with_exponents(0, 1)
+        .to_f64()
+        .ok()?;
+    Some((i64::try_from(k.rem_euclid(4)).ok()?, remainder))
+}
+
+/// The approximate value of `which` for an exact angle (radians as a [`Ratio`]).
+fn trig_of_exact_angle(radians: Ratio, which: Trig) -> Result<f64> {
+    if let Some((k, r)) = quarter_turns(radians) {
+        return Ok(which.of_quarter_turns(k, r));
+    }
+    Ok(which.of(radians_for_trig(radians)?))
+}
+
+/// `r^(num/den)` for an exact `r` outside the range of `f64`, as `m^(num/den) * 10^(k num / den)`
+/// with the power of ten of `r` split into whole multiples of `den` and a remainder.
+fn scaled_root(r: Ratio, num: i32, den: i32) -> Option<f64> {
+    if r.pi_exp() != 0 {
+        return None;
+    }
+    let ten = r.ten_exp();
+    let whole = ten.div_euclid(den);
+    let rest = ten.rem_euclid(den);
+    if rest > 300 {
+        return None;
+    }
+    let mantissa = r.with_exponents(rest, 0).to_f64().ok()?;
+    let part = approx_root(mantissa, num, den);
+    let scale = Ratio::ONE
+        .with_exponents(whole.checked_mul(num)?, 0)
+        .to_f64()
+        .ok()?;
+    let value = part * scale;
+    value.is_finite().then_some(value)
 }
 
 /// `true` when the unit expression is one unit symbol to the power 1 (`deg`, `rad`), possibly

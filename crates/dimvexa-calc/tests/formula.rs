@@ -80,9 +80,10 @@ fn a_unit_is_the_text_after_the_number_up_to_a_space() {
     // a unit with a close match is an unknown unit with the suggestion; a name with none is
     // most likely an undefined variable, and the error says it is neither
     let err = f.eval("5 PSI").unwrap_err();
-    assert_eq!(
-        (err.code(), err.suggestions()),
-        ("unknown_unit", &["psi".to_owned()][..])
+    assert_eq!(err.code(), "parse_error");
+    assert!(
+        err.to_string().contains("did you mean the unit psi?"),
+        "{err}"
     );
     let err = f.eval("5 foo").unwrap_err();
     assert_eq!(err.code(), "parse_error");
@@ -267,4 +268,24 @@ fn a_name_that_is_also_a_unit_in_the_equation_is_refused() {
         Some("invalid_definition")
     );
     assert_eq!(m.eval("m * 2").unwrap().to_string(), "6 kg");
+}
+
+#[test]
+fn eval_strict_refuses_an_unused_variable_and_eval_does_not() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("a", "1 m")
+        .unwrap()
+        .var("b", "2 m")
+        .unwrap();
+    assert_eq!(f.eval("a").unwrap().to_string(), "1 m");
+    let err = f.eval_strict("a").unwrap_err();
+    assert_eq!(err.code(), "invalid_definition");
+    assert!(
+        err.to_string().contains("the variable 'b' is not used"),
+        "{err}"
+    );
+    assert_eq!(f.eval_strict("a + b").unwrap().to_string(), "3 m");
+    // built-in constants need not be used
+    assert!(f.eval_strict("a + b + 0 m").is_ok());
 }

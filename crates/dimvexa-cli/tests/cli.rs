@@ -211,7 +211,6 @@ fn every_error_code_has_a_cli_test() {
         (&["calc", "1 + pi"], "unrepresentable", 1),
         (&["calc", "1 m / 0 s"], "division_by_zero", 1),
         (&["calc", "1 m + 1 s"], "dimension_mismatch", 1),
-        (&["calc", "5 PSI"], "unknown_unit", 1),
         (&["calc", "1 +"], "parse_error", 1),
         (&["calc", "(1 ly)^3"], "overflow", 1),
         (&["calc", "floor(1.5 m)"], "refused", 1),
@@ -3417,7 +3416,7 @@ fn calc_json_has_the_documented_fields() {
 fn calc_failures_use_the_library_codes_and_exit_1() {
     for (expr, code, needle) in [
         ("1 m + 1 s", "dimension_mismatch", "cannot be converted"),
-        ("5 PSI", "unknown_unit", "PSI"),
+        ("5 PSI", "parse_error", "did you mean the unit psi?"),
         ("5 foo", "parse_error", "not a unit and not a variable"),
         ("nothing * 2", "parse_error", "unknown variable"),
         ("1 +", "parse_error", "a value is expected"),
@@ -3455,7 +3454,6 @@ fn calc_usage_errors_exit_2() {
         (vec!["calc", "1 m", "--var"], "'--var' needs a value"),
         (vec!["calc", "1 m", "--var", "novalue"], "takes NAME=VALUE"),
         (vec!["calc", "1 m", "--var", "=5 m"], "takes NAME=VALUE"),
-        (vec!["calc", "1 m", "--var", "a b=5 m"], "takes NAME=VALUE"),
         (vec!["calc", "1 m", "--var", "a="], "takes NAME=VALUE"),
         (
             vec!["calc", "1 m", "--to", "m", "--to", "cm"],
@@ -3928,7 +3926,76 @@ fn calc_r_and_r2_are_different_names() {
         "3 m\n"
     );
     // a name is letters, digits and underscores
-    for bad in ["r-2=1 m", "r.2=1 m", "r 2=1 m"] {
-        assert_eq!(calc(&["1 m", "--var", bad]).code, 2, "{bad}");
+    for bad in ["r-2=1 m", "r.2=1 m", "r 2=1 m", "2x=1 m"] {
+        let r = calc(&["1 m", "--var", bad]);
+        assert!(
+            r.stderr.starts_with("error[invalid_definition]"),
+            "{bad}: {}",
+            r.stderr
+        );
     }
+}
+
+/// Review round 3: a name after `^`, negative temperature points, exact quarter-turn reduction,
+/// roots beyond f64, large plain powers, `--pretty` with `--`.
+#[test]
+fn calc_review_round_three_regressions() {
+    // `x^2 n` must not silently read `2 n` as the exponent
+    let r = calc(&["x^2 n", "--var", "x=10 m", "--var", "n=2"]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.contains("after '^' is ambiguous"), "{}", r.stderr);
+    assert_eq!(
+        calc(&["x^2 * n", "--var", "x=10 m", "--var", "n=2"]).stdout,
+        "200 m^2\n"
+    );
+    assert_eq!(
+        calc(&["x^(2 n)", "--var", "x=10 m", "--var", "n=2"]).stdout,
+        "10000 m^4\n"
+    );
+    // a negative temperature point
+    assert_eq!(calc(&["-40 degC"]).stdout, "-40 degC\n");
+    assert_eq!(calc(&["-40 degF", "--to", "degC"]).stdout, "-40 degC\n");
+    assert_eq!(calc(&["-40 degC + 10 delta_degC"]).stdout, "-30 degC\n");
+    assert_eq!(calc(&["-3 m"]).stdout, "-3 m\n");
+    // degree trigonometry keeps its digits near the quarter turns (exact angle reduction)
+    for (expr, want) in [
+        ("sin(179.9999999 deg)", 1.745_329_251_994_329_6e-9),
+        ("sin(359.99999999 deg)", -1.745_329_251_994_329_6e-10),
+        ("cos(90.0000001 deg)", -1.745_329_251_994_329_6e-9),
+        ("tan(89.9999999 deg)", 572_957_795.130_823_2),
+    ] {
+        let out = calc(&[expr]).stdout;
+        let got: f64 = out.trim().trim_start_matches("≈ ").parse().unwrap();
+        assert!(((got - want) / want).abs() < 1e-15, "{expr}: {out}");
+    }
+    // roots of values beyond f64, and plain numbers to large powers
+    let out = calc(&["hypot(1e200, 1e200)"]).stdout;
+    let got: f64 = out.trim().trim_start_matches("≈ ").parse().unwrap();
+    assert!(
+        ((got / 1.414_213_562_373_095e200) - 1.0).abs() < 1e-15,
+        "{out}"
+    );
+    assert_eq!(calc(&["1^128"]).stdout, "1\n");
+    assert_eq!(calc(&["10^-400"]).stdout, "1e-400\n");
+    assert_eq!(calc(&["-2.5e-400"]).stdout, "-25e-401\n");
+    // --pretty with --, and options only before it
+    let r = calc(&["--pretty", "--", "1 m / 3"]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(r.stdout.lines().count() > 5, "{}", r.stdout);
+    // a defined variable swallowed by a unit says so
+    let r = calc(&["2 m/r", "--var", "r=3 s"]);
+    assert!(
+        r.stderr.contains("'r' is a variable, not part of the unit"),
+        "{}",
+        r.stderr
+    );
+    assert!(r.stderr.contains("as in '2 m / r'"), "{}", r.stderr);
+    // an unknown name with a close unit still says it may be a variable
+    let r = calc(&["2 v"]);
+    assert!(
+        r.stderr
+            .contains("not a unit and not a variable (did you mean the unit V?)"),
+        "{}",
+        r.stderr
+    );
 }

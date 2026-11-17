@@ -253,5 +253,10 @@ fn known_limitation_kl_34_a_value_beyond_f64_cannot_be_an_approximate_argument()
         "overflow",
         "KL-34 fixed? then log10(1e-400) is exactly -400"
     );
-    assert_eq!(f.eval("sqrt(huge)").unwrap_err().code(), "overflow");
+    // roots scale the power of ten out (hypot(1e200, 1e200) squares to 2e400): fixed for them
+    let root = f.f64_in(&f.eval("sqrt(huge)").unwrap(), "1").unwrap();
+    assert!(
+        (root / 1.414_213_562_373_095e200 - 1.0).abs() < 1e-14,
+        "{root:e}"
+    );
 }
