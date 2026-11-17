@@ -341,8 +341,10 @@ multiplies: `2 r` with `--var r="3 m"` is `6 m`, and `2 r2` is `2` times the var
 (a name is never split into a name and a power: write `2 r^2` for the square of `r`). A name that is also a
 unit must not follow a number: `0.5 h` with a variable `h` is an error (`invalid_definition`:
 rename the variable), because the reader would see hours and the evaluator a length. `pi` cannot be
-redefined. `r` and `r2` are two different names. A repeated `--var` name keeps the last value (with a
-warning), and a name that is not used is ignored.
+redefined. `r` and `r2` are two different names. A `--var` that the equation does not use is an
+error (`invalid_definition`: `the variable 'r' is not used in the equation '2 r2'`), because an
+unused value is most likely a typo in the equation or the name; the built-in constants need not
+be used. A repeated `--var` name keeps the last value (with a warning).
 
 The SI constants of `dimvexa constants` are built-in names in every equation, exact and with
 their unit: `h_P`, `e` (the elementary charge), `k_B`, `N_A`, `c` (the speed of light, 299792458 m/s) and `R` (the molar gas constant,

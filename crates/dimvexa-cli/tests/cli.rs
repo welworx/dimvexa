@@ -3695,7 +3695,7 @@ fn calc_refuses_a_name_that_is_also_a_unit_in_the_equation() {
     // standing alone, or as a different symbol, the name is the value
     assert_eq!(calc(&["h * 2", "--var", "h=3 m"]).stdout, "6 m\n");
     assert_eq!(calc(&["m * 2 cm", "--var", "m=3"]).stdout, "6 cm\n");
-    assert_eq!(calc(&["0.5 h", "--var", "hh=3 m"]).stdout, "0.5 h\n");
+    assert_eq!(calc(&["0.5 h + hh", "--var", "hh=3 h"]).stdout, "3.5 h\n");
 }
 
 /// The SI constants are names in every equation; a `--var` that replaces one is warned about.
@@ -3900,22 +3900,29 @@ fn calc_a_number_before_a_variable_multiplies_unless_the_name_is_a_unit() {
 #[test]
 fn calc_r_and_r2_are_different_names() {
     for order in [["r=3 m", "r2=5 m"], ["r2=5 m", "r=3 m"]] {
-        let r = calc(&["2 r2", "--var", order[0], "--var", order[1]]);
+        let r = calc(&["2 r2 + r", "--var", order[0], "--var", order[1]]);
         assert_eq!(
             (r.code, r.stdout.as_str()),
-            (0, "10 m\n"),
+            (0, "13 m\n"),
             "{order:?}: {}",
             r.stderr
         );
+        // the square of r is written with ^: 2 * 9 m2 / 5 m
         assert_eq!(
-            calc(&["2 r", "--var", order[0], "--var", order[1]]).stdout,
-            "6 m\n"
-        );
-        assert_eq!(
-            calc(&["2 r^2", "--var", order[0], "--var", order[1]]).stdout,
-            "18 m^2\n"
+            calc(&["2 r^2 / r2", "--var", order[0], "--var", order[1]]).stdout,
+            "3.6 m\n"
         );
     }
+    // a variable that the equation does not read is an error, not ignored
+    let r = calc(&["2 r2", "--var", "r=3 m", "--var", "r2=5 m"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr
+            .contains("the variable 'r' is not used in the equation '2 r2'"),
+        "{}",
+        r.stderr
+    );
+    assert_eq!(calc(&["2 r2", "--var", "r2=5 m"]).stdout, "10 m\n");
     assert_eq!(
         calc(&["v1 + v10", "--var", "v1=1 m", "--var", "v10=2 m"]).stdout,
         "3 m\n"

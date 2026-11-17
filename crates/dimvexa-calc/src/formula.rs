@@ -336,6 +336,8 @@ struct Parser<'a, 'r> {
     pos: usize,
     depth: usize,
     f: &'a Formula<'r>,
+    /// The names the equation read.
+    used: Vec<String>,
 }
 
 impl Parser<'_, '_> {
@@ -541,12 +543,17 @@ impl Parser<'_, '_> {
                 if self.peek() == Some(&Tok::Op('(')) {
                     return self.call(&name);
                 }
-                self.f
+                let found = self
+                    .f
                     .vars
                     .iter()
                     .find(|(n, _)| *n == name)
                     .map(|(_, q)| q.clone())
-                    .ok_or_else(|| parse_error(self.src, at, "unknown variable"))
+                    .ok_or_else(|| parse_error(self.src, at, "unknown variable"))?;
+                if !self.used.contains(&name) {
+                    self.used.push(name);
+                }
+                Ok(found)
             }
             Some(Tok::Op('(')) => {
                 self.advance();
@@ -792,6 +799,34 @@ impl<'r> Formula<'r> {
     /// operation that failed (`dimension_mismatch`, `overflow`, ...). An exact operation that
     /// fails is never answered with an approximate value.
     pub fn eval(&self, formula: &str) -> Result<Number> {
+        self.run(formula).map(|(number, _)| number)
+    }
+
+    /// Like [`eval`](Self::eval), and every name bound with [`var`](Self::var) must be used by
+    /// the equation: a value that nothing reads is most likely a typo in the equation or in the
+    /// name (`2 r2` with `r` and `r2` given), so it is an error, never ignored. The built-in
+    /// constants need not be used.
+    ///
+    /// # Errors
+    ///
+    /// The errors of [`eval`](Self::eval), and `invalid_definition` naming the first unused
+    /// variable.
+    pub fn eval_strict(&self, formula: &str) -> Result<Number> {
+        let (number, used) = self.run(formula)?;
+        self.given
+            .iter()
+            .find(|name| !used.contains(name))
+            .map_or(Ok(number), |name| {
+                Err(Error::InvalidDefinition {
+                    symbol: name.clone(),
+                    message: format!(
+                        "the variable '{name}' is not used in the equation '{formula}'"
+                    ),
+                })
+            })
+    }
+
+    fn run(&self, formula: &str) -> Result<(Number, Vec<String>)> {
         let toks = self.names_after_numbers(lex(formula)?)?;
         let mut p = Parser {
             src: formula,
@@ -799,12 +834,13 @@ impl<'r> Formula<'r> {
             pos: 0,
             depth: 0,
             f: self,
+            used: Vec::new(),
         };
         let q = p.expr()?;
         if p.pos < p.toks.len() {
             return Err(parse_error(formula, p.here(), "unexpected input"));
         }
-        Ok(q)
+        Ok((q, p.used))
     }
 
     /// What a name written after a number means. `2 r` with a variable `r` that is not a unit is

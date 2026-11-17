@@ -41,7 +41,7 @@ fn evaluate(req: &CalcRequest, loaded: &Loaded) -> Result<(Report, Vec<String>),
             .map_err(|e| (e, format!("--var {name}: ")))?;
     }
     let mut number = formula
-        .eval(&req.expression)
+        .eval_strict(&req.expression)
         .map_err(|e| (e, String::new()))?;
     if let Some(unit) = &req.to {
         number = formula

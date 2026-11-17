@@ -522,7 +522,7 @@ fn calc<'py>(
     for (name, value) in vars.unwrap_or_default() {
         formula = formula.var(&name, &value).map_err(|e| to_py(&e))?;
     }
-    let mut number = formula.eval(expression).map_err(|e| to_py(&e))?;
+    let mut number = formula.eval_strict(expression).map_err(|e| to_py(&e))?;
     if let Some(unit) = to.map(str::trim).filter(|u| !u.is_empty()) {
         number = formula.to_unit(&number, unit).map_err(|e| to_py(&e))?;
     }

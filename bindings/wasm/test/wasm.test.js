@@ -123,8 +123,9 @@ assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", 
   assert.strictEqual(d.calc("2 pi r", ["r=3 m"], "", "", []).text, "18.84955592153876… m");
   assert.strictEqual(d.calc("x^n", ["x=9 m2", "n=0.5"], "", "", []).text, "3 m");
   assert.strictEqual(d.calc("10 m² · 3 m", [], "", "", []).text, "30 m^3");
-  assert.strictEqual(d.calc("2 r2", ["r=3 m", "r2=5 m"], "", "", []).text, "10 m");
-  assert.strictEqual(d.calc("2 r^2", ["r=3 m", "r2=5 m"], "", "", []).text, "18 m^2");
+  assert.strictEqual(d.calc("2 r2 + r", ["r=3 m", "r2=5 m"], "", "", []).text, "13 m");
+  assert.strictEqual(d.calc("2 r^2 / r2", ["r=3 m", "r2=5 m"], "", "", []).text, "3.6 m");
+  assert.strictEqual(code(() => d.calc("2 r2", ["r=3 m", "r2=5 m"], "", "", [])), "invalid_definition");
   assert.strictEqual(code(() => d.calc("2 r", [], "", "", [])), "parse_error");
   assert.strictEqual(d.calc("2 r", ["r=3 m"], "", "", []).text, "6 m");
   assert.strictEqual(code(() => d.calc("log(100)", [], "", "", [])), "refused");

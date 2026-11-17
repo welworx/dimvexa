@@ -439,7 +439,7 @@ pub fn calc(
             .var(name.trim(), value.trim())
             .map_err(|e| fail(&e))?;
     }
-    let mut number = formula.eval(expression).map_err(|e| fail(&e))?;
+    let mut number = formula.eval_strict(expression).map_err(|e| fail(&e))?;
     let to = to.trim();
     if !to.is_empty() {
         number = formula.to_unit(&number, to).map_err(|e| fail(&e))?;

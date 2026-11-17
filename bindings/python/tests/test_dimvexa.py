@@ -376,8 +376,12 @@ def test_calc_config_constants_kelvin_pi_names_and_notation() -> None:
 
 def test_calc_r_and_r2_are_two_names_and_an_unknown_name_is_said_so() -> None:
     both = {"r": "3 m", "r2": "5 m"}
-    assert dimvexa.calc("2 r2", vars=both)["text"] == "10 m"
-    assert dimvexa.calc("2 r^2", vars=both)["text"] == "18 m^2"
+    assert dimvexa.calc("2 r2 + r", vars=both)["text"] == "13 m"
+    assert dimvexa.calc("2 r^2 / r2", vars=both)["text"] == "3.6 m"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("2 r2", vars=both)  # r is not used
+    assert e.value.code == "invalid_definition"
+    assert "the variable 'r' is not used" in str(e.value)
     with pytest.raises(dimvexa.DimvexaError) as e:
         dimvexa.calc("2 r")
     assert e.value.code == "parse_error"
