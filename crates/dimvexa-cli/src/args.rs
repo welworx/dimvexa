@@ -88,6 +88,8 @@ pub struct ValueOptions {
     pub to: Option<String>,
     /// `--sci` or `--sci=N`, for `calc`.
     pub notation: Notation,
+    /// `--autoprefix`, for `calc`.
+    pub autoprefix: bool,
 }
 
 /// `--sci` (all digits) or `--sci=N` (N significant digits, 1 to 17); `None` for any other word.
@@ -106,8 +108,13 @@ fn scientific_option(word: &str) -> Option<Result<Notation, String>> {
 
 impl ValueOptions {
     /// Whether an option that only `calc` takes was given.
-    fn calc_only(vars: &[String], to: Option<&String>, notation: Notation) -> bool {
-        !vars.is_empty() || to.is_some() || notation != Notation::Plain
+    fn calc_only(
+        vars: &[String],
+        to: Option<&String>,
+        notation: Notation,
+        autoprefix: bool,
+    ) -> bool {
+        !vars.is_empty() || to.is_some() || notation != Notation::Plain || autoprefix
     }
 }
 
@@ -126,6 +133,7 @@ pub fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), Usa
         vars: Vec::new(),
         to: None,
         notation: Notation::Plain,
+        autoprefix: false,
     };
     let mut rest = Vec::new();
     let missing = |what: &str| UsageError {
@@ -136,6 +144,10 @@ pub fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), Usa
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
+        if a == "--autoprefix" {
+            opts.autoprefix = true;
+            continue;
+        }
         if let Some(digits) = scientific_option(a) {
             opts.notation = digits.map_err(|message| UsageError {
                 message,
@@ -269,7 +281,7 @@ pub fn parse_calc(
     rest: &[&str],
     misused: bool,
     (exact, json): (bool, bool),
-    (vars, to, notation): (Vec<String>, Option<String>, Notation),
+    (vars, to, notation, autoprefix): (Vec<String>, Option<String>, Notation, bool),
     configs: Vec<String>,
     usage: &dyn Fn(String) -> UsageError,
 ) -> Result<(Parsed, Vec<String>), UsageError> {
@@ -287,6 +299,11 @@ pub fn parse_calc(
     if to.as_deref().is_some_and(|u| u.trim().is_empty()) {
         return Err(usage(
             "'--to' needs a unit, for example --to cm2".to_string(),
+        ));
+    }
+    if autoprefix && to.is_some() {
+        return Err(usage(
+            "'--autoprefix' chooses the unit, so it cannot be used with '--to'".to_string(),
         ));
     }
     let mut named = Vec::new();
@@ -312,6 +329,7 @@ pub fn parse_calc(
         exact,
         json,
         notation,
+        autoprefix,
     };
     Ok((Parsed::Calc(request), configs))
 }
@@ -554,9 +572,11 @@ pub fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
         return Err(usage("'--check' and '-y' only apply to 'update'".into()));
     }
     let is_calc = positional.first() == Some(&"calc");
-    if !is_calc && ValueOptions::calc_only(&opts.vars, opts.to.as_ref(), opts.notation) {
+    if !is_calc
+        && ValueOptions::calc_only(&opts.vars, opts.to.as_ref(), opts.notation, opts.autoprefix)
+    {
         return Err(usage(
-            "'--var', '--to' and '--sci' only apply to 'calc'".into(),
+            "'--var', '--to', '--sci' and '--autoprefix' only apply to 'calc'".into(),
         ));
     }
     if let Some((&"calc", rest)) = positional.split_first() {
@@ -565,7 +585,7 @@ pub fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
             rest,
             misused,
             (exact, want_json),
-            (opts.vars, opts.to, opts.notation),
+            (opts.vars, opts.to, opts.notation, opts.autoprefix),
             configs,
             &usage,
         );

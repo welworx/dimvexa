@@ -2,7 +2,7 @@ dimvexa calc - calculate with units, exact where the mathematics is exact
 
 Usage:
   dimvexa calc [--] EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--exact]
-      [--sci[=N]] [--json | --pretty] [--config NAME_OR_PATH]...
+      [--sci[=N]] [--autoprefix] [--json | --pretty] [--config NAME_OR_PATH]...
 
 EXPRESSION is an equation: numbers, quantities written with their unit
 (10 cm2, 998 kg/m3, 8.314 J/(mol*K), 20 degC), names given with --var, the
@@ -39,6 +39,8 @@ Options:
   --exact          also print the exact fraction of an exact result
   --sci[=N]        write the number as 1.5e3 (all digits, or N significant
                    digits, 1 to 17: --sci=4 is 1.500e3)
+  --autoprefix     choose the SI prefix that puts the number between 1 and
+                   1000: 1500 m is 1.5 km (not with --to)
   --json           machine-readable output (schema dimvexa.calc/1)
   --pretty         --json, indented for reading
   --config NAME_OR_PATH

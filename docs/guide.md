@@ -399,7 +399,13 @@ JSON), so it is never silent. The constants of the configs in effect are names t
   result (`1/3 = 0.3333333333333333… m`), `--json` or `--pretty` print the schema
   `dimvexa.calc/1`, `--config` adds your own units as for `convert`. `--sci` writes the number in
   scientific notation (`1500 m` is `1.5e3 m`; `--sci=4` gives 4 significant digits, 1 to 17:
-  `1.500e3 m`; the `…` is left out when you ask for the digits); the JSON keeps the number a number. An expression that starts
+  `1.500e3 m`; the `…` is left out when you ask for the digits); the JSON keeps the number a number.
+  `--autoprefix` chooses the SI prefix (a power of 1000) that puts the number between 1 and 1000:
+  `1500 m` is `1.5 km`, `0.0025 m` is `2.5 mm`, `2500000 m2` is `2.5 km^2`. It changes only a
+  result that is one unit, perhaps with a power, that takes SI prefixes (`m`, `s`, `Pa`, `W`, `Hz`,
+  `rad`, `L`, `g`); a compound unit (`m/s`), a unit without prefixes (`ft`, `min`), a temperature
+  and the kilogram stay as they are (grams go below it, never `Mg`). The JSON carries the
+  prefixed unit and value. It chooses the unit, so it cannot be used with `--to`. An expression that starts
   like an option is written after `--`, and the options before it (`dimvexa calc --var h="3 m" -- -h`;
   after `--` everything is the expression, so `--var` and `--pretty` there are text).
 

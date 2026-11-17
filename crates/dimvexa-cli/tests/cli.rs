@@ -4293,3 +4293,63 @@ fn calc_sci_writes_the_number_in_scientific_notation() {
     assert_eq!(r.code, 2);
     assert!(r.stderr.contains("only apply to 'calc'"), "{}", r.stderr);
 }
+
+/// `--autoprefix` picks the SI prefix (a power of 1000) that puts the number between 1 and 1000.
+#[test]
+fn calc_autoprefix_chooses_the_si_prefix() {
+    for (expr, text) in [
+        ("1500 m", "1.5 km\n"),
+        ("0.0025 m", "2.5 mm\n"),
+        ("-1500 m", "-1.5 km\n"),
+        ("2500000 m2", "2.5 km^2\n"),
+        ("2500 m2", "2500 m^2\n"),
+        ("1e-9 s", "1 ns\n"),
+        ("1e9 Pa", "1 GPa\n"),
+        ("2000 kPa", "2 MPa\n"),
+        ("1500 W", "1.5 kW\n"),
+        ("2e9 Hz", "2 GHz\n"),
+        ("0.001 rad", "1 mrad\n"),
+        ("0.5 L", "500 mL\n"),
+        ("1500 mg", "1.5 g\n"),
+        ("0.0015 kg", "1.5 g\n"),
+        ("1 m / 3", "333.3333333333333… mm\n"),
+        ("0 m", "0 m\n"),
+        // unchanged: compound units, units without prefixes, temperatures, the kilogram
+        ("3 m/s", "3 m/s\n"),
+        ("5000 ft", "5000 ft\n"),
+        ("5 min", "5 min\n"),
+        ("20 degC", "20 degC\n"),
+        ("300 K", "300 K\n"),
+        ("1500 kg", "1500 kg\n"),
+        ("1500 g", "1.5 kg\n"),
+    ] {
+        let r = calc(&[expr, "--autoprefix"]);
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, text),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+    // with --sci, and the JSON carries the prefixed unit and value
+    assert_eq!(
+        calc(&["1500 m", "--autoprefix", "--sci"]).stdout,
+        "1.5e0 km\n"
+    );
+    let v = json::parse(&calc(&["1500 m", "--autoprefix", "--json"]).stdout).unwrap();
+    let result = v.get("result").unwrap();
+    assert_eq!(result.get("unit").unwrap().as_str(), "km");
+    assert_eq!(result.get("value").unwrap(), &json::V::Num(1.5));
+    // --autoprefix chooses the unit, so --to is a usage error; only calc takes it
+    let r = calc(&["1500 m", "--autoprefix", "--to", "cm"]);
+    assert_eq!(r.code, 2);
+    assert!(
+        r.stderr.contains("cannot be used with '--to'"),
+        "{}",
+        r.stderr
+    );
+    assert_eq!(
+        dimvexa(&["convert", "1", "m", "cm", "--autoprefix"]).code,
+        2
+    );
+}

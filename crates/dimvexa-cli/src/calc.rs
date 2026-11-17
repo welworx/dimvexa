@@ -29,6 +29,8 @@ pub struct CalcRequest {
     pub json: bool,
     /// `--sci`: how the number is written.
     pub notation: Notation,
+    /// `--autoprefix`: the SI prefix that puts the number between 1 and 1000 (`1.5 km`).
+    pub autoprefix: bool,
 }
 
 /// How the number of a text result is written.
@@ -58,6 +60,11 @@ fn evaluate(req: &CalcRequest, loaded: &Loaded) -> Result<(Report, Vec<String>),
         number = formula
             .to_unit(&number, unit)
             .map_err(|e| (e, format!("--to {unit}: ")))?;
+    }
+    if req.autoprefix {
+        number = formula
+            .autoprefix(&number)
+            .map_err(|e| (e, "--autoprefix: ".to_string()))?;
     }
     let report = Report::new(&number).map_err(|e| (e, String::new()))?;
     Ok((report, formula.warnings().to_vec()))

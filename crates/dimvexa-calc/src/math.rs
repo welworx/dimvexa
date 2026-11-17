@@ -820,6 +820,117 @@ impl<'r> Math<'r> {
         }
     }
 
+    // ----- SI prefixes ------------------------------------------------------------------------
+
+    /// The same value with the SI prefix (a power of 1000) that puts the number between 1 and
+    /// 1000: `1500 m` is `1.5 km`, `0.0025 m` is `2.5 mm`, `2500000 m^2` is `2.5 km^2`. Exact
+    /// stays exact. Only a result that is one unit, perhaps with a power, whose unit takes SI
+    /// prefixes is changed; a compound unit (`m/s`), a unit that takes none (`ft`, `degC`) and a
+    /// mass in `kg` (the SI base unit: grams go below it, never `Mg`) stay as they are.
+    ///
+    /// # Errors
+    ///
+    /// The errors of [`to_unit`](Self::to_unit).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dimvexa_calc::{Math, Number};
+    /// # let reg = dimvexa::registry()?;
+    /// # let math = Math::new(&reg);
+    /// let q = |s: &str| reg.quantity(s).map(Number::from);
+    /// assert_eq!(math.autoprefix(&q("1500 m")?)?.to_string(), "1.5 km");
+    /// assert_eq!(math.autoprefix(&q("0.0025 m")?)?.to_string(), "2.5 mm");
+    /// assert_eq!(math.autoprefix(&q("3 m/s")?)?.to_string(), "3 m/s");
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn autoprefix(&self, a: &Number) -> Result<Number> {
+        use dimvexa_core::{Expr, PrefixFamily, SI_PREFIXES};
+        let unit = a.unit();
+        let (symbol, power) = match unit.expr() {
+            Expr::Unit(s) => (s.as_str(), 1),
+            Expr::Pow(base, n) if *n >= 1 => match &**base {
+                Expr::Unit(s) => (s.as_str(), *n),
+                _ => return Ok(a.clone()),
+            },
+            _ => return Ok(a.clone()),
+        };
+        // temperatures (a scale, a point) keep their unit; angles and cycles take prefixes (mrad, GHz)
+        if !matches!(unit.kind(), Kind::Plain | Kind::Angle | Kind::Cycle)
+            || !unit.offset().is_zero()
+        {
+            return Ok(a.clone());
+        }
+        let reg = self.reg();
+        let takes_si = |u: &dimvexa_core::Unit| u.prefixes().accepts(PrefixFamily::Si);
+        // the unit without its prefix: `km` is `m`; a symbol that is a unit of its own (`ft`, not
+        // femto-tonne) is never split
+        let base = reg.get(symbol).map_or_else(
+            || {
+                SI_PREFIXES.iter().find_map(|p| {
+                    symbol
+                        .strip_prefix(p.symbol)
+                        .filter(|rest| !rest.is_empty() && reg.get(rest).is_some_and(takes_si))
+                })
+            },
+            |u| takes_si(u).then_some(symbol),
+        );
+        let Some(base) = base else {
+            return Ok(a.clone());
+        };
+        let raised = |prefix: &str| {
+            if power == 1 {
+                format!("{prefix}{base}")
+            } else {
+                format!("{prefix}{base}^{power}")
+            }
+        };
+        let in_base = self.to_unit(a, &raised(""))?;
+        let negative_zero = |n: &Number| match n {
+            Number::Exact(q) => q.value().is_zero(),
+            Number::Approx(x) => is_zero_f64(x.value),
+        };
+        if negative_zero(&in_base) {
+            return Ok(a.clone());
+        }
+        // the largest prefix (a power of 1000, no more than kilo for grams) whose power of ten the
+        // magnitude reaches; below all of them, the smallest
+        let mut choices: Vec<(&str, i32)> = SI_PREFIXES
+            .iter()
+            .filter(|p| {
+                p.exp % 3 == 0
+                    && !(base == "g" && p.exp > 3)
+                    && p.symbol != "\u{3bc}"
+                    && p.symbol != "u"
+            })
+            .map(|p| (p.symbol, p.exp))
+            .collect();
+        choices.push(("", 0));
+        choices.sort_by_key(|&(_, exp)| std::cmp::Reverse(exp));
+        let reaches = |exp: i32| -> Result<bool> {
+            let tens = exp.checked_mul(power).ok_or_else(|| overflow("prefix"))?;
+            Ok(match &in_base {
+                Number::Exact(q) => {
+                    let magnitude = if q.value().num() < 0 {
+                        q.value().checked_mul(Ratio::from_int(-1))?
+                    } else {
+                        q.value()
+                    };
+                    magnitude.checked_cmp(Ratio::ONE.with_exponents(tens, 0))? != Ordering::Less
+                }
+                Number::Approx(x) => x.value.abs() >= 10_f64.powi(tens),
+            })
+        };
+        let mut chosen = choices.last().map_or("", |&(symbol, _)| symbol);
+        for &(symbol, exp) in &choices {
+            if reaches(exp)? {
+                chosen = symbol;
+                break;
+            }
+        }
+        self.to_unit(a, &raised(chosen))
+    }
+
     // ----- hyperbolic functions --------------------------------------------------------------
 
     /// Hyperbolic sine of a dimensionless value. Exact only at 0.

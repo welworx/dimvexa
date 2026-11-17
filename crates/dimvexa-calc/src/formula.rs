@@ -1129,6 +1129,15 @@ impl<'r> Formula<'r> {
         self.math.to_unit(n, unit)
     }
 
+    /// `n` with the SI prefix that puts its number between 1 and 1000 (`1500 m` is `1.5 km`).
+    ///
+    /// # Errors
+    ///
+    /// The error of [`Math::autoprefix`].
+    pub fn autoprefix(&self, n: &Number) -> Result<Number> {
+        self.math.autoprefix(n)
+    }
+
     /// The value of `n` in `unit`, rounded once (exact) or converted exactly (approximate).
     ///
     /// # Errors
