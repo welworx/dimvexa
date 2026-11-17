@@ -213,7 +213,7 @@ fn every_error_code_has_a_cli_test() {
         (&["calc", "1 m + 1 s"], "dimension_mismatch", 1),
         (&["calc", "1 +"], "parse_error", 1),
         (&["calc", "(1 ly)^3"], "overflow", 1),
-        (&["calc", "floor(1.5 m)"], "refused", 1),
+        (&["calc", "log(100)"], "refused", 1),
         (&["calc"], "usage", 2),
     ];
     for (args, code, exit) in cases {
@@ -3442,7 +3442,6 @@ fn calc_failures_use_the_library_codes_and_exit_1() {
         ("(1 ly)^3", "overflow", "overflow"),
         ("1 + pi", "unrepresentable", "pi"),
         ("1 m / 0 s", "division_by_zero", "division by zero"),
-        ("floor(1.5 m)", "refused", "'floor' is not implemented"),
         ("log(100)", "refused", "ambiguous"),
         ("sqrt(4 m)", "refused", "KL-32"),
         ("abs(-5 degC)", "kind_mismatch", "delta_degC"),
@@ -4225,4 +4224,48 @@ fn calc_small_leftovers() {
         dimvexa(&["convert", "4.186", "kJ/(kg*degC)", "J/(kg*K)"]).stdout,
         "4186 J/(kg.K)\n"
     );
+}
+
+/// `--sci` writes the number as `1.5e3`; `--sci=N` gives N significant digits; the unit, the
+/// `≈` and the exact fraction stay; only calc takes it.
+#[test]
+fn calc_sci_writes_the_number_in_scientific_notation() {
+    for (args, text) in [
+        (vec!["1500 m", "--sci"], "1.5e3 m\n"),
+        (vec!["1500 m", "--sci=3"], "1.50e3 m\n"),
+        (vec!["1 m / 3", "--sci"], "3.333333333333333e-1… m\n"),
+        (vec!["1 m / 3", "--sci=4"], "3.333e-1 m\n"),
+        (vec!["1 m / 3", "--sci=4", "--exact"], "1/3 = 3.333e-1 m\n"),
+        (vec!["sqrt(2 m2)", "--sci=5"], "≈ 1.4142e0 m\n"),
+        (vec!["3 m / 2 m", "--sci"], "1.5e0\n"),
+        (vec!["1e300 m * 1e300", "--sci"], "1e600 m\n"),
+        (vec!["2.5e-400", "--sci"], "2.5e-400\n"),
+        (vec!["-0.00025 m", "--sci"], "-2.5e-4 m\n"),
+    ] {
+        let r = calc(&args);
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, text),
+            "{args:?}: {}",
+            r.stderr
+        );
+    }
+    // JSON keeps the number as a number
+    let v = json::parse(&calc(&["1500 m", "--sci", "--json"]).stdout).unwrap();
+    assert_eq!(
+        v.get("result").unwrap().get("value").unwrap(),
+        &json::V::Num(1500.0)
+    );
+    for bad in ["--sci=0", "--sci=18", "--sci=x", "--sci="] {
+        let r = calc(&["1 m", bad]);
+        assert_eq!(r.code, 2, "{bad}");
+        assert!(
+            r.stderr.contains("'--sci=N' takes 1 to 17"),
+            "{bad}: {}",
+            r.stderr
+        );
+    }
+    let r = dimvexa(&["convert", "1", "m", "cm", "--sci"]);
+    assert_eq!(r.code, 2);
+    assert!(r.stderr.contains("only apply to 'calc'"), "{}", r.stderr);
 }

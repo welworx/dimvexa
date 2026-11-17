@@ -27,6 +27,17 @@ pub struct CalcRequest {
     pub exact: bool,
     /// `--json`.
     pub json: bool,
+    /// `--sci`: how the number is written.
+    pub notation: Notation,
+}
+
+/// How the number of a text result is written.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Notation {
+    /// `1500`, `0.0025`.
+    Plain,
+    /// `1.5e3`, `2.5e-3`: all digits that read back, or that many significant digits.
+    Scientific(Option<usize>),
 }
 
 /// An error and what to say before its message (`--var dp: `).
@@ -52,12 +63,18 @@ fn evaluate(req: &CalcRequest, loaded: &Loaded) -> Result<(Report, Vec<String>),
     Ok((report, formula.warnings().to_vec()))
 }
 
-fn render_text(r: &Report, exact: bool, color: bool) -> String {
-    let value = r.number_text(exact);
+fn render_text(r: &Report, exact: bool, notation: Notation, color: bool) -> String {
+    let (value, text) = match notation {
+        Notation::Plain => (r.number_text(exact), r.text(exact)),
+        Notation::Scientific(digits) => (
+            r.number_text_scientific(exact, digits),
+            r.text_scientific(exact, digits),
+        ),
+    };
     match (color, r.unit.is_empty()) {
         (true, true) => format!("{BOLD_GREEN}{value}{RESET}"),
         (true, false) => format!("{BOLD_GREEN}{value}{RESET} {CYAN}{}{RESET}", r.unit),
-        (false, _) => r.text(exact),
+        (false, _) => text,
     }
 }
 
@@ -140,7 +157,7 @@ pub fn run_calc(
                 for w in &formula_warnings {
                     let _ = writeln!(err, "warning: {w}");
                 }
-                render_text(&c, req.exact, color)
+                render_text(&c, req.exact, req.notation, color)
             };
             let _ = writeln!(out, "{text}");
             0

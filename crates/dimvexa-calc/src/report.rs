@@ -110,6 +110,43 @@ impl Report {
         }
     }
 
+    /// The number in scientific notation (`1.5e3`): all the digits that read back to the same
+    /// `f64`, or `digits` significant digits when given (`Some(4)` is `1.500e3`). The `…` of a
+    /// rounded exact value is left out when `digits` is given, because the rounding is asked
+    /// for; `≈` stays.
+    #[must_use]
+    pub fn number_text_scientific(&self, show_fraction: bool, digits: Option<usize>) -> String {
+        let body = match (self.value, &self.whole) {
+            (Some(v), _) => digits.map_or_else(
+                || format!("{v:e}"),
+                |n| format!("{v:.*e}", n.saturating_sub(1)),
+            ),
+            (None, Some(w)) => scientific_from_text(w),
+            (None, None) => String::new(),
+        };
+        let more = if self.rounded && digits.is_none() {
+            "…"
+        } else {
+            ""
+        };
+        match (&self.fraction, &self.whole) {
+            (Some(f), None) if show_fraction => format!("{f} = {body}{more}"),
+            (Some(_), _) => format!("{body}{more}"),
+            (None, _) => format!("≈ {body}"),
+        }
+    }
+
+    /// [`text`](Self::text) with the number in scientific notation.
+    #[must_use]
+    pub fn text_scientific(&self, show_fraction: bool, digits: Option<usize>) -> String {
+        let number = self.number_text_scientific(show_fraction, digits);
+        if self.unit.is_empty() {
+            number
+        } else {
+            format!("{number} {}", self.unit)
+        }
+    }
+
     /// What `dimvexa calc` prints: [`number_text`](Self::number_text), a space and the unit
     /// (nothing after the number for a plain number).
     #[must_use]
@@ -179,6 +216,22 @@ fn simplified(expr: &Expr) -> Option<String> {
         1 => format!("{numerator}/{}", bottom.join(".")),
         _ => format!("{numerator}/({})", bottom.join(".")),
     })
+}
+
+/// `25e-401` or `1e600` (digits and a power of ten) as `2.5e-400`, or `1e600` as it is.
+fn scientific_from_text(text: &str) -> String {
+    let (digits, ten) = text
+        .split_once('e')
+        .map_or((text, 0_i64), |(d, t)| (d, t.parse::<i64>().unwrap_or(0)));
+    let (sign, digits) = digits
+        .strip_prefix('-')
+        .map_or(("", digits), |rest| ("-", rest));
+    let exponent = ten.saturating_add(i64::try_from(digits.len()).unwrap_or(0).saturating_sub(1));
+    let mantissa = match digits.split_at_checked(1) {
+        Some((first, rest)) if !rest.is_empty() => format!("{first}.{rest}"),
+        _ => digits.to_owned(),
+    };
+    format!("{sign}{mantissa}e{exponent}")
 }
 
 /// Whether the shortest text of `v` is exactly `r` (`0.3` for 3/10, not `0.333…` for 1/3).
@@ -317,5 +370,35 @@ mod tests {
         assert_eq!(unit("m.m^-1").as_deref(), Some(""));
         assert_eq!(unit("1/(s.s)").as_deref(), Some("1/s^2"));
         assert_eq!(unit("(m.m).(m/(kg.kg))").as_deref(), Some("m^3/kg^2"));
+    }
+
+    #[test]
+    fn scientific_notation_with_all_digits_or_a_given_number() {
+        let q = |text: &str| {
+            let reg = dimvexa::registry().unwrap();
+            Report::new(&crate::Formula::new(&reg).eval(text).unwrap()).unwrap()
+        };
+        let r = q("1500 m");
+        assert_eq!(r.text_scientific(false, None), "1.5e3 m");
+        assert_eq!(r.text_scientific(false, Some(4)), "1.500e3 m");
+        assert_eq!(r.text_scientific(false, Some(1)), "2e3 m");
+        let third = q("1 m / 3");
+        assert_eq!(
+            third.text_scientific(false, None),
+            "3.333333333333333e-1… m"
+        );
+        assert_eq!(third.text_scientific(false, Some(3)), "3.33e-1 m");
+        assert_eq!(third.text_scientific(true, Some(3)), "1/3 = 3.33e-1 m");
+        assert_eq!(q("0 m").text_scientific(false, None), "0e0 m");
+        assert_eq!(q("-0.00025 m").text_scientific(false, None), "-2.5e-4 m");
+        let huge = q("1e300 m * 1e300");
+        assert_eq!(huge.text_scientific(false, None), "1e600 m");
+        assert_eq!(q("2.5e-400").text_scientific(false, None), "2.5e-400");
+        assert_eq!(q("-25e-401").text_scientific(false, None), "-2.5e-400");
+        assert_eq!(
+            q("sqrt(2 m2)").text_scientific(false, Some(5)),
+            "≈ 1.4142e0 m"
+        );
+        assert_eq!(q("3").text_scientific(false, None), "3e0");
     }
 }

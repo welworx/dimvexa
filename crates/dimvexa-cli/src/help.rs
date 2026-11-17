@@ -7,7 +7,7 @@
 pub const USAGE: &str = "\
 Usage:
   dimvexa [convert] VALUE FROM TO [OPTIONS]
-  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--exact] [--json]
+  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--sci] [--json]
   dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]
@@ -157,41 +157,43 @@ dimvexa calc - calculate with units, exact where the mathematics is exact
 
 Usage:
   dimvexa calc [--] EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--exact]
-      [--json | --pretty] [--config NAME_OR_PATH]...
+      [--sci[=N]] [--json | --pretty] [--config NAME_OR_PATH]...
 
 EXPRESSION is an equation: numbers, quantities written with their unit
 (10 cm2, 998 kg/m3, 8.314 J/(mol*K), 20 degC), names given with --var, the
 constant pi, + - * / and parentheses, a power with a fraction as exponent
 (x^0.5, y^(1/2) and sqrt(x) agree; R^(2/3)) and the functions sqrt, cbrt,
-abs, hypot, min, max, ln, exp, log10 (lg), log2 (lb), log(x, base), sin,
-cos, tan, asin, acos, atan, atan2(y, x), sinh, cosh, tanh, asinh, acosh,
-atanh, x.to(UNIT) (convert inside an equation: 20 degC.to(K)); the names
-pi and the constants of 'dimvexa constants' and of the --config files
-(speed_of_light, boltzmann_constant, molar_gas_constant, ...; --var may
-replace one, with a warning). Exponents may be names or sums (x^n, 2^(1+1));
-2 pi r and m² or N·m are read. Quote it, and put a space on both sides of an
-operator between quantities (write -- before an expression that starts like
-an option, such as -h): a unit is the text after a number up to the next
-space, so 50 kPa / 998 kg/m3 is a quotient.
+abs, hypot, pow, floor, ceil, round, min, max, ln, exp, log10 (lg), log2
+(lb), log(x, base), sin, cos, tan, asin, acos, atan, atan2(y, x), sinh, cosh,
+tanh, asinh, acosh, atanh, x.to(UNIT) (convert inside an equation:
+20 degC.to(K)); the names pi and the constants of 'dimvexa constants' and of
+the --config files (speed_of_light, boltzmann_constant, molar_gas_constant,
+...; --var may replace one, with a warning). Exponents may be names or sums
+(x^n, 2^(1+1)); 2 pi r and m² or N·m are read. Quote it, and put a space on
+both sides of an operator between quantities (write -- before an expression
+that starts like an option, such as -h): a unit is the text after a number up
+to the next space, so 50 kPa / 998 kg/m3 is a quotient.
 
 The result is exact when the mathematics is exact (sqrt(9 m2) is 3 m,
 sin(30 deg) is 0.5) and starts with \u{2248} when it is not: an approximate f64,
 and so is everything computed from it. Without --to the unit is the one
 the arithmetic gave. A temperature point (20 degC) cannot be multiplied;
-pow, floor, round and other functions are not implemented, and log(x)
-alone is ambiguous: write ln, lg or log10, lb or log2, or log(x, base).
+log(x) alone is ambiguous: write ln, lg or log10, lb or log2, or
+log(x, base).
 
 Examples:
   dimvexa calc \"2 kip/ft * (20 ft)^2 / 8\" --to kN*m
   dimvexa calc \"sqrt(2 * 50 kPa / 998 kg/m3)\" --to m/s
   dimvexa calc \"sqrt(2 * dp / rho)\" --var dp=\"50 kPa\" --var rho=998kg/m3
   dimvexa calc \"100 kg * 1 g_n * sin(30 deg)\" --to N
-  dimvexa calc \"20 degC + 5 K\" --json
+  dimvexa calc \"planck_constant * speed_of_light / 500 nm\" --to J --sci=4
 
 Options:
   --var NAME=VALUE the value of a name, a quantity; repeatable
   --to UNIT        show the result in UNIT (an exact result stays exact)
   --exact          also print the exact fraction of an exact result
+  --sci[=N]        write the number as 1.5e3 (all digits, or N significant
+                   digits, 1 to 17: --sci=4 is 1.500e3)
   --json           machine-readable output (schema dimvexa.calc/1)
   --pretty         --json, indented for reading
   --config NAME_OR_PATH

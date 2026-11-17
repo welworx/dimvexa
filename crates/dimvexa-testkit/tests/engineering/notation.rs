@@ -12,45 +12,60 @@ fn b2_power_zero_is_dimensionless() {
     assert_eq!(one.to_string(), "1 1");
 }
 
-/// A well-known function that is not implemented is a `refused` error that says so, with the
-/// way to write it where there is one; it is never a wrong number or a syntax error.
+/// The old function form of a conversion is refused with the way to write it now; it is never a
+/// wrong number or a syntax error. Every other well-known function is implemented.
 #[test]
-fn functions_that_are_not_implemented_say_so() {
+fn the_old_function_form_of_a_conversion_says_how_to_write_it() {
     let reg = registry().unwrap();
-    let f = Formula::new(&reg)
-        .var("x", "0.5")
-        .unwrap()
-        .var("y", "2")
-        .unwrap();
-    for name in ["floor", "round"] {
-        let err = f.eval(&format!("{name}(x)")).unwrap_err();
-        assert_eq!(err.code(), "refused", "{name}");
-        let msg = err.to_string();
-        assert!(
-            msg.contains(&format!("'{name}' is not implemented")),
-            "{msg}"
-        );
-        assert!(err.suggestions().contains(&"sqrt".to_owned()), "{name}");
-    }
-    // more than one argument: the name decides, not the comma
-    for call in ["pow(x, y)", "floor("] {
+    let f = Formula::new(&reg).var("x", "0.5").unwrap();
+    for call in ["to(x, K)", "to(20 degC, K)", "to("] {
         let err = f.eval(call).unwrap_err();
         assert_eq!(err.code(), "refused", "{call}");
-        assert!(
-            err.to_string().contains("is not implemented"),
-            "{call}: {err}"
-        );
+        let msg = err.to_string();
+        assert!(msg.contains("'to' is not implemented"), "{call}: {msg}");
+        assert!(msg.contains("write x.to(UNIT)"), "{call}: {msg}");
     }
 }
 
+/// `pow`, `floor`, `ceil` and `round`: `pow` is `^`, the others keep the unit.
 #[test]
-fn a_function_that_is_not_implemented_says_how_to_write_it() {
+fn pow_floor_ceil_and_round() {
     let reg = registry().unwrap();
     let f = Formula::new(&reg);
-    let hint = |call: &str| f.eval(call).unwrap_err().to_string();
-    assert!(hint("pow(2, 3)").contains("write x^p"));
-    // no way to write it from the implemented ones: no hint
-    assert!(!hint("floor(1.5)").contains("write"));
+    for (text, want) in [
+        ("pow(2, 10)", "1024 1"),
+        ("pow(9 m2, 0.5)", "3 m"),
+        ("pow(2 m, 3)", "8 m^3"),
+        ("pow(8, 1/3)", "2 1"),
+        ("floor(7.8 m)", "7 m"),
+        ("floor(-7.2 m)", "-8 m"),
+        ("ceil(7.2 m)", "8 m"),
+        ("ceil(-7.2 m)", "-7 m"),
+        ("round(2.5 m)", "3 m"),
+        ("round(-2.5 m)", "-3 m"),
+        ("round(2.4 m)", "2 m"),
+        ("round(20.7 degC)", "21 degC"),
+        ("floor(2 pi)", "6 1"),
+        ("round(pi * 1 rad)", "3 rad"),
+        ("floor(1e-400)", "0 1"),
+        ("ceil(1e-400)", "1 1"),
+        ("floor(-1e-400)", "-1 1"),
+    ] {
+        assert_eq!(f.eval(text).unwrap().to_string(), want, "{text}");
+    }
+    // an approximate value stays approximate, and `pow` is as strict as `^`
+    assert!(!f.eval("floor(sqrt(2) * 10 m)").unwrap().is_exact());
+    for text in [
+        "pow(2, sqrt(2))",
+        "pow(2 m, 1 s)",
+        "pow(2)",
+        "floor(1, 2)",
+        "round()",
+    ] {
+        assert!(f.eval(text).is_err(), "{text}");
+    }
+    // a value that has pi and is too close to a whole number to tell is refused
+    assert_eq!(f.eval("floor(0 pi + 1)").unwrap().to_string(), "1 1");
 }
 
 #[test]

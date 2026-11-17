@@ -381,18 +381,24 @@ JSON), so it is never silent. The constants of the configs in effect are names t
   arguments (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.
 * **Notation:** `m²`, `m³`, `s⁻¹`, `·`, `×`, `÷` and the minus sign `−` are read (`10 m² · 3 m`,
   `1 kg·m/s²`; a space before the superscript is ignored, `2 m ²` is `2 m²`); error positions count the characters after this rewrite.
-* **Functions:** `sqrt`, `cbrt`, `abs`, `hypot`, `min`, `max`, `ln`, `exp`, `log10` (`lg`), `log2`
+* **Functions:** `sqrt`, `cbrt`, `abs`, `hypot`, `pow`, `floor`, `ceil`, `round`, `min`, `max`, `ln`, `exp`, `log10` (`lg`), `log2`
   (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`,
   `tanh`, `asinh`, `acosh`, `atanh`. The inverse functions return an angle in `rad` (`atan2(1 m, 1 m)
   --to deg` is `45 deg`); they are exact at the special values (`atan(1)` is exactly pi/4,
   `acos(0.5)` is pi/3, `tan(45 deg)` is `1`), and otherwise approximate.
+  `pow(x, y)` is `x^y` (an exact exponent without a unit). `floor`, `ceil` and `round` give a
+  whole number in the unit of the argument (`floor(7.8 m)` is `7 m`, `round(2.5 m)` is `3 m`,
+  halves away from zero; `round(-2.5 m)` is `-3 m`); an approximate argument gives an approximate
+  whole number, and a value with `pi` that is too close to a whole number to tell is refused.
   `min` and `max` need one dimension (`4 m` and `4 km` work, `4 m` and `3 L` do not) and return
   the winner in its own unit, exact. `abs` of a temperature point is refused. `sin` and `cos`
   take one angle unit (`30 deg`, `0.5 rad`, `pi/6 * 1 rad`), not a bare number and not
   `deg*deg` or `1/rad`.
 * **Options:** `--to UNIT` shows the result in a unit, `--exact` adds the fraction of an exact
   result (`1/3 = 0.3333333333333333… m`), `--json` or `--pretty` print the schema
-  `dimvexa.calc/1`, `--config` adds your own units as for `convert`. An expression that starts
+  `dimvexa.calc/1`, `--config` adds your own units as for `convert`. `--sci` writes the number in
+  scientific notation (`1500 m` is `1.5e3 m`; `--sci=4` gives 4 significant digits, 1 to 17:
+  `1.500e3 m`; the `…` is left out when you ask for the digits); the JSON keeps the number a number. An expression that starts
   like an option is written after `--`, and the options before it (`dimvexa calc --var h="3 m" -- -h`;
   after `--` everything is the expression, so `--var` and `--pretty` there are text).
 
@@ -429,8 +435,7 @@ answered with an approximate number.
   A root is shown in SI base units.
 * **No error bound (KL-33):** an approximate result is the `f64` nearest to the computed value;
   how far that is from the true value is not stated.
-* **Not implemented** (they fail with `refused`, "'floor' is not implemented"): `pow`,
-  `floor`, `round`. `log(x)` alone is refused as ambiguous: write
+* **Ambiguous:** `log(x)` alone is refused (natural or decimal?): write
   `ln`, `lg` or `log10`, `lb` or `log2`, or `log(x, base)`.
 * **Result units are merged and cancelled, never renamed:** `1 m * 1 m` is `1 m^2`,
   `10 kWh/100km * 250 km` is `25 kWh` and `8.314 J/(mol*K) * 300 K * 1 mol / 1 m3` is

@@ -3,7 +3,7 @@
 // Private module: `pub` here is crate-visible, and the two visibility lints disagree about it.
 #![allow(unreachable_pub)]
 
-use crate::calc::CalcRequest;
+use crate::calc::{CalcRequest, Notation};
 
 /// Parsed command line.
 pub struct Args {
@@ -86,23 +86,46 @@ pub struct ValueOptions {
     pub vars: Vec<String>,
     /// `--to UNIT`, for `calc`.
     pub to: Option<String>,
+    /// `--sci` or `--sci=N`, for `calc`.
+    pub notation: Notation,
 }
 
-/// Splits `--config NAME_OR_PATH` (repeatable), `--const NAME_OR_VALUE`, `--var NAME=VALUE`
-/// (repeatable) and `--to UNIT`, also as
-/// `--opt=value`.
+/// `--sci` (all digits) or `--sci=N` (N significant digits, 1 to 17); `None` for any other word.
+fn scientific_option(word: &str) -> Option<Result<Notation, String>> {
+    if word == "--sci" {
+        return Some(Ok(Notation::Scientific(None)));
+    }
+    let digits = word.strip_prefix("--sci=")?;
+    Some(match digits.parse::<usize>() {
+        Ok(n) if (1..=17).contains(&n) => Ok(Notation::Scientific(Some(n))),
+        _ => Err(format!(
+            "'--sci=N' takes 1 to 17 significant digits, for example --sci=4; got '{digits}'"
+        )),
+    })
+}
+
+impl ValueOptions {
+    /// Whether an option that only `calc` takes was given.
+    fn calc_only(vars: &[String], to: Option<&String>, notation: Notation) -> bool {
+        !vars.is_empty() || to.is_some() || notation != Notation::Plain
+    }
+}
+
 /// The words before a lone `--`: after it everything is text (an expression such as `-h`).
 pub fn options_of(args: &[String]) -> &[String] {
     let end = args.iter().position(|a| a == "--").unwrap_or(args.len());
     args.get(..end).unwrap_or(args)
 }
 
+/// Splits `--config NAME_OR_PATH` (repeatable), `--const NAME_OR_VALUE`, `--var NAME=VALUE`
+/// (repeatable) and `--to UNIT`, also as `--opt=value`, and reads `--sci` and `--sci=N`.
 pub fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), UsageError> {
     let mut opts = ValueOptions {
         configs: Vec::new(),
         density: None,
         vars: Vec::new(),
         to: None,
+        notation: Notation::Plain,
     };
     let mut rest = Vec::new();
     let missing = |what: &str| UsageError {
@@ -113,6 +136,13 @@ pub fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), Usa
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
+        if let Some(digits) = scientific_option(a) {
+            opts.notation = digits.map_err(|message| UsageError {
+                message,
+                ..missing("--sci")
+            })?;
+            continue;
+        }
         // `--` ends the options: what follows is text (an expression such as `-h`).
         if a == "--" {
             rest.push(a.clone());
@@ -239,7 +269,7 @@ pub fn parse_calc(
     rest: &[&str],
     misused: bool,
     (exact, json): (bool, bool),
-    (vars, to): (Vec<String>, Option<String>),
+    (vars, to, notation): (Vec<String>, Option<String>, Notation),
     configs: Vec<String>,
     usage: &dyn Fn(String) -> UsageError,
 ) -> Result<(Parsed, Vec<String>), UsageError> {
@@ -281,6 +311,7 @@ pub fn parse_calc(
         to,
         exact,
         json,
+        notation,
     };
     Ok((Parsed::Calc(request), configs))
 }
@@ -513,23 +544,20 @@ pub fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
         return Ok((parsed, configs));
     }
     if let Some((&"update", rest)) = positional.split_first() {
-        check_update_args(
+        let misused = (
             !rest.is_empty() || exact || want_json || want_groups,
             !configs.is_empty() || opts.density.is_some(),
-            schema,
-        )?;
-        let update = Parsed::Update {
-            check: want_check,
-            yes: want_yes,
-        };
-        return Ok((update, configs));
+        );
+        return parse_update(misused, schema, (want_check, want_yes), configs);
     }
     if want_check || want_yes {
         return Err(usage("'--check' and '-y' only apply to 'update'".into()));
     }
     let is_calc = positional.first() == Some(&"calc");
-    if !is_calc && (!opts.vars.is_empty() || opts.to.is_some()) {
-        return Err(usage("'--var' and '--to' only apply to 'calc'".into()));
+    if !is_calc && ValueOptions::calc_only(&opts.vars, opts.to.as_ref(), opts.notation) {
+        return Err(usage(
+            "'--var', '--to' and '--sci' only apply to 'calc'".into(),
+        ));
     }
     if let Some((&"calc", rest)) = positional.split_first() {
         let misused = want_groups || opts.density.is_some();
@@ -537,7 +565,7 @@ pub fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
             rest,
             misused,
             (exact, want_json),
-            (opts.vars, opts.to),
+            (opts.vars, opts.to, opts.notation),
             configs,
             &usage,
         );
@@ -576,6 +604,17 @@ pub fn parse_args(all: &[String]) -> Result<(Parsed, Vec<String>), UsageError> {
         configs,
         &usage,
     )
+}
+
+/// `dimvexa update [--check] [-y]`.
+fn parse_update(
+    (bad_flag, bad_option): (bool, bool),
+    schema: &'static str,
+    (check, yes): (bool, bool),
+    configs: Vec<String>,
+) -> Result<(Parsed, Vec<String>), UsageError> {
+    check_update_args(bad_flag, bad_option, schema)?;
+    Ok((Parsed::Update { check, yes }, configs))
 }
 
 /// `[convert] VALUE FROM TO`.

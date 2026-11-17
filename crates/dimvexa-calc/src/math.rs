@@ -762,6 +762,64 @@ impl<'r> Math<'r> {
         })
     }
 
+    // ----- whole numbers ---------------------------------------------------------------------
+
+    /// The largest whole number not above `a`, in the unit of `a` (`floor(7.8 m)` is `7 m`).
+    /// Exact for an exact number; an irrational exact value (with pi) is decided from its `f64`
+    /// and refused when that is too close to a whole number to tell.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Refused`] when the value is within rounding distance of a whole number and has
+    /// pi, [`Error::Overflow`] for a fraction that needs more digits.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dimvexa_calc::{Math, Number};
+    /// # let reg = dimvexa::registry()?;
+    /// # let math = Math::new(&reg);
+    /// let q = |s: &str| reg.quantity(s).map(Number::from);
+    /// assert_eq!(math.floor(&q("7.8 m")?)?.to_string(), "7 m");
+    /// assert_eq!(math.floor(&q("-7.2 m")?)?.to_string(), "-8 m");
+    /// # Ok::<(), dimvexa_core::Error>(())
+    /// ```
+    pub fn floor(&self, a: &Number) -> Result<Number> {
+        Self::whole(a, Whole::Floor)
+    }
+
+    /// The smallest whole number not below `a`, in the unit of `a`.
+    ///
+    /// # Errors
+    ///
+    /// As [`floor`](Self::floor).
+    pub fn ceil(&self, a: &Number) -> Result<Number> {
+        Self::whole(a, Whole::Ceil)
+    }
+
+    /// The nearest whole number, halves away from zero (`round(2.5 m)` is `3 m`,
+    /// `round(-2.5 m)` is `-3 m`), in the unit of `a`.
+    ///
+    /// # Errors
+    ///
+    /// As [`floor`](Self::floor).
+    pub fn round(&self, a: &Number) -> Result<Number> {
+        Self::whole(a, Whole::Round)
+    }
+
+    fn whole(a: &Number, how: Whole) -> Result<Number> {
+        match a {
+            Number::Exact(q) => Ok(Number::Exact(Quantity::new(
+                whole_of(q.value(), how)?,
+                q.unit().clone(),
+            ))),
+            Number::Approx(x) => Ok(Number::Approx(Approx {
+                value: how.of_f64(x.value),
+                unit: x.unit.clone(),
+            })),
+        }
+    }
+
     // ----- hyperbolic functions --------------------------------------------------------------
 
     /// Hyperbolic sine of a dimensionless value. Exact only at 0.
@@ -1347,6 +1405,88 @@ impl<'r> Math<'r> {
         };
         unity(value)
     }
+}
+
+#[derive(Clone, Copy)]
+enum Whole {
+    Floor,
+    Ceil,
+    Round,
+}
+
+impl Whole {
+    fn of_f64(self, x: f64) -> f64 {
+        match self {
+            Self::Floor => x.floor(),
+            Self::Ceil => x.ceil(),
+            Self::Round => x.round(),
+        }
+    }
+}
+
+/// The whole number `how` of the exact value `r`.
+fn whole_of(r: Ratio, how: Whole) -> Result<Ratio> {
+    if r.pi_exp() != 0 {
+        // irrational: decided from the f64, and refused near a boundary of the rounding
+        let x = r.to_f64()?;
+        let boundary = match how {
+            Whole::Round => (x - x.floor() - 0.5).abs(),
+            Whole::Floor | Whole::Ceil => (x - x.round()).abs(),
+        };
+        if x.abs() >= 1e15 || boundary <= 1e-9_f64.max(x.abs() * 1e-12) {
+            return Err(refused(
+                "the value has pi and is too close to a whole number (or too large) to tell \
+                 which one it rounds to",
+            ));
+        }
+        // |x| < 1e15 and not a boundary: the f64 result is a whole number that fits
+        let whole: i128 = format!("{:.0}", how.of_f64(x))
+            .parse()
+            .map_err(|_| overflow("whole number"))?;
+        return Ok(Ratio::from_int(whole));
+    }
+    let Ok(folded) = r.folded() else {
+        // beyond the digits: a whole value stays as it is, a tiny one is 0, 1 or -1 by sign
+        if r.den() == 1 && r.ten_exp() >= 0 {
+            return Ok(r);
+        }
+        if r.ten_exp() < 0 {
+            let positive = r.num() > 0;
+            let whole = match (how, positive) {
+                (Whole::Floor, false) => -1,
+                (Whole::Ceil, true) => 1,
+                _ => 0,
+            };
+            return Ok(Ratio::from_int(whole));
+        }
+        return Err(overflow("whole number"));
+    };
+    let (n, d) = (folded.num(), folded.den());
+    let err = || overflow("whole number");
+    let value = match how {
+        Whole::Floor => n.div_euclid(d),
+        Whole::Ceil => n
+            .checked_neg()
+            .ok_or_else(err)?
+            .div_euclid(d)
+            .checked_neg()
+            .ok_or_else(err)?,
+        Whole::Round => {
+            let magnitude = n.checked_abs().ok_or_else(err)?;
+            let doubled = magnitude
+                .checked_mul(2)
+                .ok_or_else(err)?
+                .checked_add(d)
+                .ok_or_else(err)?;
+            let q = doubled.div_euclid(d.checked_mul(2).ok_or_else(err)?);
+            if n < 0 {
+                q.checked_neg().ok_or_else(err)?
+            } else {
+                q
+            }
+        }
+    };
+    Ok(Ratio::from_int(value))
 }
 
 #[derive(Clone, Copy)]

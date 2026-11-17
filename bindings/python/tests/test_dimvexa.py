@@ -302,7 +302,7 @@ def test_calc_min_max_need_one_dimension_and_keep_the_winners_unit() -> None:
 def test_calc_errors_carry_codes_and_configs_apply() -> None:
     for expr, code in [
         ("1 m + 1 s", "dimension_mismatch"),
-        ("floor(1.5 m)", "refused"),
+        ("log(100)", "refused"),
         ("log(100)", "refused"),
         ("1 +", "parse_error"),
     ]:
@@ -414,3 +414,12 @@ def test_calc_review_round_three_cases() -> None:
     with pytest.raises(dimvexa.DimvexaError) as e:
         dimvexa.calc("1 m", vars={"2x": "1 m"})
     assert e.value.code == "invalid_definition"
+
+
+def test_calc_pow_floor_ceil_round() -> None:
+    assert dimvexa.calc("floor(7.8 m)")["text"] == "7 m"
+    assert dimvexa.calc("ceil(7.2 m)")["text"] == "8 m"
+    assert dimvexa.calc("round(-2.5 m)")["text"] == "-3 m"
+    assert dimvexa.calc("pow(2, 10)")["text"] == "1024"
+    assert dimvexa.calc("pow(9 m2, 0.5)")["text"] == "3 m"
+    assert dimvexa.calc("floor(sqrt(2) * 10 m)")["exact"] is False

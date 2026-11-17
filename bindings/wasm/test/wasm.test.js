@@ -113,7 +113,7 @@ assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", 
   assert.strictEqual(code(() => d.calc("min(4 m, 3 L)", [], "", "", [])), "dimension_mismatch");
   // failures carry the stable codes
   assert.strictEqual(code(() => d.calc("1 m + 1 s", [], "", "", [])), "dimension_mismatch");
-  assert.strictEqual(code(() => d.calc("floor(1.5 m)", [], "", "", [])), "refused");
+  assert.strictEqual(code(() => d.calc("log(100)", [], "", "", [])), "refused");
   assert.strictEqual(d.calc("boltzmann_constant * 300 K", [], "", "", []).text, "4.141947e-21 J");
   assert.strictEqual(d.calc("tan(45 deg)", [], "", "", []).text, "1");
   assert.strictEqual(d.calc("atan2(1 m, 100 cm)", [], "deg", "", []).text, "45 deg");
@@ -129,6 +129,9 @@ assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", 
   assert.strictEqual(code(() => d.calc("2 r", [], "", "", [])), "parse_error");
   assert.strictEqual(d.calc("2 r", ["r=3 m"], "", "", []).text, "6 m");
   assert.strictEqual(d.calc("-40 degC", [], "", "", []).text, "-40 degC");
+  assert.strictEqual(d.calc("floor(7.8 m)", [], "", "", []).text, "7 m");
+  assert.strictEqual(d.calc("round(-2.5 m)", [], "", "", []).text, "-3 m");
+  assert.strictEqual(d.calc("pow(2, 10)", [], "", "", []).text, "1024");
   assert.strictEqual(d.calc("10^-400", [], "", "", []).text, "1e-400");
   assert.strictEqual(d.calc("sin(179.9999999 deg)", [], "", "", []).text, "≈ 1.7453292519943295e-9");
   assert.strictEqual(code(() => d.calc("x^2 n", ["x=10 m", "n=2"], "", "", [])), "parse_error");

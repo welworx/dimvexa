@@ -32,6 +32,7 @@
 //!   `R^(2/3)`, `x^n`, `2^(1+1)` (`2^3^2` is `2^(3^2)`). `2 pi`, `2 pi r` and `pi r^2` multiply.
 //!   `m²`, `m³`, `s⁻¹`, `·`, `×`, `÷`, `−`, tabs and newlines are read.
 //! * The functions `sqrt`, `cbrt`, `abs`, `hypot(x, y)`, `min(x, y, ...)`, `max(x, y, ...)`,
+//!   `pow(x, y)` (the same as `x^y`), `floor`, `ceil`, `round` (to a whole number, the unit stays),
 //!   `ln`, `exp`, `log10` (`lg`), `log2` (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`,
 //!   `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`,
 //!   `tanh`, `asinh`, `acosh` and `atanh`.
@@ -284,11 +285,15 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
 
 /// The functions the evaluator implements (ADR-029), with the number of arguments: `0` means
 /// two or more (`min`, `max`).
-const IMPLEMENTED: [(&str, usize); 26] = [
+const IMPLEMENTED: [(&str, usize); 30] = [
     ("sqrt", 1),
     ("cbrt", 1),
     ("abs", 1),
     ("hypot", 2),
+    ("pow", 2),
+    ("floor", 1),
+    ("ceil", 1),
+    ("round", 1),
     ("min", 0),
     ("max", 0),
     ("ln", 1),
@@ -315,12 +320,7 @@ const IMPLEMENTED: [(&str, usize); 26] = [
 
 /// Well-known functions that are **not implemented**, each with the way to write it from the
 /// ones that are (empty where there is none). Using one is an error, never a guess.
-const NOT_IMPLEMENTED: [(&str, &str); 4] = [
-    ("to", "x.to(UNIT), for example 20 degC.to(K)"),
-    ("pow", "x^p"),
-    ("floor", ""),
-    ("round", ""),
-];
+const NOT_IMPLEMENTED: [(&str, &str); 1] = [("to", "x.to(UNIT), for example 20 degC.to(K)")];
 
 fn function_list() -> String {
     let names: Vec<&str> = IMPLEMENTED.iter().map(|(name, _)| *name).collect();
@@ -517,8 +517,14 @@ impl Parser<'_, '_> {
         let at = self.here();
         let negative = self.eat('-');
         let value = self.power()?;
+        let (num, den) = self.exponent_parts(&value, at)?;
+        Ok((if negative { num.saturating_neg() } else { num }, den))
+    }
+
+    /// The fraction `(p, q)` of an exponent that is an exact number without a unit.
+    fn exponent_parts(&self, value: &Number, at: usize) -> Result<(i32, i32)> {
         let unit = value.unit();
-        let ratio = match &value {
+        let ratio = match value {
             Number::Exact(q) if unit.kind() == Kind::Plain && unit.dim().is_dimensionless() => {
                 q.value().checked_mul(unit.factor())?
             }
@@ -555,7 +561,7 @@ impl Parser<'_, '_> {
             .map_err(|_| parse_error(self.src, at, "the exponent is too large"))?;
         let den = i32::try_from(ratio.den())
             .map_err(|_| parse_error(self.src, at, "the exponent is too precise"))?;
-        Ok((if negative { num.saturating_neg() } else { num }, den))
+        Ok((num, den))
     }
 
     fn power(&mut self) -> Result<Number> {
@@ -805,6 +811,18 @@ impl Parser<'_, '_> {
             ("acosh", _) => math.acosh(one),
             ("atanh", _) => math.atanh(one),
             ("hypot", Some(other)) => math.hypot(one, other),
+            ("pow", Some(exponent)) => {
+                // the same as `x^y`: an exact exponent without a unit
+                let (num, den) = self.exponent_parts(exponent, at)?;
+                if den == 1 {
+                    math.pow(one, num)
+                } else {
+                    math.root(one, num, den)
+                }
+            }
+            ("floor", _) => math.floor(one),
+            ("ceil", _) => math.ceil(one),
+            ("round", _) => math.round(one),
             ("log", Some(base)) => math.log(one, base),
             ("min" | "max", _) => {
                 let mut acc = one.clone();

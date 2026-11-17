@@ -111,7 +111,7 @@ $ dimvexa calc "sqrt(2 m2)"
 Write the values in the equation or name them with `--var`; `x^0.5`, `x^(1/2)` and `sqrt(x)`
 are the same. `sqrt`, `cbrt`, `ln`, `exp`, `log10`, `log2`, `sin`, `cos`, `tan`, `asin`, `atan2`,
 `min`, `max`, `abs` and more work, the SI constants (`planck_constant`, `boltzmann_constant`, `avogadro_constant`, `speed_of_light`, `molar_gas_constant`, `elementary_charge`, `pi`) are built-in
-names, and the few functions that are missing say "not implemented", never a guess. The same
+names, and `--sci` writes the number in scientific notation. The same
 calculation is
 `dimvexa.calc(...)` in Python and `calc(...)` in JavaScript. Convert inside an equation with
 `.to`: `n * molar_gas_constant * T.to(K) / V` with `T` in degrees Celsius (`20 degC.to(K)` is `293.15 K`). What it supports, and its limits, is

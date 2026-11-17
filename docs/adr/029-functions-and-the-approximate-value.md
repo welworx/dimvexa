@@ -67,7 +67,7 @@ a `Quantity` holding the rational value of an `f64`: nothing would show that it 
 * No change to the exact core, the CLI, the JSON schemas or the bindings. The bindings do not
   expose `Math` yet; that is a separate change.
 * **A function that is not implemented is an error that says so.** In the equation helper,
-  `pow`, `floor` and `round` fail with `refused` (since ADR-030 follow-up, `tan`, `asin`, `acos`, `atan` and `atan2` are implemented) and
+  `pow`, `floor` and `round` failed with `refused` (implemented since the ADR-030 follow-up; also `tan`, `asin`, `acos`, `atan` and `atan2` are implemented) and
   the wording of the other unsupported requests: `'tan' is not implemented (the functions are
   sqrt, cbrt, abs, ..., ADR-029); write sin(x) / cos(x)`. The name is checked before the
   argument is read, so `atan2(y, x)` is not a syntax error, and the message gives the way to
