@@ -4,3 +4,4 @@ h_P	Planck constant	6.62607015e-34	J.s	defined	none (defined)	BIPM SI Brochure, 
 e	Elementary charge	1.602176634e-19	C	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): e = 1.602 176 634e-19 C	built-in
 k_B	Boltzmann constant	1.380649e-23	J/K	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): k = 1.380 649e-23 J/K	built-in
 N_A	Avogadro constant	6.02214076e23	1/mol	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): N_A = 6.022 140 76e23 1/mol	built-in
+R	Molar gas constant	8.31446261815324	J/(mol.K)	defined	none (defined)	R = N_A k_B, the product of two defining constants (BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1): 6.022 140 76e23 1/mol x 1.380 649e-23 J/K = 8.314 462 618 153 24 J/(mol K)	built-in

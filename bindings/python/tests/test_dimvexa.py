@@ -127,7 +127,7 @@ def test_density_and_configs_like_the_cli() -> None:
 
 def test_constants_table() -> None:
     names = [c["id"] for c in dimvexa.constants()]
-    assert names == ["pi", "h_P", "e", "k_B", "N_A"]
+    assert names == ["pi", "h_P", "e", "k_B", "N_A", "R"]
     h = dimvexa.constants()[1]
     assert h["name"] == "Planck constant"
     assert (h["value"], h["value_text"], h["unit"]) == ("662607015 10^-42", "6.62607015e-34", "J.s")

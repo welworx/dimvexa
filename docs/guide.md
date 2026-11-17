@@ -343,11 +343,11 @@ redefined, a repeated `--var` name keeps the last value (with a warning), and a 
 used is ignored.
 
 The SI constants of `dimvexa constants` are built-in names in every equation, exact and with
-their unit: `h_P`, `e` (the elementary charge), `k_B`, `N_A`, besides `pi`. The energy of a
-500 nm photon is `h_P * 299792458 m/s / 500 nm` (`--to J`), the molar gas constant is
-`N_A * k_B`. A `--var` with the same name replaces the constant, with a warning (on stderr, and
-in `warnings` of the JSON), so a variable `e` for your own purpose still works but is never
-silent. Constants of your own configs are not names in equations yet: pass them with `--var`.
+their unit: `h_P`, `e` (the elementary charge), `k_B`, `N_A` and `R` (the molar gas constant,
+exactly `N_A * k_B`, 8.31446261815324 J/(mol.K)), besides `pi`. The energy of a 500 nm photon
+is `h_P * 299792458 m/s / 500 nm` (`--to J`), and `p V = n R T` reads `n * R * T / V`. A `--var` with the same name replaces the constant, with a warning (on stderr, and
+in `warnings` of the JSON), so a variable `e` or `R` (a radius) for your own purpose still
+works but is never silent. Constants of your own configs are not names in equations yet: pass them with `--var`.
 
 * **Numbers and units:** `10 cm2`, `998 kg/m3`, `8.314 J/(mol*K)`, `20 degC`, `1.5e-3 m`. A unit
   is the text after a number up to the next space, so put a space on both sides of an operator
@@ -438,8 +438,9 @@ calc("sqrt(2 * dp / rho)", ["dp=50 kPa", "rho=998 kg/m3"], "m/s", "", []);  // a
 ### Constants: `dimvexa constants`
 
 A **constant** is a named, exact value of a unit with its conditions and its source (ADR-018).
-The built-in ones are the mathematical constant `pi` and the SI defining constants `h_P`, `e`,
-`k_B` and `N_A`; since 2019 their values are exact by definition:
+The built-in ones are the mathematical constant `pi`, the SI defining constants `h_P`, `e`, `k_B`
+and `N_A`, and the molar gas constant `R` (their product `N_A * k_B`); since 2019 their values
+are exact by definition:
 
 ```console
 $ dimvexa constants k_B

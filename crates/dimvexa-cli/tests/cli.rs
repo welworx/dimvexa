@@ -2994,7 +2994,7 @@ fn constants_lists_the_built_in_table_with_exact_values_units_and_sources() {
         .map(|l| l.split('\t').collect())
         .collect();
     let names: Vec<&str> = rows.iter().map(|c| c[0]).collect();
-    assert_eq!(names, ["pi", "h_P", "e", "k_B", "N_A"]);
+    assert_eq!(names, ["pi", "h_P", "e", "k_B", "N_A", "R"]);
     snapshot("constants.txt", &r.stdout);
     snapshot("constants.json", &dimvexa(&["constants", "--json"]).stdout);
     let get = |n: &str| rows.iter().find(|c| c[0] == n).unwrap().clone();
@@ -3043,7 +3043,7 @@ fn constants_shows_one_constant_with_its_note_and_refuses_an_unknown_name() {
     assert_eq!(r.code, 2);
     assert!(
         r.stderr
-            .contains("no constant named 'nope'; known: pi, h_P, e, k_B, N_A"),
+            .contains("no constant named 'nope'; known: pi, h_P, e, k_B, N_A, R"),
         "{}",
         r.stderr
     );
@@ -3082,6 +3082,7 @@ fn constants_lists_those_of_a_config_after_the_built_in_ones() {
             "e",
             "k_B",
             "N_A",
+            "R",
             "water_25C",
             "water_max_density"
         ]
@@ -3097,7 +3098,7 @@ fn constants_lists_those_of_a_config_after_the_built_in_ones() {
 /// `pi` cannot be redefined by a config: a user-defined pi would silently change every angle.
 #[test]
 fn a_config_cannot_redefine_a_built_in_constant() {
-    for name in ["pi", "h_P", "e", "k_B", "N_A"] {
+    for name in ["pi", "h_P", "e", "k_B", "N_A", "R"] {
         let cfg = config_file(
             &format!("redefine_{name}.toml"),
             &format!(
@@ -3704,7 +3705,7 @@ fn calc_knows_the_si_constants_and_warns_when_a_name_replaces_one() {
         "3.972891714297857e-19… J\n",
     );
     assert_eq!(
-        calc(&["N_A * k_B", "--to", "J/(mol*K)"]).stdout,
+        calc(&["R", "--to", "J/(mol*K)"]).stdout,
         "8.31446261815324 J/(mol.K)\n"
     );
     let r = calc(&["e * 2", "--var", "e=3 C"]);
@@ -3767,4 +3768,25 @@ fn calc_merges_and_cancels_the_unit_but_never_renames_it() {
     ] {
         assert_eq!(calc(&[expr]).stdout, format!("{text}\n"), "{expr}");
     }
+}
+
+/// `R` is exactly `N_A * k_B`, and the ideal gas law reads as written.
+#[test]
+fn calc_ideal_gas_constant_is_n_a_times_k_b_and_runs_the_gas_law() {
+    assert_eq!(
+        calc(&["N_A * k_B - R", "--to", "J/(mol*K)"]).stdout,
+        "0 J/(mol.K)\n"
+    );
+    // p = n R T / V: 1 mol at 273.15 K in 22.414 L
+    let r = calc(&["1 mol * R * 273.15 K / 22.414 L", "--to", "kPa"]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(r.stdout.starts_with("101.32"), "{}", r.stdout);
+    // a radius called R replaces the constant, with a warning
+    let r = calc(&["2 * R", "--var", "R=3 m"]);
+    assert_eq!(r.stdout, "6 m\n");
+    assert!(
+        r.stderr.contains("replaces the built-in constant R"),
+        "{}",
+        r.stderr
+    );
 }

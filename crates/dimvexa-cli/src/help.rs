@@ -165,7 +165,7 @@ constant pi, + - * / and parentheses, a power with a fraction as exponent
 (x^0.5, y^(1/2) and sqrt(x) agree; R^(2/3)) and the functions sqrt, cbrt,
 abs, hypot, min, max, ln, exp, log10 (lg), log2 (lb), log(x, base), sin,
 cos, tan, asin, acos, atan, atan2(y, x), sinh, cosh, tanh, asinh, acosh,
-atanh, and the built-in names pi, h_P, e, k_B, N_A (the SI constants of
+atanh, and the built-in names pi, h_P, e, k_B, N_A, R (the SI constants of
 'dimvexa constants'; --var may replace one, with a warning). Quote it, and
 put a space on both sides of an operator between quantities (write --
 before an expression that starts like an option, such as -h): a unit is the
@@ -280,7 +280,7 @@ Usage:
 
 A constant is an exact value of a unit with its conditions and source; nothing
 is rounded and nothing is applied unless you ask. The built-in ones (pi, h_P,
-e, k_B, N_A) cannot be redefined by a config. A config adds its own with
+e, k_B, N_A, R) cannot be redefined by a config. A config adds its own with
 [[constant]]; a constant of a density unit is what --const uses for mass <->
 volume.
 

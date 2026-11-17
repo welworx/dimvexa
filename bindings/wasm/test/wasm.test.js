@@ -30,7 +30,7 @@ assert.strictEqual(d.convertWith(1, "L", "kg", "rho", "", [constant("rho", "0.99
 
 // constants: the built-in ones first, then the configs'
 const names = (c, t) => d.constants(c, t).map((x) => x.id);
-assert.deepStrictEqual(names("", []), ["pi", "h_P", "e", "k_B", "N_A"]);
+assert.deepStrictEqual(names("", []), ["pi", "h_P", "e", "k_B", "N_A", "R"]);
 const h = d.constants("", [])[1];
 assert.strictEqual(h.name, "Planck constant");
 assert.deepStrictEqual(
