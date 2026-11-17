@@ -286,7 +286,7 @@ impl<'r> Math<'r> {
     }
 
     /// A temperature in a unit without an offset (`K`, `degR`) times or divided by a plain number
-    /// (`2 * kelvin(20 degC)`, `kelvin(T) / 2`): the unit stays, the number scales. The point
+    /// (`2 * 20 degC.to(K)`, `T.to(K) / 2`): the unit stays, the number scales. The point
     /// and the difference readings give the same number, so nothing is guessed; a unit with an
     /// offset (`degC`, `degF`) is still refused by the core. `None` when the pair is not this
     /// case.

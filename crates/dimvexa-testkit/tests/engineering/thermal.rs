@@ -240,13 +240,18 @@ fn a5_log_mean_temperature_difference() {
     );
 }
 
+/// B1 (decided by the owner): `20 degC + 30 degC` is `50 degC`, the sum of two Celsius states
+/// as numbers on the scale; a difference is `20 degC - 5 degC = 15 delta_degC` (ADR-027).
 #[test]
-#[ignore = "open B1: 20 degC + 80 degC is accepted as 100 degC (ADR-027 decision 3)"]
-fn open_b1_adding_two_celsius_states_is_refused() {
-    assert_eq!(
-        code(&[("a", "20 degC"), ("b", "80 degC")], "a + b", "K"),
-        "kind_mismatch"
-    );
+fn b1_adding_two_celsius_states_is_allowed_by_decision() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg)
+        .var("a", "20 degC")
+        .unwrap()
+        .var("b", "30 degC")
+        .unwrap();
+    assert_eq!(f.eval("a + b").unwrap().to_string(), "50 degC");
+    assert_eq!(f.eval("b - a").unwrap().to_string(), "10 delta_degC");
 }
 
 #[test]

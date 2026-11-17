@@ -373,7 +373,7 @@ def test_calc_knows_the_constants_tan_atan2_and_merges_units() -> None:
         )
 
 
-def test_calc_config_constants_kelvin_pi_names_and_notation() -> None:
+def test_calc_config_constants_to_pi_names_and_notation() -> None:
     r = dimvexa.calc("1 L * water_25C", to="kg", configs=["water"])
     assert r["text"] == "0.99704702 kg"
     gas = dimvexa.calc(

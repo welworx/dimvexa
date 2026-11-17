@@ -113,7 +113,8 @@ are the same. `sqrt`, `cbrt`, `ln`, `exp`, `log10`, `log2`, `sin`, `cos`, `tan`,
 `min`, `max`, `abs` and more work, the SI constants (`planck_constant`, `boltzmann_constant`, `avogadro_constant`, `speed_of_light`, `molar_gas_constant`, `elementary_charge`, `pi`) are built-in
 names, and the few functions that are missing say "not implemented", never a guess. The same
 calculation is
-`dimvexa.calc(...)` in Python and `calc(...)` in JavaScript. What it supports, and its limits, is
+`dimvexa.calc(...)` in Python and `calc(...)` in JavaScript. Convert inside an equation with
+`.to`: `n * molar_gas_constant * T.to(K) / V` with `T` in degrees Celsius (`20 degC.to(K)` is `293.15 K`). What it supports, and its limits, is
 in the [user guide](docs/guide.md#equations-dimvexa-calc).
 
 The [user guide](docs/guide.md) has the full unit list, configs and densities, units of your

@@ -3,7 +3,7 @@
 About 130 CLI conversions and 95 calculations with `dimvexa-calc`, from civil, fluid, thermal,
 electrical, mechanical, chemical, hydrological, aero and astronomical work, in SI, US customary
 and imperial units. Every number that came back matched an independent `f64` SI calculation
-(relative error below 1e-12); every failure was loud, except B1.
+(relative error below 1e-12); every failure was loud, except B1 (a decision, see below).
 
 The calculations that work are tests in `crates/dimvexa-testkit/tests/engineering/`, one file per field, written
 as equations (`crates/dimvexa-testkit/src/formula.rs`: `"rho * v * D / mu"`). The breaks are
@@ -25,12 +25,12 @@ write the equation, and a precise result with the correct unit.
 | A1 | *Fixed (ADR-028).* A value below about 1e-38 could not be entered (`overflow`): Planck's constant `6.62607015e-34 J*s`, the electron mass. Cause: the parser multiplied the whole decimal exponent into the denominator (`den = 10^digits * 10^exp`, must fit `i128`), although `Ratio` has a separate power-of-ten field that products only add. Now the exponent stays in that field when it does not fit. | `a1_*`, `prefix_*` |
 | A2 | *Fixed for powers of ten (ADR-028):* `(1.380649e-23 J/K)^2`, `(5.29e-11 m)^2`, the Coulomb force at the Bohr radius, a prefixed value read in the plain unit, and the order of the factors (all 120 orders agree). The Stefan-Boltzmann constant from `k`, `h`, `c` needs a 40-digit denominator: digit width, an accepted limit (KL-31). | `a2_*` |
 | A3 | Powers of large unit factors overflow because of the width of their digits: `ly^3`, `psi^3`. Accepted limit of the exact core (owner decision, KL-31), pinned in `known_limitations.rs`. | none open |
-| A4 | A computed temperature (`p V / (n R)`) cannot be read in K or degC (`kind_mismatch`); the hint says "use delta_K", which is wrong for an absolute temperature. Fixed: a computed temperature converts to K and degC (`--to K`, `x.to(degC)`). | `a4_*` |
+| A4 | A computed temperature (`p V / (n R)`) cannot be read in K or degC (`kind_mismatch`); the hint says "use delta_K", which is wrong for an absolute temperature. Fixed: a computed temperature converts to K and degC (`--to K`, `x.to(degC)`); a Celsius input in a product is `T.to(K)`. | `a4_*`, `dot_to_*` |
 | A5 | *Fixed (ADR-029):* `sqrt`, `ln`, `exp`, `sin`, `cos` and fractional powers, exact when the mathematics is exact and an explicit `≈` value otherwise. Limits: integer dimension exponents (KL-32, Manning is written dimensionless), no error bound on approximate values (KL-33). | `a5_*` |
 | A6 | `2 pi f` needs the detour through `1/s` (works, tested). `rpm` and `rev` are not shipped on purpose (ADR-020): a use case defines them, see below. | none open |
-| B1 | `20 degC + 80 degC` is accepted as `100 degC` (= 373.15 K); ADR-027 decision 3 reads a same-scale point as a rise. A decision to revisit. | `open_b1_*` |
-| B2 | `pow(5 m, 0)` is `1 m^0`, not dimensionless. | `open_b2_*` |
-| C | `degC` inside a compound (`kJ/(kg*degC)`) is refused; notation `m³`, `ft/s²`, `N m`, `m s^-1` is not read. | `open_c_*` |
+| B1 | *Decided (owner, 2026-11-17):* `20 degC + 80 degC` is `100 degC`; ADR-027 decision 3 reads a same-scale point as a rise. Kept. | `b1_*` |
+| B2 | *Fixed:* a unit to the power 0 is the plain number 1 (it was `1 m^0`). | `b2_*` |
+| C | `degC` inside a compound (`kJ/(kg*degC)`) is refused (open). Notation: `m³`, `ft/s²`, `N·m` are read in `calc` equations (fixed); a space between units (`N m`, `m s^-1`) is not a product, by decision: write `N*m`, `m*s^-1`. | `open_c_celsius_*`, `superscripts_*` |
 
 ## Names a use case defines itself
 

@@ -8,7 +8,7 @@
 //! Two kinds of test:
 //!
 //! * normal tests: what works today, so it keeps working;
-//! * `#[ignore = "open ..."]` tests: the equation an engineer would write today and the answer
+//! * `#[ignore = "open ..."]` tests (one left: `degC` inside a compound unit): the equation an engineer would write today and the answer
 //!   they should get, for things that do not work yet. They fail on purpose until the cause is
 //!   fixed. Run them with
 //!   `cargo test -p dimvexa-testkit --test engineering -- --ignored`; a fixed one loses its

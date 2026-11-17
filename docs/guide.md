@@ -352,7 +352,7 @@ their unit, and their names say what they are: `planck_constant`, `elementary_ch
 `molar_gas_constant` (exactly `avogadro_constant * boltzmann_constant`, 8.31446261815324
 J/(mol.K)), besides `pi`. The energy of a 500 nm photon is
 `planck_constant * speed_of_light / 500 nm` (`--to J`), and `p V = n R T` reads
-`n * molar_gas_constant * T / V`. Short symbols such as `c`, `e` or `R` are yours to define: a
+`n * molar_gas_constant * T / V` (with `T` in kelvin, see `.to(K)` below). Short symbols such as `c`, `e` or `R` are yours to define: a
 `[[constant]]` in a config (`dimvexa constants --config mine.toml`) or a `--var`.
 `examples/configs/engineering.toml` defines `R`, `c`, `k_B`, `N_A`, `h_P` and `q_e` with the exact
 values of the built-in ones, so `n * R * T.to(K) / V --config examples/configs/engineering.toml`
@@ -435,19 +435,20 @@ answered with an approximate number.
 * **Result units are merged and cancelled, never renamed:** `1 m * 1 m` is `1 m^2`,
   `10 kWh/100km * 250 km` is `25 kWh` and `8.314 J/(mol*K) * 300 K * 1 mol / 1 m3` is
   `2494.2 J/m^3`. A different symbol stays as it is: `1 J / 1 N` is `J/N`, `km * m` stays
-  `km.m`, and `planck_constant * c / 500 nm` keeps `J.m/nm`. Give `--to` (`--to J`, `--to Pa`) for the unit you
+  `km.m`, and `planck_constant * speed_of_light / 500 nm` keeps `J.m/nm`. Give `--to` (`--to J`, `--to Pa`) for the unit you
   want; a wrong dimension is an error.
+* **Conversion:** `x.to(UNIT)` converts a value to another unit inside the equation, so you
+  decide where the conversion happens and the units are checked against it: `20 degC.to(K)` is
+  `293.15 K`, `3 m.to(ft)`, `(10 kW * 2 h).to(kW*h)`, `(a + b).to(cm)`; a wrong dimension is an
+  error (`5 m.to(K)`). It binds tighter than `*` and `/`, so `n * molar_gas_constant * T.to(K) / V`
+  is `p V = n R T` with `T` in degrees Celsius. `--to UNIT` does the same for the whole result.
 * **Temperatures:** a point (`20 degC`, `-40 degC`) can be compared and shifted by a difference,
   not multiplied or negated (`-40 degC` is the point itself, `-(20 degC)` is refused); `degC + degC` adds two points (`20 degC + 30 degC` is `50 degC`) while
   `degC - degC` is a difference (`delta_degC`) and a point minus a kelvin is refused (ADR-027).
-  `x.to(UNIT)` converts a value to another unit inside the equation, so you decide where the
-  conversion happens and the units are checked against it: `20 degC.to(K)` is `293.15 K`,
-  `3 m.to(ft)`, `(10 kW * 2 h).to(kW*h)`, `(a + b).to(cm)`; a wrong dimension is an error
-  (`5 m.to(K)`). It binds tighter than `*` and `/`, so `n * molar_gas_constant * T.to(K) / V`
-  is `p V = n R T` with `T` in degrees Celsius. A computed temperature (`p * V / (n * R)`,
-  dimension K) converts to `K`, `degC` and `degF` too, also with `--to`. A kelvin value scales
-  (`2 * 20 degC.to(K)` is `586.3 K`); a Celsius or Fahrenheit point does not (`2 * 20 degC` is
-  refused). A temperature difference is not a temperature (`5 delta_K.to(K)` is refused).
+  A computed temperature (`p * V / (n * R)`, dimension K) converts to `K`, `degC` and `degF`, also
+  with `--to`. A kelvin value scales (`2 * 20 degC.to(K)` is `586.3 K`); a Celsius or Fahrenheit
+  point does not (`2 * 20 degC` is refused). A temperature difference is not a temperature
+  (`5 delta_K.to(K)` is refused).
 * **Not units of every trade:** names that mean different things (`ton`, `gpm`, `mph`, `rpm`) are
   errors until a config chooses (`--config us-customary`, or your own, see
   `examples/configs/engineering.toml`). A space between two units is not a product: write

@@ -641,6 +641,10 @@ impl UnitExpr {
             return Ok(self.clone());
         }
         self.refuse_affine(&Self::unity())?;
+        if exp == 0 {
+            // anything to the power 0 is the plain number 1, not `m^0`
+            return Ok(Self::unity());
+        }
         let kind_exp = self.kind_exp.checked_mul(exp).ok_or(Error::Overflow {
             operation: "kind power",
         })?;

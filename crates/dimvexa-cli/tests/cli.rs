@@ -4080,7 +4080,7 @@ fn calc_a_division_before_an_implicit_pi_product_is_refused() {
 /// A kelvin value scales by a plain number (both orders); a Celsius point does not; a spaced
 /// superscript belongs to the unit before it.
 #[test]
-fn calc_a_converted_kelvin_scales_and_a_spaced_superscript_is_part_of_the_unit() {
+fn calc_a_converted_temperature_scales_and_a_spaced_superscript_is_part_of_the_unit() {
     assert_eq!(calc(&["2 * 20 degC.to(K)"]).stdout, "586.3 K\n");
     assert_eq!(calc(&["20 degC.to(K) * 2"]).stdout, "586.3 K\n");
     assert_eq!(calc(&["20 degC.to(K) / 2"]).stdout, "146.575 K\n");
