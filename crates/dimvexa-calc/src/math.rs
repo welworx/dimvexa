@@ -387,7 +387,12 @@ impl<'r> Math<'r> {
                     Err(ambiguous())
                 }
             }
-            (false, true) if !scalar(a) => Err(ambiguous()),
+            (false, true) if !scalar(a) || divide => Err(ambiguous()),
+            (true, false) | (false, true) => Err(refused(
+                "a temperature point cannot be scaled by a plain number (`2 * 20 degC`, \
+                 `20 degC / 2`): write 20 degC.to(K) for the temperature, or \
+                 2 * 20 delta_degC for a difference",
+            )),
             _ => Ok((a.clone(), b.clone())),
         }
     }
@@ -852,11 +857,19 @@ impl<'r> Math<'r> {
     /// `b` when `a.cmp(b)` is `swap_on`, otherwise `a`.
     fn extremum(self, a: &Number, b: &Number, swap_on: Ordering) -> Result<Number> {
         if let (Number::Exact(x), Number::Exact(y)) = (a, b) {
-            return Ok(if self.calc.cmp(x, y)? == swap_on {
-                b.clone()
-            } else {
-                a.clone()
-            });
+            match self.calc.cmp(x, y) {
+                Ok(order) => {
+                    return Ok(if order == swap_on {
+                        b.clone()
+                    } else {
+                        a.clone()
+                    });
+                }
+                // different powers of pi have no exact order: compare the `f64`s below, and
+                // keep the exact winner when the gap is decisive
+                Err(Error::Unrepresentable { .. }) if !self.exact_only => {}
+                Err(e) => return Err(e),
+            }
         }
         let (x, y) = (Self::approx_of(a)?, Self::approx_of(b)?);
         Self::linear_only(&x.unit)?;
@@ -976,36 +989,13 @@ impl<'r> Math<'r> {
     ///
     /// As [`autoprefix`](Self::autoprefix).
     pub fn autoprefix_in(&self, a: &Number, digits: Option<usize>) -> Result<Number> {
-        use dimvexa_core::{PrefixFamily, SI_PREFIXES};
-        let unit = a.unit();
-        let Some((symbol, power)) = single_unit(unit.expr()) else {
+        use dimvexa_core::SI_PREFIXES;
+        let Some((base, power)) = self.prefix_target(a) else {
             return Ok(a.clone());
         };
-        let symbol = symbol.as_str();
-        // temperatures (a scale, a point) keep their unit; angles and cycles take prefixes (mrad, GHz)
-        if !matches!(unit.kind(), Kind::Plain | Kind::Angle | Kind::Cycle)
-            || !unit.offset().is_zero()
-        {
-            return Ok(a.clone());
-        }
         let reg = self.reg();
-        let takes_si = |u: &dimvexa_core::Unit| u.prefixes().accepts(PrefixFamily::Si);
-        // the unit without its prefix: `km` is `m`; a symbol that is a unit of its own (`ft`, not
-        // femto-tonne) is never split
-        let base = reg.get(symbol).map_or_else(
-            || {
-                SI_PREFIXES.iter().find_map(|p| {
-                    symbol
-                        .strip_prefix(p.symbol)
-                        .filter(|rest| !rest.is_empty() && reg.get(rest).is_some_and(takes_si))
-                })
-            },
-            |u| takes_si(u).then_some(symbol),
-        );
-        let Some(base) = base else {
-            return Ok(a.clone());
-        };
-        let base = self.autoprefix_base(a, base, power)?;
+        let base = self.autoprefix_base(a, &base, power, digits)?;
+        let base = base.as_str();
         let raised = |prefix: &str| {
             if power == 1 {
                 format!("{prefix}{base}")
@@ -1079,27 +1069,71 @@ impl<'r> Math<'r> {
         }
     }
 
+    /// The unit without its prefix and its power, when `--autoprefix` can prefix `a`: one unit
+    /// that takes SI prefixes (`km^2` is `m` and 2), not a temperature.
+    fn prefix_target(&self, a: &Number) -> Option<(String, i32)> {
+        use dimvexa_core::{PrefixFamily, SI_PREFIXES};
+        let unit = a.unit();
+        let (symbol, power) = single_unit(unit.expr())?;
+        let symbol = symbol.as_str();
+        // temperatures (a scale, a point) keep their unit; angles and cycles take prefixes
+        // (mrad, GHz)
+        if !matches!(unit.kind(), Kind::Plain | Kind::Angle | Kind::Cycle)
+            || !unit.offset().is_zero()
+        {
+            return None;
+        }
+        let reg = self.reg();
+        let takes_si = |u: &dimvexa_core::Unit| u.prefixes().accepts(PrefixFamily::Si);
+        // the unit without its prefix: `km` is `m`; a symbol that is a unit of its own (`ft`, not
+        // femto-tonne) is never split
+        let base = reg.get(symbol).map_or_else(
+            || {
+                SI_PREFIXES.iter().find_map(|p| {
+                    symbol
+                        .strip_prefix(p.symbol)
+                        .filter(|rest| !rest.is_empty() && reg.get(rest).is_some_and(takes_si))
+                })
+            },
+            |u| takes_si(u).then_some(symbol),
+        );
+        base.map(|b| (b.to_owned(), power))
+    }
+
+    /// The power of the unit `--autoprefix` prefixes in `a` (2 for `m^2`), `None` when it keeps
+    /// the unit it has.
+    #[must_use]
+    pub fn prefix_power(&self, a: &Number) -> Option<i32> {
+        self.prefix_target(a).map(|(_, power)| power)
+    }
+
     /// The unit to put the prefix on: `base`, or the smaller unit it hands over to below one of
     /// itself (the tonne: `kg` and `g`).
-    fn autoprefix_base<'a>(&'a self, a: &Number, base: &'a str, power: i32) -> Result<&'a str> {
+    fn autoprefix_base(
+        &self,
+        a: &Number,
+        base: &str,
+        power: i32,
+        digits: Option<usize>,
+    ) -> Result<String> {
         let reg = self.reg();
         let smaller = reg
             .get(base)
             .map(dimvexa_core::Unit::autoprefix_below)
             .filter(|b| !b.is_empty() && reg.get(b).is_some());
         let Some(smaller) = smaller else {
-            return Ok(base);
+            return Ok(base.to_owned());
         };
         let whole = if power == 1 {
-            base.to_string()
+            base.to_owned()
         } else {
             format!("{base}^{power}")
         };
-        Ok(if magnitude_reaches(&self.to_unit(a, &whole)?, 0)? {
-            base
-        } else {
-            smaller
-        })
+        let in_whole = self.to_unit(a, &whole)?;
+        let reaches = digits
+            .and_then(|n| crate::rounded_exponent(&in_whole, n))
+            .map_or_else(|| magnitude_reaches(&in_whole, 0), |e| Ok(e >= 0))?;
+        Ok(if reaches { base } else { smaller }.to_owned())
     }
 
     // ----- hyperbolic functions --------------------------------------------------------------

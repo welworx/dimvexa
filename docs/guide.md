@@ -390,7 +390,7 @@ JSON), so it is never silent. The constants of the configs in effect are names t
   sign `−` are read (`10 m² · 3 m`, `1 kg·m/s²`; a space before a superscript is ignored,
   `2 m ²` is `2 m²`); error positions count the characters after this rewrite. A power of a unit
   may be written `m^2`, `m2` or `m^(2)` (a whole number, `m^(-1)` too). A reciprocal unit is
-  `K^-1` (`12e-6 K^-1`), not `12e-6 1/K`. Words that the shell split are joined with spaces
+  `K^-1` or `1/K` (`12e-6 K^-1`, `12e-6 1/K`). Words that the shell split are joined with spaces
   (`calc 2 m '*' 3 m`).
 * **Functions:** `sqrt`, `cbrt`, `abs`, `hypot`, `pow`, `floor`, `ceil`, `round`, `min`, `max`, `ln`, `exp`, `log10` (`lg`), `log2`
   (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`,
@@ -489,7 +489,8 @@ answered with an approximate number.
   `20 degC.to(K)^2` or the number alone, `20^2`).
 * **Not units of every trade:** names that mean different things (`ton`, `mt`, `cal`) are
   `ambiguous_symbol` errors until a config chooses (`--config us-customary`, or your own), and
-  a variable may not take such a name. `gpm`, `mph` and `rpm` are no units unless a config defines
+  after a number such a name is refused as a variable (`2 ton --var ton=3`); written alone
+  (`ton * 2`) it is reported as an ambiguous unit symbol unless defined with `--var`. `gpm`, `mph` and `rpm` are no units unless a config defines
   them (see `examples/configs/engineering.toml`). A space between two units is not a product: write
   `N*m` or `N·m`, not `N m`.
 * **Size:** an equation has at most 4096 characters, 64 levels of parentheses and 512 `--var` definitions.
@@ -596,7 +597,8 @@ Rules for your units:
   that the key `symbol` was the id: rename it to `id`, an old file is refused with that hint.
 - `autoprefix_below = "g"` (optional) makes `--autoprefix` read a value below 1 of this unit in
   another unit of the same dimension and its prefixes (`0.5 t` is `500 kg`); the tonne has it.
-  The target must be a unit you can type with the same dimension.
+  The target must be the unprefixed symbol of a unit with the same dimension that takes SI
+  prefixes (`g`, not `kg`), and the unit itself needs `prefixes = "si"`.
 - A unit may carry an `offset` of its own (ADR-022), see the next example. It needs a plain
   base and `prefixes = "none"`, and it cannot be part of a compound unit.
 - If the base is `measured`, so is the new unit, whatever you state.

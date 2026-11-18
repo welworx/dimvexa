@@ -447,12 +447,12 @@ pub fn calc(
             .var(name.trim(), value.trim())
             .map_err(|e| fail(&e))?;
     }
-    let r = formula
-        .calculate_in(expression, Some(to), autoprefix, notation)
-        .map_err(|e| fail(&e.error))?;
+    let result = formula.calculate_in(expression, Some(to), autoprefix, notation);
+    // the warnings come first, so they are not lost when the calculation fails
     for w in formula.warnings() {
         warn(&w);
     }
+    let r = result.map_err(|e| fail(&e.error))?;
     let fraction = r
         .fraction
         .as_deref()

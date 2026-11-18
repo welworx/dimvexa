@@ -532,9 +532,8 @@ fn calc<'py>(
     for (name, value) in vars.unwrap_or_default() {
         formula = formula.var(&name, &value).map_err(|e| to_py(&e))?;
     }
-    let r = formula
-        .calculate_in(expression, to, autoprefix, notation)
-        .map_err(|e| to_py(&e.error))?;
+    let result = formula.calculate_in(expression, to, autoprefix, notation);
+    // the warnings come first, so they are not lost when the calculation fails
     for w in formula.warnings() {
         let message = std::ffi::CString::new(w.replace('\0', " ")).unwrap_or_default();
         PyErr::warn(
@@ -544,6 +543,7 @@ fn calc<'py>(
             1,
         )?;
     }
+    let r = result.map_err(|e| to_py(&e.error))?;
     let out = PyDict::new(py);
     out.set_item("value", r.value)?;
     out.set_item("unit", &r.unit)?;

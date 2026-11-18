@@ -16,7 +16,7 @@ All functions live in the `DIMVEXA` namespace. Excel ignores letter case, so
 | `DIMVEXA.CONVERT(value, from, to, [density], [config])` | one number |
 | `DIMVEXA.CONVERTEXACT(value, from, to, [density], [config])` | one number; the value may be text with pi, kept exact (`"4pi"`, `"pi/2"`) |
 | `DIMVEXA.CONVERTRANGE(range, from, to, [density], [config])` | a range of numbers, spilled below and beside the formula |
-| `DIMVEXA.CALC(expression, to, [variables], [config])` | one number: an equation with units in the unit you ask for (the unit is required and checked) |
+| `DIMVEXA.CALC(expression, to, [variables], [config])` | one number: an equation with units in the unit you ask for (the unit is required and checked; `"1"` asks for a dimensionless result) |
 | `DIMVEXA.CALCTEXT(expression, [to], [variables], [config], [format])` | text with the unit: `1.5 km`, `≈ 1.4142135623730951 m` |
 | `DIMVEXA.VERSION()` | text, the unit table version and the number of units |
 

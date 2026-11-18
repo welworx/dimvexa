@@ -57,8 +57,9 @@ pub struct Report {
     whole: Option<String>,
     /// The exact value when it has no `pi`: `--sci=N` rounds this, not the `f64`.
     ratio: Option<Ratio>,
-    /// A prefix was chosen for the unit: scientific notation then needs no exponent.
-    prefixed: bool,
+    /// The power of the unit that `--autoprefix` prefixed: scientific notation then needs no
+    /// exponent while the number is below 1000 to that power.
+    prefixed: Option<i32>,
 }
 
 impl Report {
@@ -107,15 +108,15 @@ impl Report {
                 Number::Exact(q) if q.value().pi_exp() == 0 => Some(q.value()),
                 _ => None,
             },
-            prefixed: false,
+            prefixed: None,
         })
     }
 
     /// Marks the unit as chosen by `--autoprefix`: `--sci` then writes `1.5 km`, not `1.5e0 km`
     /// (the prefix has taken the exponent), and only the significant digits are asked for.
     #[must_use]
-    pub const fn with_prefix(mut self) -> Self {
-        self.prefixed = true;
+    pub const fn with_prefix(mut self, power: i32) -> Self {
+        self.prefixed = Some(power);
         self
     }
 
@@ -156,10 +157,9 @@ impl Report {
             (None, Some(w)) => scientific_from_text(w),
             (None, None) => String::new(),
         };
-        let body = if self.prefixed {
-            positional(&body).unwrap_or(body)
-        } else {
-            body
+        let body = match self.prefixed {
+            Some(power) => positional(&body, power).unwrap_or(body),
+            None => body,
         };
         let more = if self.rounded && digits.is_none() {
             "…"
@@ -287,11 +287,14 @@ pub fn rounded_exponent(n: &Number, digits: usize) -> Option<i64> {
 }
 
 /// `1.50e2` as `150`: the scientific text written without its exponent, for a number the prefix
-/// of its unit has already scaled. `None` outside 0 to 8 (no such prefix), where it stays.
-fn positional(scientific: &str) -> Option<String> {
+/// of its unit has already scaled. `None` from 1000 to the power of the unit up, where it stays.
+fn positional(scientific: &str, power: i32) -> Option<String> {
     let (mantissa, exponent) = scientific.split_once('e')?;
     let exponent = usize::try_from(exponent.parse::<i64>().ok()?).ok()?;
-    if exponent > 8 {
+    // below 1000 to the power of the unit (`km^2`: up to 999999); beyond it, or below 1, the
+    // exponent stays (no prefix reaches there)
+    let limit = usize::try_from(power.saturating_mul(3)).ok()?;
+    if exponent >= limit {
         return None;
     }
     let (sign, digits) = mantissa

@@ -814,7 +814,17 @@ impl Parser<'_, '_> {
                     .find(|(n, _)| *n == name)
                     .map(|(_, q)| q.clone())
                     .ok_or_else(|| {
-                        let message = if self.f.reg.parse(&name).is_ok() {
+                        let ambiguous = match self.f.reg.parse(&name) {
+                            Err(Error::AmbiguousSymbol { candidates, .. }) => Some(candidates),
+                            _ => None,
+                        };
+                        let message = if let Some(candidates) = ambiguous {
+                            format!(
+                                "'{name}' is an ambiguous unit symbol ({}) and not a variable \
+                                 of this equation (define it with --var {name}=VALUE)",
+                                candidates.join(", ")
+                            )
+                        } else if self.f.reg.parse(&name).is_ok() {
                             format!(
                                 "'{name}' is a unit, and a unit needs a number in front \
                                  of it (1 {name})"
@@ -1279,7 +1289,8 @@ impl<'r> Formula<'r> {
     /// and the evaluator would take the other, and is refused.
     fn names_after_numbers(&self, src: &str, toks: Vec<(usize, Tok)>) -> Result<Vec<(usize, Tok)>> {
         let mut out: Vec<(usize, Tok)> = Vec::with_capacity(toks.len());
-        for (at, tok) in toks {
+        let mut toks = toks.into_iter().peekable();
+        while let Some((at, tok)) = toks.next() {
             let Tok::Qty(number, unit) = &tok else {
                 out.push((at, tok));
                 continue;
@@ -1330,7 +1341,10 @@ impl<'r> Formula<'r> {
                 leading = false;
                 symbol.clear();
             }
-            if rewrite.is_none() && number_over_quantity(&mut out, (number, unit), at) {
+            // a temperature point (`degC`) is never moved to the result: `40/2 degC.to(K)` would
+            // convert the `1 degC` alone; it divides by the point and is refused as ambiguous
+            let point = self.reg.parse(unit).is_ok_and(|u| !u.offset().is_zero());
+            if rewrite.is_none() && !point && number_over_quantity(&mut out, (number, unit), at) {
                 continue;
             }
             match rewrite {
@@ -1354,6 +1368,18 @@ impl<'r> Formula<'r> {
                         &format!(
                             "'{number} {unit}' after '^' is ambiguous: write ^{number} * {unit} \
                              for the power times {unit}, or ^({number} {unit}) for the exponent"
+                        ),
+                    ));
+                }
+                Some(_) if matches!(toks.peek(), Some((_, Tok::Op('^')))) => {
+                    // `2 x ^ 2` would square the product `(2 * x)`, `2 * x ^ 2` is what is meant
+                    return Err(parse_error(
+                        src,
+                        at,
+                        &format!(
+                            "'{number} {unit}' followed by '^' is ambiguous: write \
+                             {number} * {unit}^... for the power times {number}, or \
+                             ({number} {unit})^... for the power of the product"
                         ),
                     ));
                 }
@@ -1454,11 +1480,12 @@ impl<'r> Formula<'r> {
                 .map_err(at(CalcStep::Prefix))?;
         }
         let report = crate::Report::new(&number).map_err(at(CalcStep::Expression))?;
-        Ok(if autoprefix {
-            report.with_prefix()
-        } else {
-            report
-        })
+        Ok(
+            match self.math.prefix_power(&number).filter(|_| autoprefix) {
+                Some(power) => report.with_prefix(power),
+                None => report,
+            },
+        )
     }
 
     /// `n` with the SI prefix that puts its number between 1 and 1000 (`1500 m` is `1.5 km`).

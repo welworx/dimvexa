@@ -199,7 +199,8 @@ pub fn run(root: &Path) -> Result<Report, String> {
     // ---- units
     let mut unit_sources: BTreeMap<String, String> = BTreeMap::new();
     let mut rows: BTreeMap<String, Row> = BTreeMap::new();
-    let mut below: Vec<(String, String, Vec<i64>)> = Vec::new();
+    let mut below: Vec<(String, String, Vec<i64>, bool)> = Vec::new();
+    let mut takes_prefixes: BTreeMap<String, bool> = BTreeMap::new();
     let mut names: BTreeMap<String, String> = BTreeMap::new(); // symbol or alias -> owner
     for (fname, t) in &unit_tables {
         let sym = match t.str("id") {
@@ -331,9 +332,15 @@ pub fn run(root: &Path) -> Result<Report, String> {
         }
         if let Ok(Some(target)) = t.opt_str("autoprefix_below") {
             if !target.is_empty() {
-                below.push((at.clone(), target.to_string(), dim.clone()));
+                below.push((
+                    at.clone(),
+                    target.to_string(),
+                    dim.clone(),
+                    t.str("prefixes") != Ok("none"),
+                ));
             }
         }
+        takes_prefixes.insert(sym.clone(), t.str("prefixes") == Ok("si"));
         rows.insert(
             sym.clone(),
             Row {
@@ -346,12 +353,20 @@ pub fn run(root: &Path) -> Result<Report, String> {
     }
 
     // ---- autoprefix_below must name a unit of the same dimension
-    for (at, target, dim) in &below {
-        let found = names.get(target).and_then(|id| rows.get(id));
+    for (at, target, dim, own_prefixes) in &below {
+        let found = names
+            .get(target)
+            .and_then(|id| rows.get(id).map(|r| (id, r)));
         match found {
             None => err(format!("{at}: autoprefix_below '{target}' is not a unit")),
-            Some(row) if row.dim != *dim => err(format!(
+            Some((_, row)) if row.dim != *dim => err(format!(
                 "{at}: autoprefix_below '{target}' has another dimension"
+            )),
+            Some((id, _)) if takes_prefixes.get(id) != Some(&true) => err(format!(
+                "{at}: autoprefix_below '{target}' must take SI prefixes"
+            )),
+            Some(_) if !own_prefixes => err(format!(
+                "{at}: autoprefix_below needs prefixes = \"si\" on the unit itself"
             )),
             Some(_) => {}
         }

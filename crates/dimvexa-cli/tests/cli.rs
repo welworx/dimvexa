@@ -4368,7 +4368,7 @@ fn calc_approximate_temperatures_follow_the_exact_rules() {
             r.stderr
         );
         assert!(
-            r.stderr.contains("cannot be multiplied or divided"),
+            r.stderr.contains("cannot be scaled by a plain number"),
             "{}",
             r.stderr
         );
@@ -4666,4 +4666,56 @@ fn calc_a_point_over_a_temperature_is_refused() {
     assert_eq!(calc(&["1 - 20 degC.to(K) / 300 K"]).code, 0);
     // over something that is not a temperature it is the rate of the interval
     assert_eq!(calc(&["20 degC / 2 s"]).stdout, "10 delta_degC/s\n");
+}
+
+/// Cases of the last review: `.to` after a fraction, `^` after `2 x`, min/max with pi, the
+/// digits of `--sci` when no prefix is chosen, the tonne with digits, and wording.
+#[test]
+fn calc_final_review_regressions() {
+    // a point never moves to the result: it divides, and that is refused
+    for expr in ["1/2 degC", "10/2 degF", "1 / 20 degC"] {
+        let r = calc(&[expr]);
+        assert_eq!(r.code, 1, "{expr}");
+        assert!(r.stderr.contains("ambiguous"), "{expr}: {}", r.stderr);
+    }
+    assert_eq!(calc(&["1/2 km.to(m)"]).stdout, "500 m\n");
+    let r = calc(&["2 * 20 degC"]);
+    assert!(r.stderr.starts_with("error[refused]"), "{}", r.stderr);
+    // `2 x ^ 2` is ambiguous, `2 x^2` and `2 * x ^ 2` are not
+    let with_x = |e: &str| calc(&[e, "--var", "x=3"]);
+    assert_eq!(with_x("2 x ^ 2").code, 1);
+    assert!(with_x("2 x ^ 2").stderr.contains("ambiguous"));
+    assert_eq!(with_x("2 x^2").stdout, "18\n");
+    assert_eq!(with_x("2 * x ^ 2").stdout, "18\n");
+    // min and max with different powers of pi compare the numbers and keep the winner
+    assert_eq!(calc(&["max(1, pi)"]).stdout, "3.141592653589793…\n");
+    assert_eq!(
+        calc(&["min(10 m, pi * 1 m)"]).stdout,
+        "3.141592653589793… m\n"
+    );
+    assert_eq!(calc(&["max(1, pi)", "--exact"]).code, 1);
+    // --sci keeps its exponent when the prefix did not take it
+    for (expr, text) in [
+        ("1234567 kg", "1.23e6 kg\n"),
+        ("123456789 ft", "1.23e8 ft\n"),
+        ("1e30 g", "1.00e27 kg\n"),
+        ("1500 kg", "1.50e3 kg\n"),
+        ("0.99996 t", "1.00 t\n"),
+        ("0.5 t", "500. kg\n"),
+    ] {
+        let r = calc(&[expr, "--autoprefix", "--sci=3"]);
+        assert_eq!(
+            r.stdout,
+            if expr == "0.5 t" { "500 kg\n" } else { text },
+            "{expr}"
+        );
+    }
+    // a name that is an ambiguous unit symbol says so
+    let r = calc(&["2 * cal"]);
+    assert!(r.stderr.contains("ambiguous unit symbol"), "{}", r.stderr);
+    // plain numbers in a term after `,` or in a sum
+    assert_eq!(calc(&["(10+20)/1 s"]).stdout, "30 s\n");
+    assert_eq!(calc(&["max(1/2 kg, 400 g)"]).stdout, "0.5 kg\n");
+    assert_eq!(calc(&["pi/2 rad"]).stdout, "1.5707963267948966… rad\n");
+    assert_eq!(calc(&["1 + 1/2 kg"]).code, 1);
 }

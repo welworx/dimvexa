@@ -1203,7 +1203,7 @@ fn a_kelvin_value_scales_and_one_over_kelvin_works() {
     // a Celsius point does not scale
     assert_eq!(
         math.mul(&two, &num(&reg, "20 degC")).unwrap_err().code(),
-        "kind_mismatch"
+        "refused"
     );
     // approximate kelvin values scale too, and stay approximate
     let root_two = math.sqrt(&num(&reg, "2 1")).unwrap();

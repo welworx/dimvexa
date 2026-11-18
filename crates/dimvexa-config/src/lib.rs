@@ -1246,11 +1246,19 @@ fn check_autoprefix_below(
     if u.autoprefix_below.is_empty() {
         return Ok(());
     }
+    if u.prefixes == PrefixMode::None {
+        return Err(bad(
+            "autoprefix_below needs prefixes = \"si\": a unit without prefixes keeps its unit"
+                .to_string(),
+        ));
+    }
     let target = reg.get(&u.autoprefix_below).ok_or_else(|| {
-        bad(format!(
-            "autoprefix_below '{}' is not a unit",
-            u.autoprefix_below
-        ))
+        let why = if reg.parse(&u.autoprefix_below).is_ok() {
+            "is a prefixed form; name the unit without its prefix (g, not kg)"
+        } else {
+            "is not a unit"
+        };
+        bad(format!("autoprefix_below '{}' {why}", u.autoprefix_below))
     })?;
     if target.dim() != base.dim() || target.kind() != base.kind() {
         return Err(bad(format!(
@@ -1874,7 +1882,7 @@ mod tests {
         let with = |target: &str| {
             let text = BARREL.replace(
                 "source",
-                &format!("autoprefix_below = \"{target}\"\nsource"),
+                &format!("prefixes = \"si\"\nautoprefix_below = \"{target}\"\nsource"),
             );
             let mut reg = Registry::new();
             let gal = Unit::linear(
@@ -1892,6 +1900,15 @@ mod tests {
             apply(&mut reg, &[Config::parse(&text, "o.toml").unwrap()]).map(|_| ())
         };
         assert!(with("gal_us").is_ok());
+        // a unit without prefixes keeps its unit, so the key is refused there
+        let none = BARREL.replace("source", "autoprefix_below = \"gal_us\"\nsource");
+        let mut reg = Registry::new();
+        let gal = Unit::linear("gal_us", cube, Ratio::ONE)
+            .unwrap()
+            .with_prefixes(PrefixMode::Si);
+        reg.register(gal).unwrap();
+        let e = apply(&mut reg, &[Config::parse(&none, "o.toml").unwrap()]).unwrap_err();
+        assert!(e.to_string().contains("needs prefixes"), "{e}");
         for (bad, why) in [
             ("m", "same dimension"),
             ("nosuch", "is not a unit"),

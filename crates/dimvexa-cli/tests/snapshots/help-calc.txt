@@ -36,11 +36,14 @@ Examples:
 Options:
   --var NAME=VALUE the value of a name, a quantity; repeatable
   --to UNIT        show the result in UNIT (an exact result stays exact)
-  --exact          also print the exact fraction of an exact result
+  --exact          also print the exact fraction of an exact result, and
+                   refuse a sum with no exact value (1 + pi, else it is
+                   approximate)
   --sci[=N]        write the number as 1.5e3 (all digits, or N significant
                    digits, 1 to 17: --sci=4 is 1.500e3)
   --autoprefix     choose the SI prefix that puts the number between 1 and
-                   1000: 1500 m is 1.5 km (not with --to)
+                   1000: 1500 m is 1.5 km (not with --to); with --sci
+                   there is no exponent: 1.50 km
   --json           machine-readable output (schema dimvexa.calc/1)
   --pretty         --json, indented for reading
   --config NAME_OR_PATH

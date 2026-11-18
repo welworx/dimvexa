@@ -459,7 +459,7 @@ def test_calc_review_round_four_cases() -> None:
     assert e.value.code == "overflow"
     with pytest.raises(dimvexa.DimvexaError) as e:
         dimvexa.calc("2 * 27 degC")
-    assert e.value.code == "kind_mismatch"
+    assert e.value.code == "refused"
 
 
 def test_calc_reading_rules_pi_sums_and_sci_with_prefix() -> None:
@@ -472,3 +472,10 @@ def test_calc_reading_rules_pi_sums_and_sci_with_prefix() -> None:
     assert dimvexa.calc("999.9996 m", autoprefix=True, sci=3)["text"] == "1.00 km"
     with pytest.raises(dimvexa.DimvexaError, match="20 degC.to"):
         dimvexa.calc("1 - 20 degC / 300 K")
+
+
+def test_calc_warnings_are_not_lost_when_the_calculation_fails() -> None:
+    with pytest.warns(UserWarning, match="replaces the constant"):
+        with pytest.raises(dimvexa.DimvexaError) as e:
+            dimvexa.calc("speed_of_light / 0", vars={"speed_of_light": "3"})
+    assert e.value.code == "division_by_zero"
