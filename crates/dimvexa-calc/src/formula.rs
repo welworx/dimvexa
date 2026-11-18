@@ -683,7 +683,18 @@ impl Parser<'_, '_> {
         match self.peek().cloned() {
             Some(Tok::Num(text)) => {
                 self.advance();
-                self.f.reg.quantity(&format!("{text} 1")).map(Number::from)
+                self.f
+                    .reg
+                    .quantity(&format!("{text} 1"))
+                    .map(Number::from)
+                    .map_err(|e| match e {
+                        Error::Parse { message, .. } => parse_error(
+                            self.src,
+                            at,
+                            &format!("'{text}' is not a number ({message}); check the dots"),
+                        ),
+                        other => other,
+                    })
             }
             Some(Tok::Qty(number, unit)) => {
                 self.advance();
@@ -700,7 +711,20 @@ impl Parser<'_, '_> {
                     .iter()
                     .find(|(n, _)| *n == name)
                     .map(|(_, q)| q.clone())
-                    .ok_or_else(|| parse_error(self.src, at, "unknown variable"))?;
+                    .ok_or_else(|| {
+                        let message = if self.f.reg.parse(&name).is_ok() {
+                            format!(
+                                "'{name}' is a unit, and a unit needs a number in front \
+                                 of it (1 {name})"
+                            )
+                        } else {
+                            format!(
+                                "'{name}' is not a variable of this equation (define it with \
+                                 --var {name}=VALUE) and not a unit"
+                            )
+                        };
+                        parse_error(self.src, at, &message)
+                    })?;
                 if !self.used.contains(&name) {
                     self.used.push(name);
                 }
@@ -791,6 +815,12 @@ impl Parser<'_, '_> {
                     };
                     parse_error(self.src, at, &format!("'{number} {unit}': {advice}"))
                 }
+                // the registry quotes its own text (`..5 1`): quote the equation instead
+                Error::Parse { message, .. } => parse_error(
+                    self.src,
+                    at,
+                    &format!("this is not a number with a unit ({message}); check the dots (a conversion is written (3 m).to(UNIT))"),
+                ),
                 other => other,
             })
     }
@@ -1124,7 +1154,7 @@ impl<'r> Formula<'r> {
             let message = match p.toks.get(p.pos) {
                 Some((_, Tok::Id(name))) => format!(
                     "unexpected '{name}': two names or values in a row need an operator, \
-                     write the product with * (for example 2 * r * {name})"
+                     write the product with * between them"
                 ),
                 _ => "unexpected input".to_owned(),
             };
@@ -1165,7 +1195,14 @@ impl<'r> Formula<'r> {
                         .filter(usable)
                         .find(|n| n.as_str() == text)
                 };
-                if self.reg.parse(&symbol).is_ok() || self.reg.parse(&bare).is_ok() {
+                // an ambiguous symbol (`ton`, `cal`) is a unit name too: a variable may not take it
+                let unit_name = |t: &str| {
+                    matches!(
+                        self.reg.parse(t),
+                        Ok(_) | Err(Error::AmbiguousSymbol { .. })
+                    )
+                };
+                if unit_name(&symbol) || unit_name(&bare) {
                     if let Some(name) = named(&symbol).or_else(|| named(&bare)) {
                         return Err(Error::InvalidDefinition {
                             symbol: name.clone(),

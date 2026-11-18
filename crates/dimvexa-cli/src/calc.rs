@@ -157,11 +157,9 @@ pub fn run_calc(
             0
         }
         Err(failure) => {
-            // the JSON error has no field for warnings: they go to stderr, so none is lost
-            if req.json {
-                for w in &formula_warnings {
-                    let _ = writeln!(err, "warning: {w}");
-                }
+            // the error has no field for warnings: they go to stderr, so none is lost
+            for w in &formula_warnings {
+                let _ = writeln!(err, "warning: {w}");
             }
             fail(req.json, &failure, out, err)
         }

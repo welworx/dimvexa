@@ -942,16 +942,12 @@ impl<'r> Math<'r> {
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     pub fn autoprefix(&self, a: &Number) -> Result<Number> {
-        use dimvexa_core::{Expr, PrefixFamily, SI_PREFIXES};
+        use dimvexa_core::{PrefixFamily, SI_PREFIXES};
         let unit = a.unit();
-        let (symbol, power) = match unit.expr() {
-            Expr::Unit(s) => (s.as_str(), 1),
-            Expr::Pow(base, n) if *n >= 1 => match &**base {
-                Expr::Unit(s) => (s.as_str(), *n),
-                _ => return Ok(a.clone()),
-            },
-            _ => return Ok(a.clone()),
+        let Some((symbol, power)) = single_unit(unit.expr()) else {
+            return Ok(a.clone());
         };
+        let symbol = symbol.as_str();
         // temperatures (a scale, a point) keep their unit; angles and cycles take prefixes (mrad, GHz)
         if !matches!(unit.kind(), Kind::Plain | Kind::Angle | Kind::Cycle)
             || !unit.offset().is_zero()
@@ -2141,4 +2137,26 @@ fn magnitude_reaches(n: &Number, tens: i32) -> Result<bool> {
         }
         Number::Approx(x) => x.value.abs() >= 10_f64.powi(tens),
     })
+}
+
+/// The one symbol and its positive power of a unit that is only that symbol, perhaps repeated
+/// (`m`, `m^2`, `m.m`), so `0.5 m * 1 m` prefixes like `0.5 m^2`.
+fn single_unit(expr: &dimvexa_core::Expr) -> Option<(String, i32)> {
+    use dimvexa_core::Expr;
+    match expr {
+        Expr::Unit(s) => Some((s.clone(), 1)),
+        Expr::Pow(base, n) if *n >= 1 => {
+            let (s, p) = single_unit(base)?;
+            Some((s, p.checked_mul(*n)?))
+        }
+        Expr::Mul(a, b) => {
+            let (sa, pa) = single_unit(a)?;
+            let (sb, pb) = single_unit(b)?;
+            (sa == sb)
+                .then(|| (sa, pa.checked_add(pb)))?
+                .1
+                .map(|p| (sb, p))
+        }
+        _ => None,
+    }
 }

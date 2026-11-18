@@ -449,7 +449,7 @@ answered with an approximate number.
 
 * **Digit width (KL-31).** Exact arithmetic holds numbers of about 38 digits. Equations that
   need more, such as `(1 ly)^3` or a product of the SI constants entered as numbers
-  (`k^4 / (h^3 c^2)`), fail with `overflow`. Powers of ten
+  (`boltzmann_constant^4 / (planck_constant^3 * speed_of_light^2)`), fail with `overflow`. Powers of ten
   do not count against this (a number may be written from `1e-10000` to `1e10000`, and a result
   beyond the range of `f64` is printed from its exact value: `10^-400` is `1e-400`).
 * **Roots need whole exponents of units (KL-32):** `sqrt(4 m)` is refused, `sqrt(4 m2)` is `2 m`.
@@ -469,7 +469,7 @@ answered with an approximate number.
   error (`5 m.to(K)`). It binds tighter than `*` and `/`, so `n * molar_gas_constant * T.to(K) / V`
   is `p V = n R T` with `T` in degrees Celsius. `--to UNIT` does the same for the whole result.
 * **Temperatures:** a point (`20 degC`, `-40 degC`) can be compared and shifted by a difference,
-  not multiplied or negated (`-40 degC` is the point itself, `-(20 degC)` is refused); `degC + degC` adds two points (`20 degC + 30 degC` is `50 degC`) while
+  not multiplied or negated (`-40 degC` is the point itself, `-(20 degC)` is refused); `degC + degC` is `20 degC + 30 degC` = `50 degC` (the second point is read as a rise, ADR-027) while
   `degC - degC` is a difference (`delta_degC`) and a point minus a kelvin is refused (ADR-027).
   A computed temperature (`p * V / (n * R)`, dimension K) converts to `K`, `degC` and `degF`, also
   with `--to`. A kelvin value scales (`2 * 20 degC.to(K)` is `586.3 K`); a Celsius or Fahrenheit
@@ -481,11 +481,12 @@ answered with an approximate number.
   `delta_degC`; `(20 degC)^2` is refused too (known limitation KL-35: a decision to keep a silent
   wrong result out, which may be too strict or wrongly implemented; write `(20 delta_degC)^2`,
   `20 degC.to(K)^2` or the number alone, `20^2`).
-* **Not units of every trade:** names that mean different things (`ton`, `gpm`, `mph`, `rpm`) are
-  errors until a config chooses (`--config us-customary`, or your own, see
-  `examples/configs/engineering.toml`). A space between two units is not a product: write
+* **Not units of every trade:** names that mean different things (`ton`, `mt`, `cal`) are
+  `ambiguous_symbol` errors until a config chooses (`--config us-customary`, or your own), and
+  a variable may not take such a name. `gpm`, `mph` and `rpm` are no units unless a config defines
+  them (see `examples/configs/engineering.toml`). A space between two units is not a product: write
   `N*m` or `N·m`, not `N m`.
-* **Size:** an equation has at most 4096 characters, 64 levels of parentheses and 512 names.
+* **Size:** an equation has at most 4096 characters, 64 levels of parentheses and 512 `--var` definitions.
 
 #### In Python, JavaScript and Excel
 
@@ -666,7 +667,7 @@ What to know:
    once, at the end, to the nearest `f64`. These units are `defined` in `dimvexa units deg`.
 2. **Addition is not defined for values with different exponents.** Combining `pi` with a plain
    number in a sum (`1 + pi`) is refused with `unrepresentable` (not `overflow`: no integer bound is involved), never approximated. A conversion only
-   multiplies, so this shows up only through the library (`Ratio::checked_add`). The one conversion that adds is a temperature scale with an offset, so `dimvexa convert pi degC degF` is refused (`refused`): use a decimal.
+   multiplies, so this shows up in `dimvexa calc` (`1 + pi`, `2 * pi * 1 m + 3 m`: write the sum with a decimal such as `3.14159`) and in the library (`Ratio::checked_add`). The one conversion that adds is a temperature scale with an offset, so `dimvexa convert pi degC degF` is refused (`refused`): use a decimal.
 3. **A value may contain `pi`** (ADR-018, step 3). `4pi`, `4π`, `4 pi`, `pi/2`, `1/2*pi`,
    `2*pi^2` and `1/(2*pi)` are all values; so are `4 pi rad deg` and `2 * pi rad deg` written
    with spaces. A value may use `*`, `/`, an integer power `^`, a leading sign and parentheses.

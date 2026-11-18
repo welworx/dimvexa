@@ -50,8 +50,8 @@
 )]
 
 use dimvexa_core::{
-    ConstantDef, Conversion, Dim, Error, Exactness, Kind, PrefixMode, Ratio, Registry, Result,
-    Status, Unit, UnitExpr, is_valid_symbol,
+    ConstantDef, Conversion, Dim, Error, Exactness, Kind, PrefixFamily, PrefixMode, Ratio,
+    Registry, Result, Status, Unit, UnitExpr, is_valid_symbol,
 };
 
 /// A parsed config file: its origin, a content hash and its `[map]`, `[[unit]]` and
@@ -1215,6 +1215,7 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
     if !base_sources.is_empty() {
         note = format!("{note} (base {}: {base_sources})", u.base);
     }
+    check_autoprefix_below(reg, u, &base, &bad)?;
     let wrap = |e| at(&u.origin, u.line, e);
     let mut unit = Unit::new(&u.id, base.dim(), base.kind(), factor, offset).map_err(wrap)?;
     if let Some(symbol) = &u.symbol {
@@ -1233,6 +1234,37 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
         .with_provenance(base.exactness().combine(u.exactness), &u.source, &note)
         .with_namespace("user");
     reg.register(unit).map_err(|e| at(&u.origin, u.line, e))
+}
+
+/// `autoprefix_below` must name a unit of the base's dimension that takes SI prefixes.
+fn check_autoprefix_below(
+    reg: &Registry,
+    u: &ConfigUnit,
+    base: &UnitExpr,
+    bad: &dyn Fn(String) -> Error,
+) -> Result<()> {
+    if u.autoprefix_below.is_empty() {
+        return Ok(());
+    }
+    let target = reg.get(&u.autoprefix_below).ok_or_else(|| {
+        bad(format!(
+            "autoprefix_below '{}' is not a unit",
+            u.autoprefix_below
+        ))
+    })?;
+    if target.dim() != base.dim() || target.kind() != base.kind() {
+        return Err(bad(format!(
+            "autoprefix_below '{}' must have the same dimension as '{}'",
+            u.autoprefix_below, u.id
+        )));
+    }
+    if !target.prefixes().accepts(PrefixFamily::Si) {
+        return Err(bad(format!(
+            "autoprefix_below '{}' must take SI prefixes",
+            u.autoprefix_below
+        )));
+    }
+    Ok(())
 }
 
 /// Applies configs to a registry and returns what is now in effect.
@@ -1834,6 +1866,40 @@ mod tests {
         let bad = BARREL.replace("source", "symbol = \"b o\"\nsource");
         let msg = Config::parse(&bad, "o").unwrap_err().to_string();
         assert!(msg.contains("symbol 'b o' is not a well-formed"), "{msg}");
+    }
+
+    #[test]
+    fn autoprefix_below_names_a_prefixable_unit_of_the_same_dimension() {
+        let cube = Dim::new([0, 3, 0, 0, 0, 0, 0]);
+        let with = |target: &str| {
+            let text = BARREL.replace(
+                "source",
+                &format!("autoprefix_below = \"{target}\"\nsource"),
+            );
+            let mut reg = Registry::new();
+            let gal = Unit::linear(
+                "gal_us",
+                cube,
+                Ratio::new(473_176_473, 125_000_000_000).unwrap(),
+            )
+            .unwrap()
+            .with_prefixes(PrefixMode::Si);
+            reg.register(gal).unwrap();
+            reg.register(Unit::linear("m", Dim::M, Ratio::ONE).unwrap())
+                .unwrap();
+            reg.register(Unit::linear("flat", cube, Ratio::ONE).unwrap())
+                .unwrap();
+            apply(&mut reg, &[Config::parse(&text, "o.toml").unwrap()]).map(|_| ())
+        };
+        assert!(with("gal_us").is_ok());
+        for (bad, why) in [
+            ("m", "same dimension"),
+            ("nosuch", "is not a unit"),
+            ("flat", "SI prefixes"),
+        ] {
+            let e = with(bad).unwrap_err().to_string();
+            assert!(e.contains(why), "{bad}: {e}");
+        }
     }
 
     #[test]

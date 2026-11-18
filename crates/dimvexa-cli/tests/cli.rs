@@ -3437,7 +3437,7 @@ fn calc_failures_use_the_library_codes_and_exit_1() {
         ("1 m + 1 s", "dimension_mismatch", "cannot be converted"),
         ("5 PSI", "parse_error", "did you mean the unit psi?"),
         ("5 foo", "parse_error", "not a unit and not a variable"),
-        ("nothing * 2", "parse_error", "unknown variable"),
+        ("nothing * 2", "parse_error", "'nothing' is not a variable"),
         ("1 +", "parse_error", "a value is expected"),
         ("(1 ly)^3", "overflow", "overflow"),
         ("1 + pi", "unrepresentable", "pi"),
@@ -4518,4 +4518,71 @@ fn calc_two_names_in_a_row_need_an_operator() {
         r.stderr
     );
     assert_eq!(calc(&["2 r * r", "--var", "r=3 m"]).stdout, "18 m^2\n");
+}
+
+/// A variable may not take the name of an ambiguous unit symbol either (`ton`).
+#[test]
+fn calc_a_variable_named_like_an_ambiguous_unit_is_refused() {
+    let r = calc(&["2 ton", "--var", "ton=3"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr.starts_with("error[invalid_definition]: "),
+        "{}",
+        r.stderr
+    );
+    assert!(r.stderr.contains("'ton' is also a unit"), "{}", r.stderr);
+}
+
+/// A warning is shown when the calculation fails too, in text as in JSON.
+#[test]
+fn calc_warnings_are_not_lost_when_the_calculation_fails() {
+    for json in [false, true] {
+        let mut args = vec!["speed_of_light * 1 s", "--to", "m"];
+        args.extend(["--var", "speed_of_light=3"]);
+        if json {
+            args.push("--json");
+        }
+        let r = calc(&args);
+        assert_eq!(r.code, 1);
+        assert!(
+            r.stderr
+                .contains("warning: the name 'speed_of_light' replaces"),
+            "json={json}: {}",
+            r.stderr
+        );
+    }
+}
+
+/// `--autoprefix` reads a repeated unit as its power: `0.5 m * 1 m` is `0.5 m2`.
+#[test]
+fn calc_autoprefix_prefixes_a_power_that_comes_from_a_product() {
+    for (expr, text) in [
+        ("0.5 m * 1 m", "500000 mm^2\n"),
+        ("0.5 t * 1 t", "500000 kg^2\n"),
+        ("1 m * 1 m * 1 m * 0.001", "1000000 mm^3\n"),
+        ("3 m * 2 s", "6 m.s\n"),
+    ] {
+        assert_eq!(calc(&[expr, "--autoprefix"]).stdout, text, "{expr}");
+    }
+}
+
+/// Errors about a number or a name quote the equation and say what is wrong.
+#[test]
+fn calc_syntax_errors_quote_the_equation_and_name_the_problem() {
+    for (expr, needle) in [
+        ("1..5", "cannot parse '1..5' at position 0"),
+        ("1.2.3 m", "cannot parse '1.2.3 m' at position 0"),
+        ("5. m", "cannot parse '5. m' at position 0"),
+        ("x", "'x' is not a variable of this equation"),
+        ("1 m/s / s", "'s' is a unit, and a unit needs a number"),
+        ("2 x y", "unexpected 'y'"),
+    ] {
+        let r = if expr == "2 x y" {
+            calc(&[expr, "--var", "x=3", "--var", "y=4"])
+        } else {
+            calc(&[expr])
+        };
+        assert_eq!(r.code, 1, "{expr}");
+        assert!(r.stderr.contains(needle), "{expr}: {}", r.stderr);
+    }
 }

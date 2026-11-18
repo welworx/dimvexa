@@ -451,7 +451,7 @@ def test_calc_review_round_four_cases() -> None:
     assert dimvexa.calc("2 m^(2)")["text"] == "2 m^2"
     assert dimvexa.calc("9.995", sci=3)["text"] == "1.00e1"
     assert dimvexa.calc("2.5", sci=1)["text"] == "3e0"
-    assert dimvexa.calc("0.5 t", autoprefix=True)["text"] == "0.5 t"
+    assert dimvexa.calc("0.5 t", autoprefix=True)["text"] == "500 kg"
     assert dimvexa.calc("20 degC / 2 s")["text"] == "10 delta_degC/s"
     assert dimvexa.calc("5 s⁻²")["text"] == "5 s^-2"
     with pytest.raises(dimvexa.DimvexaError) as e:
