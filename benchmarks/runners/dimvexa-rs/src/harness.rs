@@ -144,6 +144,7 @@ pub fn machine_info() -> Json {
         .lines()
         .find(|l| l.to_lowercase().starts_with("model name"))
         .and_then(|l| l.split_once(':').map(|x| x.1.trim().to_string()))
+        .or_else(|| cmd_out("sysctl", &["-n", "machdep.cpu.brand_string"]))
         .unwrap_or_else(|| "unknown".to_string());
     let gov = read("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
     let mut o = Json::obj();
