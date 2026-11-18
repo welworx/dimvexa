@@ -65,6 +65,26 @@ pub const MAX_VARS: usize = 512;
 /// How deeply parentheses and function calls may nest.
 const MAX_DEPTH: usize = 64;
 
+/// The step of [`Formula::calculate`] that failed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CalcStep {
+    /// Reading and evaluating the equation (and describing the result).
+    Expression,
+    /// The conversion to the unit asked for.
+    Unit,
+    /// The choice of an SI prefix.
+    Prefix,
+}
+
+/// A failure of [`Formula::calculate`]: the step, and the error.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CalcError {
+    /// Which step failed.
+    pub step: CalcStep,
+    /// The error, with its stable code.
+    pub error: Error,
+}
+
 /// A set of named quantities and an evaluator for equations over them.
 #[derive(Debug)]
 pub struct Formula<'r> {
@@ -144,6 +164,42 @@ fn conversion_follows(chars: &[char], dot: usize) -> bool {
     chars.get(dot.saturating_add(1)..dot.saturating_add(4)) == Some(&['t', 'o', '('][..])
 }
 
+/// The end of `^(2)` or `^(-1)` that starts at `caret` (the index after the closing
+/// parenthesis): a whole-number power written in parentheses.
+fn power_in_parentheses(chars: &[char], caret: usize) -> Option<usize> {
+    if chars.get(caret) != Some(&'^') || chars.get(next(caret)) != Some(&'(') {
+        return None;
+    }
+    let mut j = next(next(caret));
+    if chars.get(j) == Some(&'-') {
+        j = next(j);
+    }
+    let digits = j;
+    while chars.get(j).is_some_and(char::is_ascii_digit) {
+        j = next(j);
+    }
+    (j > digits && chars.get(j) == Some(&')')).then(|| next(j))
+}
+
+/// A unit text with `^(2)` written as `^2` (the registry reads the second form).
+fn plain_powers(unit: &str) -> String {
+    let chars: Vec<char> = unit.chars().collect();
+    let mut out = String::new();
+    let mut i = 0;
+    while let Some(&c) = chars.get(i) {
+        if let Some(end) = power_in_parentheses(&chars, i) {
+            out.push('^');
+            let inside = i.saturating_add(2)..end.saturating_sub(1);
+            out.extend(chars.get(inside).unwrap_or_default());
+            i = end;
+        } else {
+            out.push(c);
+            i = next(i);
+        }
+    }
+    out
+}
+
 /// The end of the unit that starts at `start`: symbols, digits (`m3`), `^` powers, `.`, and a
 /// `*` or `/` only when a unit symbol follows it; parentheses must balance. A space ends it.
 fn scan_unit(chars: &[char], start: usize) -> usize {
@@ -169,7 +225,14 @@ fn scan_unit(chars: &[char], start: usize) -> usize {
             '*' | '/' => atom(following),
             // `20 degC.to(K)`: the dot before `to(` is the conversion, not a product of units
             '.' => following.is_some_and(starts_unit) && !conversion_follows(chars, j),
-            '^' => following.is_some_and(|n| n.is_ascii_digit() || n == '-'),
+            '^' => {
+                // `m^2`, `m^-1` and `m^(2)`, `m^(-1)`: the power belongs to the unit
+                if let Some(end) = power_in_parentheses(chars, j) {
+                    j = end;
+                    continue;
+                }
+                following.is_some_and(|n| n.is_ascii_digit() || n == '-')
+            }
             '-' => j > start && chars.get(j.saturating_sub(1)) == Some(&'^'),
             _ => false,
         };
@@ -186,26 +249,48 @@ fn scan_unit(chars: &[char], start: usize) -> usize {
 /// `²`, `³` and `⁻¹` are `^2`, `^3` and `^-1`. (An error position counts the characters after
 /// this rewrite.)
 fn normalise(input: &str) -> Vec<char> {
+    // a superscript digit, as its digit
+    let superscript = |c: char| match c {
+        '⁰' => Some('0'),
+        '¹' => Some('1'),
+        '²' => Some('2'),
+        '³' => Some('3'),
+        '⁴' => Some('4'),
+        '⁵' => Some('5'),
+        '⁶' => Some('6'),
+        '⁷' => Some('7'),
+        '⁸' => Some('8'),
+        '⁹' => Some('9'),
+        _ => None,
+    };
     let mut out = Vec::new();
     let mut chars = input.chars().peekable();
     while let Some(c) = chars.next() {
-        // a superscript belongs to what stands before it, spaces or not: `2 m ²` is `2 m²`
-        if matches!(c, '²' | '³' | '⁻') {
+        if superscript(c).is_some() || c == '⁻' {
+            // a superscript belongs to what stands before it, spaces or not: `2 m ²` is `2 m²`;
+            // a run of superscripts (`s⁻²`, `m¹⁰`) is one power
             while out.last() == Some(&' ') {
                 out.pop();
             }
+            out.push('^');
+            let mut current = c;
+            loop {
+                out.push(superscript(current).unwrap_or('-'));
+                match chars.peek().copied() {
+                    Some(n) if n == '⁻' || superscript(n).is_some() => {
+                        chars.next();
+                        current = n;
+                    }
+                    _ => break,
+                }
+            }
+            continue;
         }
         match c {
             '\t' | '\n' | '\r' | '\u{a0}' | '\u{2009}' | '\u{202f}' => out.push(' '),
             '·' | '⋅' | '×' => out.push('*'),
             '÷' => out.push('/'),
             '−' => out.push('-'),
-            '²' => out.extend(['^', '2']),
-            '³' => out.extend(['^', '3']),
-            '⁻' if chars.peek() == Some(&'¹') => {
-                chars.next();
-                out.extend(['^', '-', '1']);
-            }
             c => out.push(c),
         }
     }
@@ -260,7 +345,10 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
                 && chars.get(next(after)).copied().is_some_and(starts_unit);
             if chars.get(after).copied().is_some_and(starts_unit) || opens_unit {
                 let end = scan_unit(&chars, after);
-                out.push((start, Tok::Qty(number, text(&chars, after, end))));
+                out.push((
+                    start,
+                    Tok::Qty(number, plain_powers(&text(&chars, after, end))),
+                ));
                 i = end;
             } else {
                 out.push((start, Tok::Num(number)));
@@ -548,7 +636,8 @@ impl Parser<'_, '_> {
                 parse_error(
                     self.src,
                     at,
-                    "the exponent is too large or too precise (or has pi)",
+                    "the exponent must be a fraction: it is too large or too precise, or it has pi \
+                     (an irrational exponent is not exact)",
                 )
             })?;
         let num = i32::try_from(ratio.num())
@@ -682,6 +771,25 @@ impl Parser<'_, '_> {
                                      --var {written}=VALUE"
                         ),
                     )
+                }
+                // `2 sin(30 deg)`: a function or name after a number is read as a unit
+                Error::Parse { ref message, .. }
+                    if message.contains("missing operator between units") =>
+                {
+                    let lower = unit.to_ascii_lowercase();
+                    let advice = if lower.contains(".to(") && !unit.contains(".to(") {
+                        "the conversion is written .to(UNIT), in lower case".to_owned()
+                    } else {
+                        let name = unit
+                            .split(|c: char| !(c.is_alphanumeric() || c == '_'))
+                            .next()
+                            .unwrap_or_default();
+                        format!(
+                            "a function or a name after a number needs an operator: \
+                             write {number} * {name}(...)"
+                        )
+                    };
+                    parse_error(self.src, at, &format!("'{number} {unit}': {advice}"))
                 }
                 other => other,
             })
@@ -942,7 +1050,7 @@ impl<'r> Formula<'r> {
                 ));
             } else if i < self.builtin {
                 self.warnings.push(format!(
-                    "the name '{name}' replaces the built-in constant {name}; \
+                    "the name '{name}' replaces the constant {name}; \
                      the value you gave is used"
                 ));
             }
@@ -1135,29 +1243,36 @@ impl<'r> Formula<'r> {
     ///
     /// # Errors
     ///
-    /// The errors of `eval_strict`, [`to_unit`](Self::to_unit) and
-    /// [`autoprefix`](Self::autoprefix), and `refused` when both `to` and `autoprefix` are given.
+    /// A [`CalcError`] with the step that failed and the errors of `eval_strict`,
+    /// [`to_unit`](Self::to_unit) and [`autoprefix`](Self::autoprefix), and `refused` when both
+    /// `to` and `autoprefix` are given.
     pub fn calculate(
         &self,
         expression: &str,
         to: Option<&str>,
         autoprefix: bool,
-    ) -> Result<crate::Report> {
+    ) -> std::result::Result<crate::Report, CalcError> {
+        let at = |step: CalcStep| move |error: Error| CalcError { step, error };
         let to = to.map(str::trim).filter(|u| !u.is_empty());
         if autoprefix && to.is_some() {
-            return Err(Error::Refused {
-                reason: "autoprefix chooses the unit, so it cannot be used with a target unit"
-                    .to_owned(),
-                suggestions: Vec::new(),
+            return Err(CalcError {
+                step: CalcStep::Prefix,
+                error: Error::Refused {
+                    reason: "autoprefix chooses the unit, so it cannot be used with a target unit"
+                        .to_owned(),
+                    suggestions: Vec::new(),
+                },
             });
         }
-        let mut number = self.eval_strict(expression)?;
+        let mut number = self
+            .eval_strict(expression)
+            .map_err(at(CalcStep::Expression))?;
         if let Some(unit) = to {
-            number = self.to_unit(&number, unit)?;
+            number = self.to_unit(&number, unit).map_err(at(CalcStep::Unit))?;
         } else if autoprefix {
-            number = self.autoprefix(&number)?;
+            number = self.autoprefix(&number).map_err(at(CalcStep::Prefix))?;
         }
-        crate::Report::new(&number)
+        crate::Report::new(&number).map_err(at(CalcStep::Expression))
     }
 
     /// `n` with the SI prefix that puts its number between 1 and 1000 (`1500 m` is `1.5 km`).

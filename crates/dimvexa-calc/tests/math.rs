@@ -1338,3 +1338,61 @@ fn an_approximate_temperature_converts_and_is_never_scaled_as_a_point() {
         1e-13,
     );
 }
+
+#[test]
+fn autoprefix_leaves_a_unit_alone_when_the_prefixed_symbol_reads_as_another_unit() {
+    let reg = registry().unwrap();
+    let math = Math::new(&reg);
+    for text in ["0.5 t", "1e-12 t", "1e-15 t"] {
+        let before = num(&reg, text);
+        assert_eq!(
+            math.autoprefix(&before).unwrap().to_string(),
+            before.to_string(),
+            "{text}"
+        );
+    }
+    assert_eq!(
+        math.autoprefix(&num(&reg, "1500 t")).unwrap().to_string(),
+        "1.5 kt"
+    );
+}
+
+#[test]
+fn a_point_over_a_non_number_is_an_interval_rate_and_otherwise_ambiguous() {
+    let reg = registry().unwrap();
+    let math = Math::new(&reg);
+    let rate = math.div(&num(&reg, "20 degC"), &num(&reg, "2 s")).unwrap();
+    assert_eq!(rate.to_string(), "10 delta_degC/s");
+    close(math.to_f64_in(&rate, "K/s").unwrap(), 10.0, 1e-15);
+    for (a, b, divide) in [
+        ("27 degC", "8.314 J/(mol*K)", false),
+        ("8.314 J/(mol*K)", "27 degC", false),
+        ("1 J", "20 degC", true),
+    ] {
+        let (a, b) = (num(&reg, a), num(&reg, b));
+        let r = if divide {
+            math.div(&a, &b)
+        } else {
+            math.mul(&a, &b)
+        };
+        let err = r.unwrap_err();
+        assert_eq!(err.code(), "refused");
+        assert!(err.to_string().contains("ambiguous"), "{err}");
+    }
+}
+
+#[test]
+fn approximate_results_that_underflow_are_overflow_errors() {
+    let reg = registry().unwrap();
+    let math = Math::new(&reg);
+    let root_two = math.sqrt(&num(&reg, "2 1")).unwrap();
+    let tiny = num(&reg, "1e-200");
+    let once = math.mul(&root_two, &tiny).unwrap();
+    assert_eq!(math.mul(&once, &tiny).unwrap_err().code(), "overflow");
+    assert_eq!(math.exp(&num(&reg, "-746")).unwrap_err().code(), "overflow");
+    assert_eq!(math.exp(&num(&reg, "710")).unwrap_err().code(), "overflow");
+    // a difference that is exactly zero is fine (the mathematics is zero too)
+    let zero = math.sub(&root_two, &root_two).unwrap();
+    assert!(!zero.is_exact());
+    assert_eq!(math.to_f64_in(&zero, "1").unwrap(), 0.0);
+}

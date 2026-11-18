@@ -9,7 +9,7 @@
 use std::io::Write;
 
 use dimvexa::Error;
-use dimvexa_calc::{Formula, Notation, Report};
+use dimvexa_calc::{CalcStep, Formula, Notation, Report};
 
 use crate::color::{BOLD_GREEN, CYAN, RESET};
 use crate::json::{configs_json, f64_text, json_error, json_string, schema_id, warnings_json};
@@ -36,29 +36,27 @@ pub struct CalcRequest {
 /// An error and what to say before its message (`--var dp: `).
 type Failure = (Error, String);
 
-/// The result and what to warn about (a name that replaces a built-in constant or repeats).
-fn evaluate(req: &CalcRequest, loaded: &Loaded) -> Result<(Report, Vec<String>), Failure> {
+/// The result (or the failure) and what to warn about: a name that replaces a constant, or that
+/// is given twice.
+fn evaluate(req: &CalcRequest, loaded: &Loaded) -> (Result<Report, Failure>, Vec<String>) {
     let mut formula = Formula::from_loaded(&loaded.lib);
     for (name, value) in &req.vars {
-        formula = formula
-            .var(name, value)
-            .map_err(|e| (e, format!("--var {name}: ")))?;
+        formula = match formula.var(name, value) {
+            Ok(f) => f,
+            Err(e) => return (Err((e, format!("--var {name}: "))), Vec::new()),
+        };
     }
-    let mut number = formula
-        .eval_strict(&req.expression)
-        .map_err(|e| (e, String::new()))?;
-    if let Some(unit) = &req.to {
-        number = formula
-            .to_unit(&number, unit)
-            .map_err(|e| (e, format!("--to {unit}: ")))?;
-    }
-    if req.autoprefix {
-        number = formula
-            .autoprefix(&number)
-            .map_err(|e| (e, "--autoprefix: ".to_string()))?;
-    }
-    let report = Report::new(&number).map_err(|e| (e, String::new()))?;
-    Ok((report, formula.warnings().to_vec()))
+    let result = formula
+        .calculate(&req.expression, req.to.as_deref(), req.autoprefix)
+        .map_err(|e| {
+            let prefix = match (e.step, &req.to) {
+                (CalcStep::Unit, Some(unit)) => format!("--to {unit}: "),
+                (CalcStep::Prefix, _) => "--autoprefix: ".to_string(),
+                _ => String::new(),
+            };
+            (e.error, prefix)
+        });
+    (result, formula.warnings().to_vec())
 }
 
 fn render_text(r: &Report, exact: bool, notation: Notation, color: bool) -> String {
@@ -142,8 +140,9 @@ pub fn run_calc(
         Err(e) => return report_load_error(&e, req.json, "calc", out, err),
     };
     print_warnings(&loaded, err);
-    match evaluate(req, &loaded) {
-        Ok((c, formula_warnings)) => {
+    let (result, formula_warnings) = evaluate(req, &loaded);
+    match result {
+        Ok(c) => {
             let text = if req.json {
                 let mut all = loaded.lib.warnings.clone();
                 all.extend(formula_warnings);
@@ -157,6 +156,14 @@ pub fn run_calc(
             let _ = writeln!(out, "{text}");
             0
         }
-        Err(failure) => fail(req.json, &failure, out, err),
+        Err(failure) => {
+            // the JSON error has no field for warnings: they go to stderr, so none is lost
+            if req.json {
+                for w in &formula_warnings {
+                    let _ = writeln!(err, "warning: {w}");
+                }
+            }
+            fail(req.json, &failure, out, err)
+        }
     }
 }

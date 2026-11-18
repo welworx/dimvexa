@@ -276,7 +276,9 @@ impl fmt::Display for Error {
             Self::Overflow { operation } => {
                 write!(
                     f,
-                    "overflow ({operation}): the result is outside what exact arithmetic or an f64 can hold"
+                    "overflow ({operation}): the result needs more digits than exact arithmetic holds \
+                     (about 38) or is outside the range of an f64 (too large, or so small that it \
+                     would lose its digits)"
                 )
             }
             Self::Unrepresentable { operation } => write!(

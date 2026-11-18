@@ -366,7 +366,7 @@ def test_calc_knows_the_constants_tan_atan2_and_merges_units() -> None:
     assert dimvexa.calc("tan(45 deg)")["text"] == "1"
     assert dimvexa.calc("atan2(1 m, 100 cm)", to="deg")["text"] == "45 deg"
     assert dimvexa.calc("1 m * 1 m")["unit"] == "m^2"
-    with pytest.warns(UserWarning, match="replaces the built-in constant"):
+    with pytest.warns(UserWarning, match="replaces the constant"):
         assert (
             dimvexa.calc("elementary_charge * 2", vars={"elementary_charge": "3 C"})["text"]
             == "6 C"
@@ -445,3 +445,18 @@ def test_calc_sci_autoprefix_and_exact_options() -> None:
     for bad in (0, 18, -1, "x", 2.5):
         with pytest.raises(ValueError, match="significant digits"):
             dimvexa.calc("1 m", sci=bad)  # type: ignore[arg-type]
+
+
+def test_calc_review_round_four_cases() -> None:
+    assert dimvexa.calc("2 m^(2)")["text"] == "2 m^2"
+    assert dimvexa.calc("9.995", sci=3)["text"] == "1.00e1"
+    assert dimvexa.calc("2.5", sci=1)["text"] == "3e0"
+    assert dimvexa.calc("0.5 t", autoprefix=True)["text"] == "0.5 t"
+    assert dimvexa.calc("20 degC / 2 s")["text"] == "10 delta_degC/s"
+    assert dimvexa.calc("5 s⁻²")["text"] == "5 s^-2"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("exp(-746)")
+    assert e.value.code == "overflow"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("2 * 27 degC")
+    assert e.value.code == "kind_mismatch"

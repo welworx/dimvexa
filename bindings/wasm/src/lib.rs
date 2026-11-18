@@ -449,7 +449,7 @@ pub fn calc(
     }
     let r = formula
         .calculate(expression, Some(to), autoprefix)
-        .map_err(|e| fail(&e))?;
+        .map_err(|e| fail(&e.error))?;
     for w in formula.warnings() {
         warn(w);
     }

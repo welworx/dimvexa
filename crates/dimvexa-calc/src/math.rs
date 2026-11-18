@@ -51,6 +51,17 @@ const fn finite(value: f64, operation: &'static str) -> Result<f64> {
     }
 }
 
+/// An approximate result that is not zero in mathematics must not become `0` or a subnormal
+/// number (it would have lost its digits): that is an `overflow` as loud as one beyond the top of
+/// the range. `nonzero` says the exact result cannot be zero (a product of nonzero factors).
+fn finite_nonzero(value: f64, nonzero: bool, operation: &'static str) -> Result<f64> {
+    let value = finite(value, operation)?;
+    if nonzero && (value == 0.0 || value.abs() < f64::MIN_POSITIVE) {
+        return Err(overflow(operation));
+    }
+    Ok(value)
+}
+
 fn is_zero_f64(x: f64) -> bool {
     x.classify() == FpCategory::Zero
 }
@@ -262,6 +273,7 @@ impl<'r> Math<'r> {
     /// The errors of `Quantity::checked_mul`, and [`Error::Overflow`] for a result that is not
     /// finite.
     pub fn mul(&self, a: &Number, b: &Number) -> Result<Number> {
+        let (a, b) = &self.read_intervals(a, b, false)?;
         if let Some(scaled) = Self::scale_kelvin(a, b, false)? {
             return Ok(scaled);
         }
@@ -272,7 +284,11 @@ impl<'r> Math<'r> {
         Self::no_offset(&x.unit)?;
         Self::no_offset(&y.unit)?;
         Ok(Number::Approx(Approx {
-            value: finite(x.value * y.value, "approximate product")?,
+            value: finite_nonzero(
+                x.value * y.value,
+                x.value != 0.0 && y.value != 0.0,
+                "approximate product",
+            )?,
             unit: x.unit.mul(&y.unit)?,
         }))
     }
@@ -283,6 +299,7 @@ impl<'r> Math<'r> {
     ///
     /// The errors of `Quantity::checked_div`, [`Error::DivisionByZero`] and [`Error::Overflow`].
     pub fn div(&self, a: &Number, b: &Number) -> Result<Number> {
+        let (a, b) = &self.read_intervals(a, b, true)?;
         if let Some(scaled) = Self::scale_kelvin(a, b, true)? {
             return Ok(scaled);
         }
@@ -296,9 +313,59 @@ impl<'r> Math<'r> {
             return Err(Error::DivisionByZero);
         }
         Ok(Number::Approx(Approx {
-            value: finite(x.value / y.value, "approximate quotient")?,
+            value: finite_nonzero(x.value / y.value, x.value != 0.0, "approximate quotient")?,
             unit: x.unit.div(&y.unit)?,
         }))
+    }
+
+    /// A temperature point of a scale with an offset (`20 degC`) next to something that is not a
+    /// plain number. Divided by it (`20 degC / 2 s`, `20 degC / 5 m`) it is read as the interval
+    /// of that scale, a rate or a gradient: `10 delta_degC/s`. In a product (`R * 20 degC`) or in
+    /// a denominator (`Ea / (R * T)`) it is refused: the point could be the temperature, which
+    /// needs kelvin (`20 degC.to(K)`), or a difference (`20 delta_degC`), and a guess would be
+    /// silently wrong for one of them. Next to a plain number it stays refused as before
+    /// (`2 * 20 degC`), and two points cannot be combined.
+    fn read_intervals(self, a: &Number, b: &Number, divide: bool) -> Result<(Number, Number)> {
+        let scalar = |n: &Number| {
+            let u = n.unit();
+            u.kind() == Kind::Plain && u.dim().is_dimensionless() && u.offset().is_zero()
+        };
+        let offset = |n: &Number| !n.unit().offset().is_zero();
+        let ambiguous = || {
+            refused(
+                "a temperature point in a product or a denominator is ambiguous (the temperature \
+                 or a temperature difference?): write 20 delta_degC for a difference, or \
+                 20 degC.to(K) for the temperature",
+            )
+        };
+        let as_interval = |n: &Number| -> Result<Number> {
+            let Some(difference) = n.unit().difference_symbol() else {
+                return Ok(n.clone());
+            };
+            let unit = self.reg().resolve_symbol(difference)?;
+            Ok(match n {
+                Number::Exact(q) => Number::Exact(Quantity::new(q.value(), unit)),
+                Number::Approx(x) => Number::Approx(Approx {
+                    value: x.value,
+                    unit,
+                }),
+            })
+        };
+        match (offset(a), offset(b)) {
+            (true, true) => Err(refused(
+                "two temperature points cannot be multiplied or divided; use a difference \
+                 (delta_degC) or K, for example 20 degC.to(K)",
+            )),
+            (true, false) if !scalar(b) => {
+                if divide {
+                    Ok((as_interval(a)?, b.clone()))
+                } else {
+                    Err(ambiguous())
+                }
+            }
+            (false, true) if !scalar(a) => Err(ambiguous()),
+            _ => Ok((a.clone(), b.clone())),
+        }
     }
 
     /// A temperature in a unit without an offset (`K`, `degR`) times or divided by a plain number
@@ -345,7 +412,7 @@ impl<'r> Math<'r> {
         }
         let value = if divide { t / s } else { t * s };
         Ok(Some(Number::Approx(Approx {
-            value: finite(value, "approximate product")?,
+            value: finite_nonzero(value, t != 0.0 && s != 0.0, "approximate product")?,
             unit: temperature.unit().clone(),
         })))
     }
@@ -375,7 +442,7 @@ impl<'r> Math<'r> {
             return Err(Error::DivisionByZero);
         }
         Ok(Number::Approx(Approx {
-            value: finite(s * factor.to_f64()? / t, "approximate quotient")?,
+            value: finite_nonzero(s * factor.to_f64()? / t, s != 0.0, "approximate quotient")?,
             unit: per_kelvin,
         }))
     }
@@ -404,6 +471,12 @@ impl<'r> Math<'r> {
     ///
     /// The errors of [`Calc::pow`], [`Error::DivisionByZero`] and [`Error::Overflow`].
     pub fn pow(&self, a: &Number, exp: i32) -> Result<Number> {
+        if exp != 1 && !a.unit().offset().is_zero() {
+            return Err(refused(
+                "a temperature point cannot be raised to a power; use a difference (delta_degC) \
+                 or K, for example 20 degC.to(K)",
+            ));
+        }
         match a {
             Number::Exact(q) => self.calc.pow(q, exp).map(Number::Exact),
             Number::Approx(x) => {
@@ -411,7 +484,7 @@ impl<'r> Math<'r> {
                     return Err(Error::DivisionByZero);
                 }
                 Ok(Number::Approx(Approx {
-                    value: finite(x.value.powi(exp), "approximate power")?,
+                    value: finite_nonzero(x.value.powi(exp), x.value != 0.0, "approximate power")?,
                     unit: x.unit.pow(exp)?,
                 }))
             }
@@ -594,7 +667,7 @@ impl<'r> Math<'r> {
             Si::Approx(real) => approx_root(real, num, den),
         };
         Ok(Number::Approx(Approx {
-            value: finite(value, "approximate root")?,
+            value: finite_nonzero(value, true, "approximate root")?,
             unit,
         }))
     }
@@ -945,14 +1018,39 @@ impl<'r> Math<'r> {
                 Number::Approx(x) => x.value.abs() >= 10_f64.powi(tens),
             })
         };
-        let mut chosen = choices.last().map_or("", |&(symbol, _)| symbol);
-        for &(symbol, exp) in &choices {
-            if reaches(exp)? {
-                chosen = symbol;
-                break;
+        // the first prefix the magnitude reaches, else the smallest
+        let first = {
+            let mut found = choices.len().saturating_sub(1);
+            for (i, &(_, exp)) in choices.iter().enumerate() {
+                if reaches(exp)? {
+                    found = i;
+                    break;
+                }
             }
+            found
+        };
+        // A prefix and a symbol can read as another unit (`mt` is ambiguous, `ft` is the foot,
+        // `pt` the pint): when the prefix does not resolve to this unit with its own factor, the
+        // unit stays as it is, never an error and never a far-off prefix.
+        let plain = reg.parse(&raised(""))?;
+        let Some(&(symbol, exp)) = choices.get(first) else {
+            return Ok(a.clone());
+        };
+        let Ok(candidate) = reg.parse(&raised(symbol)) else {
+            return Ok(a.clone());
+        };
+        let tens = exp.checked_mul(power).ok_or_else(|| overflow("prefix"))?;
+        let expected = plain
+            .factor()
+            .checked_mul(Ratio::ONE.with_exponents(tens, 0))?;
+        let same = candidate.dim() == plain.dim()
+            && candidate.kind() == plain.kind()
+            && candidate.factor().checked_eq(expected)?;
+        if same {
+            self.to_unit(a, &raised(symbol))
+        } else {
+            Ok(a.clone())
         }
-        self.to_unit(a, &raised(chosen))
     }
 
     // ----- hyperbolic functions --------------------------------------------------------------
@@ -1208,7 +1306,8 @@ impl<'r> Math<'r> {
             }
             Si::Approx(f) => f,
         };
-        unity(f.exp())
+        let value = finite_nonzero(f.exp(), true, "exp")?;
+        unity(value)
     }
 
     fn dimensionless(a: &Number) -> Result<Si> {

@@ -129,6 +129,11 @@ assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", 
   assert.strictEqual(code(() => d.calc("2 r", [], "", "", [])), "parse_error");
   assert.strictEqual(d.calc("2 r", ["r=3 m"], "", "", []).text, "6 m");
   assert.strictEqual(d.calc("-40 degC", [], "", "", []).text, "-40 degC");
+  assert.strictEqual(d.calc("2 m^(2)", [], "", "", []).text, "2 m^2");
+  assert.strictEqual(d.calc("9.995", [], "", "", [], { sci: 3 }).text, "1.00e1");
+  assert.strictEqual(d.calc("0.5 t", [], "", "", [], { autoprefix: true }).text, "0.5 t");
+  assert.strictEqual(d.calc("20 degC / 2 s", [], "", "", []).text, "10 delta_degC/s");
+  assert.strictEqual(code(() => d.calc("exp(-746)", [], "", "", [])), "overflow");
   // options: sci, autoprefix, exact (undefined or null is none)
   assert.strictEqual(d.calc("1500 m", [], "", "", [], { sci: true }).text, "1.5e3 m");
   assert.strictEqual(d.calc("1500 m", [], "", "", [], { sci: 3 }).text, "1.50e3 m");

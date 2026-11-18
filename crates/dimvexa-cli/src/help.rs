@@ -7,7 +7,7 @@
 pub const USAGE: &str = "\
 Usage:
   dimvexa [convert] VALUE FROM TO [OPTIONS]
-  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--sci] [--json]
+  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [OPTIONS]
   dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]
@@ -21,7 +21,7 @@ Run 'dimvexa --help' for commands, options and examples.
 pub const HELP: &str = "\
 Usage:
   dimvexa [convert] VALUE FROM TO [OPTIONS]
-  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--json]
+  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [OPTIONS]
   dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]

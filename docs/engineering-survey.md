@@ -6,7 +6,7 @@ and imperial units. Every number that came back matched an independent `f64` SI 
 (relative error below 1e-12); every failure was loud, except B1 (a decision, see below).
 
 The calculations that work are tests in `crates/dimvexa-testkit/tests/engineering/`, one file per field, written
-as equations (`crates/dimvexa-testkit/src/formula.rs`: `"rho * v * D / mu"`). The breaks are
+as equations (`crates/dimvexa-calc/src/formula.rs`: `"rho * v * D / mu"`). The breaks are
 `#[ignore = "open ..."]` tests in the same file that state the answer an engineer should get.
 They fail today on purpose. Work one field at a time: the files are `civil`, `hydrology`, `fluids`,
 `thermal`, `electrical`, `mechanical`, `chemistry`, `astro`, `user_config`, `number_range` and

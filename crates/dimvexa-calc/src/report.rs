@@ -55,6 +55,8 @@ pub struct Report {
     /// The exact value as text where it is not an `f64`: a whole number (`--exact` shows it
     /// without a fraction) or `1e600` for a value beyond `f64`.
     whole: Option<String>,
+    /// The exact value when it has no `pi`: `--sci=N` rounds this, not the `f64`.
+    ratio: Option<Ratio>,
 }
 
 impl Report {
@@ -99,6 +101,10 @@ impl Report {
             dimension: unit.dim().exponents(),
             kind: unit.kind().name().to_string(),
             whole,
+            ratio: match number {
+                Number::Exact(q) if q.value().pi_exp() == 0 => Some(q.value()),
+                _ => None,
+            },
         })
     }
 
@@ -125,7 +131,13 @@ impl Report {
     /// for; `≈` stays.
     #[must_use]
     pub fn number_text_scientific(&self, show_fraction: bool, digits: Option<usize>) -> String {
+        // `--sci=N` of an exact value rounds the exact value (halves away from zero, as `round`
+        // does), not the `f64` that is nearest to it
+        let exact_digits = digits
+            .zip(self.ratio)
+            .and_then(|(n, r)| scientific_of_ratio(r, n));
         let body = match (self.value, &self.whole) {
+            _ if exact_digits.is_some() => exact_digits.unwrap_or_default(),
             (Some(v), _) => digits.map_or_else(
                 || format!("{v:e}"),
                 |n| format!("{v:.*e}", n.saturating_sub(1)),
@@ -244,6 +256,86 @@ fn simplified(expr: &Expr) -> Option<String> {
         1 => format!("{numerator}/{}", bottom.join(".")),
         _ => format!("{numerator}/({})", bottom.join(".")),
     })
+}
+
+/// The exact value `r` in scientific notation with `n` significant digits, the last one rounded
+/// half away from zero (`9.995` with 3 digits is `1.00e1`). `None` when the long division does
+/// not fit the integers (the `f64` text is used then).
+fn scientific_of_ratio(r: Ratio, n: usize) -> Option<String> {
+    let n = n.max(1);
+    let negative = r.num() < 0;
+    let numerator = r.num().unsigned_abs();
+    let denominator = u128::try_from(r.den()).ok().filter(|d| *d > 0)?;
+    let mut digits: Vec<u8> = Vec::with_capacity(n.saturating_add(1));
+    let mut exponent = i64::from(r.ten_exp());
+    if numerator == 0 {
+        digits.resize(n, 0);
+    } else {
+        let integer = numerator.checked_div(denominator)?;
+        let mut remainder = numerator.checked_rem(denominator)?;
+        if integer > 0 {
+            let text = integer.to_string();
+            digits.extend(text.bytes().map(|b| b.saturating_sub(b'0')));
+            exponent = exponent.checked_add(i64::try_from(text.len()).ok()?.checked_sub(1)?)?;
+        } else {
+            // leading zeros after the point set the exponent
+            let mut zeros = 0_i64;
+            loop {
+                remainder = remainder.checked_mul(10)?;
+                let digit = remainder.checked_div(denominator)?;
+                remainder = remainder.checked_rem(denominator)?;
+                if digit > 0 {
+                    digits.push(u8::try_from(digit).ok()?);
+                    break;
+                }
+                zeros = zeros.checked_add(1)?;
+                if zeros > 400 {
+                    return None;
+                }
+            }
+            exponent = exponent.checked_sub(zeros.checked_add(1)?)?;
+        }
+        while digits.len() <= n {
+            remainder = remainder.checked_mul(10)?;
+            digits.push(u8::try_from(remainder.checked_div(denominator)?).ok()?);
+            remainder = remainder.checked_rem(denominator)?;
+        }
+        let round_up = digits.get(n).is_some_and(|d| *d >= 5);
+        digits.truncate(n);
+        if round_up {
+            let mut i = n;
+            loop {
+                if i == 0 {
+                    // 999 became 1000
+                    digits.insert(0, 1);
+                    digits.truncate(n);
+                    exponent = exponent.checked_add(1)?;
+                    break;
+                }
+                i = i.saturating_sub(1);
+                let digit = digits.get_mut(i)?;
+                if *digit == 9 {
+                    *digit = 0;
+                } else {
+                    *digit = digit.saturating_add(1);
+                    break;
+                }
+            }
+        }
+    }
+    let mut out = String::new();
+    if negative {
+        out.push('-');
+    }
+    for (i, d) in digits.iter().enumerate() {
+        if i == 1 {
+            out.push('.');
+        }
+        out.push(char::from(b'0'.saturating_add(*d)));
+    }
+    out.push('e');
+    out.push_str(&exponent.to_string());
+    Some(out)
 }
 
 /// `25e-401` or `1e600` (digits and a power of ten) as `2.5e-400`, or `1e600` as it is.

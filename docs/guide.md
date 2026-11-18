@@ -380,8 +380,12 @@ JSON), so it is never silent. The constants of the configs in effect are names t
 * **Spaces:** a space ends a unit. `1/2 m` is `1` divided by `2 m` (`0.5 1/m`), so write
   `(1/2) * 1 m` or `0.5 m`. Tabs, newlines and the no-break space are spaces. A comma separates
   arguments (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.
-* **Notation:** `m²`, `m³`, `s⁻¹`, `·`, `×`, `÷` and the minus sign `−` are read (`10 m² · 3 m`,
-  `1 kg·m/s²`; a space before the superscript is ignored, `2 m ²` is `2 m²`); error positions count the characters after this rewrite.
+* **Notation:** superscripts of any size (`m²`, `m⁴`, `s⁻²`, `m¹⁰`), `·`, `×`, `÷` and the minus
+  sign `−` are read (`10 m² · 3 m`, `1 kg·m/s²`; a space before a superscript is ignored,
+  `2 m ²` is `2 m²`); error positions count the characters after this rewrite. A power of a unit
+  may be written `m^2`, `m2` or `m^(2)` (a whole number, `m^(-1)` too). A reciprocal unit is
+  `K^-1` (`12e-6 K^-1`), not `12e-6 1/K`. Words that the shell split are joined with spaces
+  (`calc 2 m '*' 3 m`).
 * **Functions:** `sqrt`, `cbrt`, `abs`, `hypot`, `pow`, `floor`, `ceil`, `round`, `min`, `max`, `ln`, `exp`, `log10` (`lg`), `log2`
   (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`,
   `tanh`, `asinh`, `acosh`, `atanh`. The inverse functions return an angle in `rad` (`atan2(1 m, 1 m)
@@ -398,14 +402,19 @@ JSON), so it is never silent. The constants of the configs in effect are names t
 * **Options:** `--to UNIT` shows the result in a unit, `--exact` adds the fraction of an exact
   result (`1/3 = 0.3333333333333333… m`), `--json` or `--pretty` print the schema
   `dimvexa.calc/1`, `--config` adds your own units as for `convert`. `--sci` writes the number in
-  scientific notation (`1500 m` is `1.5e3 m`; `--sci=4` gives 4 significant digits, 1 to 17:
-  `1.500e3 m`; the `…` is left out when you ask for the digits); the JSON keeps the number a number.
-  `--autoprefix` chooses the SI prefix (a power of 1000) that puts the number between 1 and 1000:
-  `1500 m` is `1.5 km`, `0.0025 m` is `2.5 mm`, `2500000 m2` is `2.5 km^2`. It changes only a
-  result that is one unit, perhaps with a power, that takes SI prefixes (`m`, `s`, `Pa`, `W`, `Hz`,
-  `rad`, `L`, `g`); a compound unit (`m/s`), a unit without prefixes (`ft`, `min`), a temperature
-  and the kilogram stay as they are (grams go below it, never `Mg`). The JSON carries the
-  prefixed unit and value. It chooses the unit, so it cannot be used with `--to`. An expression that starts
+  scientific notation (`1500 m` is `1.5e3 m`); `--sci=4` gives 4 significant digits, 1 to 17
+  (`1.500e3 m`), rounded from the exact value with halves away from zero, as `round` does
+  (`9.995 --sci=3` is `1.00e1`, `2.5 --sci=1` is `3e0`; an approximate result is rounded from its
+  `f64`); the `…` is left out when you ask for the digits. The JSON keeps the number a number.
+  `--autoprefix` chooses the SI prefix (a power of 1000) that puts the number between 1 and 1000
+  (between 1 and 1000^n for a power n): `1500 m` is `1.5 km`, `0.0025 m` is `2.5 mm`,
+  `2500000 m2` is `2.5 km^2`. It changes only a result that is one unit, perhaps with a positive
+  power, that takes SI prefixes (`m`, `s`, `Pa`, `W`, `Hz`, `rad`, `L`, `g`). A compound unit
+  (`m/s`), a negative power (`s^-1`), a unit without prefixes (`ft`, `min`), a temperature and
+  a result in `kg` of 1 or more stay as they are (grams stop at the kilogram, never `Mg`, so
+  `0.5 kg` is `500 g`), and so does a unit whose prefixed symbol reads as another unit (`0.5 t`:
+  `mt` is ambiguous). The JSON carries the prefixed unit and value. It chooses the unit, so it
+  cannot be used with `--to`. An expression that starts
   like an option is written after `--`, and the options before it (`dimvexa calc --var h="3 m" -- -h`;
   after `--` everything is the expression, so `--var` and `--pretty` there are text).
 
@@ -429,7 +438,10 @@ answered with an approximate number.
   `sin(179.9999999 deg)` keeps all its digits; an angle given in `rad` as a plain number has no
   exact multiple of pi to reduce by, so near a multiple of pi its digits are limited by the `f64`
   of the angle. It is not the nearest `f64` and carries no error bound (KL-33).
-  A result outside the range of `f64` is an `overflow` error, never infinity.
+  A result outside the range of `f64` is an `overflow` error, never infinity; so is an
+  approximate result that would become `0` or a subnormal number although the mathematics is not
+  zero (`exp(-746)`, `sqrt(2) * 1e-200 * 1e-200`), because it would have lost its digits
+  (`sqrt(2) - sqrt(2)` is a true `≈ 0`).
 
 #### Limitations
 
@@ -460,7 +472,11 @@ answered with an approximate number.
   A computed temperature (`p * V / (n * R)`, dimension K) converts to `K`, `degC` and `degF`, also
   with `--to`. A kelvin value scales (`2 * 20 degC.to(K)` is `586.3 K`); a Celsius or Fahrenheit
   point does not (`2 * 20 degC` is refused). A temperature difference is not a temperature
-  (`5 delta_K.to(K)` is refused).
+  (`5 delta_K.to(K)` is refused). A point divided by something that is not a number is a rate of
+  the interval: `20 degC / 2 s` is `10 delta_degC/s` (`--to K/s` for kelvin per second). In a
+  product or a denominator a point is ambiguous (the temperature or a difference?) and refused:
+  `R * 27 degC` and `Ea / (R * 27 degC)` need `27 degC.to(K)`, a heat `cp * m * 20 delta_degC` the
+  `delta_degC`; `(20 degC)^2` is refused too.
 * **Not units of every trade:** names that mean different things (`ton`, `gpm`, `mph`, `rpm`) are
   errors until a config chooses (`--config us-customary`, or your own, see
   `examples/configs/engineering.toml`). A space between two units is not a product: write

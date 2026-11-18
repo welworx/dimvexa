@@ -534,7 +534,7 @@ fn calc<'py>(
     }
     let r = formula
         .calculate(expression, to, autoprefix)
-        .map_err(|e| to_py(&e))?;
+        .map_err(|e| to_py(&e.error))?;
     for w in formula.warnings() {
         let message = std::ffi::CString::new(w.replace('\0', " ")).unwrap_or_default();
         PyErr::warn(

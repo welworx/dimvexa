@@ -34,8 +34,8 @@ another.
 4. **The command.**
 
    ```
-   dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--exact] [--json]
-                           [--config NAME_OR_PATH]...
+   dimvexa calc [--] EXPRESSION [--var NAME=VALUE]... [--to UNIT] [--exact] [--sci[=N]]
+                           [--autoprefix] [--json | --pretty] [--config NAME_OR_PATH]...
    ```
 
    An expression can carry its quantities (`"0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)"`) or
@@ -59,9 +59,12 @@ another.
 
 * Everything of ADR-027 and ADR-029 is reachable without writing Rust.
 * The equation grammar is now a public interface: a change of it follows `api-change`.
-* The Python and WebAssembly bindings expose it as `calc`, with the fields of `--json` plus the CLI text (`dimvexa_calc::Report`, one implementation for all three). The Excel add-in does not yet (a gap, `docs/excel.md`).
-* Follow-up decisions (owner, 2026-11-17): the equation knows the SI constants by name (`planck_constant`, `e`, `boltzmann_constant`, `avogadro_constant`, besides `pi`; `--var` may replace one, with a warning); `tan`, `asin`, `acos`, `atan`, `atan2` are implemented; a result unit is merged and cancelled for display (`m.m` is `m^2`) but a symbol is never renamed; a rounded exact result ends in `…`.
-* Follow-up decisions (owner, 2026-11-17, second round): the constants of the configs in effect are names in equations; `kelvin(x)` read a temperature as kelvin (replaced in the third round by `to(x, UNIT)`); `2 pi r`, exponent expressions (`x^n`) and the engineer's notation (`m²`, `·`, `×`, tabs) are read; a result unit is not renamed to a named derived unit (the user gives `--to`).
-* Follow-up decisions (owner, 2026-11-17, third round): the built-in constants have self-explaining ids (`planck_constant`, `elementary_charge`, `boltzmann_constant`, `avogadro_constant`, `speed_of_light`, `molar_gas_constant`; older ADRs and changelog entries use the former short ids `h_P`, `e`, `k_B`, `N_A`, `c`, `R`); a kelvin value scales by a plain number; `x.to(UNIT)` converts inside an equation (`20 degC.to(K)`; it replaced `kelvin(x)` and a function form `to(x, UNIT)`), and a computed temperature converts to K, degC and degF; `20 degC + 30 degC` stays `50 degC` (approved); a division followed by `2 pi` or `2 r` without parentheses is refused as unclear (write `10 m / (2 pi)`); `2^3 m` is `(2^3) m`; the function form `to(x, UNIT)` is gone; a temperature scale inside a compound unit (`kJ/(kg*degC)`) is read as its interval, not refused; `pow`, `floor`, `ceil` and `round` are implemented and `--sci[=N]` writes a number in scientific notation and `--autoprefix` chooses the SI prefix (in the CLI, Python and WebAssembly; Excel has `CALC` and `CALCTEXT` with a `format`).
+* The Python, WebAssembly and Excel front ends expose it too (`calc`, `DIMVEXA.CALC`, `DIMVEXA.CALCTEXT`), with the fields of `--json` plus the CLI text; the text, the options and the errors come from one implementation (`Formula::calculate`, `Report`, `Notation`).
+* Decisions of the owner during the build (2026-11-17), in the form they have today:
+  * The built-in constants have self-explaining ids (`planck_constant`, `elementary_charge`, `boltzmann_constant`, `avogadro_constant`, `speed_of_light`, `molar_gas_constant`; older ADRs and changelog entries use the former short ids `h_P`, `e`, `k_B`, `N_A`, `c`, `R`). A user defines short symbols in a config (`examples/configs/engineering.toml`). The constants of the configs in effect are names too, and a `--var` with the name of a constant replaces it with a warning.
+  * `tan`, `asin`, `acos`, `atan`, `atan2`, `pow`, `floor`, `ceil` and `round` are implemented. A result unit is merged and cancelled for display (`m.m` is `m^2`) but a symbol is never renamed; a rounded exact result ends in `…`.
+  * `x.to(UNIT)` is the only way to convert inside an equation (there is no `to()` function and no `kelvin()`); a computed temperature converts to K, degC and degF; a kelvin value scales by a plain number; `20 degC + 30 degC` is `50 degC`; a temperature scale inside a compound unit (`kJ/(kg*degC)`) is read as its interval; a point divided by a non-number is a rate (`20 degC / 2 s`), in a product or a denominator it is ambiguous and refused.
+  * A name is letters, digits and `_` and is never split; `2 r` is 2 times `r`; a name that is also a unit must not follow a number; an unused `--var` is an error; a division followed by `2 pi` or `2 r` without parentheses is refused (`10 m / (2 pi)`); `2^3 m` is `(2^3) m`; `x^2 n` with a variable is refused as ambiguous.
+  * `--sci[=N]` writes the number in scientific notation (rounded from the exact value, halves away from zero) and `--autoprefix` chooses the SI prefix; both exist in the CLI, Python, WebAssembly and Excel (`CALCTEXT`'s `format`).
 * OPEN (recommended default: later): a `--var` value that is itself an equation; `ans` and a
-  REPL; (`pow`, `floor`, `ceil`, `round` were implemented in a follow-up).
+  REPL.

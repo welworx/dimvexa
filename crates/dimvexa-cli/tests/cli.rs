@@ -3662,8 +3662,7 @@ fn calc_marks_rounded_exact_results_and_prints_values_beyond_f64() {
     let r = calc(&["exp(1000)"]);
     assert_eq!(r.code, 1);
     assert!(
-        r.stderr
-            .contains("outside what exact arithmetic or an f64 can hold"),
+        r.stderr.contains("outside the range of an f64"),
         "{}",
         r.stderr
     );
@@ -3733,7 +3732,7 @@ fn calc_knows_the_si_constants_and_warns_when_a_name_replaces_one() {
     assert_eq!((r.code, r.stdout.as_str()), (0, "6 C\n"));
     assert_eq!(
         r.stderr,
-        "warning: the name 'elementary_charge' replaces the built-in constant elementary_charge; the value you gave is used\n"
+        "warning: the name 'elementary_charge' replaces the constant elementary_charge; the value you gave is used\n"
     );
     let r = calc(&["x", "--var", "x=1 m", "--var", "x=2 m"]);
     assert_eq!(r.stdout, "2 m\n");
@@ -3825,7 +3824,7 @@ fn calc_ideal_gas_constant_is_n_a_times_k_b_and_runs_the_gas_law() {
     assert_eq!(r.stdout, "6 m\n");
     assert!(
         r.stderr
-            .contains("replaces the built-in constant molar_gas_constant"),
+            .contains("replaces the constant molar_gas_constant"),
         "{}",
         r.stderr
     );
@@ -4390,4 +4389,116 @@ fn calc_approximate_temperatures_follow_the_exact_rules() {
             .starts_with("≈ 141.4267")
     );
     assert_eq!(calc(&["sqrt(2) * 20 delta_degC"]).code, 0);
+}
+
+/// Review round 4: `^(n)` after a unit, autoprefix on the tonne, `--sci=N` from the exact value,
+/// loud underflow, a temperature rate, clearer messages, more superscripts.
+#[test]
+fn calc_review_round_four_regressions() {
+    // a power in parentheses belongs to the unit (it used to raise the whole quantity)
+    for (expr, text) in [
+        ("2 m^(2)", "2 m^2\n"),
+        ("2 m^(-1)", "2 m^-1\n"),
+        ("2 kg/m^(3)", "2 kg/m^3\n"),
+        ("2 m^(2).to(cm2)", "20000 cm^2\n"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, text, "{expr}");
+    }
+    assert_eq!(calc(&["2 r^(2)", "--var", "r=3 m"]).stdout, "18 m^2\n");
+    // autoprefix never turns a valid result into an error: the unit stays when the prefix
+    // would read as another unit (`mt`, `ft`, `pt`)
+    for (expr, text) in [
+        ("0.5 t", "0.5 t\n"),
+        ("1e-12 t", "1e-12 t\n"),
+        ("1e-15 t", "1e-15 t\n"),
+        ("1500 t", "1.5 kt\n"),
+    ] {
+        let r = calc(&[expr, "--autoprefix"]);
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, text),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+    // --sci=N rounds the exact value, halves away from zero, as round() does
+    for (args, text) in [
+        (vec!["9.995", "--sci=3"], "1.00e1\n"),
+        (vec!["0.15", "--sci=1"], "2e-1\n"),
+        (vec!["2.5", "--sci=1"], "3e0\n"),
+        (vec!["-2.5", "--sci=1"], "-3e0\n"),
+        (vec!["0.1 + 0.2", "--sci=17"], "3.0000000000000000e-1\n"),
+        (vec!["999.5", "--sci=3"], "1.00e3\n"),
+        (vec!["1e600 m", "--sci=3"], "1.00e600 m\n"),
+        (vec!["0", "--sci=3"], "0.00e0\n"),
+        (vec!["-0.0001235", "--sci=3"], "-1.24e-4\n"),
+    ] {
+        assert_eq!(calc(&args).stdout, text, "{args:?}");
+    }
+    assert_eq!(calc(&["round(2.5)"]).stdout, "3\n");
+    // an approximate result that would become 0 or a subnormal is an overflow, as loud as a huge one
+    for expr in [
+        "exp(-746)",
+        "exp(710)",
+        "sqrt(2) * 1e-200 * 1e-200",
+        "sqrt(2) / 1e300 / 1e300",
+        "(sqrt(2) * 1e-200)^2",
+    ] {
+        let r = calc(&[expr]);
+        assert!(
+            r.stderr.starts_with("error[overflow]"),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+    assert_eq!(calc(&["sqrt(2) - sqrt(2)"]).stdout, "≈ 0\n");
+    assert_eq!(calc(&["exp(-700)"]).code, 0);
+    // a point divided by something that is not a number is a rate; in a product or a
+    // denominator it is ambiguous and refused
+    assert_eq!(calc(&["20 degC / 2 s"]).stdout, "10 delta_degC/s\n");
+    assert_eq!(calc(&["20 degC / 2 s", "--to", "K/s"]).stdout, "10 K/s\n");
+    assert_eq!(calc(&["20 degC / 5 m", "--to", "K/m"]).stdout, "4 K/m\n");
+    for expr in [
+        "R * 27 degC",
+        "2 kg * 20 degF",
+        "1 J / 20 degC",
+        "20 degC * 3 m",
+    ] {
+        let r = calc(&[expr, "--var", "R=8.314 J/(mol*K)"]);
+        assert!(r.stderr.contains("is ambiguous"), "{expr}: {}", r.stderr);
+    }
+    let r = calc(&["(20 degC)^2"]);
+    assert!(
+        r.stderr.contains("cannot be raised to a power"),
+        "{}",
+        r.stderr
+    );
+    // clearer messages
+    let r = calc(&["2 sin(30 deg)"]);
+    assert!(
+        r.stderr.contains("needs an operator: write 2 * sin(...)"),
+        "{}",
+        r.stderr
+    );
+    let r = calc(&["1 m.TO(ft)"]);
+    assert!(r.stderr.contains("in lower case"), "{}", r.stderr);
+    // superscripts of any size
+    assert_eq!(calc(&["1 m⁴"]).stdout, "1 m^4\n");
+    assert_eq!(calc(&["5 s⁻²"]).stdout, "5 s^-2\n");
+    assert_eq!(calc(&["3 m¹⁰"]).stdout, "3 m^10\n");
+    // the usage line lists the options; warnings are not lost in a JSON error
+    let r = calc(&["--json"]);
+    assert!(r.stdout.contains("\"ok\":false"), "{}", r.stdout);
+    let r = calc(&[
+        "molar_gas_constant + 1",
+        "--var",
+        "molar_gas_constant=1 m",
+        "--json",
+    ]);
+    assert!(
+        r.stderr
+            .contains("warning: the name 'molar_gas_constant' replaces the constant"),
+        "{}",
+        r.stderr
+    );
 }
