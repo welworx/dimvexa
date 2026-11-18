@@ -172,6 +172,7 @@ enum Si {
 #[derive(Debug, Clone, Copy)]
 pub struct Math<'r> {
     calc: Calc<'r>,
+    exact_only: bool,
 }
 
 impl<'r> Math<'r> {
@@ -180,7 +181,17 @@ impl<'r> Math<'r> {
     pub const fn new(reg: &'r Registry) -> Self {
         Self {
             calc: Calc::new(reg),
+            exact_only: false,
         }
+    }
+
+    /// With `true` a sum that has no exact value (`1 + pi`, different powers of pi) is
+    /// `unrepresentable` and never approximated; by default it falls back to an approximate
+    /// value.
+    #[must_use]
+    pub const fn exact_only(mut self, on: bool) -> Self {
+        self.exact_only = on;
+        self
     }
 
     /// The exact calculator this one is built on.
@@ -248,12 +259,16 @@ impl<'r> Math<'r> {
 
     fn sum(self, a: &Number, b: &Number, subtract: bool) -> Result<Number> {
         if let (Number::Exact(x), Number::Exact(y)) = (a, b) {
-            return if subtract {
+            let exact = if subtract {
                 self.calc.sub(x, y)
             } else {
                 self.calc.add(x, y)
+            };
+            match exact {
+                // different powers of pi have no exact sum: approximate, unless exact is wanted
+                Err(Error::Unrepresentable { .. }) if !self.exact_only => {}
+                other => return other.map(Number::Exact),
             }
-            .map(Number::Exact);
         }
         let (x, y) = (Self::approx_of(a)?, Self::approx_of(b)?);
         Self::linear_only(&x.unit)?;
@@ -942,6 +957,16 @@ impl<'r> Math<'r> {
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     pub fn autoprefix(&self, a: &Number) -> Result<Number> {
+        self.autoprefix_in(a, None)
+    }
+
+    /// As [`autoprefix`](Self::autoprefix), choosing the prefix from the number rounded to
+    /// `digits` significant digits (`999.9996 m` with 3 digits is `1.00 km`, not `1000 m`).
+    ///
+    /// # Errors
+    ///
+    /// As [`autoprefix`](Self::autoprefix).
+    pub fn autoprefix_in(&self, a: &Number, digits: Option<usize>) -> Result<Number> {
         use dimvexa_core::{PrefixFamily, SI_PREFIXES};
         let unit = a.unit();
         let Some((symbol, power)) = single_unit(unit.expr()) else {
@@ -1003,7 +1028,12 @@ impl<'r> Math<'r> {
         choices.sort_by_key(|&(_, exp)| std::cmp::Reverse(exp));
         let reaches = |exp: i32| -> Result<bool> {
             let tens = exp.checked_mul(power).ok_or_else(|| overflow("prefix"))?;
-            magnitude_reaches(&in_base, tens)
+            digits
+                .and_then(|n| crate::rounded_exponent(&in_base, n))
+                .map_or_else(
+                    || magnitude_reaches(&in_base, tens),
+                    |rounded| Ok(rounded >= i64::from(tens)),
+                )
         };
         // the first prefix the magnitude reaches, else the smallest
         let first = {

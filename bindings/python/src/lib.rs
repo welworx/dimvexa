@@ -528,12 +528,12 @@ fn calc<'py>(
         &configs.unwrap_or_default(),
         &config_texts.unwrap_or_default(),
     )?;
-    let mut formula = Formula::from_loaded(&loaded);
+    let mut formula = Formula::from_loaded(&loaded).exact_only(exact);
     for (name, value) in vars.unwrap_or_default() {
         formula = formula.var(&name, &value).map_err(|e| to_py(&e))?;
     }
     let r = formula
-        .calculate(expression, to, autoprefix)
+        .calculate_in(expression, to, autoprefix, notation)
         .map_err(|e| to_py(&e.error))?;
     for w in formula.warnings() {
         let message = std::ffi::CString::new(w.replace('\0', " ")).unwrap_or_default();

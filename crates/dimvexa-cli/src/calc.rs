@@ -39,7 +39,7 @@ type Failure = (Error, String);
 /// The result (or the failure) and what to warn about: a name that replaces a constant, or that
 /// is given twice.
 fn evaluate(req: &CalcRequest, loaded: &Loaded) -> (Result<Report, Failure>, Vec<String>) {
-    let mut formula = Formula::from_loaded(&loaded.lib);
+    let mut formula = Formula::from_loaded(&loaded.lib).exact_only(req.exact);
     for (name, value) in &req.vars {
         formula = match formula.var(name, value) {
             Ok(f) => f,
@@ -47,7 +47,12 @@ fn evaluate(req: &CalcRequest, loaded: &Loaded) -> (Result<Report, Failure>, Vec
         };
     }
     let result = formula
-        .calculate(&req.expression, req.to.as_deref(), req.autoprefix)
+        .calculate_in(
+            &req.expression,
+            req.to.as_deref(),
+            req.autoprefix,
+            req.notation,
+        )
         .map_err(|e| {
             let prefix = match (e.step, &req.to) {
                 (CalcStep::Unit, Some(unit)) => format!("--to {unit}: "),
@@ -56,7 +61,7 @@ fn evaluate(req: &CalcRequest, loaded: &Loaded) -> (Result<Report, Failure>, Vec
             };
             (e.error, prefix)
         });
-    (result, formula.warnings().to_vec())
+    (result, formula.warnings())
 }
 
 fn render_text(r: &Report, exact: bool, notation: Notation, color: bool) -> String {

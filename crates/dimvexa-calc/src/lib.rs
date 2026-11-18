@@ -78,7 +78,7 @@ mod report;
 
 pub use formula::{CalcError, CalcStep, Formula, MAX_EQUATION_CHARS, MAX_VARS};
 pub use math::{Approx, Math, Number};
-pub use report::{Notation, Report, format_f64};
+pub use report::{Notation, Report, format_f64, rounded_exponent};
 
 use dimvexa_core::{Dim, Error, Kind, Quantity, Ratio, Registry, Result, UnitExpr};
 

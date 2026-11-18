@@ -355,7 +355,7 @@ def test_calc_marks_rounding_prints_beyond_f64_and_refuses_ambiguous_names() -> 
         dimvexa.calc("0.5 h", vars={"h": "3 m"})
     assert e.value.code == "invalid_definition"
     assert dimvexa.calc("h * 2", vars={"h": "3 m"})["text"] == "6 m"
-    for bad in ("sin(30 deg * 30 deg)", "sin(1 / 1 rad)"):
+    for bad in ("sin(30 deg * 30 deg)", "sin(1 / (1 rad))"):
         with pytest.raises(dimvexa.DimvexaError) as e:
             dimvexa.calc(bad)
         assert e.value.code == "refused", bad
@@ -436,7 +436,7 @@ def test_calc_sci_autoprefix_and_exact_options() -> None:
     assert (r["text"], r["unit"], r["value"]) == ("1.5 km", "km", 1.5)
     assert dimvexa.calc("0.0025 m", autoprefix=True)["text"] == "2.5 mm"
     assert dimvexa.calc("3 m/s", autoprefix=True)["text"] == "3 m/s"
-    assert dimvexa.calc("1500 m", autoprefix=True, sci=True)["text"] == "1.5e0 km"
+    assert dimvexa.calc("1500 m", autoprefix=True, sci=True)["text"] == "1.5 km"
     # the number in the dict stays a number; only text follows sci
     assert dimvexa.calc("1500 m", sci=3)["value"] == 1500.0
     with pytest.raises(dimvexa.DimvexaError) as e:
@@ -460,3 +460,15 @@ def test_calc_review_round_four_cases() -> None:
     with pytest.raises(dimvexa.DimvexaError) as e:
         dimvexa.calc("2 * 27 degC")
     assert e.value.code == "kind_mismatch"
+
+
+def test_calc_reading_rules_pi_sums_and_sci_with_prefix() -> None:
+    assert dimvexa.calc("10/2 s")["text"] == "5 s"
+    assert dimvexa.calc("10/(2 s)")["text"] == "5 1/s"
+    assert dimvexa.calc("1 + pi")["text"] == "≈ 4.141592653589793"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("1 + pi", exact=True)
+    assert e.value.code == "unrepresentable"
+    assert dimvexa.calc("999.9996 m", autoprefix=True, sci=3)["text"] == "1.00 km"
+    with pytest.warns(UserWarning, match="20 degC.to"):
+        dimvexa.calc("1 - 20 degC / 300 K")

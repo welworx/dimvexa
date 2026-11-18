@@ -377,8 +377,11 @@ JSON), so it is never silent. The constants of the configs in effect are names t
   `10 m / (2 pi)` or `(10 m / 2) * pi`; the same for `Q / pi r^2`, and for a number and a variable
   after a division (`10 m / 2 r`: write `10 m / (2 r)`). A unit after an exponent multiplies the
   power: `2^3 m` is `(2^3) m`, `8 m`, because a unit cannot be part of an exponent.
-* **Spaces:** a space ends a unit. `1/2 m` is `1` divided by `2 m` (`0.5 1/m`), so write
-  `(1/2) * 1 m` or `0.5 m`. Tabs, newlines and the no-break space are spaces. A comma separates
+* **Spaces:** a space ends a unit. A number over a number with a unit is that number with the
+  unit: `10/2 s` is `5 s` and `1/2 kg` is `0.5 kg`. For the other reading write
+  `10/(2 s)` (`5 1/s`), `10/2 1/s` or `10/2 s^-1`. After another operator (`3 * 10/2 s`) it is
+  refused: write the parentheses. A quantity over a quantity is as usual (`10 m / 2 s` is
+  `5 m/s`). A reciprocal unit may follow a number (`60 1/min`). Tabs, newlines and the no-break space are spaces. A comma separates
   arguments (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.
 * **Notation:** superscripts of any size (`m²`, `m⁴`, `s⁻²`, `m¹⁰`), `·`, `×`, `÷` and the minus
   sign `−` are read (`10 m² · 3 m`, `1 kg·m/s²`; a space before a superscript is ignored,
@@ -402,7 +405,7 @@ JSON), so it is never silent. The constants of the configs in effect are names t
 * **Options:** `--to UNIT` shows the result in a unit, `--exact` adds the fraction of an exact
   result (`1/3 = 0.3333333333333333… m`), `--json` or `--pretty` print the schema
   `dimvexa.calc/1`, `--config` adds your own units as for `convert`. `--sci` writes the number in
-  scientific notation (`1500 m` is `1.5e3 m`); `--sci=4` gives 4 significant digits, 1 to 17
+  scientific notation (`1500 m` is `1.5e3 m`; with `--autoprefix` the prefix has taken the exponent: `1.5 km`, and `--sci=3` gives `1.50 km`, the prefix chosen from the rounded number, so `999.9996 m` is `1.00 km`); `--sci=4` gives 4 significant digits, 1 to 17
   (`1.500e3 m`), rounded from the exact value with halves away from zero, as `round` does
   (`9.995 --sci=3` is `1.00e1`, `2.5 --sci=1` is `3e0`; an approximate result is rounded from its
   `f64`); the `…` is left out when you ask for the digits. The JSON keeps the number a number.
@@ -478,7 +481,7 @@ answered with an approximate number.
   the interval: `20 degC / 2 s` is `10 delta_degC/s` (`--to K/s` for kelvin per second). In a
   product or a denominator a point is ambiguous (the temperature or a difference?) and refused:
   `R * 27 degC` and `Ea / (R * 27 degC)` need `27 degC.to(K)`, a heat `cp * m * 20 delta_degC` the
-  `delta_degC`; `(20 degC)^2` is refused too (known limitation KL-35: a decision to keep a silent
+  `delta_degC`; `1 - 20 degC / 300 K` reads the point as a difference and warns (the temperature is `20 degC.to(K)`); `(20 degC)^2` is refused too (known limitation KL-35: a decision to keep a silent
   wrong result out, which may be too strict or wrongly implemented; write `(20 delta_degC)^2`,
   `20 degC.to(K)^2` or the number alone, `20^2`).
 * **Not units of every trade:** names that mean different things (`ton`, `mt`, `cal`) are
@@ -666,8 +669,8 @@ What to know:
    to `deg`, `100 grad` to `deg` and `180 deg` to `rad` carry no error. The decimal is rounded
    once, at the end, to the nearest `f64`. These units are `defined` in `dimvexa units deg`.
 2. **Addition is not defined for values with different exponents.** Combining `pi` with a plain
-   number in a sum (`1 + pi`) is refused with `unrepresentable` (not `overflow`: no integer bound is involved), never approximated. A conversion only
-   multiplies, so this shows up in `dimvexa calc` (`1 + pi`, `2 * pi * 1 m + 3 m`: write the sum with a decimal such as `3.14159`) and in the library (`Ratio::checked_add`). The one conversion that adds is a temperature scale with an offset, so `dimvexa convert pi degC degF` is refused (`refused`): use a decimal.
+   number in a sum (`1 + pi`) has no exact value. `dimvexa calc` then gives an approximate value (`≈ 4.14159...`); with `--exact` (or `exact=True`) and in the library it is refused with `unrepresentable` (not `overflow`: no integer bound is involved), never approximated. A conversion only
+   multiplies, so this shows up in `dimvexa calc --exact` (`1 + pi`, `2 * pi * 1 m + 3 m`) and in the library (`Ratio::checked_add`). The one conversion that adds is a temperature scale with an offset, so `dimvexa convert pi degC degF` is refused (`refused`): use a decimal.
 3. **A value may contain `pi`** (ADR-018, step 3). `4pi`, `4π`, `4 pi`, `pi/2`, `1/2*pi`,
    `2*pi^2` and `1/(2*pi)` are all values; so are `4 pi rad deg` and `2 * pi rad deg` written
    with spaces. A value may use `*`, `/`, an integer power `^`, a leading sign and parentheses.

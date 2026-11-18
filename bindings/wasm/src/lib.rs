@@ -432,7 +432,7 @@ pub fn calc(
 ) -> Result<JsValue, JsValue> {
     let (exact, notation, autoprefix) = calc_options(&options)?;
     let loaded = load_config(config, &config_texts)?;
-    let mut formula = Formula::from_loaded(&loaded);
+    let mut formula = Formula::from_loaded(&loaded).exact_only(exact);
     for entry in &vars {
         let (name, value) = entry
             .split_once('=')
@@ -448,10 +448,10 @@ pub fn calc(
             .map_err(|e| fail(&e))?;
     }
     let r = formula
-        .calculate(expression, Some(to), autoprefix)
+        .calculate_in(expression, Some(to), autoprefix, notation)
         .map_err(|e| fail(&e.error))?;
     for w in formula.warnings() {
-        warn(w);
+        warn(&w);
     }
     let fraction = r
         .fraction

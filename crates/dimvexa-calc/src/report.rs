@@ -57,6 +57,8 @@ pub struct Report {
     whole: Option<String>,
     /// The exact value when it has no `pi`: `--sci=N` rounds this, not the `f64`.
     ratio: Option<Ratio>,
+    /// A prefix was chosen for the unit: scientific notation then needs no exponent.
+    prefixed: bool,
 }
 
 impl Report {
@@ -105,7 +107,16 @@ impl Report {
                 Number::Exact(q) if q.value().pi_exp() == 0 => Some(q.value()),
                 _ => None,
             },
+            prefixed: false,
         })
+    }
+
+    /// Marks the unit as chosen by `--autoprefix`: `--sci` then writes `1.5 km`, not `1.5e0 km`
+    /// (the prefix has taken the exponent), and only the significant digits are asked for.
+    #[must_use]
+    pub const fn with_prefix(mut self) -> Self {
+        self.prefixed = true;
+        self
     }
 
     /// The number as shown: an exact result is the rounded `f64` (followed by `…` when that is
@@ -144,6 +155,11 @@ impl Report {
             ),
             (None, Some(w)) => scientific_from_text(w),
             (None, None) => String::new(),
+        };
+        let body = if self.prefixed {
+            positional(&body).unwrap_or(body)
+        } else {
+            body
         };
         let more = if self.rounded && digits.is_none() {
             "…"
@@ -255,6 +271,44 @@ fn simplified(expr: &Expr) -> Option<String> {
         0 => numerator,
         1 => format!("{numerator}/{}", bottom.join(".")),
         _ => format!("{numerator}/({})", bottom.join(".")),
+    })
+}
+
+/// The power of ten of `n` rounded to `digits` significant digits (`999.9996` with 3 digits is
+/// 3, as it rounds to `1.00e3`); `None` for a value with pi.
+#[must_use]
+pub fn rounded_exponent(n: &Number, digits: usize) -> Option<i64> {
+    let text = match n {
+        Number::Exact(q) if q.value().pi_exp() == 0 => scientific_of_ratio(q.value(), digits)?,
+        Number::Exact(_) => return None,
+        Number::Approx(a) => format!("{:.*e}", digits.saturating_sub(1), a.value()),
+    };
+    text.split_once('e')?.1.parse().ok()
+}
+
+/// `1.50e2` as `150`: the scientific text written without its exponent, for a number the prefix
+/// of its unit has already scaled. `None` outside 0 to 8 (no such prefix), where it stays.
+fn positional(scientific: &str) -> Option<String> {
+    let (mantissa, exponent) = scientific.split_once('e')?;
+    let exponent = usize::try_from(exponent.parse::<i64>().ok()?).ok()?;
+    if exponent > 8 {
+        return None;
+    }
+    let (sign, digits) = mantissa
+        .strip_prefix('-')
+        .map_or(("", mantissa), |rest| ("-", rest));
+    let mut digits: Vec<char> = digits.chars().filter(|c| *c != '.').collect();
+    let integer = exponent.checked_add(1)?;
+    while digits.len() < integer {
+        digits.push('0');
+    }
+    let (whole, fraction) = digits.split_at(integer);
+    let fraction: String = fraction.iter().collect();
+    let whole: String = whole.iter().collect();
+    Some(if fraction.is_empty() {
+        format!("{sign}{whole}")
+    } else {
+        format!("{sign}{whole}.{fraction}")
     })
 }
 

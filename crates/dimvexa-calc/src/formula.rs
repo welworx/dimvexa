@@ -96,6 +96,8 @@ pub struct Formula<'r> {
     /// The names the caller bound, in order.
     given: Vec<String>,
     warnings: Vec<String>,
+    /// What evaluating an equation warned about (a point over a temperature).
+    eval_warnings: std::cell::RefCell<Vec<String>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -343,7 +345,24 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
             // a unit starts with a symbol, or with a parenthesis that opens on one: `998 (kg/m3)`
             let opens_unit = chars.get(after) == Some(&'(')
                 && chars.get(next(after)).copied().is_some_and(starts_unit);
-            if chars.get(after).copied().is_some_and(starts_unit) || opens_unit {
+            // a reciprocal unit: `5 1/s`, `60 1/min`
+            let reciprocal = chars.get(after) == Some(&'1') && {
+                let mut j = next(after);
+                while chars.get(j) == Some(&' ') {
+                    j = next(j);
+                }
+                let slash = chars.get(j) == Some(&'/');
+                j = next(j);
+                while chars.get(j) == Some(&' ') {
+                    j = next(j);
+                }
+                slash
+                    && chars
+                        .get(j)
+                        .copied()
+                        .is_some_and(|c| starts_unit(c) || c == '(')
+            };
+            if chars.get(after).copied().is_some_and(starts_unit) || opens_unit || reciprocal {
                 let end = scan_unit(&chars, after);
                 out.push((
                     start,
@@ -369,6 +388,56 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
         }
     }
     Ok(out)
+}
+
+/// `10 / 2 s` at the start of a term is the number with the unit (`5 s`, `1 / 2 kg` is `0.5 kg`):
+/// the tokens become `(10 / 2) * 1 s`. After another operator it can be read two ways and is
+/// refused. `true` when `out` was rewritten.
+fn number_over_quantity(
+    src: &str,
+    out: &mut Vec<(usize, Tok)>,
+    (number, unit): (&String, &String),
+    at: usize,
+) -> Result<bool> {
+    if !matches!(out.last(), Some((_, Tok::Op('/')))) {
+        return Ok(false);
+    }
+    let numerator = out
+        .len()
+        .checked_sub(2)
+        .and_then(|i| out.get(i))
+        .and_then(|(_, t)| match t {
+            Tok::Num(a) => Some(a.clone()),
+            _ => None,
+        });
+    let Some(a) = numerator else {
+        return Ok(false);
+    };
+    let before = out.len().checked_sub(3).and_then(|i| out.get(i));
+    if !matches!(before, None | Some((_, Tok::Op('(' | ',')))) {
+        return Err(parse_error(
+            src,
+            at,
+            &format!(
+                "'{a} / {number} {unit}' can be read ({a} / {number}) {unit} or \
+                 {a} / ({number} {unit}): write the parentheses"
+            ),
+        ));
+    }
+    out.pop();
+    out.pop();
+    for t in [
+        Tok::Op('('),
+        Tok::Num(a),
+        Tok::Op('/'),
+        Tok::Num(number.clone()),
+        Tok::Op(')'),
+        Tok::Op('*'),
+        Tok::Qty("1".to_owned(), unit.clone()),
+    ] {
+        out.push((at, t));
+    }
+    Ok(true)
 }
 
 /// The functions the evaluator implements (ADR-029), with the number of arguments: `0` means
@@ -496,6 +565,7 @@ impl Parser<'_, '_> {
                 divided = false;
             } else if self.eat('/') {
                 let rhs = self.unary()?;
+                self.f.warn_point_over_temperature(&acc, &rhs);
                 acc = self.f.math.div(&acc, &rhs)?;
                 divided = true;
             } else if self.peek() == Some(&Tok::Implicit) || self.after_pi_name() {
@@ -1008,7 +1078,16 @@ impl<'r> Formula<'r> {
             vars,
             given: Vec::new(),
             warnings: Vec::new(),
+            eval_warnings: std::cell::RefCell::new(Vec::new()),
         }
+    }
+
+    /// With `true` a sum with no exact value (`1 + pi`) is `unrepresentable`; by default it is
+    /// approximate (`≈`).
+    #[must_use]
+    pub const fn exact_only(mut self, on: bool) -> Self {
+        self.math = self.math.exact_only(on);
+        self
     }
 
     /// An evaluator over the registry of `loaded` (the configs' units and names) whose built-in
@@ -1040,8 +1119,27 @@ impl<'r> Formula<'r> {
     /// What the caller should be told about: a name that replaces a built-in constant, or that
     /// is bound twice (the last value is used).
     #[must_use]
-    pub fn warnings(&self) -> &[String] {
-        &self.warnings
+    pub fn warnings(&self) -> Vec<String> {
+        let mut all = self.warnings.clone();
+        all.extend(self.eval_warnings.borrow().iter().cloned());
+        all
+    }
+
+    /// `20 degC / 300 K`: the point is read as the interval (a rate), so the temperatures
+    /// cancel; most likely the temperature itself was meant, which is `20 degC.to(K)`.
+    fn warn_point_over_temperature(&self, a: &Number, b: &Number) {
+        let point = a.unit().kind() == Kind::AbsoluteTemperature && !a.unit().offset().is_zero();
+        let per_temperature = b.unit().dim().exponents().get(4).is_some_and(|e| *e != 0);
+        if point && per_temperature {
+            let message = format!(
+                "'{a}' in a quotient is read as a temperature difference, not as the temperature: \
+                 for the temperature write {a}.to(K)"
+            );
+            let mut seen = self.eval_warnings.borrow_mut();
+            if !seen.contains(&message) {
+                seen.push(message);
+            }
+        }
     }
 
     /// Binds `name` to the quantity written in `quantity` (`"998 kg/m^3"`); a second binding of
@@ -1220,6 +1318,9 @@ impl<'r> Formula<'r> {
                 leading = false;
                 symbol.clear();
             }
+            if rewrite.is_none() && number_over_quantity(src, &mut out, (number, unit), at)? {
+                continue;
+            }
             match rewrite {
                 Some(_) if matches!(out.last(), Some((_, Tok::Op('/')))) => {
                     // `a / 2 r` is (a / 2) * r or a / (2 * r)
@@ -1296,6 +1397,23 @@ impl<'r> Formula<'r> {
         to: Option<&str>,
         autoprefix: bool,
     ) -> std::result::Result<crate::Report, CalcError> {
+        self.calculate_in(expression, to, autoprefix, crate::Notation::Plain)
+    }
+
+    /// As [`calculate`](Self::calculate) for a result that will be shown in `notation`: with
+    /// `autoprefix` and significant digits the prefix is chosen from the rounded number
+    /// (`999.9996 m` with 3 digits is `1.00 km`), and `Scientific` then needs no exponent.
+    ///
+    /// # Errors
+    ///
+    /// As [`calculate`](Self::calculate).
+    pub fn calculate_in(
+        &self,
+        expression: &str,
+        to: Option<&str>,
+        autoprefix: bool,
+        notation: crate::Notation,
+    ) -> std::result::Result<crate::Report, CalcError> {
         let at = |step: CalcStep| move |error: Error| CalcError { step, error };
         let to = to.map(str::trim).filter(|u| !u.is_empty());
         if autoprefix && to.is_some() {
@@ -1314,9 +1432,21 @@ impl<'r> Formula<'r> {
         if let Some(unit) = to {
             number = self.to_unit(&number, unit).map_err(at(CalcStep::Unit))?;
         } else if autoprefix {
-            number = self.autoprefix(&number).map_err(at(CalcStep::Prefix))?;
+            let digits = match notation {
+                crate::Notation::Scientific(d) => d,
+                crate::Notation::Plain => None,
+            };
+            number = self
+                .math
+                .autoprefix_in(&number, digits)
+                .map_err(at(CalcStep::Prefix))?;
         }
-        crate::Report::new(&number).map_err(at(CalcStep::Expression))
+        let report = crate::Report::new(&number).map_err(at(CalcStep::Expression))?;
+        Ok(if autoprefix {
+            report.with_prefix()
+        } else {
+            report
+        })
     }
 
     /// `n` with the SI prefix that puts its number between 1 and 1000 (`1500 m` is `1.5 km`).

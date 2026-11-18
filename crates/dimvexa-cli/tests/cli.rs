@@ -208,7 +208,7 @@ fn every_error_code_has_a_cli_test() {
         (&["convert", "1", "ly3", "m3"], "overflow", 1),
         (&["convert", "1", "m"], "usage", 2),
         // `calc` reaches the codes of a sum and a quotient (ADR-030)
-        (&["calc", "1 + pi"], "unrepresentable", 1),
+        (&["calc", "1 + pi", "--exact"], "unrepresentable", 1),
         (&["calc", "1 m / 0 s"], "division_by_zero", 1),
         (&["calc", "1 m + 1 s"], "dimension_mismatch", 1),
         (&["calc", "1 +"], "parse_error", 1),
@@ -3440,7 +3440,6 @@ fn calc_failures_use_the_library_codes_and_exit_1() {
         ("nothing * 2", "parse_error", "'nothing' is not a variable"),
         ("1 +", "parse_error", "a value is expected"),
         ("(1 ly)^3", "overflow", "overflow"),
-        ("1 + pi", "unrepresentable", "pi"),
         ("1 m / 0 s", "division_by_zero", "division by zero"),
         ("log(100)", "refused", "ambiguous"),
         ("sqrt(4 m)", "refused", "KL-32"),
@@ -3673,7 +3672,7 @@ fn calc_marks_rounded_exact_results_and_prints_values_beyond_f64() {
 fn calc_trig_needs_one_angle_unit() {
     for expr in [
         "sin(30 deg * 30 deg)",
-        "sin(1 / 1 rad)",
+        "sin(1 / (1 rad))",
         "sin(pi/6 rad)",
         "cos(30)",
     ] {
@@ -4219,7 +4218,7 @@ fn engineering_config_short_symbols_equal_the_built_in_constants() {
 #[test]
 fn calc_small_leftovers() {
     assert_eq!(calc(&["1e308 * 10"]).stdout, "1e309\n");
-    assert_eq!(calc(&["2 / 300 K"]).stdout, "0.006666666666666667… 1/K\n");
+    assert_eq!(calc(&["2 / (300 K)"]).stdout, "0.006666666666666667… 1/K\n");
     assert_eq!(
         calc(&["alpha * 100 K", "--var", "alpha=1.2e-5 1/K"]).stdout,
         "0.0012\n"
@@ -4336,7 +4335,7 @@ fn calc_autoprefix_chooses_the_si_prefix() {
     // with --sci, and the JSON carries the prefixed unit and value
     assert_eq!(
         calc(&["1500 m", "--autoprefix", "--sci"]).stdout,
-        "1.5e0 km\n"
+        "1.5 km\n"
     );
     let v = json::parse(&calc(&["1500 m", "--autoprefix", "--json"]).stdout).unwrap();
     let result = v.get("result").unwrap();
@@ -4585,4 +4584,74 @@ fn calc_syntax_errors_quote_the_equation_and_name_the_problem() {
         assert_eq!(r.code, 1, "{expr}");
         assert!(r.stderr.contains(needle), "{expr}: {}", r.stderr);
     }
+}
+
+/// A sum with different powers of pi is approximate (`≈`), and refused when `--exact` is given.
+#[test]
+fn calc_a_sum_with_pi_is_approximate_unless_exact_is_asked() {
+    assert_eq!(calc(&["1 + pi"]).stdout, "≈ 4.141592653589793\n");
+    assert_eq!(
+        calc(&["2 * pi * 1 m + 3 m"]).stdout,
+        "≈ 9.283185307179586 m\n"
+    );
+    let r = calc(&["1 + pi", "--exact"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr.starts_with("error[unrepresentable]"),
+        "{}",
+        r.stderr
+    );
+}
+
+/// `--sci` with `--autoprefix` needs no exponent, and the prefix comes from the rounded number.
+#[test]
+fn calc_sci_with_autoprefix_writes_no_exponent() {
+    for (expr, option, text) in [
+        ("1500 m", "--sci", "1.5 km\n"),
+        ("1500 m", "--sci=3", "1.50 km\n"),
+        ("999.9996 m", "--sci=3", "1.00 km\n"),
+        ("0.9999996 mm", "--sci=3", "1.00 mm\n"),
+        ("15 m", "--sci=3", "15.0 m\n"),
+        ("-1500 m", "--sci=2", "-1.5 km\n"),
+        ("2500000 m2", "--sci=3", "2.50 km^2\n"),
+    ] {
+        assert_eq!(calc(&[expr, "--autoprefix", option]).stdout, text, "{expr}");
+    }
+    // without --autoprefix the exponent stays
+    assert_eq!(calc(&["1500 m", "--sci"]).stdout, "1.5e3 m\n");
+}
+
+/// A number over a number with a unit is the number with the unit; the other reading is written
+/// with parentheses, and a reciprocal unit can follow a number.
+#[test]
+fn calc_a_number_over_a_quantity_is_the_quantity() {
+    for (expr, text) in [
+        ("10/2 s", "5 s\n"),
+        ("1/2 kg", "0.5 kg\n"),
+        ("10/(2 s)", "5 1/s\n"),
+        ("10/2 1/s", "5 1/s\n"),
+        ("10/2 s^-1", "5 s^-1\n"),
+        ("10 m / 2 s", "5 m/s\n"),
+        ("5 1/s", "5 1/s\n"),
+        ("60 1/min", "60 1/min\n"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, text, "{expr}");
+    }
+    let r = calc(&["3 * 10/2 s"]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.contains("write the parentheses"), "{}", r.stderr);
+}
+
+/// A temperature point over a temperature is read as a difference, with a warning.
+#[test]
+fn calc_a_point_over_a_temperature_warns() {
+    let r = calc(&["1 - 20 degC / 300 K"]);
+    assert_eq!(r.code, 0);
+    assert!(r.stderr.contains("20 degC.to(K)"), "{}", r.stderr);
+    // a rate is meant there, so no warning
+    let r = calc(&["20 degC / 2 s"]);
+    assert_eq!(
+        (r.stdout.as_str(), r.stderr.as_str()),
+        ("10 delta_degC/s\n", "")
+    );
 }

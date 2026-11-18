@@ -131,8 +131,12 @@ fn pi_is_a_constant_and_stays_exact() {
     // a full turn is exact too
     assert_eq!(f.eval("sin(2 * pi * 1 rad)").unwrap().to_string(), "0 1");
     assert_eq!(f.eval("cos(pi * 1 rad)").unwrap().to_string(), "-1 1");
-    // 1 + pi has no exact form: loud
-    assert_eq!(f.eval("1 + pi").unwrap_err().code(), "unrepresentable");
+    // 1 + pi has no exact form: approximate, and loud when only an exact value is wanted
+    let sum = f.eval("1 + pi").unwrap();
+    assert!(!sum.is_exact());
+    assert!((f.f64_in(&sum, "1").unwrap() - (1.0 + core::f64::consts::PI)).abs() < 1e-15);
+    let strict = Formula::new(&reg).exact_only(true);
+    assert_eq!(strict.eval("1 + pi").unwrap_err().code(), "unrepresentable");
 }
 
 /// `x^0.5`, `x^(1/2)` and `sqrt(x)` are the same number; so are the forms of the other powers.
