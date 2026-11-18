@@ -470,5 +470,5 @@ def test_calc_reading_rules_pi_sums_and_sci_with_prefix() -> None:
         dimvexa.calc("1 + pi", exact=True)
     assert e.value.code == "unrepresentable"
     assert dimvexa.calc("999.9996 m", autoprefix=True, sci=3)["text"] == "1.00 km"
-    with pytest.warns(UserWarning, match="20 degC.to"):
+    with pytest.raises(dimvexa.DimvexaError, match="20 degC.to"):
         dimvexa.calc("1 - 20 degC / 300 K")

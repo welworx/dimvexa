@@ -335,7 +335,8 @@ impl<'r> Math<'r> {
 
     /// A temperature point of a scale with an offset (`20 degC`) next to something that is not a
     /// plain number. Divided by it (`20 degC / 2 s`, `20 degC / 5 m`) it is read as the interval
-    /// of that scale, a rate or a gradient: `10 delta_degC/s`. In a product (`R * 20 degC`) or in
+    /// of that scale, a rate or a gradient: `10 delta_degC/s`; divided by a temperature
+    /// (`20 degC / 300 K`) it is refused, the temperature or a difference being equally likely. In a product (`R * 20 degC`) or in
     /// a denominator (`Ea / (R * T)`) it is refused: the point could be the temperature, which
     /// needs kelvin (`20 degC.to(K)`), or a difference (`20 delta_degC`), and a guess would be
     /// silently wrong for one of them. Next to a plain number it stays refused as before
@@ -346,6 +347,8 @@ impl<'r> Math<'r> {
             u.kind() == Kind::Plain && u.dim().is_dimensionless() && u.offset().is_zero()
         };
         let offset = |n: &Number| !n.unit().offset().is_zero();
+        let per_temperature =
+            |n: &Number| n.unit().dim().exponents().get(4).is_some_and(|e| *e != 0);
         let ambiguous = || {
             refused(
                 "a temperature point in a product or a denominator is ambiguous (the temperature \
@@ -372,7 +375,13 @@ impl<'r> Math<'r> {
                  (delta_degC) or K, for example 20 degC.to(K)",
             )),
             (true, false) if !scalar(b) => {
-                if divide {
+                if divide && per_temperature(b) {
+                    Err(refused(
+                        "a temperature point divided by a temperature is ambiguous (the \
+                         temperature itself, or a temperature difference?): write \
+                         20 degC.to(K) for the temperature or 20 delta_degC for a difference",
+                    ))
+                } else if divide {
                     Ok((as_interval(a)?, b.clone()))
                 } else {
                     Err(ambiguous())

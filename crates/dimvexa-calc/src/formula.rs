@@ -96,8 +96,6 @@ pub struct Formula<'r> {
     /// The names the caller bound, in order.
     given: Vec<String>,
     warnings: Vec<String>,
-    /// What evaluating an equation warned about (a point over a temperature).
-    eval_warnings: std::cell::RefCell<Vec<String>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -565,7 +563,6 @@ impl Parser<'_, '_> {
                 divided = false;
             } else if self.eat('/') {
                 let rhs = self.unary()?;
-                self.f.warn_point_over_temperature(&acc, &rhs);
                 acc = self.f.math.div(&acc, &rhs)?;
                 divided = true;
             } else if self.peek() == Some(&Tok::Implicit) || self.after_pi_name() {
@@ -1078,7 +1075,6 @@ impl<'r> Formula<'r> {
             vars,
             given: Vec::new(),
             warnings: Vec::new(),
-            eval_warnings: std::cell::RefCell::new(Vec::new()),
         }
     }
 
@@ -1119,27 +1115,8 @@ impl<'r> Formula<'r> {
     /// What the caller should be told about: a name that replaces a built-in constant, or that
     /// is bound twice (the last value is used).
     #[must_use]
-    pub fn warnings(&self) -> Vec<String> {
-        let mut all = self.warnings.clone();
-        all.extend(self.eval_warnings.borrow().iter().cloned());
-        all
-    }
-
-    /// `20 degC / 300 K`: the point is read as the interval (a rate), so the temperatures
-    /// cancel; most likely the temperature itself was meant, which is `20 degC.to(K)`.
-    fn warn_point_over_temperature(&self, a: &Number, b: &Number) {
-        let point = a.unit().kind() == Kind::AbsoluteTemperature && !a.unit().offset().is_zero();
-        let per_temperature = b.unit().dim().exponents().get(4).is_some_and(|e| *e != 0);
-        if point && per_temperature {
-            let message = format!(
-                "'{a}' in a quotient is read as a temperature difference, not as the temperature: \
-                 for the temperature write {a}.to(K)"
-            );
-            let mut seen = self.eval_warnings.borrow_mut();
-            if !seen.contains(&message) {
-                seen.push(message);
-            }
-        }
+    pub fn warnings(&self) -> &[String] {
+        &self.warnings
     }
 
     /// Binds `name` to the quantity written in `quantity` (`"998 kg/m^3"`); a second binding of

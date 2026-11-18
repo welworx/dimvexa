@@ -61,7 +61,7 @@ fn evaluate(req: &CalcRequest, loaded: &Loaded) -> (Result<Report, Failure>, Vec
             };
             (e.error, prefix)
         });
-    (result, formula.warnings())
+    (result, formula.warnings().to_vec())
 }
 
 fn render_text(r: &Report, exact: bool, notation: Notation, color: bool) -> String {

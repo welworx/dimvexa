@@ -4642,16 +4642,14 @@ fn calc_a_number_over_a_quantity_is_the_quantity() {
     assert!(r.stderr.contains("write the parentheses"), "{}", r.stderr);
 }
 
-/// A temperature point over a temperature is read as a difference, with a warning.
+/// A temperature point over a temperature is refused (the temperature or a difference?).
 #[test]
-fn calc_a_point_over_a_temperature_warns() {
+fn calc_a_point_over_a_temperature_is_refused() {
     let r = calc(&["1 - 20 degC / 300 K"]);
-    assert_eq!(r.code, 0);
+    assert_eq!((r.code, r.stdout.as_str()), (1, ""));
+    assert!(r.stderr.starts_with("error[refused]"), "{}", r.stderr);
     assert!(r.stderr.contains("20 degC.to(K)"), "{}", r.stderr);
-    // a rate is meant there, so no warning
-    let r = calc(&["20 degC / 2 s"]);
-    assert_eq!(
-        (r.stdout.as_str(), r.stderr.as_str()),
-        ("10 delta_degC/s\n", "")
-    );
+    assert_eq!(calc(&["1 - 20 degC.to(K) / 300 K"]).code, 0);
+    // over something that is not a temperature it is the rate of the interval
+    assert_eq!(calc(&["20 degC / 2 s"]).stdout, "10 delta_degC/s\n");
 }
