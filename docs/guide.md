@@ -414,9 +414,9 @@ JSON), so it is never silent. The constants of the configs in effect are names t
   `f64`); the `…` is left out when you ask for the digits. The JSON keeps the number a number.
   `--autoprefix` chooses the SI prefix (a power of 1000) that puts the number between 1 and 1000
   (between 1 and 1000^n for a power n): `1500 m` is `1.5 km`, `0.0025 m` is `2.5 mm`,
-  `2500000 m2` is `2.5 km^2`. It changes only a result that is one unit, perhaps with a positive
-  power, that takes SI prefixes (`m`, `s`, `Pa`, `W`, `Hz`, `rad`, `L`, `g`). A compound unit
-  (`m/s`), a negative power (`s^-1`), a unit without prefixes (`ft`, `min`), a temperature and
+  `2500000 m2` is `2.5 km^2`. It changes only a result whose one unit with a positive power
+  takes SI prefixes (`m`, `s`, `Pa`, `W`, `Hz`, `rad`, `L`, `g`). A compound unit
+  takes the prefix on its one numerator unit (`1500 m/s` is `1.5 km/s`, `2500 J/(kg*K)` is `2.5 kJ/(kg.K)`, `0.5 mol/L` is `500 mmol/L`) and stays when it has none or two (`kg*m`, `1/s`); a negative power (`s^-1`), a unit without prefixes (`ft`, `min`), a temperature and
   a result in `kg` of 1 or more stay as they are (grams stop at the kilogram, never `Mg`, so
   `0.5 kg` is `500 g`), and so does a unit whose prefixed symbol reads as another unit (`mt` is ambiguous, so a
   unit never becomes `mt`). The tonne hands over to grams below 1 t: `0.5 t` is `500 kg`,
@@ -475,7 +475,7 @@ answered with an approximate number.
   error (`5 m.to(K)`). It binds tighter than `*` and `/`, so `n * molar_gas_constant * T.to(K) / V`
   is `p V = n R T` with `T` in degrees Celsius. `--to UNIT` does the same for the whole result.
 * **Temperatures:** a point (`20 degC`, `-40 degC`) can be compared and shifted by a difference,
-  not multiplied or negated (`-40 degC` is the point itself, `-(20 degC)` is refused); `degC + degC` is `20 degC + 30 degC` = `50 degC` (the second point is read as a rise, ADR-027) while
+  not multiplied or divided. Its sign and magnitude keep the scale (`-(40 degC)` is `-40 degC`, `abs(-40 degC)` is `40 degC`). A sum of points in two scales has no clear unit and is refused (`20 degC + 41 degF`); `(20 degC + 41 degF).to(degC)` converts both to the unit first and gives `25 degC`, and a difference of two scales is fine (`100 degF - 20 degC` is `32 delta_degF`); `degC + degC` is `20 degC + 30 degC` = `50 degC` (the second point is read as a rise, ADR-027) while
   `degC - degC` is a difference (`delta_degC`) and a point minus a kelvin is refused (ADR-027).
   A computed temperature (`p * V / (n * R)`, dimension K) converts to `K`, `degC` and `degF`, also
   with `--to`. A kelvin value scales (`2 * 20 degC.to(K)` is `586.3 K`); a Celsius or Fahrenheit

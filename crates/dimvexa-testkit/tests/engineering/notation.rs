@@ -197,7 +197,7 @@ fn lg_and_lb_are_log10_and_log2() {
 /// The absolute value and the negation of a temperature point mean nothing: `-5 degC` and
 /// `5 degC` are different states. A temperature difference is fine, and so is `abs(T1 - T2)`.
 #[test]
-fn the_absolute_value_of_a_temperature_point_is_refused_and_names_the_delta_unit() {
+fn the_sign_and_absolute_value_of_a_temperature_point_keep_its_scale() {
     let reg = registry().unwrap();
     let f = Formula::new(&reg)
         .var("Tc", "-5 degC")
@@ -208,15 +208,8 @@ fn the_absolute_value_of_a_temperature_point_is_refused_and_names_the_delta_unit
         .unwrap()
         .var("d", "-5 delta_degC")
         .unwrap();
-    for call in ["abs(Tc)", "-Tc"] {
-        let err = f.eval(call).unwrap_err();
-        assert_eq!(err.code(), "kind_mismatch", "{call}");
-        assert_eq!(err.suggestions(), ["delta_degC".to_owned()], "{call}");
-        assert!(
-            err.to_string().contains("for a difference use delta_degC"),
-            "{err}"
-        );
-    }
+    assert_eq!(f.eval_exact("abs(Tc)").unwrap().to_string(), "5 degC");
+    assert_eq!(f.eval_exact("-Tc").unwrap().to_string(), "5 degC");
     assert_eq!(f.eval_exact("abs(d)").unwrap().to_string(), "5 delta_degC");
     assert_eq!(
         f.eval_exact("abs(T1 - T2)").unwrap().to_string(),

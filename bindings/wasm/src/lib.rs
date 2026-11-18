@@ -443,9 +443,7 @@ pub fn calc(
                     format!("'{entry}' is not NAME=VALUE (for example dp=50 kPa)"),
                 )
             })?;
-        formula = formula
-            .var(name.trim(), value.trim())
-            .map_err(|e| fail(&e))?;
+        formula = formula.var(name, value).map_err(|e| fail(&e))?;
     }
     let result = formula.calculate_in(expression, Some(to), autoprefix, notation);
     // the warnings come first, so they are not lost when the calculation fails

@@ -534,6 +534,9 @@ struct Parser<'a, 'r> {
     pow_depth: usize,
     /// The unit written after the exponent of the outermost power (`2^3 m`), with its position.
     tail_unit: Option<(String, usize)>,
+    /// The unit of a `(a + b).to(UNIT)` being read: temperature points of other scales in the
+    /// sum are converted to it first.
+    sum_target: Option<String>,
 }
 
 impl Parser<'_, '_> {
@@ -576,7 +579,8 @@ impl Parser<'_, '_> {
         loop {
             if self.eat('+') {
                 let rhs = self.term()?;
-                acc = self.f.math.add(&acc, &rhs)?;
+                let (a, b) = self.in_sum_scale(acc, rhs)?;
+                acc = self.f.math.add(&a, &b)?;
             } else if self.eat('-') {
                 let rhs = self.term()?;
                 acc = self.f.math.sub(&acc, &rhs)?;
@@ -584,6 +588,63 @@ impl Parser<'_, '_> {
                 return Ok(acc);
             }
         }
+    }
+
+    /// Two temperature points of different scales in a `(a + b).to(UNIT)`: both in that unit.
+    fn in_sum_scale(&self, a: Number, b: Number) -> Result<(Number, Number)> {
+        let point = |n: &Number| !n.unit().offset().is_zero();
+        match &self.sum_target {
+            Some(unit)
+                if point(&a) && point(&b) && a.unit().to_string() != b.unit().to_string() =>
+            {
+                Ok((
+                    self.f.math.to_unit(&a, unit)?,
+                    self.f.math.to_unit(&b, unit)?,
+                ))
+            }
+            _ => Ok((a, b)),
+        }
+    }
+
+    /// The unit of the `.to(UNIT)` that follows the token at `from`, if there is one.
+    fn conversion_after(&self, from: usize) -> Option<String> {
+        let at = |i: usize| self.toks.get(i).map(|(_, t)| t);
+        if at(from) != Some(&Tok::Op('.'))
+            || !matches!(at(next(from)), Some(Tok::Id(n)) if n == "to")
+            || at(next(next(from))) != Some(&Tok::Op('('))
+        {
+            return None;
+        }
+        let start = next(next(next(from)));
+        let mut depth = 0_usize;
+        let mut end = start;
+        while let Some(tok) = at(end) {
+            match tok {
+                Tok::Op('(') => depth = next(depth),
+                Tok::Op(')') if depth == 0 => break,
+                Tok::Op(')') => depth = depth.saturating_sub(1),
+                _ => {}
+            }
+            end = next(end);
+        }
+        let first = self.toks.get(start).map(|(p, _)| *p)?;
+        let last = self.toks.get(end).map(|(p, _)| *p)?;
+        let unit: String = self.norm.get(first..last)?.iter().collect();
+        Some(unit.trim().to_owned()).filter(|u| !u.is_empty())
+    }
+
+    /// The index of the `)` that closes the `(` before `from`.
+    fn closing_paren(&self, from: usize) -> Option<usize> {
+        let mut depth = 0_usize;
+        for (i, (_, tok)) in self.toks.iter().enumerate().skip(from) {
+            match tok {
+                Tok::Op('(') => depth = next(depth),
+                Tok::Op(')') if depth == 0 => return Some(i),
+                Tok::Op(')') => depth = depth.saturating_sub(1),
+                _ => {}
+            }
+        }
+        None
     }
 
     fn term(&mut self) -> Result<Number> {
@@ -845,7 +906,16 @@ impl Parser<'_, '_> {
             Some(Tok::Op('(')) => {
                 self.advance();
                 self.enter()?;
-                let inner = self.expr()?;
+                let target = self
+                    .closing_paren(self.pos)
+                    .and_then(|close| self.conversion_after(next(close)));
+                let outer = self.sum_target.clone();
+                if target.is_some() {
+                    self.sum_target = target;
+                }
+                let inner = self.expr();
+                self.sum_target = outer;
+                let inner = inner?;
                 self.leave();
                 if self.eat(')') {
                     Ok(inner)
@@ -1268,6 +1338,7 @@ impl<'r> Formula<'r> {
             norm: normalise(formula),
             pow_depth: 0,
             tail_unit: None,
+            sum_target: None,
         };
         let q = p.expr()?;
         if p.pos < p.toks.len() {

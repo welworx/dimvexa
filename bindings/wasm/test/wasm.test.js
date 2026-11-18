@@ -135,6 +135,12 @@ assert.strictEqual(code(() => d.convertExactWith("1/2pi", "rad", "deg", "", "", 
   assert.strictEqual(d.calc("20 degC / 2 s", [], "", "", []).text, "10 delta_degC/s");
   assert.strictEqual(code(() => d.calc("exp(-746)", [], "", "", [])), "overflow");
   assert.strictEqual(d.calc("10/2 s", [], "", "", []).text, "5 s");
+  assert.strictEqual(d.calc("1500 m/s", [], "", "", [], { autoprefix: true }).text, "1.5 km/s");
+  assert.strictEqual(d.calc("-(40 degC)", [], "", "", []).text, "-40 degC");
+  assert.strictEqual(d.calc("(20 degC + 41 degF).to(degC)", [], "", "", []).text, "25 degC");
+  assert.strictEqual(code(() => d.calc("20 degC + 41 degF", [], "", "", [])), "refused");
+  assert.strictEqual(code(() => d.calc("1500 m", [], "cm", "", [], { autoprefix: true })), "refused");
+  assert.strictEqual(code(() => d.calc("x", ["x =3 m"], "", "", [])), "invalid_definition");
   assert.strictEqual(d.calc("1 + pi", [], "", "", []).text, "≈ 4.141592653589793");
   assert.strictEqual(code(() => d.calc("1 + pi", [], "", "", [], { exact: true })), "unrepresentable");
   assert.strictEqual(d.calc("999.9996 m", [], "", "", [], { autoprefix: true, sci: 3 }).text, "1.00 km");

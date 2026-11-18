@@ -258,6 +258,17 @@ impl<'r> Math<'r> {
     }
 
     fn sum(self, a: &Number, b: &Number, subtract: bool) -> Result<Number> {
+        // two points in different scales: their difference is fine, their sum has no unit
+        if !subtract
+            && !a.unit().offset().is_zero()
+            && !b.unit().offset().is_zero()
+            && a.unit().to_string() != b.unit().to_string()
+        {
+            return Err(refused(format!(
+                "a sum of temperature points in different scales ({a} and {b}) has no clear \
+                 unit: convert both first, for example ({a} + {b}).to(degC)"
+            )));
+        }
         if let (Number::Exact(x), Number::Exact(y)) = (a, b) {
             let exact = if subtract {
                 self.calc.sub(x, y)
@@ -482,6 +493,10 @@ impl<'r> Math<'r> {
     ///
     /// The errors of [`Calc::neg`].
     pub fn neg(&self, a: &Number) -> Result<Number> {
+        // a temperature point: the number changes sign in its own scale, as in `-40 degC`
+        if let Some(point) = Self::point_with(a, |v| v.checked_mul(Ratio::from_int(-1)), |x| -x)? {
+            return Ok(point);
+        }
         match a {
             Number::Exact(q) => self.calc.neg(q).map(Number::Exact),
             Number::Approx(x) => {
@@ -492,6 +507,26 @@ impl<'r> Math<'r> {
                 }))
             }
         }
+    }
+
+    /// `a` with its number changed by `exact` or `approx` when it is a temperature point (a
+    /// scale with an offset): the sign or the magnitude of the number in that scale. `None` for
+    /// anything else.
+    fn point_with(
+        a: &Number,
+        exact: impl Fn(Ratio) -> Result<Ratio>,
+        approx: impl Fn(f64) -> f64,
+    ) -> Result<Option<Number>> {
+        if a.unit().offset().is_zero() {
+            return Ok(None);
+        }
+        Ok(Some(match a {
+            Number::Exact(q) => Number::Exact(Quantity::new(exact(q.value())?, a.unit().clone())),
+            Number::Approx(x) => Number::Approx(Approx {
+                value: approx(x.value),
+                unit: x.unit.clone(),
+            }),
+        }))
     }
 
     /// Integer power. Exact for an exact number.
@@ -783,6 +818,17 @@ impl<'r> Math<'r> {
     /// The errors of [`Calc::abs`] (a temperature point is refused: `abs(-5 degC)` has no
     /// meaning), [`Error::Refused`] for an approximate temperature point.
     pub fn abs(&self, a: &Number) -> Result<Number> {
+        // a temperature point: `abs(-40 degC)` is `40 degC`
+        let magnitude = |v: Ratio| {
+            if v.num() < 0 {
+                v.checked_mul(Ratio::from_int(-1))
+            } else {
+                Ok(v)
+            }
+        };
+        if let Some(point) = Self::point_with(a, magnitude, f64::abs)? {
+            return Ok(point);
+        }
         match a {
             Number::Exact(q) => self.calc.abs(q).map(Number::Exact),
             Number::Approx(x) => {
@@ -990,17 +1036,17 @@ impl<'r> Math<'r> {
     /// As [`autoprefix`](Self::autoprefix).
     pub fn autoprefix_in(&self, a: &Number, digits: Option<usize>) -> Result<Number> {
         use dimvexa_core::SI_PREFIXES;
-        let Some((base, power)) = self.prefix_target(a) else {
+        let Some((base, power, rest)) = self.prefix_target(a) else {
             return Ok(a.clone());
         };
         let reg = self.reg();
-        let base = self.autoprefix_base(a, &base, power, digits)?;
+        let base = self.autoprefix_base(a, (&base, power, &rest), digits)?;
         let base = base.as_str();
         let raised = |prefix: &str| {
             if power == 1 {
-                format!("{prefix}{base}")
+                format!("{prefix}{base}{rest}")
             } else {
-                format!("{prefix}{base}^{power}")
+                format!("{prefix}{base}^{power}{rest}")
             }
         };
         let in_base = self.to_unit(a, &raised(""))?;
@@ -1071,10 +1117,10 @@ impl<'r> Math<'r> {
 
     /// The unit without its prefix and its power, when `--autoprefix` can prefix `a`: one unit
     /// that takes SI prefixes (`km^2` is `m` and 2), not a temperature.
-    fn prefix_target(&self, a: &Number) -> Option<(String, i32)> {
+    fn prefix_target(&self, a: &Number) -> Option<(String, i32, String)> {
         use dimvexa_core::{PrefixFamily, SI_PREFIXES};
         let unit = a.unit();
-        let (symbol, power) = single_unit(unit.expr())?;
+        let (symbol, power, rest) = numerator_split(unit.expr())?;
         let symbol = symbol.as_str();
         // temperatures (a scale, a point) keep their unit; angles and cycles take prefixes
         // (mrad, GHz)
@@ -1097,14 +1143,14 @@ impl<'r> Math<'r> {
             },
             |u| takes_si(u).then_some(symbol),
         );
-        base.map(|b| (b.to_owned(), power))
+        base.map(|b| (b.to_owned(), power, rest.clone()))
     }
 
     /// The power of the unit `--autoprefix` prefixes in `a` (2 for `m^2`), `None` when it keeps
     /// the unit it has.
     #[must_use]
     pub fn prefix_power(&self, a: &Number) -> Option<i32> {
-        self.prefix_target(a).map(|(_, power)| power)
+        self.prefix_target(a).map(|(_, power, _)| power)
     }
 
     /// The unit to put the prefix on: `base`, or the smaller unit it hands over to below one of
@@ -1112,8 +1158,7 @@ impl<'r> Math<'r> {
     fn autoprefix_base(
         &self,
         a: &Number,
-        base: &str,
-        power: i32,
+        (base, power, rest): (&str, i32, &str),
         digits: Option<usize>,
     ) -> Result<String> {
         let reg = self.reg();
@@ -1125,9 +1170,9 @@ impl<'r> Math<'r> {
             return Ok(base.to_owned());
         };
         let whole = if power == 1 {
-            base.to_owned()
+            format!("{base}{rest}")
         } else {
-            format!("{base}^{power}")
+            format!("{base}^{power}{rest}")
         };
         let in_whole = self.to_unit(a, &whole)?;
         let reaches = digits
@@ -2212,24 +2257,56 @@ fn magnitude_reaches(n: &Number, tens: i32) -> Result<bool> {
     })
 }
 
-/// The one symbol and its positive power of a unit that is only that symbol, perhaps repeated
-/// (`m`, `m^2`, `m.m`), so `0.5 m * 1 m` prefixes like `0.5 m^2`.
-fn single_unit(expr: &dimvexa_core::Expr) -> Option<(String, i32)> {
+/// The unit split for `--autoprefix`: the one symbol with a positive power (`m` and 2 of
+/// `m^2/s`), and what stays as it is (`/s`). `None` when more than one symbol has a positive
+/// power (`kg*m`) or none has (`1/s`). A repeated symbol is merged (`m.m` is `m^2`).
+fn numerator_split(expr: &dimvexa_core::Expr) -> Option<(String, i32, String)> {
     use dimvexa_core::Expr;
-    match expr {
-        Expr::Unit(s) => Some((s.clone(), 1)),
-        Expr::Pow(base, n) if *n >= 1 => {
-            let (s, p) = single_unit(base)?;
-            Some((s, p.checked_mul(*n)?))
+    fn flatten(expr: &Expr, power: i32, out: &mut Vec<(String, i32)>) -> Option<()> {
+        match expr {
+            Expr::One => Some(()),
+            Expr::Unit(s) => {
+                out.push((s.clone(), power));
+                Some(())
+            }
+            Expr::Mul(a, b) => {
+                flatten(a, power, out)?;
+                flatten(b, power, out)
+            }
+            Expr::Div(a, b) => {
+                flatten(a, power, out)?;
+                flatten(b, power.checked_neg()?, out)
+            }
+            Expr::Pow(base, n) => flatten(base, power.checked_mul(*n)?, out),
         }
-        Expr::Mul(a, b) => {
-            let (sa, pa) = single_unit(a)?;
-            let (sb, pb) = single_unit(b)?;
-            (sa == sb)
-                .then(|| (sa, pa.checked_add(pb)))?
-                .1
-                .map(|p| (sb, p))
-        }
-        _ => None,
     }
+    let mut raw = Vec::new();
+    flatten(expr, 1, &mut raw)?;
+    let mut merged: Vec<(String, i32)> = Vec::new();
+    for (symbol, power) in raw {
+        match merged.iter_mut().find(|(s, _)| *s == symbol) {
+            Some((_, p)) => *p = p.checked_add(power)?,
+            None => merged.push((symbol, power)),
+        }
+    }
+    merged.retain(|(_, p)| *p != 0);
+    let mut positive = merged.iter().filter(|(_, p)| *p > 0);
+    let (symbol, power) = positive.next()?;
+    if positive.next().is_some() {
+        return None;
+    }
+    let denominator: Vec<String> = merged
+        .iter()
+        .filter(|(_, p)| *p < 0)
+        .filter_map(|(s, p)| match p.checked_neg()? {
+            1 => Some(s.clone()),
+            n => Some(format!("{s}^{n}")),
+        })
+        .collect();
+    let rest = match denominator.as_slice() {
+        [] => String::new(),
+        [one] => format!("/{one}"),
+        many => format!("/({})", many.join("*")),
+    };
+    Some((symbol.clone(), *power, rest))
 }

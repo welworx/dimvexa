@@ -3443,7 +3443,6 @@ fn calc_failures_use_the_library_codes_and_exit_1() {
         ("1 m / 0 s", "division_by_zero", "division by zero"),
         ("log(100)", "refused", "ambiguous"),
         ("sqrt(4 m)", "refused", "KL-32"),
-        ("abs(-5 degC)", "kind_mismatch", "delta_degC"),
         ("frobnicate(1)", "refused", "unknown function"),
     ] {
         let r = calc(&[expr]);
@@ -4338,11 +4337,12 @@ fn calc_autoprefix_chooses_the_si_prefix() {
     let result = v.get("result").unwrap();
     assert_eq!(result.get("unit").unwrap().as_str(), "km");
     assert_eq!(result.get("value").unwrap(), &json::V::Num(1.5));
-    // --autoprefix chooses the unit, so --to is a usage error; only calc takes it
+    // --autoprefix chooses the unit, so --to is refused (the code Python and WebAssembly give
+    // too); only calc takes the option
     let r = calc(&["1500 m", "--autoprefix", "--to", "cm"]);
-    assert_eq!(r.code, 2);
+    assert_eq!(r.code, 1);
     assert!(
-        r.stderr.contains("cannot be used with '--to'"),
+        r.stderr.starts_with("error[refused]: --autoprefix: "),
         "{}",
         r.stderr
     );
@@ -4718,4 +4718,55 @@ fn calc_final_review_regressions() {
     assert_eq!(calc(&["max(1/2 kg, 400 g)"]).stdout, "0.5 kg\n");
     assert_eq!(calc(&["pi/2 rad"]).stdout, "1.5707963267948966… rad\n");
     assert_eq!(calc(&["1 + 1/2 kg"]).code, 1);
+}
+
+/// Compound units take the prefix on their one numerator unit; the others stay.
+#[test]
+fn calc_autoprefix_prefixes_the_numerator_of_a_compound_unit() {
+    for (expr, text) in [
+        ("1500 m/s", "1.5 km/s\n"),
+        ("0.0025 m/s", "2.5 mm/s\n"),
+        ("3 m/s", "3 m/s\n"),
+        ("2500 J/(kg*K)", "2.5 kJ/(kg.K)\n"),
+        ("2500000 m2/s", "2.5 km^2/s\n"),
+        ("0.5 t/h", "500 kg/h\n"),
+        ("0.5 mol/L", "500 mmol/L\n"),
+        ("1500 kg*m", "1500 kg.m\n"),
+        ("1500 1/s", "1500 1/s\n"),
+        ("1500 degC/s", "1500 delta_degC/s\n"),
+    ] {
+        assert_eq!(calc(&[expr, "--autoprefix"]).stdout, text, "{expr}");
+    }
+    assert_eq!(
+        calc(&["1500 m/s", "--autoprefix", "--sci=3"]).stdout,
+        "1.50 km/s\n"
+    );
+}
+
+/// The options behave the same in every front end: a repeated `--sci` is an error like `--to`.
+#[test]
+fn calc_a_repeated_sci_is_a_usage_error() {
+    let r = calc(&["1 m", "--sci=3", "--sci=4"]);
+    assert_eq!(r.code, 2);
+    assert!(r.stderr.contains("'--sci' is given twice"), "{}", r.stderr);
+}
+
+/// Temperature points: the sign and the magnitude keep the scale; a sum of points in two scales
+/// needs `.to(UNIT)` around it, which converts both first.
+#[test]
+fn calc_temperature_points_negate_abs_and_sum_with_a_target_scale() {
+    for (expr, text) in [
+        ("-(40 degC)", "-40 degC\n"),
+        ("abs(-40 degC)", "40 degC\n"),
+        ("abs(-(40 degC))", "40 degC\n"),
+        ("(20 degC + 41 degF).to(degC)", "25 degC\n"),
+        ("(20 degC + 41 degF).to(degF)", "109 degF\n"),
+        ("(20 degC + 30 degC)", "50 degC\n"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, text, "{expr}");
+    }
+    let r = calc(&["20 degC + 41 degF"]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.starts_with("error[refused]"), "{}", r.stderr);
+    assert!(r.stderr.contains(".to(degC)"), "{}", r.stderr);
 }

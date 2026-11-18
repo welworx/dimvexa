@@ -490,8 +490,9 @@ fn the_absolute_value_keeps_the_unit_and_the_exactness() {
     let r = m.abs(&root).unwrap();
     assert!(!r.is_exact());
     assert_eq!(m.to_f64_in(&r, "m").unwrap(), 2.0_f64.sqrt());
-    // the absolute value of a temperature point means nothing; a difference is fine
-    assert_eq!(code(m.abs(&n(&reg, "-5 degC"))), "kind_mismatch");
+    // a temperature point keeps its scale: the number changes, as in `-40 degC`
+    assert_eq!(m.abs(&n(&reg, "-5 degC")).unwrap().to_string(), "5 degC");
+    assert_eq!(m.neg(&n(&reg, "40 degC")).unwrap().to_string(), "-40 degC");
     assert_eq!(
         m.abs(&n(&reg, "-5 delta_K")).unwrap().to_string(),
         "5 delta_K"

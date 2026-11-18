@@ -479,3 +479,20 @@ def test_calc_warnings_are_not_lost_when_the_calculation_fails() -> None:
         with pytest.raises(dimvexa.DimvexaError) as e:
             dimvexa.calc("speed_of_light / 0", vars={"speed_of_light": "3"})
     assert e.value.code == "division_by_zero"
+
+
+def test_calc_compound_prefix_temperature_points_and_options_match_the_cli() -> None:
+    assert dimvexa.calc("1500 m/s", autoprefix=True)["text"] == "1.5 km/s"
+    assert dimvexa.calc("1500 m/s", autoprefix=True, sci=3)["text"] == "1.50 km/s"
+    assert dimvexa.calc("-(40 degC)")["text"] == "-40 degC"
+    assert dimvexa.calc("abs(-40 degC)")["text"] == "40 degC"
+    assert dimvexa.calc("(20 degC + 41 degF).to(degC)")["text"] == "25 degC"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("20 degC + 41 degF")
+    assert e.value.code == "refused"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("1500 m", to="cm", autoprefix=True)
+    assert e.value.code == "refused"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("x", vars={"x ": "3 m"})
+    assert e.value.code == "invalid_definition"

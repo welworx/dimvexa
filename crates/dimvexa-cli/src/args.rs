@@ -150,6 +150,12 @@ pub fn split_options(args: &[String]) -> Result<(ValueOptions, Vec<String>), Usa
             continue;
         }
         if let Some(digits) = scientific_option(a) {
+            if opts.notation != Notation::Plain {
+                return Err(UsageError {
+                    message: "'--sci' is given twice; give it once".to_string(),
+                    ..missing("--sci")
+                });
+            }
             opts.notation = digits.map_err(|message| UsageError {
                 message,
                 ..missing("--sci")
@@ -300,11 +306,6 @@ pub fn parse_calc(
     if to.as_deref().is_some_and(|u| u.trim().is_empty()) {
         return Err(usage(
             "'--to' needs a unit, for example --to cm2".to_string(),
-        ));
-    }
-    if autoprefix && to.is_some() {
-        return Err(usage(
-            "'--autoprefix' chooses the unit, so it cannot be used with '--to'".to_string(),
         ));
     }
     let mut named = Vec::new();
