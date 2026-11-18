@@ -1121,7 +1121,14 @@ impl<'r> Formula<'r> {
         };
         let q = p.expr()?;
         if p.pos < p.toks.len() {
-            return Err(parse_error(formula, p.here(), "unexpected input"));
+            let message = match p.toks.get(p.pos) {
+                Some((_, Tok::Id(name))) => format!(
+                    "unexpected '{name}': two names or values in a row need an operator, \
+                     write the product with * (for example 2 * r * {name})"
+                ),
+                _ => "unexpected input".to_owned(),
+            };
+            return Err(parse_error(formula, p.here(), &message));
         }
         Ok((q, p.used))
     }

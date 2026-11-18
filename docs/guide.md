@@ -478,7 +478,9 @@ answered with an approximate number.
   the interval: `20 degC / 2 s` is `10 delta_degC/s` (`--to K/s` for kelvin per second). In a
   product or a denominator a point is ambiguous (the temperature or a difference?) and refused:
   `R * 27 degC` and `Ea / (R * 27 degC)` need `27 degC.to(K)`, a heat `cp * m * 20 delta_degC` the
-  `delta_degC`; `(20 degC)^2` is refused too.
+  `delta_degC`; `(20 degC)^2` is refused too (known limitation KL-35: a decision to keep a silent
+  wrong result out, which may be too strict or wrongly implemented; write `(20 delta_degC)^2`,
+  `20 degC.to(K)^2` or the number alone, `20^2`).
 * **Not units of every trade:** names that mean different things (`ton`, `gpm`, `mph`, `rpm`) are
   errors until a config chooses (`--config us-customary`, or your own, see
   `examples/configs/engineering.toml`). A space between two units is not a product: write

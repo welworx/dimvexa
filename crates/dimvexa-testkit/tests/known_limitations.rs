@@ -260,3 +260,24 @@ fn known_limitation_kl_34_a_value_beyond_f64_cannot_be_an_approximate_argument()
         "{root:e}"
     );
 }
+
+/// KL-35: a temperature point cannot be raised to a power (a decision, possibly too strict).
+#[test]
+fn known_limitation_kl_35_a_temperature_point_cannot_be_squared() {
+    let reg = registry().unwrap();
+    let f = Formula::new(&reg);
+    assert_eq!(
+        f.eval("(20 degC)^2").unwrap_err().code(),
+        "refused",
+        "KL-35 fixed? then (20 degC)^2 is 400 degC^2"
+    );
+    // the explicit forms work
+    assert_eq!(
+        f.eval("(20 delta_degC)^2").unwrap().to_string(),
+        "400 delta_degC^2"
+    );
+    assert_eq!(
+        f.eval("20 degC.to(K)^2").unwrap().to_string(),
+        "85936.9225 K^2"
+    );
+}

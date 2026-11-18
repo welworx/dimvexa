@@ -4505,3 +4505,17 @@ fn calc_review_round_four_regressions() {
         r.stderr
     );
 }
+
+/// `2 r r` is two names in a row: the error says to write the product with `*`.
+#[test]
+fn calc_two_names_in_a_row_need_an_operator() {
+    let r = calc(&["2 r r", "--var", "r=3 m"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr
+            .contains("two names or values in a row need an operator"),
+        "{}",
+        r.stderr
+    );
+    assert_eq!(calc(&["2 r * r", "--var", "r=3 m"]).stdout, "18 m^2\n");
+}
