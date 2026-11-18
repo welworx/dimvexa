@@ -377,11 +377,14 @@ JSON), so it is never silent. The constants of the configs in effect are names t
   `10 m / (2 pi)` or `(10 m / 2) * pi`; the same for `Q / pi r^2`, and for a number and a variable
   after a division (`10 m / 2 r`: write `10 m / (2 r)`). A unit after an exponent multiplies the
   power: `2^3 m` is `(2^3) m`, `8 m`, because a unit cannot be part of an exponent.
-* **Spaces:** a space ends a unit. A number over a number with a unit is that number with the
-  unit: `10/2 s` is `5 s` and `1/2 kg` is `0.5 kg`. For the other reading write
-  `10/(2 s)` (`5 1/s`), `10/2 1/s` or `10/2 s^-1`. After another operator (`3 * 10/2 s`) it is
-  refused: write the parentheses. A quantity over a quantity is as usual (`10 m / 2 s` is
-  `5 m/s`). A reciprocal unit may follow a number (`60 1/min`). Tabs, newlines and the no-break space are spaces. A comma separates
+* **Spaces:** a space ends a unit. A unit belongs to the number before it, so after a `/` it
+  divides: `10 m / 2 s` is `5 m/s`, `x / 2 s` divides `x` by `2 s`, `10/(2 s)` is `5 1/s`. One
+  exception, for the units of a fraction of plain numbers: when everything before the `/` in the
+  term is plain numbers (and `pi`), the unit is the unit of the whole term. `1/2 kg` is
+  `0.5 kg`, `10/2 s` is `5 s`, `2/300 K`, `5 * 1 / 2 s`, `(2/3) / 4 s` and `1 / -2 s` the same.
+  For a reciprocal unit write `20/100 1/s`, `20/100 s^-1` or `20/(100 s)`. A name or a function
+  before the `/` is not a plain number (`a / 2 s` is `a / (2 s)`). A reciprocal unit may follow
+  a number (`60 1/min`). To multiply a fraction by a unit write `(1/2) * 1 kg` or `0.5 kg`. Tabs, newlines and the no-break space are spaces. A comma separates
   arguments (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.
 * **Notation:** superscripts of any size (`m²`, `m⁴`, `s⁻²`, `m¹⁰`), `·`, `×`, `÷` and the minus
   sign `−` are read (`10 m² · 3 m`, `1 kg·m/s²`; a space before a superscript is ignored,

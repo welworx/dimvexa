@@ -3670,12 +3670,7 @@ fn calc_marks_rounded_exact_results_and_prints_values_beyond_f64() {
 /// `sin` and `cos` take one angle unit: not `deg*deg`, not `1/rad`.
 #[test]
 fn calc_trig_needs_one_angle_unit() {
-    for expr in [
-        "sin(30 deg * 30 deg)",
-        "sin(1 / (1 rad))",
-        "sin(pi/6 rad)",
-        "cos(30)",
-    ] {
+    for expr in ["sin(30 deg * 30 deg)", "sin(1 / (1 rad))", "cos(30)"] {
         let r = calc(&[expr]);
         assert!(
             r.stderr.starts_with("error[refused]"),
@@ -3684,6 +3679,8 @@ fn calc_trig_needs_one_angle_unit() {
         );
     }
     assert_eq!(calc(&["sin(pi/6 * 1 rad)"]).stdout, "0.5\n");
+    // plain numbers over `6 rad` give the angle of the whole term
+    assert_eq!(calc(&["sin(pi/6 rad)"]).stdout, "0.5\n");
     assert_eq!(calc(&["sin(30 deg)"]).stdout, "0.5\n");
     assert_eq!(calc(&["cos(2 * 30 deg)"]).stdout, "0.5\n");
 }
@@ -4621,25 +4618,42 @@ fn calc_sci_with_autoprefix_writes_no_exponent() {
     assert_eq!(calc(&["1500 m", "--sci"]).stdout, "1.5e3 m\n");
 }
 
-/// A number over a number with a unit is the number with the unit; the other reading is written
-/// with parentheses, and a reciprocal unit can follow a number.
+/// A term of plain numbers over `N unit` has the unit as a whole; a unit after any other
+/// value belongs to its own number and divides.
 #[test]
-fn calc_a_number_over_a_quantity_is_the_quantity() {
+fn calc_the_unit_after_a_division_follows_one_rule() {
+    // plain numbers (and pi) before the `/`: the unit is the unit of the term
     for (expr, text) in [
         ("10/2 s", "5 s\n"),
         ("1/2 kg", "0.5 kg\n"),
+        ("-1 / 2 s", "-0.5 s\n"),
+        ("5 * 1 / 2 s", "2.5 s\n"),
+        ("3 * 10/2 s", "15 s\n"),
+        ("1 / -2 s", "-0.5 s\n"),
+        ("2 / 3 / 4 s", "0.16666666666666666… s\n"),
+        ("(2 / 3) / 4 s", "0.16666666666666666… s\n"),
+        ("2^3 / 4 s", "2 s\n"),
+        ("1/2 m^2", "0.5 m^2\n"),
+        ("(1/2 s)", "0.5 s\n"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, text, "{expr}");
+    }
+    // anything else divides by the quantity
+    for (expr, text) in [
+        ("10 m / 2 s", "5 m/s\n"),
+        ("6 m / 3 / 2 s", "1 m/s\n"),
         ("10/(2 s)", "5 1/s\n"),
         ("10/2 1/s", "5 1/s\n"),
         ("10/2 s^-1", "5 s^-1\n"),
-        ("10 m / 2 s", "5 m/s\n"),
+        ("20/100 1/s", "0.2 1/s\n"),
         ("5 1/s", "5 1/s\n"),
         ("60 1/min", "60 1/min\n"),
     ] {
         assert_eq!(calc(&[expr]).stdout, text, "{expr}");
     }
-    let r = calc(&["3 * 10/2 s"]);
-    assert_eq!(r.code, 1);
-    assert!(r.stderr.contains("write the parentheses"), "{}", r.stderr);
+    // a name or a function is not a plain number
+    assert_eq!(calc(&["x / 2 s", "--var", "x=4 m"]).stdout, "2 m/s\n");
+    assert_eq!(calc(&["a / 2 s", "--var", "a=1"]).stdout, "0.5 1/s\n");
 }
 
 /// A temperature point over a temperature is refused (the temperature or a difference?).

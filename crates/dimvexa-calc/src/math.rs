@@ -1655,7 +1655,7 @@ impl<'r> Math<'r> {
         if !is_one_unit(unit.expr()) {
             return Err(refused(format!(
                 "{name} needs an angle in one angle unit (30 deg, 0.5 rad), not a product or \
-                 quotient of angles such as deg*deg or 1/rad (for pi/6 rad write pi/6 * 1 rad)"
+                 quotient of angles such as deg*deg or 1/rad"
             )));
         }
         Ok(unit)

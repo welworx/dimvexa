@@ -388,46 +388,81 @@ fn lex(input: &str) -> Result<Vec<(usize, Tok)>> {
     Ok(out)
 }
 
-/// `10 / 2 s` at the start of a term is the number with the unit (`5 s`, `1 / 2 kg` is `0.5 kg`):
-/// the tokens become `(10 / 2) * 1 s`. After another operator it can be read two ways and is
-/// refused. `true` when `out` was rewritten.
+/// Whether the token ends an operand (a number, a name, a quantity or a closing parenthesis).
+const fn ends_operand(t: &Tok) -> bool {
+    matches!(t, Tok::Num(_) | Tok::Qty(..) | Tok::Id(_) | Tok::Op(')'))
+}
+
+/// A term made only of plain numbers and `pi` followed by `/ N unit` has the unit as a whole:
+/// `1 / 2 kg` is `0.5 kg`, `5 * 1 / 2 s` is `2.5 s`, `(2 / 3) / 4 s` and `1 / -2 s` too, written
+/// as `((...) / N) * 1 unit`. Anywhere else (`10 m / 2 s`, `x / 2 s`, `sin(1) / 2 s`) a unit
+/// belongs to its own number and divides. `true` when `out` was rewritten.
 fn number_over_quantity(
-    src: &str,
     out: &mut Vec<(usize, Tok)>,
     (number, unit): (&String, &String),
     at: usize,
-) -> Result<bool> {
-    if !matches!(out.last(), Some((_, Tok::Op('/')))) {
-        return Ok(false);
-    }
-    let numerator = out
-        .len()
-        .checked_sub(2)
-        .and_then(|i| out.get(i))
-        .and_then(|(_, t)| match t {
-            Tok::Num(a) => Some(a.clone()),
-            _ => None,
-        });
-    let Some(a) = numerator else {
-        return Ok(false);
+) -> bool {
+    // `/ N unit` or `/ -N unit`
+    let negative = matches!(out.last(), Some((_, Tok::Op('-'))))
+        && out
+            .len()
+            .checked_sub(2)
+            .and_then(|i| out.get(i))
+            .is_some_and(|(_, t)| *t == Tok::Op('/'));
+    let slash = if negative {
+        out.len().checked_sub(1)
+    } else {
+        Some(out.len())
     };
-    let before = out.len().checked_sub(3).and_then(|i| out.get(i));
-    if !matches!(before, None | Some((_, Tok::Op('(' | ',')))) {
-        return Err(parse_error(
-            src,
-            at,
-            &format!(
-                "'{a} / {number} {unit}' can be read ({a} / {number}) {unit} or \
-                 {a} / ({number} {unit}): write the parentheses"
-            ),
-        ));
+    let Some(slash) = slash else {
+        return false;
+    };
+    let before = slash.checked_sub(1).and_then(|i| out.get(i));
+    if !matches!(before, Some((_, Tok::Op('/')))) {
+        return false;
     }
-    out.pop();
-    out.pop();
+    // the start of the term: after the last `(`, `,` or binary `+`/`-` outside parentheses
+    let mut start = 0;
+    let mut depth = 0_usize;
+    for (i, (_, t)) in out.iter().enumerate().take(slash).rev() {
+        match t {
+            Tok::Op(')') => depth = depth.saturating_add(1),
+            Tok::Op('(' | ',') if depth == 0 => {
+                start = next(i);
+                break;
+            }
+            Tok::Op('(') => depth = depth.saturating_sub(1),
+            Tok::Op('+' | '-') if depth == 0 => {
+                let operand = i
+                    .checked_sub(1)
+                    .and_then(|j| out.get(j))
+                    .is_some_and(|(_, p)| ends_operand(p));
+                if operand {
+                    start = next(i);
+                    break;
+                }
+            }
+            _ => {}
+        }
+    }
+    let plain = out.get(start..slash).is_some_and(|term| {
+        !term.is_empty()
+            && term.iter().all(|(_, t)| match t {
+                Tok::Num(_) | Tok::Implicit => true,
+                Tok::Id(name) => name == "pi",
+                Tok::Op(c) => "*/^+-()".contains(*c),
+                Tok::Qty(..) => false,
+            })
+    });
+    if !plain {
+        return false;
+    }
+    let minus = negative.then(|| out.pop()).flatten();
+    out.insert(start, (at, Tok::Op('(')));
+    if let Some((_, sign)) = minus {
+        out.push((at, sign));
+    }
     for t in [
-        Tok::Op('('),
-        Tok::Num(a),
-        Tok::Op('/'),
         Tok::Num(number.clone()),
         Tok::Op(')'),
         Tok::Op('*'),
@@ -435,7 +470,7 @@ fn number_over_quantity(
     ] {
         out.push((at, t));
     }
-    Ok(true)
+    true
 }
 
 /// The functions the evaluator implements (ADR-029), with the number of arguments: `0` means
@@ -1295,7 +1330,7 @@ impl<'r> Formula<'r> {
                 leading = false;
                 symbol.clear();
             }
-            if rewrite.is_none() && number_over_quantity(src, &mut out, (number, unit), at)? {
+            if rewrite.is_none() && number_over_quantity(&mut out, (number, unit), at) {
                 continue;
             }
             match rewrite {
