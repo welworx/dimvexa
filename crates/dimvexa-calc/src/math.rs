@@ -975,6 +975,7 @@ impl<'r> Math<'r> {
         let Some(base) = base else {
             return Ok(a.clone());
         };
+        let base = self.autoprefix_base(a, base, power)?;
         let raised = |prefix: &str| {
             if power == 1 {
                 format!("{prefix}{base}")
@@ -1006,17 +1007,7 @@ impl<'r> Math<'r> {
         choices.sort_by_key(|&(_, exp)| std::cmp::Reverse(exp));
         let reaches = |exp: i32| -> Result<bool> {
             let tens = exp.checked_mul(power).ok_or_else(|| overflow("prefix"))?;
-            Ok(match &in_base {
-                Number::Exact(q) => {
-                    let magnitude = if q.value().num() < 0 {
-                        q.value().checked_mul(Ratio::from_int(-1))?
-                    } else {
-                        q.value()
-                    };
-                    magnitude.checked_cmp(Ratio::ONE.with_exponents(tens, 0))? != Ordering::Less
-                }
-                Number::Approx(x) => x.value.abs() >= 10_f64.powi(tens),
-            })
+            magnitude_reaches(&in_base, tens)
         };
         // the first prefix the magnitude reaches, else the smallest
         let first = {
@@ -1051,6 +1042,29 @@ impl<'r> Math<'r> {
         } else {
             Ok(a.clone())
         }
+    }
+
+    /// The unit to put the prefix on: `base`, or the smaller unit it hands over to below one of
+    /// itself (the tonne: `kg` and `g`).
+    fn autoprefix_base<'a>(&'a self, a: &Number, base: &'a str, power: i32) -> Result<&'a str> {
+        let reg = self.reg();
+        let smaller = reg
+            .get(base)
+            .map(dimvexa_core::Unit::autoprefix_below)
+            .filter(|b| !b.is_empty() && reg.get(b).is_some());
+        let Some(smaller) = smaller else {
+            return Ok(base);
+        };
+        let whole = if power == 1 {
+            base.to_string()
+        } else {
+            format!("{base}^{power}")
+        };
+        Ok(if magnitude_reaches(&self.to_unit(a, &whole)?, 0)? {
+            base
+        } else {
+            smaller
+        })
     }
 
     // ----- hyperbolic functions --------------------------------------------------------------
@@ -2111,5 +2125,20 @@ fn special_angle(radians: Ratio, cos: bool) -> Result<Option<Ratio>> {
         7 | 11 => Some(half.checked_neg()?),
         9 => Some(Ratio::ONE.checked_neg()?),
         _ => None,
+    })
+}
+
+/// Whether `|n|` is at least `10^tens`.
+fn magnitude_reaches(n: &Number, tens: i32) -> Result<bool> {
+    Ok(match n {
+        Number::Exact(q) => {
+            let magnitude = if q.value().num() < 0 {
+                q.value().checked_mul(Ratio::from_int(-1))?
+            } else {
+                q.value()
+            };
+            magnitude.checked_cmp(Ratio::ONE.with_exponents(tens, 0))? != Ordering::Less
+        }
+        Number::Approx(x) => x.value.abs() >= 10_f64.powi(tens),
     })
 }

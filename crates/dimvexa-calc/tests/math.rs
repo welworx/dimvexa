@@ -1340,21 +1340,23 @@ fn an_approximate_temperature_converts_and_is_never_scaled_as_a_point() {
 }
 
 #[test]
-fn autoprefix_leaves_a_unit_alone_when_the_prefixed_symbol_reads_as_another_unit() {
+fn autoprefix_hands_the_tonne_over_to_kilograms_and_grams_below_one_tonne() {
     let reg = registry().unwrap();
     let math = Math::new(&reg);
-    for text in ["0.5 t", "1e-12 t", "1e-15 t"] {
-        let before = num(&reg, text);
+    for (text, shown) in [
+        ("0.5 t", "500 kg"),
+        ("0.0005 t", "500 g"),
+        ("1 t", "1 t"),
+        ("1500 t", "1.5 kt"),
+        ("-0.5 t", "-500 kg"),
+        ("0.5 t^2", "500000 kg^2"),
+    ] {
         assert_eq!(
-            math.autoprefix(&before).unwrap().to_string(),
-            before.to_string(),
+            math.autoprefix(&num(&reg, text)).unwrap().to_string(),
+            shown,
             "{text}"
         );
     }
-    assert_eq!(
-        math.autoprefix(&num(&reg, "1500 t")).unwrap().to_string(),
-        "1.5 kt"
-    );
 }
 
 #[test]

@@ -105,6 +105,8 @@ pub struct ConfigUnit {
     pub status: Status,
     /// Which SI and binary prefixes the symbol accepts.
     pub prefixes: PrefixMode,
+    /// The unit `--autoprefix` switches to below one of this unit (empty for none).
+    pub autoprefix_below: String,
     /// Where the definition comes from.
     pub source: String,
     /// A free-text note (may be empty).
@@ -350,6 +352,7 @@ impl TableKind {
                 "status",
                 "source",
                 "prefixes",
+                "autoprefix_below",
                 "note",
             ],
         }
@@ -582,6 +585,7 @@ fn finish_unit(
         exactness,
         status,
         prefixes,
+        autoprefix_below: p.get("autoprefix_below").unwrap_or_default().to_string(),
         source,
         note: p.get("note").unwrap_or_default().to_string(),
         origin: origin.to_string(),
@@ -1225,6 +1229,7 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
     let unit = unit
         .with_status(u.status)
         .with_prefixes(u.prefixes)
+        .with_autoprefix_below(&u.autoprefix_below)
         .with_provenance(base.exactness().combine(u.exactness), &u.source, &note)
         .with_namespace("user");
     reg.register(unit).map_err(|e| at(&u.origin, u.line, e))
@@ -1841,6 +1846,10 @@ mod tests {
         assert_eq!(u.prefixes, PrefixMode::None);
         assert_eq!((u.origin.as_str(), u.line), ("o.toml", 4));
         assert_eq!(u.note, "");
+        assert_eq!(u.autoprefix_below, "");
+        let below = BARREL.replace("source", "autoprefix_below = \"gal_us\"\nsource");
+        let u = Config::parse(&below, "o").unwrap().units()[0].clone();
+        assert_eq!(u.autoprefix_below, "gal_us");
         let full = BARREL.replace("source", "prefixes = \"si\"\nnote = \"n\"\nsource");
         let u = Config::parse(&full, "o").unwrap().units()[0].clone();
         assert_eq!((u.prefixes, u.note.as_str()), (PrefixMode::Si, "n"));

@@ -146,13 +146,14 @@ fn unit_def(t: &toml_lite::Table) -> Res<String> {
     let _ = writeln!(
         s,
         "    UnitDef {{ id: {}, symbol: {}, name: {}, aliases: &[{}], dim: [{}], kind: {kind}, shape: {shape}, \
-         factor: {factor}, factor_exp: {factor_exp}, offset: {offset}, exactness: {exactness}, status: {status}, prefixes: {prefixes}, \
+         factor: {factor}, factor_exp: {factor_exp}, offset: {offset}, exactness: {exactness}, status: {status}, prefixes: {prefixes}, autoprefix_below: {}, \
          namespace: {}, source: {}, note: {} }},",
         lit(symbol),
         lit(t.opt_str("symbol").map_err(ctx)?.unwrap_or(symbol)),
         lit(t.str("name").map_err(ctx)?),
         aliases.join(", "),
         dim.join(", "),
+        lit(t.opt_str("autoprefix_below").map_err(ctx)?.unwrap_or("")),
         lit(t.str("namespace").map_err(ctx)?),
         lit(t.str("source").map_err(ctx)?),
         lit(t.str("note").map_err(ctx)?),

@@ -412,8 +412,10 @@ JSON), so it is never silent. The constants of the configs in effect are names t
   power, that takes SI prefixes (`m`, `s`, `Pa`, `W`, `Hz`, `rad`, `L`, `g`). A compound unit
   (`m/s`), a negative power (`s^-1`), a unit without prefixes (`ft`, `min`), a temperature and
   a result in `kg` of 1 or more stay as they are (grams stop at the kilogram, never `Mg`, so
-  `0.5 kg` is `500 g`), and so does a unit whose prefixed symbol reads as another unit (`0.5 t`:
-  `mt` is ambiguous). The JSON carries the prefixed unit and value. It chooses the unit, so it
+  `0.5 kg` is `500 g`), and so does a unit whose prefixed symbol reads as another unit (`mt` is ambiguous, so a
+  unit never becomes `mt`). The tonne hands over to grams below 1 t: `0.5 t` is `500 kg`,
+  `0.0005 t` is `500 g`, and `1500 t` is `1.5 kt` (the unit key `autoprefix_below`). The JSON carries the prefixed unit and value. It chooses the
+  unit, so it
   cannot be used with `--to`. An expression that starts
   like an option is written after `--`, and the options before it (`dimvexa calc --var h="3 m" -- -h`;
   after `--` everything is the expression, so `--var` and `--pretty` there are text).
@@ -583,6 +585,9 @@ Rules for your units:
 - A `[[unit]]` has an `id` (the name you type), an optional `symbol` (printed by `dimvexa units`
   and also accepted when typed) and an optional full `name`, like a shipped unit (ADR-025). Before
   that the key `symbol` was the id: rename it to `id`, an old file is refused with that hint.
+- `autoprefix_below = "g"` (optional) makes `--autoprefix` read a value below 1 of this unit in
+  another unit of the same dimension and its prefixes (`0.5 t` is `500 kg`); the tonne has it.
+  The target must be a unit you can type with the same dimension.
 - A unit may carry an `offset` of its own (ADR-022), see the next example. It needs a plain
   base and `prefixes = "none"`, and it cannot be part of a compound unit.
 - If the base is `measured`, so is the new unit, whatever you state.

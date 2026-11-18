@@ -4321,6 +4321,9 @@ fn calc_autoprefix_chooses_the_si_prefix() {
         ("300 K", "300 K\n"),
         ("1500 kg", "1500 kg\n"),
         ("1500 g", "1.5 kg\n"),
+        ("0.5 t", "500 kg\n"),
+        ("0.0005 t", "500 g\n"),
+        ("1500 t", "1.5 kt\n"),
     ] {
         let r = calc(&[expr, "--autoprefix"]);
         assert_eq!(
@@ -4406,11 +4409,11 @@ fn calc_review_round_four_regressions() {
     }
     assert_eq!(calc(&["2 r^(2)", "--var", "r=3 m"]).stdout, "18 m^2\n");
     // autoprefix never turns a valid result into an error: the unit stays when the prefix
-    // would read as another unit (`mt`, `ft`, `pt`)
+    // would read as another unit (`mt`, `ft`, `pt`); a tonne below 1 t reads in kg and g
     for (expr, text) in [
-        ("0.5 t", "0.5 t\n"),
-        ("1e-12 t", "1e-12 t\n"),
-        ("1e-15 t", "1e-15 t\n"),
+        ("0.5 t", "500 kg\n"),
+        ("1e-12 t", "1 \u{b5}g\n"),
+        ("1e-15 t", "1 ng\n"),
         ("1500 t", "1.5 kt\n"),
     ] {
         let r = calc(&[expr, "--autoprefix"]);
