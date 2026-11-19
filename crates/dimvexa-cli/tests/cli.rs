@@ -3760,10 +3760,15 @@ fn calc_inverse_trigonometry_returns_an_angle() {
         calc(&["asin(0.5)", "--exact"]).stdout,
         "1/6 pi = 0.5235987755982989… rad\n"
     );
-    assert_eq!(
-        calc(&["atan(2)", "--to", "deg"]).stdout,
-        "≈ 63.434948822922 deg\n"
-    );
+    // the platform's libm decides the last digit (Linux 63.434948822922, macOS
+    // 63.43494882292202): compare the number, not the text
+    let out = calc(&["atan(2)", "--to", "deg"]).stdout;
+    let number: f64 = out
+        .strip_prefix("≈ ")
+        .and_then(|rest| rest.strip_suffix(" deg\n"))
+        .and_then(|digits| digits.parse().ok())
+        .unwrap_or(f64::NAN);
+    assert!((number - 63.434_948_822_922_01).abs() < 1e-12, "{out}");
     for expr in [
         "tan(90 deg)",
         "asin(2)",
