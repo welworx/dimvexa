@@ -7,6 +7,8 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-11-19
+
 ### Changed
 - **Breaking: a compound unit is printed with `*` as the product separator, never `.` (ADR-031).** `kN*m`, `J/(mol*K)`, `kg*m/s^2`, `km*m` instead of `kN.m`, `J/(mol.K)`, `kg.m/s^2`, `km.m`: a dot reads as a decimal point. It applies everywhere a unit is printed: `dimvexa calc`, `convert` and `units` text and the `--json` `unit` fields, `dimvexa constants` (`planck_constant` is `J*s`, `molar_gas_constant` `J/(mol*K)`), `Display` of `Expr` and `UnitExpr`, the Python, WebAssembly and Excel results, and the ambiguity error message. Input is unchanged: `.`, `*` and `·` all still multiply (`5 N.m.to(J)` works). The JSON schemas keep their versions (the `unit` field is still a string that parses back to the same unit); callers that compare the text of a printed unit must expect `*`. The built-in constants changed their unit text, so the data version is 33.
 
