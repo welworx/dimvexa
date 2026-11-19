@@ -101,7 +101,7 @@ so when it is not (`≈`). The unit of the result follows the arithmetic (`--to`
 
 ```console
 $ dimvexa calc "2 kip/ft * (20 ft)^2 / 8" --to kN*m
-135.58179483314004 kN.m
+135.58179483314004 kN*m
 $ dimvexa calc "sqrt(9 m2)"
 3 m
 $ dimvexa calc "sqrt(2 m2)"

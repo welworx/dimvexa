@@ -138,7 +138,7 @@ def test_constants_table() -> None:
     ]
     h = dimvexa.constants()[1]
     assert h["name"] == "Planck constant"
-    assert (h["value"], h["value_text"], h["unit"]) == ("662607015 10^-42", "6.62607015e-34", "J.s")
+    assert (h["value"], h["value_text"], h["unit"]) == ("662607015 10^-42", "6.62607015e-34", "J*s")
     assert h["exactness"] == "defined" and h["file"] == "built-in"
     both = [c["id"] for c in dimvexa.constants(configs=["water"], config_texts=[WATER_TEXT])]
     assert both[-3:] == ["water_25C", "water_max_density", "rho"]

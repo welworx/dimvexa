@@ -48,7 +48,7 @@ a `Quantity` holding the rational value of an `f64`: nothing would show that it 
    negative power: `refused` with a reason (or `division_by_zero`). A result that is not a
    finite number: `overflow`. No code was added to `Error::ALL_CODES`.
 7. **Arguments.** `sqrt` and `root` take plain values (no temperature point, no angle) and the
-   result is in **SI base units** (`m.s^-1`), because the dimension exponents are integers
+   result is in **SI base units** (`m.s^-1`; printed `m*s^-1` since ADR-031), because the dimension exponents are integers
    (`Dim` is `[i8; 7]`): a root whose exponents are not integers (`sqrt(m)`, `R^(2/3)` with `R`
    in metres) is refused, and the way round is a dimensionless ratio `(R / 1 m)^(2/3)` (KL-32).
    A root whose result would be a bare temperature is refused (a state or a difference?).

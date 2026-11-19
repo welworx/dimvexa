@@ -35,7 +35,7 @@ const h = d.constants("", [])[1];
 assert.strictEqual(h.name, "Planck constant");
 assert.deepStrictEqual(
   [h.value, h.valueText, h.unit, h.exactness, h.file, h.line],
-  ["662607015 10^-42", "6.62607015e-34", "J.s", "defined", "built-in", 0],
+  ["662607015 10^-42", "6.62607015e-34", "J*s", "defined", "built-in", 0],
 );
 assert.deepStrictEqual(names("water", [constant("rho", "1")]).slice(-3), ["water_25C", "water_max_density", "rho"]);
 

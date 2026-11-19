@@ -346,7 +346,7 @@
     },
     {
       "type": "object",
-      "description": "`dimvexa units UNIT --json`: one table unit (looked up by symbol or alias), or a resolved prefixed or compound expression such as `km` or `kW.h`, for which prefixes, namespace, note and origin are null.",
+      "description": "`dimvexa units UNIT --json`: one table unit (looked up by symbol or alias), or a resolved prefixed or compound expression such as `km` or `kW*h`, for which prefixes, namespace, note and origin are null.",
       "required": [
         "schema",
         "ok",

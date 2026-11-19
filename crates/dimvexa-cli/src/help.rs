@@ -116,7 +116,7 @@ Usage:
 VALUE is a number, or a number with pi: 4pi, 4 pi, pi/2, 2*pi^2, 1/(2*pi). It
 may use * / ^ (integer power) and parentheses; there is no addition, and only
 a constant without a unit (pi) is allowed. pi stays exact: 4 pi rad is
-exactly 720 deg. FROM and TO are units or unit expressions (m/s, kW.h, psi).
+exactly 720 deg. FROM and TO are units or unit expressions (m/s, kW*h, psi).
 Units of different quantities, or an ambiguous symbol, are an error.
 
 Examples:

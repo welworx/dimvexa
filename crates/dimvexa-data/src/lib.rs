@@ -39,7 +39,7 @@ pub use generated::{AMBIGUOUS, CONSTANTS, DATA_HASH, DATA_VERSION, PACKS, UNITS}
 ///
 /// ```
 /// let h = dimvexa_data::constant("planck_constant").expect("built in");
-/// assert_eq!(h.unit, "J.s");
+/// assert_eq!(h.unit, "J*s");
 /// assert!(dimvexa_data::constant("nope").is_none());
 /// ```
 #[must_use]

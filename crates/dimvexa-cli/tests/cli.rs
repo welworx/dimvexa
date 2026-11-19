@@ -3012,7 +3012,7 @@ fn constants_lists_the_built_in_table_with_exact_values_units_and_sources() {
     assert_eq!(get("pi")[1..5], ["Pi", "pi", "1", "defined"]);
     assert_eq!(
         get("planck_constant")[1..5],
-        ["Planck constant", "6.62607015e-34", "J.s", "defined"]
+        ["Planck constant", "6.62607015e-34", "J*s", "defined"]
     );
     assert_eq!(get("elementary_charge")[2..4], ["1.602176634e-19", "C"]);
     assert_eq!(
@@ -3039,7 +3039,7 @@ fn constants_shows_one_constant_with_its_note_and_refuses_an_unknown_name() {
     assert_eq!(r.code, 0);
     assert!(
         r.stdout
-            .contains("planck_constant\tPlanck constant\t6.62607015e-34\tJ.s"),
+            .contains("planck_constant\tPlanck constant\t6.62607015e-34\tJ*s"),
         "{}",
         r.stdout
     );
@@ -3069,7 +3069,7 @@ fn constants_json_carries_the_exact_value_as_a_string() {
     assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.constants/1");
     let c = &v.get("constants").unwrap().as_array()[0];
     assert_eq!(c.get("value").unwrap().as_str(), "662607015 10^-42");
-    assert_eq!(c.get("unit").unwrap().as_str(), "J.s");
+    assert_eq!(c.get("unit").unwrap().as_str(), "J*s");
     assert_eq!(c.get("exactness").unwrap().as_str(), "defined");
     assert_eq!(c.get("file").unwrap().as_str(), "built-in");
 }
@@ -3153,13 +3153,13 @@ fn a_config_cannot_redefine_a_built_in_constant() {
 fn a_config_constant_of_any_unit_is_listed_but_only_a_density_feeds_const() {
     let cfg = config_file(
         "gas_constant.toml",
-        "[[constant]]\nid = \"gas_R\"\nname = \"gas_R\"\nvalue = \"8.314462618\"\nunit = \"J/(mol.K)\"\nexactness = \"measured\"\ncodata = \"CODATA 2022\"\nconditions = \"none\"\nsource = \"CODATA 2022\"\n",
+        "[[constant]]\nid = \"gas_R\"\nname = \"gas_R\"\nvalue = \"8.314462618\"\nunit = \"J/(mol*K)\"\nexactness = \"measured\"\ncodata = \"CODATA 2022\"\nconditions = \"none\"\nsource = \"CODATA 2022\"\n",
     );
     let r = dimvexa(&["constants", "gas_R", "--config", &cfg]);
     assert_eq!(r.code, 0, "{}", r.stderr);
     assert!(
         r.stdout
-            .contains("gas_R\tgas_R\t8.314462618\tJ/(mol.K)\tmeasured"),
+            .contains("gas_R\tgas_R\t8.314462618\tJ/(mol*K)\tmeasured"),
         "{}",
         r.stdout
     );
@@ -3314,7 +3314,7 @@ fn calc_prints_an_exact_result_like_convert_and_an_approximate_one_with_a_sign()
     let r = calc(&["2 kip/ft * (20 ft)^2 / 8", "--to", "kN*m"]);
     assert_eq!(
         (r.code, r.stdout.as_str(), r.stderr.as_str()),
-        (0, "135.58179483314004 kN.m\n", "")
+        (0, "135.58179483314004 kN*m\n", "")
     );
     assert_eq!(calc(&["sqrt(9 m2)"]).stdout, "3 m\n");
     assert_eq!(
@@ -3561,7 +3561,7 @@ fn guide_calc_examples_are_what_the_cli_prints() {
         (
             "2 kip/ft * (20 ft)^2 / 8",
             vec!["--to", "kN*m"],
-            "135.58179483314004 kN.m",
+            "135.58179483314004 kN*m",
         ),
         ("sqrt(9 m2)", vec![], "3 m"),
         (
@@ -3721,7 +3721,7 @@ fn calc_knows_the_si_constants_and_warns_when_a_name_replaces_one() {
     );
     assert_eq!(
         calc(&["molar_gas_constant", "--to", "J/(mol*K)"]).stdout,
-        "8.31446261815324 J/(mol.K)\n"
+        "8.31446261815324 J/(mol*K)\n"
     );
     let r = calc(&["elementary_charge * 2", "--var", "elementary_charge=3 C"]);
     assert_eq!((r.code, r.stdout.as_str()), (0, "6 C\n"));
@@ -3793,7 +3793,7 @@ fn calc_merges_and_cancels_the_unit_but_never_renames_it() {
         ("10 kWh/100km * 250 km", "25 kWh"),
         ("8.314 J/(mol*K) * 300 K * 1 mol / 1 m3", "2494.2 J/m^3"),
         ("1 J / 1 N", "1 J/N"),
-        ("2 km * 3 m", "6 km.m"),
+        ("2 km * 3 m", "6 km*m"),
     ] {
         assert_eq!(calc(&[expr]).stdout, format!("{text}\n"), "{expr}");
     }
@@ -3809,7 +3809,7 @@ fn calc_ideal_gas_constant_is_n_a_times_k_b_and_runs_the_gas_law() {
             "J/(mol*K)"
         ])
         .stdout,
-        "0 J/(mol.K)\n"
+        "0 J/(mol*K)\n"
     );
     // p = n R T / V: 1 mol at 273.15 K in 22.414 L
     let r = calc(&[
@@ -3889,7 +3889,7 @@ fn calc_reads_config_constants_to_pi_names_exponents_and_notation() {
     assert_eq!(calc(&["2^sqrt(2)"]).code, 1);
     // superscripts, dots, crosses, any whitespace
     assert_eq!(calc(&["10 m² · 3 m"]).stdout, "30 m^3\n");
-    assert_eq!(calc(&["1 kg·m/s²"]).stdout, "1 kg.m/s^2\n");
+    assert_eq!(calc(&["1 kg·m/s²"]).stdout, "1 kg*m/s^2\n");
     assert_eq!(calc(&["3 × 4 m"]).stdout, "12 m\n");
     assert_eq!(calc(&["2 m\t*\n3 m"]).stdout, "6 m^2\n");
 }
@@ -3920,8 +3920,8 @@ fn calc_a_number_before_a_variable_multiplies_unless_the_name_is_a_unit() {
         calc(&["10 m / (2 r)", "--var", "r=3 s"]).stdout,
         "1.6666666666666667… m/s\n"
     );
-    assert_eq!(calc(&["10 m / 2 * r", "--var", "r=3 s"]).stdout, "15 m.s\n");
-    assert_eq!(calc(&["10 m * 2 r", "--var", "r=3 s"]).stdout, "60 m.s\n");
+    assert_eq!(calc(&["10 m / 2 * r", "--var", "r=3 s"]).stdout, "15 m*s\n");
+    assert_eq!(calc(&["10 m * 2 r", "--var", "r=3 s"]).stdout, "60 m*s\n");
 
     // no variable: an unknown unit, never a claim about a variable
     let r = calc(&["2 r"]);
@@ -4108,7 +4108,7 @@ fn calc_dot_to_converts_inside_an_equation_and_checks_the_dimension() {
         ("20 °C.to(K)", "293.15 K\n"),
         ("68 degF.to(degC)", "20 degC\n"),
         ("3 m.to(ft)", "9.84251968503937… ft\n"),
-        ("(10 kW * 2 h).to(kW*h)", "20 kW.h\n"),
+        ("(10 kW * 2 h).to(kW*h)", "20 kW*h\n"),
         ("1000 kg/m3.to(g/cm3)", "1 g/cm^3\n"),
         ("(2 pi * 1 rad).to(deg)", "360 deg\n"),
     ] {
@@ -4245,7 +4245,7 @@ fn calc_small_leftovers() {
     );
     assert_eq!(
         dimvexa(&["convert", "4.186", "kJ/(kg*degC)", "J/(kg*K)"]).stdout,
-        "4186 J/(kg.K)\n"
+        "4186 J/(kg*K)\n"
     );
 }
 
@@ -4561,7 +4561,7 @@ fn calc_autoprefix_prefixes_a_power_that_comes_from_a_product() {
         ("0.5 m * 1 m", "500000 mm^2\n"),
         ("0.5 t * 1 t", "500000 kg^2\n"),
         ("1 m * 1 m * 1 m * 0.001", "1000000 mm^3\n"),
-        ("3 m * 2 s", "6 m.s\n"),
+        ("3 m * 2 s", "6 m*s\n"),
     ] {
         assert_eq!(calc(&[expr, "--autoprefix"]).stdout, text, "{expr}");
     }
@@ -4732,11 +4732,11 @@ fn calc_autoprefix_prefixes_the_numerator_of_a_compound_unit() {
         ("1500 m/s", "1.5 km/s\n"),
         ("0.0025 m/s", "2.5 mm/s\n"),
         ("3 m/s", "3 m/s\n"),
-        ("2500 J/(kg*K)", "2.5 kJ/(kg.K)\n"),
+        ("2500 J/(kg*K)", "2.5 kJ/(kg*K)\n"),
         ("2500000 m2/s", "2.5 km^2/s\n"),
         ("0.5 t/h", "500 kg/h\n"),
         ("0.5 mol/L", "500 mmol/L\n"),
-        ("1500 kg*m", "1500 kg.m\n"),
+        ("1500 kg*m", "1500 kg*m\n"),
         ("1500 1/s", "1500 1/s\n"),
         ("1500 degC/s", "1500 delta_degC/s\n"),
     ] {

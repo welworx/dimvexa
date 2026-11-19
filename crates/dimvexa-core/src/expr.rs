@@ -44,7 +44,7 @@ pub const MAX_DEPTH: usize = 32;
 /// use dimvexa_core::Expr;
 ///
 /// let e = Expr::parse("kg.m/s2")?;
-/// assert_eq!(e.to_string(), "kg.m/s^2");
+/// assert_eq!(e.to_string(), "kg*m/s^2");
 /// assert_eq!(Expr::parse(&e.to_string())?, e);
 /// # Ok::<(), dimvexa_core::Error>(())
 /// ```
@@ -231,7 +231,7 @@ impl Parser<'_> {
                             input: self.input.to_string(),
                             message: format!(
                                 "a multiplication after a division (position {}) can be read two ways; \
-                                 write a/(b.c) or (a/b).c",
+                                 write a/(b*c) or (a/b)*c",
                                 self.here()
                             ),
                         });
@@ -337,7 +337,7 @@ impl Expr {
         if p.pos < p.toks.len() {
             return Err(match p.peek() {
                 Some(Tok::Close) => p.err("unmatched ')'"),
-                _ => p.err("missing operator between units (use '.' to multiply)"),
+                _ => p.err("missing operator between units (use '*' to multiply)"),
             });
         }
         Ok(e)
@@ -359,7 +359,7 @@ impl fmt::Display for Expr {
             Self::Unit(s) => f.write_str(s),
             Self::Mul(l, r) => {
                 l.fmt_operand(f, matches!(**l, Self::Div(..)))?;
-                f.write_str(".")?;
+                f.write_str("*")?;
                 r.fmt_operand(f, matches!(**r, Self::Mul(..) | Self::Div(..)))
             }
             Self::Div(l, r) => {

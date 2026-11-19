@@ -264,13 +264,13 @@ fn simplified(expr: &Expr) -> Option<String> {
     let numerator = if top.is_empty() {
         "1".to_owned()
     } else {
-        top.join(".")
+        top.join("*")
     };
     Some(match bottom.len() {
         0 if top.is_empty() => String::new(),
         0 => numerator,
-        1 => format!("{numerator}/{}", bottom.join(".")),
-        _ => format!("{numerator}/({})", bottom.join(".")),
+        1 => format!("{numerator}/{}", bottom.join("*")),
+        _ => format!("{numerator}/({})", bottom.join("*")),
     })
 }
 

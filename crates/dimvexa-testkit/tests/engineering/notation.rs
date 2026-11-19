@@ -250,10 +250,10 @@ fn superscripts_dots_and_whitespace_are_read_in_equations() {
     for (text, want) in [
         ("1 m³", "1 m^3"),
         ("9.81 m/s²", "9.81 m/s^2"),
-        ("2 N·m", "2 N.m"),
-        ("3 m × 4 m", "12 m.m"),
+        ("2 N·m", "2 N*m"),
+        ("3 m × 4 m", "12 m*m"),
         ("6 m ÷ 2", "3 m"),
-        ("2 m\t*\n3 m", "6 m.m"),
+        ("2 m\t*\n3 m", "6 m*m"),
         ("−2 m", "-2 m"),
         ("1 s⁻¹", "1 s^-1"),
     ] {

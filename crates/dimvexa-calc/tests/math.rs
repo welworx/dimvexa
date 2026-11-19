@@ -38,7 +38,7 @@ fn a_perfect_square_has_an_exact_root_in_si_base_units() {
     assert_eq!(m.sqrt(&n(&reg, "0.0001")).unwrap().to_string(), "0.01 1");
     // m^2/s^2 -> m/s
     let v = m.sqrt(&n(&reg, "100 m^2/s^2")).unwrap();
-    assert_eq!(v.to_string(), "10 m.s^-1");
+    assert_eq!(v.to_string(), "10 m*s^-1");
     assert!(v.is_exact());
 }
 

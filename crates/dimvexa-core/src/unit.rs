@@ -392,7 +392,7 @@ impl Unit {
     }
 }
 
-/// A resolved unit expression such as `km/h` or `kW.h`: dimension, kind and the exact
+/// A resolved unit expression such as `km/h` or `kW*h`: dimension, kind and the exact
 /// relation to the coherent SI unit, composed once.
 ///
 /// `si_value = factor * x + offset`. Only a single (possibly prefixed) unit can have a
@@ -718,7 +718,7 @@ mod tests {
     fn products_compose_exactly() {
         let sq = m().mul(&m()).unwrap();
         assert_eq!(sq.dim(), Dim::new([0, 2, 0, 0, 0, 0, 0]));
-        assert_eq!(sq.to_string(), "m.m");
+        assert_eq!(sq.to_string(), "m*m");
         let inv = UnitExpr::unity().div(&m()).unwrap();
         assert_eq!(inv.dim(), Dim::new([0, -1, 0, 0, 0, 0, 0]));
         assert_eq!(inv.sources(), ["SI"]);
