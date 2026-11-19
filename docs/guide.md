@@ -321,7 +321,7 @@ mathematics is exact, and starts with `≈` when it is not:
 
 ```console
 $ dimvexa calc "2 kip/ft * (20 ft)^2 / 8" --to kN*m
-135.58179483314004 kN.m
+135.58179483314004 kN*m
 $ dimvexa calc "sqrt(9 m2)"
 3 m
 $ dimvexa calc "100 kg * 1 g_n * sin(30 deg)" --to N
@@ -350,7 +350,7 @@ The SI constants of `dimvexa constants` are built-in names in every equation, ex
 their unit, and their names say what they are: `planck_constant`, `elementary_charge`,
 `boltzmann_constant`, `avogadro_constant`, `speed_of_light` (299792458 m/s) and
 `molar_gas_constant` (exactly `avogadro_constant * boltzmann_constant`, 8.31446261815324
-J/(mol.K)), besides `pi`. The energy of a 500 nm photon is
+J/(mol*K)), besides `pi`. The energy of a 500 nm photon is
 `planck_constant * speed_of_light / 500 nm` (`--to J`), and `p V = n R T` reads
 `n * molar_gas_constant * T / V` (with `T` in kelvin, see `.to(K)` below). Short symbols such as `c`, `e` or `R` are yours to define: a
 `[[constant]]` in a config (`dimvexa constants --config mine.toml`) or a `--var`.
@@ -416,7 +416,7 @@ JSON), so it is never silent. The constants of the configs in effect are names t
   (between 1 and 1000^n for a power n): `1500 m` is `1.5 km`, `0.0025 m` is `2.5 mm`,
   `2500000 m2` is `2.5 km^2`. It changes only a result whose one unit with a positive power
   takes SI prefixes (`m`, `s`, `Pa`, `W`, `Hz`, `rad`, `L`, `g`). A compound unit
-  takes the prefix on its one numerator unit (`1500 m/s` is `1.5 km/s`, `2500 J/(kg*K)` is `2.5 kJ/(kg.K)`, `0.5 mol/L` is `500 mmol/L`) and stays when it has none or two (`kg*m`, `1/s`); a negative power (`s^-1`), a unit without prefixes (`ft`, `min`), a temperature and
+  takes the prefix on its one numerator unit (`1500 m/s` is `1.5 km/s`, `2500 J/(kg*K)` is `2.5 kJ/(kg*K)`, `0.5 mol/L` is `500 mmol/L`) and stays when it has none or two (`kg*m`, `1/s`); a negative power (`s^-1`), a unit without prefixes (`ft`, `min`), a temperature and
   a result in `kg` of 1 or more stay as they are (grams stop at the kilogram, never `Mg`, so
   `0.5 kg` is `500 g`), and so does a unit whose prefixed symbol reads as another unit (`mt` is ambiguous, so a
   unit never becomes `mt`). The tonne hands over to grams below 1 t: `0.5 t` is `500 kg`,
@@ -467,7 +467,7 @@ answered with an approximate number.
 * **Result units are merged and cancelled, never renamed:** `1 m * 1 m` is `1 m^2`,
   `10 kWh/100km * 250 km` is `25 kWh` and `8.314 J/(mol*K) * 300 K * 1 mol / 1 m3` is
   `2494.2 J/m^3`. A different symbol stays as it is: `1 J / 1 N` is `J/N`, `km * m` stays
-  `km.m`, and `planck_constant * speed_of_light / 500 nm` keeps `J.m/nm`. Give `--to` (`--to J`, `--to Pa`) for the unit you
+  `km*m`, and `planck_constant * speed_of_light / 500 nm` keeps `J*m/nm`. Give `--to` (`--to J`, `--to Pa`) for the unit you
   want; a wrong dimension is an error.
 * **Conversion:** `x.to(UNIT)` converts a value to another unit inside the equation, so you
   decide where the conversion happens and the units are checked against it: `20 degC.to(K)` is

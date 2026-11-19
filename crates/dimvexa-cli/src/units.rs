@@ -382,7 +382,7 @@ pub fn unit_detail(
                 .map(|m| (m.origin.clone(), m.line)),
         });
     }
-    // Not a table symbol: a prefixed or compound expression such as km or kW.h, or an
+    // Not a table symbol: a prefixed or compound expression such as km or kW*h, or an
     // error (unknown, ambiguous) that the library words.
     let e = reg.parse(query)?;
     // A single prefixed unit (`km`) is named from its two parts; a compound is not named yet.

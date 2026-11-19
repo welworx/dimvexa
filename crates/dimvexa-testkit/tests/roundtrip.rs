@@ -172,3 +172,32 @@ fn round_trip_never_panics_on_special_values() {
         }
     }
 }
+
+/// A printed compound unit never uses `.` as the product separator (it reads as a decimal
+/// point), and it parses back to the same unit: same printed text, identity conversion.
+#[test]
+fn printed_compound_units_use_star_and_parse_back_to_the_same_unit() {
+    let reg = registry().unwrap();
+    for text in [
+        "N.m",
+        "N*m",
+        "kg.m/s2",
+        "J/(mol.K)",
+        "kJ/(kg*K)",
+        "W/(m2.K)",
+        "kg.m2/s2",
+        "kW.h",
+        "m.s^-1",
+        "Btu_IT/(h.ft2.delta_degF)",
+    ] {
+        let unit = reg.parse(text).unwrap();
+        let printed = unit.to_string();
+        assert!(!printed.contains('.'), "{text} prints as {printed}");
+        let again = reg.parse(&printed).unwrap();
+        assert_eq!(again.to_string(), printed, "{text}");
+        assert!(
+            is_identity(&reg.conversion(text, &printed).unwrap()),
+            "{text}"
+        );
+    }
+}

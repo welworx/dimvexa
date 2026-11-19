@@ -40,7 +40,7 @@ Own-performance numbers: one report per released version in [`docs/benchmarks/`]
 | 8 | Dimvexa itself | The same checks, including the cases where it fails. Dimvexa is run through its Rust API (fast and exact paths) and the CLI; the WASM binding runs in Node (`benchmarks/node/run_dimvexa_wasm.js`) and the Python binding in CPython with NumPy (`benchmarks/python/run_dimvexa_py.py`), both built in release mode by `run_all.sh` |
 
 Conversions timed: `m/s` to `km/h` (linear), `psi` to `kPa` (linear), `degC` to `degF` (affine),
-`kJ/(kg.K)` to `Btu_IT/(lb.delta_degF)` (compound).
+`kJ/(kg*K)` to `Btu_IT/(lb*delta_degF)` (compound).
 
 ## The corpus
 

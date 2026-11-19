@@ -543,7 +543,7 @@ impl Registry {
         Ok(unit)
     }
 
-    /// Parses and resolves a unit expression such as `km/h` or `kg.m/s2`.
+    /// Parses and resolves a unit expression such as `km/h` or `kg*m/s2`.
     ///
     /// # Errors
     ///

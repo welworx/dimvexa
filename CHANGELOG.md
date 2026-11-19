@@ -7,6 +7,11 @@ Commits. Releases are published by `.github/workflows/release.yml` (see `docs/re
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-11-19
+
+### Changed
+- **Breaking: a compound unit is printed with `*` as the product separator, never `.` (ADR-031).** `kN*m`, `J/(mol*K)`, `kg*m/s^2`, `km*m` instead of `kN.m`, `J/(mol.K)`, `kg.m/s^2`, `km.m`: a dot reads as a decimal point. It applies everywhere a unit is printed: `dimvexa calc`, `convert` and `units` text and the `--json` `unit` fields, `dimvexa constants` (`planck_constant` is `J*s`, `molar_gas_constant` `J/(mol*K)`), `Display` of `Expr` and `UnitExpr`, the Python, WebAssembly and Excel results, and the ambiguity error message. Input is unchanged: `.`, `*` and `·` all still multiply (`5 N.m.to(J)` works). The JSON schemas keep their versions (the `unit` field is still a string that parses back to the same unit); callers that compare the text of a printed unit must expect `*`. The built-in constants changed their unit text, so the data version is 33.
+
 ## [0.11.0] - 2026-11-18
 ### Changed
 - **A power of ten no longer overflows (ADR-028).** A decimal whose power of ten does not fit beside its digits is stored with the power in the exponent instead of in the denominator: `6.62607015e-34 J*s` (Planck's constant) and the electron mass can be entered, `1e-100 m` converts, `(1.380649e-23 J/K)^2` and `Qm` to `qm` are exact, and the order of the factors of a product no longer decides whether it works. Numbers that parsed before are stored exactly as before. The exponent of an entered number is capped at 10 000 (`overflow` beyond it). What still overflows is the width of the digits (`1 ly^3`, `1 psi^3`): an accepted limit of the exact core, KL-31. Sums and orderings of numbers with different powers of ten are aligned in the core (`6.62607015e-34 + 1e-34` is exact; only a different power of pi is `unrepresentable`), `1.0e-38` and `1e-38` are one number, and `Ratio::parse_symbolic` (used by `[[constant]]` in a config) keeps the exponent of a far decimal. Tests that pinned `overflow` for a power of ten (`Qm2` to `qm2`, the overflow census, KL-1) now pin the exact result. Explained in `docs/how-numbers-work.md`.

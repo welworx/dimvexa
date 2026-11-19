@@ -762,7 +762,7 @@ impl<'r> Math<'r> {
         Ok((si, unit.dim()))
     }
 
-    /// The SI base unit expression of a dimension: `m.s^-1`, or `1`.
+    /// The SI base unit expression of a dimension: `m*s^-1`, or `1`.
     fn base_unit(self, dim: Dim) -> Result<UnitExpr> {
         const SYMBOLS: [&str; 7] = ["kg", "m", "s", "A", "K", "mol", "cd"];
         if dim == Dim::K {
@@ -785,7 +785,7 @@ impl<'r> Math<'r> {
         if parts.is_empty() {
             return Ok(UnitExpr::unity());
         }
-        self.reg().parse(&parts.join("."))
+        self.reg().parse(&parts.join("*"))
     }
 
     // ----- more roots, absolute value, extremes ----------------------------------------------
@@ -857,7 +857,7 @@ impl<'r> Math<'r> {
     /// # let reg = dimvexa::registry()?;
     /// # let math = Math::new(&reg);
     /// let q = |s: &str| reg.quantity(s).map(Number::from);
-    /// assert_eq!(math.hypot(&q("30 kN")?, &q("40000 N")?)?.to_string(), "50000 kg.m.s^-2");
+    /// assert_eq!(math.hypot(&q("30 kN")?, &q("40000 N")?)?.to_string(), "50000 kg*m*s^-2");
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     pub fn hypot(&self, a: &Number, b: &Number) -> Result<Number> {

@@ -32,7 +32,7 @@ $ dimvexa convert 1 J/mol.K J/mol/K
 [exit 1]
 --- stdout
 --- stderr
-error[ambiguous_expression]: ambiguous expression 'J/mol.K': a multiplication after a division (position 5) can be read two ways; write a/(b.c) or (a/b).c
+error[ambiguous_expression]: ambiguous expression 'J/mol.K': a multiplication after a division (position 5) can be read two ways; write a/(b*c) or (a/b)*c
 
 $ dimvexa convert 20 degC delta_degC
 [exit 1]
@@ -49,7 +49,7 @@ $ dimvexa convert 5 K delta_degF --json
 $ dimvexa convert 1 degC/s K/s --json
 [exit 0]
 --- stdout
-{"schema":"dimvexa.convert/3","ok":true,"input":{"value":"1","unit":"delta_degC/s"},"output":{"value":"1","unit":"K/s","f64":1,"truncated":false},"exact":{"value":"1/1","decimal":"1","factor":"1/1","offset":"0/1"},"exactness":"defined","dimension":[0,0,-1,0,1,0,0],"kind":"linear","quantity_kind":"plain","packs":["base","common"],"data_version":"v32+fnv1a64:0d2268d44330c306","sources":["BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4, note (f) (degree Celsius, temperature intervals)","BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"],"config":[],"density":null,"warnings":[]}
+{"schema":"dimvexa.convert/3","ok":true,"input":{"value":"1","unit":"delta_degC/s"},"output":{"value":"1","unit":"K/s","f64":1,"truncated":false},"exact":{"value":"1/1","decimal":"1","factor":"1/1","offset":"0/1"},"exactness":"defined","dimension":[0,0,-1,0,1,0,0],"kind":"linear","quantity_kind":"plain","packs":["base","common"],"data_version":"v33+fnv1a64:0b11068fa10458b6","sources":["BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4, note (f) (degree Celsius, temperature intervals)","BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"],"config":[],"density":null,"warnings":[]}
 --- stderr
 
 $ dimvexa convert 1 ppm 1
