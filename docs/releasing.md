@@ -18,9 +18,9 @@ publishes all of them from `main`.
    `plan` (is `vX.Y.Z` already tagged? if so everything else is skipped) -> `verify`
    (`cargo xtask ci`) -> wheels (Linux x86_64/aarch64, macOS arm64/x86_64, Windows), sdist,
    npm package, Excel add-in (built and tested with the real WASM), crates package check -> **approval of the `release` environment** ->
-   crates.io (core, data, config, dimvexa, cli) -> PyPI and npm -> tag `vX.Y.Z` and GitHub release
+   crates.io (core, data, config, dimvexa, calc, cli; the order is dependency order and is checked by `scripts/check-versions.sh`) -> PyPI and npm -> tag `vX.Y.Z` and GitHub release
    (with the CLI binaries and `dimvexa-excel-addin-X.Y.Z.zip`).
-4. A failed run can be re-run: versions already on a registry are skipped. The tag is created
+4. A failed run can be re-run: versions already on a registry are skipped (a release that stopped half way through the crates, for example `dimvexa-cli` before `dimvexa-calc`, is finished by re-running the run after the fix is on `main`, or with `workflow_dispatch`). The tag is created
    last, so it also marks a complete release.
 
 Merges to `main` that do not change the version publish nothing.

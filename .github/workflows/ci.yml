@@ -154,7 +154,7 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: List the files of every publishable crate
         run: |
-          for c in dimvexa-core dimvexa-data dimvexa-config dimvexa dimvexa-cli dimvexa-calc; do
+          for c in dimvexa-core dimvexa-data dimvexa-config dimvexa dimvexa-calc dimvexa-cli; do
             echo "== $c"
             cargo package --list --package "$c" --locked
           done
@@ -163,7 +163,7 @@ jobs:
       - name: Dry-run publish of the leaf crate
         # Only dimvexa-core can be checked this way: the others depend on workspace crates
         # at the version under test (they are published by release.yml after this version is
-        # merged). Extend this to the others in dependency order (core, data, config, dimvexa, cli)
+        # merged). Extend this to the others in dependency order (core, data, config, dimvexa, calc, cli)
         # only if that becomes possible.
         run: cargo publish --dry-run --package dimvexa-core --locked
 

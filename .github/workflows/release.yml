@@ -384,9 +384,9 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
           VERSION: ${{ needs.plan.outputs.version }}
         run: |
-          # dimvexa-calc (ADR-027) depends only on dimvexa-core; it is last because it was added
-          # last (first version published by hand, see docs/releasing.md).
-          for c in dimvexa-core dimvexa-data dimvexa-config dimvexa dimvexa-cli dimvexa-calc; do
+          # Dependency order (scripts/check-versions.sh checks it): dimvexa-cli depends on
+          # dimvexa-calc since 0.11.0, so calc comes first.
+          for c in dimvexa-core dimvexa-data dimvexa-config dimvexa dimvexa-calc dimvexa-cli; do
             code=$(curl -s -o /dev/null -w '%{http_code}' -A "dimvexa-release (github.com/${{ github.repository }})" \
               "https://crates.io/api/v1/crates/$c/$VERSION")
             if [ "$code" = 200 ]; then echo "$c $VERSION is already on crates.io: skipped"; continue; fi
