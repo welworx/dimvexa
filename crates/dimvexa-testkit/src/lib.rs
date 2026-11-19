@@ -4,6 +4,7 @@
 //! * [`rng`]: a small deterministic PRNG (`SplitMix64`) so std-only property tests are
 //!   reproducible without extra dependencies,
 //! * [`ulp`]: ulp distance between `f64` values,
+//! * [`formula`]: equations as text, evaluated exactly with units (the engineering tests),
 //! * [`generators`]: generators for dimensions, rationals, expressions and `f64` edge cases,
 //! * [`alloc_counter`]: a counting global allocator (the only `unsafe` in the repository).
 //!
@@ -11,6 +12,7 @@
 #![deny(unsafe_code)]
 
 pub mod alloc_counter;
+pub mod formula;
 pub mod generators;
 pub mod rng;
 pub mod ulp;

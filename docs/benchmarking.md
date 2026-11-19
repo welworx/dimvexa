@@ -126,16 +126,16 @@ on a networked machine.
 
 ## Status of the runners
 
-Latest full run: 2026-11-12, for release 0.5.0, see [`benchmarks/comparison/v0.5.0.md`](benchmarks/comparison/v0.5.0.md) (earlier dated runs:
+Latest full run: 2026-11-18, for release 0.11.0 on an Apple M2 Mac, see [`benchmarks/comparison/v0.11.0.md`](benchmarks/comparison/v0.11.0.md); the run for 0.5.0 is [`benchmarks/comparison/v0.5.0.md`](benchmarks/comparison/v0.5.0.md) (earlier dated runs:
 [`benchmarks/comparison/history/`](benchmarks/comparison/history/)) for
 the summary, the caveats and the cases where Dimvexa is slower, and
-[`benchmarks/comparison/comparison.md`](benchmarks/comparison/comparison.md) for every table. One run on one shared VM:
-indicative; the 0.5.0 run does not support a "fastest" claim (it lists the rows Dimvexa does not win).
+[`benchmarks/comparison/comparison.md`](benchmarks/comparison/comparison.md) for every table. One run on one machine each (a shared VM for 0.5.0, an Apple M2 Mac for 0.11.0):
+indicative; the 0.11.0 and 0.5.0 runs do not support a "fastest" claim (it lists the rows Dimvexa does not win).
 
 | Runner | Run on a networked machine |
 |---|---|
 | Corpus generator, report generator | yes |
-| Corpus with 28 independent cases and the refusal groups | Dimvexa semantics run on the new corpus; the competitor result files are **from the older corpus** and have not been rerun (no network in the authoring environment). `benchmarks/run_all.sh` refreshes everything |
+| Corpus with 40 independent cases and the refusal groups | yes: the 0.11.0 run (corpus `69bf1471279e6d39`, 302 must-convert and 30 must-refuse cases) reran every library and Dimvexa on it |
 | Dimvexa, Rust API, and Rust ceilings | yes, full run |
 | Dimvexa CLI (spawn per conversion) | yes, full run |
 | uom (needed a one-line fix to compile) | yes, 20 typed pairs only |

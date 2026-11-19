@@ -675,3 +675,60 @@ fn factors_with_pi_or_a_power_of_ten_are_correctly_rounded() {
     }
     assert!(rows >= 300, "{rows}");
 }
+
+/// ADR-028: a decimal whose power of ten does not fit the fraction (Planck's constant,
+/// `1e-300`) is rounded to `f64` as correctly as the standard library rounds it. The oracle is
+/// `str::parse::<f64>`, which is correctly rounded; the numbers are random decimals, positive and
+/// negative, with up to 38 digits (the most an `i128` takes) and exponents from -330 to 300, most of them outside what an `i128` denominator
+/// can hold. A value that is too close to a rounding boundary for the 128-bit proof is allowed
+/// to be refused (`overflow`), never to be rounded differently; the test counts how often.
+#[test]
+fn decimals_with_a_far_exponent_round_like_the_standard_library() {
+    let mut rng = Rng::new(0x00ad_4028_5eed);
+    eprintln!("seed 0x00ad_4028_5eed");
+    let (mut compared, mut refused, mut kept) = (0_u32, 0_u32, 0_u32);
+    for _ in 0..200_000 {
+        let digits = 1 + rng.below(38);
+        let mut mantissa = String::new();
+        if rng.below(3) == 0 {
+            mantissa.push('-');
+        }
+        for i in 0..digits {
+            let d = rng.below(10);
+            mantissa.push(char::from(
+                b'0' + u8::try_from(if i == 0 { 1 + d % 9 } else { d }).unwrap(),
+            ));
+        }
+        // sometimes a decimal point after the first digit
+        if digits > 1 && rng.below(2) == 0 {
+            // after the first digit (and the sign, if any)
+            mantissa.insert(usize::from(mantissa.starts_with('-')) + 1, '.');
+        }
+        let exp = rng.range_i64(-330, 300);
+        let text = format!("{mantissa}e{exp}");
+        let want: f64 = text.parse().unwrap();
+        if want == 0.0 || !want.is_normal() {
+            continue; // outside the normal range: the exact path refuses it by design
+        }
+        let Ok(r) = text.parse::<Ratio>() else {
+            continue;
+        };
+        if r.ten_exp() != 0 {
+            kept += 1;
+        }
+        match r.to_f64() {
+            Ok(got) => {
+                assert_eq!(got.to_bits(), want.to_bits(), "{text}: {got:e} vs {want:e}");
+                compared += 1;
+            }
+            Err(e) => {
+                assert_eq!(e.code(), "overflow", "{text}");
+                refused += 1;
+            }
+        }
+    }
+    eprintln!("compared {compared}, refused as undecidable {refused}, exponent kept {kept}");
+    assert!(compared > 150_000, "{compared}");
+    assert!(kept > 100_000, "{kept}");
+    assert!(refused * 1000 < compared, "{refused} refused of {compared}");
+}

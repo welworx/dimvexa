@@ -1,6 +1,16 @@
-from typing import Any
+from typing import Any, TypedDict
 
 __version__: str
+
+class CalcResult(TypedDict):
+    value: float | None
+    unit: str
+    exact: bool
+    rounded: bool
+    fraction: str | None
+    dimension: list[int]
+    kind: str
+    text: str
 
 class DimvexaError(ValueError):
     code: str
@@ -56,6 +66,17 @@ def quantity(
     configs: list[str] | None = None,
     config_texts: list[str] | None = None,
 ) -> Quantity: ...
+def calc(
+    expression: str,
+    *,
+    vars: dict[str, str] | None = None,
+    to: str | None = None,
+    configs: list[str] | None = None,
+    config_texts: list[str] | None = None,
+    exact: bool = False,
+    sci: bool | int | None = None,
+    autoprefix: bool = False,
+) -> CalcResult: ...
 def units(
     *, configs: list[str] | None = None, config_texts: list[str] | None = None
 ) -> list[str]: ...

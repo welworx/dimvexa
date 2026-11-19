@@ -59,7 +59,13 @@ else
   exit 1
 fi
 
-{ lscpu; echo; cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo "governor: unknown"; } > "$out/machine.txt" || true
+if command -v lscpu >/dev/null 2>&1; then
+  { lscpu; echo; cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo "governor: unknown"; } > "$out/machine.txt" || true
+else
+  # macOS and others without lscpu
+  { sysctl -n machdep.cpu.brand_string 2>/dev/null || uname -m; echo "logical cores: $(sysctl -n hw.logicalcpu 2>/dev/null || echo unknown)"; \
+    echo "memory bytes: $(sysctl -n hw.memsize 2>/dev/null || echo unknown)"; sw_vers 2>/dev/null || uname -sr; echo "governor: unknown"; } > "$out/machine.txt" || true
+fi
 
 cargo build --release --locked -p dimvexa-cli
 cargo build --release --locked --manifest-path benchmarks/runners/dimvexa-rs/Cargo.toml

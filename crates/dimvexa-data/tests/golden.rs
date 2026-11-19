@@ -262,13 +262,24 @@ fn kelvin_inside_a_compound_unit_is_the_difference_kind() {
     let c = reg.conversion("kJ/(kg.delta_degF)", "kJ/(kg.K)").unwrap();
     assert_eq!(c.factor(), Ratio::new(9, 5).unwrap());
     assert_eq!(c.offset(), Ratio::ZERO);
-    // A temperature point (offset scale) inside a compound is refused and names the delta unit.
-    for expr in ["kJ/(kg.degC)", "W/(m.degF)", "degC/s", "degC2"] {
-        let err = reg.parse(expr).unwrap_err();
-        assert_eq!(err.code(), "refused", "{expr}");
-        assert!(err.to_string().contains("delta_deg"), "{expr}: {err}");
-        assert_eq!(err.suggestions().len(), 1, "{expr}");
+    // A temperature scale (offset) inside a compound is read as its interval, the way a
+    // specific heat per degree Celsius is meant: `degC` is `delta_degC`, never the offset.
+    for (a, b) in [
+        ("kJ/(kg.degC)", "kJ/(kg.delta_degC)"),
+        ("W/(m.degF)", "W/(m.delta_degF)"),
+        ("degC/s", "delta_degC/s"),
+        ("degC2", "delta_degC2"),
+        ("kg.degC", "kg.delta_degC"),
+    ] {
+        let (x, y) = (reg.parse(a).unwrap(), reg.parse(b).unwrap());
+        assert_eq!(x.factor(), y.factor(), "{a}");
+        assert_eq!(x.offset(), Ratio::ZERO, "{a}");
+        assert_eq!(x.dim(), y.dim(), "{a}");
     }
+    let c = reg.conversion("kJ/(kg.degF)", "kJ/(kg.degC)").unwrap();
+    assert_eq!(c.factor(), Ratio::new(9, 5).unwrap());
+    // alone, `degC` is still a point with its offset
+    assert!(!reg.parse("degC").unwrap().offset().is_zero());
     // Plain K as a standalone unit stays a point: it does not convert to an interval.
     assert_eq!(
         reg.conversion("K", "delta_K").unwrap_err().code(),

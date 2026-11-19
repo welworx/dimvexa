@@ -10,6 +10,7 @@ use std::sync::{Arc, OnceLock};
 use ::dimvexa::{
     CONSTANTS, Conversion as CoreConversion, Quantity as CoreQuantity, Ratio, Registry,
 };
+use dimvexa_calc::{Formula, Notation};
 use numpy::{PyArrayDyn, PyArrayMethods, PyReadonlyArrayDyn, PyUntypedArrayMethods};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -494,6 +495,88 @@ fn quantity(
     })
 }
 
+/// Calculate an equation with units (ADR-030): `calc("sqrt(2 * dp / rho)", vars={"dp": "50 kPa",
+/// "rho": "998 kg/m3"}, to="m/s")`, or with the quantities written in the equation
+/// (`calc("2 m * 3 m")`). Returns a dict with the fields of `dimvexa calc --json`: `value`
+/// (float; an exact result is rounded once; None for an exact result beyond the range of
+/// `f64`, see `fraction`), `unit`, `exact` (False when the result is an approximate `f64`),
+/// `rounded` (True when the number shown is not the exact value), `fraction` (the exact value as text, None when approximate), `dimension`
+/// (the exponents of kg, m, s, A, K, mol, cd), `kind`, and `text` (exactly what `dimvexa calc` prints, `≈ ` first when
+/// approximate). `to` is the unit of the result; without it the unit the arithmetic gave.
+/// `autoprefix=True` chooses the SI prefix instead (`1500 m` is `1.5 km`; not with `to`). `sci`
+/// writes the number of `text` in scientific notation (`True`, or 1 to 17 significant digits),
+/// `exact=True` adds the fraction of an exact result to `text`. Other options as in `convert`.
+#[pyfunction]
+#[pyo3(signature = (
+    expression, *, vars = None, to = None, configs = None, config_texts = None,
+    exact = false, sci = None, autoprefix = false
+))]
+#[allow(clippy::too_many_arguments)]
+fn calc<'py>(
+    py: Python<'py>,
+    expression: &str,
+    vars: Option<std::collections::BTreeMap<String, String>>,
+    to: Option<&str>,
+    configs: Option<Vec<String>>,
+    config_texts: Option<Vec<String>>,
+    exact: bool,
+    sci: Option<&Bound<'py, PyAny>>,
+    autoprefix: bool,
+) -> PyResult<Bound<'py, PyDict>> {
+    let notation = notation_of(sci)?;
+    let loaded = load(
+        &configs.unwrap_or_default(),
+        &config_texts.unwrap_or_default(),
+    )?;
+    let mut formula = Formula::from_loaded(&loaded).exact_only(exact);
+    for (name, value) in vars.unwrap_or_default() {
+        formula = formula.var(&name, &value).map_err(|e| to_py(&e))?;
+    }
+    let result = formula.calculate_in(expression, to, autoprefix, notation);
+    // the warnings come first, so they are not lost when the calculation fails
+    for w in formula.warnings() {
+        let message = std::ffi::CString::new(w.replace('\0', " ")).unwrap_or_default();
+        PyErr::warn(
+            py,
+            &py.get_type::<pyo3::exceptions::PyUserWarning>(),
+            &message,
+            1,
+        )?;
+    }
+    let r = result.map_err(|e| to_py(&e.error))?;
+    let out = PyDict::new(py);
+    out.set_item("value", r.value)?;
+    out.set_item("unit", &r.unit)?;
+    out.set_item("exact", r.exact)?;
+    out.set_item("rounded", r.rounded)?;
+    out.set_item("fraction", &r.fraction)?;
+    out.set_item("dimension", r.dimension.to_vec())?;
+    out.set_item("kind", &r.kind)?;
+    out.set_item("text", r.text_in(exact, notation))?;
+    Ok(out)
+}
+
+/// `sci=None`/`False`: plain; `True`: scientific with all digits; an int 1 to 17: that many
+/// significant digits.
+fn notation_of(sci: Option<&Bound<'_, PyAny>>) -> PyResult<Notation> {
+    let Some(sci) = sci.filter(|s| !s.is_none()) else {
+        return Ok(Notation::Plain);
+    };
+    if sci.is_instance_of::<pyo3::types::PyBool>() {
+        return Ok(if sci.extract::<bool>()? {
+            Notation::Scientific(None)
+        } else {
+            Notation::Plain
+        });
+    }
+    match sci.extract::<usize>() {
+        Ok(n) if (1..=17).contains(&n) => Ok(Notation::Scientific(Some(n))),
+        _ => Err(PyValueError::new_err(
+            "sci is True, or a number of significant digits from 1 to 17",
+        )),
+    }
+}
+
 /// All unit symbols in the table, and those of the `configs` / `config_texts` if given.
 #[pyfunction]
 #[pyo3(signature = (*, configs = None, config_texts = None))]
@@ -572,6 +655,7 @@ fn _dimvexa(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(conversion, m)?)?;
     m.add_function(wrap_pyfunction!(constants, m)?)?;
     m.add_function(wrap_pyfunction!(quantity, m)?)?;
+    m.add_function(wrap_pyfunction!(calc, m)?)?;
     m.add_function(wrap_pyfunction!(units, m)?)?;
     m.add_function(wrap_pyfunction!(unit_info, m)?)?;
     m.add_function(wrap_pyfunction!(data_version, m)?)?;

@@ -50,6 +50,20 @@ fn read(path: &Path) -> String {
     fs::read_to_string(path).unwrap_or_default()
 }
 
+/// All `.rs` files directly in `dir`, one after the other (in name order): a source split into
+/// modules reads like one file.
+fn read_sources(dir: &Path) -> String {
+    let mut files: Vec<_> = fs::read_dir(dir)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.extension().is_some_and(|x| x == "rs"))
+        .collect();
+    files.sort();
+    files.iter().map(|f| read(f)).collect::<Vec<_>>().join("\n")
+}
+
 /// Text between pairs of single backticks (inline code), one per match.
 fn inline_code(text: &str) -> Vec<String> {
     let mut out = Vec::new();
@@ -128,7 +142,7 @@ fn files_under(dir: &Path, out: &mut Vec<PathBuf>) {
 /// Schema ids such as `dimvexa.convert/3` named in a text, sorted and de-duplicated.
 fn schema_ids(text: &str) -> Vec<String> {
     let mut out = Vec::new();
-    for cmd in ["convert", "units", "configs", "constants"] {
+    for cmd in ["convert", "calc", "units", "configs", "constants"] {
         let head = format!("dimvexa.{cmd}/");
         for (at, _) in text.match_indices(&head) {
             let rest = text.get(at.saturating_add(head.len())..).unwrap_or("");
@@ -148,7 +162,11 @@ fn emitted_schema_ids(cli: &str) -> Vec<String> {
     let mut out = Vec::new();
     let mut inside = false;
     for line in cli.lines().map(str::trim) {
-        if line.starts_with("fn schema_id") {
+        if line
+            .trim_start_matches("pub(crate) ")
+            .trim_start_matches("pub ")
+            .starts_with("fn schema_id")
+        {
             inside = true;
             continue;
         }
@@ -179,24 +197,22 @@ fn emitted_schema_ids(cli: &str) -> Vec<String> {
 /// Facts that are written in several places must agree, and a few rules must stay enforced.
 fn consistency(root: &Path, agents: &str, errors: &mut Vec<String>) {
     // The JSON schema versions in AGENTS.md and the api-change skill equal those of the CLI.
-    let cli_text = read(&root.join("crates/dimvexa-cli/src/lib.rs"));
+    let cli_text = read_sources(&root.join("crates/dimvexa-cli/src"));
     let cli = emitted_schema_ids(&cli_text);
     if cli.is_empty() {
-        errors.push(
-            "crates/dimvexa-cli/src/lib.rs: cannot find the arms of `fn schema_id`".to_string(),
-        );
+        errors.push("crates/dimvexa-cli/src: cannot find the arms of `fn schema_id`".to_string());
     }
     let mentioned = schema_ids(&cli_text);
     if mentioned != cli {
         errors.push(format!(
-            "crates/dimvexa-cli/src/lib.rs: schema ids in comments and help {mentioned:?} differ from `fn schema_id` {cli:?}"
+            "crates/dimvexa-cli/src: schema ids in comments and help {mentioned:?} differ from `fn schema_id` {cli:?}"
         ));
     }
     for f in ["AGENTS.md", "skills/api-change/SKILL.md"] {
         let named = schema_ids(&read(&root.join(f)));
         if named != cli {
             errors.push(format!(
-                "{f}: schema versions {named:?} differ from crates/dimvexa-cli/src/lib.rs {cli:?}"
+                "{f}: schema versions {named:?} differ from crates/dimvexa-cli/src {cli:?}"
             ));
         }
     }

@@ -23,7 +23,7 @@
 //! `conditions` and `source`, and, for a CODATA value, the pinned `codata` edition. A constant
 //! of a density unit is what a conversion the core refuses (ADR-001) needs, such as litres to
 //! kilograms; the library multiplies by it and never derives it from temperature or pressure.
-//! The names of the built-in constants (`pi`, `h_P`, ...) cannot be redefined.
+//! The names of the built-in constants (`pi`, `planck_constant`, ...) cannot be redefined.
 //!
 //! ```text
 //! [[constant]]
@@ -50,8 +50,8 @@
 )]
 
 use dimvexa_core::{
-    ConstantDef, Conversion, Dim, Error, Exactness, Kind, PrefixMode, Ratio, Registry, Result,
-    Status, Unit, UnitExpr, is_valid_symbol,
+    ConstantDef, Conversion, Dim, Error, Exactness, Kind, PrefixFamily, PrefixMode, Ratio,
+    Registry, Result, Status, Unit, UnitExpr, is_valid_symbol,
 };
 
 /// A parsed config file: its origin, a content hash and its `[map]`, `[[unit]]` and
@@ -105,6 +105,8 @@ pub struct ConfigUnit {
     pub status: Status,
     /// Which SI and binary prefixes the symbol accepts.
     pub prefixes: PrefixMode,
+    /// The unit `--autoprefix` switches to below one of this unit (empty for none).
+    pub autoprefix_below: String,
     /// Where the definition comes from.
     pub source: String,
     /// A free-text note (may be empty).
@@ -123,7 +125,7 @@ pub struct ConfigUnit {
 /// travels without the assumption behind it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Constant {
-    /// The identifier selected with `--const`, for example `water_20C` or `k_B`. Never also a
+    /// The identifier selected with `--const`, for example `water_20C` or `boltzmann_constant`. Never also a
     /// unit's name.
     pub id: String,
     /// The full name, for example `Boltzmann constant`. Never empty.
@@ -350,6 +352,7 @@ impl TableKind {
                 "status",
                 "source",
                 "prefixes",
+                "autoprefix_below",
                 "note",
             ],
         }
@@ -582,6 +585,7 @@ fn finish_unit(
         exactness,
         status,
         prefixes,
+        autoprefix_below: p.get("autoprefix_below").unwrap_or_default().to_string(),
         source,
         note: p.get("note").unwrap_or_default().to_string(),
         origin: origin.to_string(),
@@ -649,12 +653,12 @@ impl Constant {
     /// use dimvexa_config::Constant;
     /// use dimvexa_core::{ConstantDef, Exactness};
     /// let def = ConstantDef {
-    ///     id: "h_P", name: "Planck constant", value: (662_607_015, 1), value_exp: (-42, 0), unit: "J.s",
+    ///     id: "planck_constant", name: "Planck constant", value: (662_607_015, 1), value_exp: (-42, 0), unit: "J.s",
     ///     exactness: Exactness::Defined, codata: "", conditions: "none (defined)",
     ///     source: "BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1", note: "",
     /// };
     /// let h = Constant::from_def(&def)?;
-    /// assert_eq!((h.id.as_str(), h.name.as_str(), h.unit.as_str()), ("h_P", "Planck constant", "J.s"));
+    /// assert_eq!((h.id.as_str(), h.name.as_str(), h.unit.as_str()), ("planck_constant", "Planck constant", "J.s"));
     /// # Ok::<(), dimvexa_core::Error>(())
     /// ```
     pub fn from_def(def: &ConstantDef) -> Result<Self> {
@@ -787,7 +791,7 @@ pub const BUILT_IN: &str = "built-in";
 /// Refuses a config that defines a constant with the name of a built-in one.
 ///
 /// A built-in constant cannot be redefined by a config: a user-defined `pi` would silently
-/// change the meaning of every angle (ADR-018), and the same holds for `h_P` or `N_A`.
+/// change the meaning of every angle (ADR-018), and the same holds for `planck_constant` or `avogadro_constant`.
 ///
 /// # Errors
 ///
@@ -802,7 +806,7 @@ pub const BUILT_IN: &str = "built-in";
 ///      conditions = \"none (defined)\"\nsource = \"s\"\n",
 ///     "mine.toml",
 /// )?;
-/// let err = reject_builtin_constants(&cfg, &["pi", "h_P"]).unwrap_err();
+/// let err = reject_builtin_constants(&cfg, &["pi", "planck_constant"]).unwrap_err();
 /// assert!(err.to_string().contains("cannot be redefined"));
 /// # Ok::<(), dimvexa_core::Error>(())
 /// ```
@@ -1211,6 +1215,7 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
     if !base_sources.is_empty() {
         note = format!("{note} (base {}: {base_sources})", u.base);
     }
+    check_autoprefix_below(reg, u, &base, &bad)?;
     let wrap = |e| at(&u.origin, u.line, e);
     let mut unit = Unit::new(&u.id, base.dim(), base.kind(), factor, offset).map_err(wrap)?;
     if let Some(symbol) = &u.symbol {
@@ -1225,9 +1230,49 @@ fn define_unit(reg: &mut Registry, u: &ConfigUnit) -> Result<()> {
     let unit = unit
         .with_status(u.status)
         .with_prefixes(u.prefixes)
+        .with_autoprefix_below(&u.autoprefix_below)
         .with_provenance(base.exactness().combine(u.exactness), &u.source, &note)
         .with_namespace("user");
     reg.register(unit).map_err(|e| at(&u.origin, u.line, e))
+}
+
+/// `autoprefix_below` must name a unit of the base's dimension that takes SI prefixes.
+fn check_autoprefix_below(
+    reg: &Registry,
+    u: &ConfigUnit,
+    base: &UnitExpr,
+    bad: &dyn Fn(String) -> Error,
+) -> Result<()> {
+    if u.autoprefix_below.is_empty() {
+        return Ok(());
+    }
+    if u.prefixes == PrefixMode::None {
+        return Err(bad(
+            "autoprefix_below needs prefixes = \"si\": a unit without prefixes keeps its unit"
+                .to_string(),
+        ));
+    }
+    let target = reg.get(&u.autoprefix_below).ok_or_else(|| {
+        let why = if reg.parse(&u.autoprefix_below).is_ok() {
+            "is a prefixed form; name the unit without its prefix (g, not kg)"
+        } else {
+            "is not a unit"
+        };
+        bad(format!("autoprefix_below '{}' {why}", u.autoprefix_below))
+    })?;
+    if target.dim() != base.dim() || target.kind() != base.kind() {
+        return Err(bad(format!(
+            "autoprefix_below '{}' must have the same dimension as '{}'",
+            u.autoprefix_below, u.id
+        )));
+    }
+    if !target.prefixes().accepts(PrefixFamily::Si) {
+        return Err(bad(format!(
+            "autoprefix_below '{}' must take SI prefixes",
+            u.autoprefix_below
+        )));
+    }
+    Ok(())
 }
 
 /// Applies configs to a registry and returns what is now in effect.
@@ -1832,6 +1877,49 @@ mod tests {
     }
 
     #[test]
+    fn autoprefix_below_names_a_prefixable_unit_of_the_same_dimension() {
+        let cube = Dim::new([0, 3, 0, 0, 0, 0, 0]);
+        let with = |target: &str| {
+            let text = BARREL.replace(
+                "source",
+                &format!("prefixes = \"si\"\nautoprefix_below = \"{target}\"\nsource"),
+            );
+            let mut reg = Registry::new();
+            let gal = Unit::linear(
+                "gal_us",
+                cube,
+                Ratio::new(473_176_473, 125_000_000_000).unwrap(),
+            )
+            .unwrap()
+            .with_prefixes(PrefixMode::Si);
+            reg.register(gal).unwrap();
+            reg.register(Unit::linear("m", Dim::M, Ratio::ONE).unwrap())
+                .unwrap();
+            reg.register(Unit::linear("flat", cube, Ratio::ONE).unwrap())
+                .unwrap();
+            apply(&mut reg, &[Config::parse(&text, "o.toml").unwrap()]).map(|_| ())
+        };
+        assert!(with("gal_us").is_ok());
+        // a unit without prefixes keeps its unit, so the key is refused there
+        let none = BARREL.replace("source", "autoprefix_below = \"gal_us\"\nsource");
+        let mut reg = Registry::new();
+        let gal = Unit::linear("gal_us", cube, Ratio::ONE)
+            .unwrap()
+            .with_prefixes(PrefixMode::Si);
+        reg.register(gal).unwrap();
+        let e = apply(&mut reg, &[Config::parse(&none, "o.toml").unwrap()]).unwrap_err();
+        assert!(e.to_string().contains("needs prefixes"), "{e}");
+        for (bad, why) in [
+            ("m", "same dimension"),
+            ("nosuch", "is not a unit"),
+            ("flat", "SI prefixes"),
+        ] {
+            let e = with(bad).unwrap_err().to_string();
+            assert!(e.contains(why), "{bad}: {e}");
+        }
+    }
+
+    #[test]
     fn parses_a_unit_with_its_base_factor_and_source() {
         let cfg = Config::parse(&format!("[map]\nmt = \"tonne\"\n\n{BARREL}"), "o.toml").unwrap();
         let u = &cfg.units()[0];
@@ -1841,6 +1929,10 @@ mod tests {
         assert_eq!(u.prefixes, PrefixMode::None);
         assert_eq!((u.origin.as_str(), u.line), ("o.toml", 4));
         assert_eq!(u.note, "");
+        assert_eq!(u.autoprefix_below, "");
+        let below = BARREL.replace("source", "autoprefix_below = \"gal_us\"\nsource");
+        let u = Config::parse(&below, "o").unwrap().units()[0].clone();
+        assert_eq!(u.autoprefix_below, "gal_us");
         let full = BARREL.replace("source", "prefixes = \"si\"\nnote = \"n\"\nsource");
         let u = Config::parse(&full, "o").unwrap().units()[0].clone();
         assert_eq!((u.prefixes, u.note.as_str()), (PrefixMode::Si, "n"));
@@ -1929,10 +2021,12 @@ mod tests {
 
     #[test]
     fn numbers_that_overflow_say_so() {
-        let big = BARREL.replace("\"42\"", "\"1e40\"");
+        // a power of ten is kept in the exponent (ADR-028); 41 digits do not fit
+        let digits = "10000000000000000000000000000000000000000";
+        let big = BARREL.replace("\"42\"", &format!("\"{digits}\""));
         let msg = Config::parse(&big, "o").unwrap_err().to_string();
-        assert!(msg.contains("too large") && msg.contains("'1e40'"), "{msg}");
-        let msg = Config::parse(&WATER.replace("9982067/10000", "1e40"), "w")
+        assert!(msg.contains("too large") && msg.contains(digits), "{msg}");
+        let msg = Config::parse(&WATER.replace("9982067/10000", digits), "w")
             .unwrap_err()
             .to_string();
         assert!(msg.contains("too large"), "{msg}");

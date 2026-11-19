@@ -218,7 +218,7 @@ and source. `oz` stays refused in `us` and `imperial` because it means a mass or
 `--config us-customary --config ./mine.toml` starts from the US names and adds yours. Replacing is allowed
 but never silent: every name, unit or constant that replaces one of an earlier config prints
 `warning: constant 'water_25C' (./mine.toml:3) replaces the one from bundled:water:7` on stderr, and in `--json` output as a `warnings` array (empty when nothing was replaced).
-The built-in constants (`pi`, `h_P`, ...) and the units of the table cannot be replaced.
+The built-in constants (`pi`, `planck_constant`, ...) and the units of the table cannot be replaced.
 
 Your own file is the same format:
 
@@ -314,16 +314,221 @@ What a density does and does not do:
   added to `sources`.
 - `dimvexa units --config NAME_OR_PATH` lists the densities your configs define.
 
+### Equations: `dimvexa calc`
+
+`dimvexa calc` evaluates an equation with units (ADR-030). The result is exact when the
+mathematics is exact, and starts with `≈` when it is not:
+
+```console
+$ dimvexa calc "2 kip/ft * (20 ft)^2 / 8" --to kN*m
+135.58179483314004 kN.m
+$ dimvexa calc "sqrt(9 m2)"
+3 m
+$ dimvexa calc "100 kg * 1 g_n * sin(30 deg)" --to N
+490.3325 N
+$ dimvexa calc "sqrt(2 m2)"
+≈ 1.4142135623730951 m
+```
+
+#### Writing an equation
+
+Write the values in the equation (`0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)`) or name them
+with `--var` (`"Cd * A * sqrt(2 * dp / rho)" --var Cd=0.61 --var A="10 cm2" --var dp="50 kPa"
+--var rho="998 kg/m3"`); both give the same result. A name is letters, digits and `_`. It
+stands for its value wherever it is written alone (`h * 2` with `--var h="3 m"` is `6 m`; a name
+such as `m` has nothing to do with the metre). A number before a name that is not a unit
+multiplies: `2 r` with `--var r="3 m"` is `6 m`, and `2 r2` is `2` times the variable `r2`
+(a name is never split into a name and a power: write `2 r^2` for the square of `r`). A name that is also a
+unit must not follow a number: `0.5 h` with a variable `h` is an error (`invalid_definition`:
+rename the variable), because the reader would see hours and the evaluator a length. `pi` cannot be
+redefined. `r` and `r2` are two different names. A `--var` that the equation does not use is an
+error (`invalid_definition`: `the variable 'r' is not used in the equation '2 r2'`), because an
+unused value is most likely a typo in the equation or the name; the built-in constants need not
+be used. A repeated `--var` name keeps the last value (with a warning).
+
+The SI constants of `dimvexa constants` are built-in names in every equation, exact and with
+their unit, and their names say what they are: `planck_constant`, `elementary_charge`,
+`boltzmann_constant`, `avogadro_constant`, `speed_of_light` (299792458 m/s) and
+`molar_gas_constant` (exactly `avogadro_constant * boltzmann_constant`, 8.31446261815324
+J/(mol.K)), besides `pi`. The energy of a 500 nm photon is
+`planck_constant * speed_of_light / 500 nm` (`--to J`), and `p V = n R T` reads
+`n * molar_gas_constant * T / V` (with `T` in kelvin, see `.to(K)` below). Short symbols such as `c`, `e` or `R` are yours to define: a
+`[[constant]]` in a config (`dimvexa constants --config mine.toml`) or a `--var`.
+`examples/configs/engineering.toml` defines `R`, `c`, `k_B`, `N_A`, `h_P` and `q_e` with the exact
+values of the built-in ones, so `n * R * T.to(K) / V --config examples/configs/engineering.toml`
+reads as an engineer writes it. A `--var` with
+the name of a built-in constant replaces it, with a warning (on stderr, and in `warnings` of the
+JSON), so it is never silent. The constants of the configs in effect are names too
+(`dimvexa constants --config water` lists them): `1 L * water_25C --config water --to kg` is
+`0.99704702 kg`. A config constant with the name of a built-in one replaces it, as for
+`dimvexa constants`.
+
+* **Numbers and units:** `10 cm2`, `998 kg/m3`, `8.314 J/(mol*K)`, `20 degC`, `1.5e-3 m`. A unit
+  is the text after a number up to the next space, so put a space on both sides of an operator
+  between quantities: `50 kPa / 998 kg/m3` is a quotient.
+* **Operators:** `+ - * /`, parentheses and `^`. The exponent may be an integer, a decimal or a
+  fraction: `x^2`, `x^0.5`, `y^(1/2)` and `sqrt(y)` are the same, `R^(2/3)` works. The exponent
+  may also be a name or an expression, if it is an exact number without a unit (`x^n`,
+  `2^(1+1)`, `x^(1/k)`); `2^3^2` is `2^(3^2)`, a name after a number right after `^` (`x^2 n`) is
+  refused as ambiguous (write `x^2 * n` or `x^(2 n)`), and an approximate exponent such as `2^sqrt(2)`
+  is refused. `pi` is the exact constant: `2 pi`, `2 * pi * r` and `2 pi r` are the same
+  (`pi` multiplies the names that follow it). After a division the form is ambiguous and refused:
+  `10 m / 2 pi` is `(10 m / 2) * pi` or `10 m / (2 * pi)`, so write the parentheses,
+  `10 m / (2 pi)` or `(10 m / 2) * pi`; the same for `Q / pi r^2`, and for a number and a variable
+  after a division (`10 m / 2 r`: write `10 m / (2 r)`). A unit after an exponent multiplies the
+  power: `2^3 m` is `(2^3) m`, `8 m`, because a unit cannot be part of an exponent.
+* **Spaces:** a space ends a unit. A unit belongs to the number before it, so after a `/` it
+  divides: `10 m / 2 s` is `5 m/s`, `x / 2 s` divides `x` by `2 s`, `10/(2 s)` is `5 1/s`. One
+  exception, for the units of a fraction of plain numbers: when everything before the `/` in the
+  term is plain numbers (and `pi`), the unit is the unit of the whole term. `1/2 kg` is
+  `0.5 kg`, `10/2 s` is `5 s`, `2/300 K`, `5 * 1 / 2 s`, `(2/3) / 4 s` and `1 / -2 s` the same.
+  For a reciprocal unit write `20/100 1/s`, `20/100 s^-1` or `20/(100 s)`. A name or a function
+  before the `/` is not a plain number (`a / 2 s` is `a / (2 s)`). A reciprocal unit may follow
+  a number (`60 1/min`). To multiply a fraction by a unit write `(1/2) * 1 kg` or `0.5 kg`. Tabs, newlines and the no-break space are spaces. A comma separates
+  arguments (`min(1,5)` is the smaller of 1 and 5), it is never a decimal separator.
+* **Notation:** superscripts of any size (`m²`, `m⁴`, `s⁻²`, `m¹⁰`), `·`, `×`, `÷` and the minus
+  sign `−` are read (`10 m² · 3 m`, `1 kg·m/s²`; a space before a superscript is ignored,
+  `2 m ²` is `2 m²`); error positions count the characters after this rewrite. A power of a unit
+  may be written `m^2`, `m2` or `m^(2)` (a whole number, `m^(-1)` too). A reciprocal unit is
+  `K^-1` or `1/K` (`12e-6 K^-1`, `12e-6 1/K`). Words that the shell split are joined with spaces
+  (`calc 2 m '*' 3 m`).
+* **Functions:** `sqrt`, `cbrt`, `abs`, `hypot`, `pow`, `floor`, `ceil`, `round`, `min`, `max`, `ln`, `exp`, `log10` (`lg`), `log2`
+  (`lb`), `log(x, base)`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2(y, x)`, `sinh`, `cosh`,
+  `tanh`, `asinh`, `acosh`, `atanh`. The inverse functions return an angle in `rad` (`atan2(1 m, 1 m)
+  --to deg` is `45 deg`); they are exact at the special values (`atan(1)` is exactly pi/4,
+  `acos(0.5)` is pi/3, `tan(45 deg)` is `1`), and otherwise approximate.
+  `pow(x, y)` is `x^y` (an exact exponent without a unit). `floor`, `ceil` and `round` give a
+  whole number in the unit of the argument (`floor(7.8 m)` is `7 m`, `round(2.5 m)` is `3 m`,
+  halves away from zero; `round(-2.5 m)` is `-3 m`); an approximate argument gives an approximate
+  whole number, and a value with `pi` that is too close to a whole number to tell is refused.
+  `min` and `max` need one dimension (`4 m` and `4 km` work, `4 m` and `3 L` do not) and return
+  the winner in its own unit, exact. `abs` of a temperature point is refused. `sin` and `cos`
+  take one angle unit (`30 deg`, `0.5 rad`, `pi/6 * 1 rad`), not a bare number and not
+  `deg*deg` or `1/rad`.
+* **Options:** `--to UNIT` shows the result in a unit, `--exact` adds the fraction of an exact
+  result (`1/3 = 0.3333333333333333… m`), `--json` or `--pretty` print the schema
+  `dimvexa.calc/1`, `--config` adds your own units as for `convert`. `--sci` writes the number in
+  scientific notation (`1500 m` is `1.5e3 m`; with `--autoprefix` the prefix has taken the exponent: `1.5 km`, and `--sci=3` gives `1.50 km`, the prefix chosen from the rounded number, so `999.9996 m` is `1.00 km`); `--sci=4` gives 4 significant digits, 1 to 17
+  (`1.500e3 m`), rounded from the exact value with halves away from zero, as `round` does
+  (`9.995 --sci=3` is `1.00e1`, `2.5 --sci=1` is `3e0`; an approximate result is rounded from its
+  `f64`); the `…` is left out when you ask for the digits. The JSON keeps the number a number.
+  `--autoprefix` chooses the SI prefix (a power of 1000) that puts the number between 1 and 1000
+  (between 1 and 1000^n for a power n): `1500 m` is `1.5 km`, `0.0025 m` is `2.5 mm`,
+  `2500000 m2` is `2.5 km^2`. It changes only a result whose one unit with a positive power
+  takes SI prefixes (`m`, `s`, `Pa`, `W`, `Hz`, `rad`, `L`, `g`). A compound unit
+  takes the prefix on its one numerator unit (`1500 m/s` is `1.5 km/s`, `2500 J/(kg*K)` is `2.5 kJ/(kg.K)`, `0.5 mol/L` is `500 mmol/L`) and stays when it has none or two (`kg*m`, `1/s`); a negative power (`s^-1`), a unit without prefixes (`ft`, `min`), a temperature and
+  a result in `kg` of 1 or more stay as they are (grams stop at the kilogram, never `Mg`, so
+  `0.5 kg` is `500 g`), and so does a unit whose prefixed symbol reads as another unit (`mt` is ambiguous, so a
+  unit never becomes `mt`). The tonne hands over to grams below 1 t: `0.5 t` is `500 kg`,
+  `0.0005 t` is `500 g`, and `1500 t` is `1.5 kt` (the unit key `autoprefix_below`). The JSON carries the prefixed unit and value. It chooses the
+  unit, so it
+  cannot be used with `--to`. An expression that starts
+  like an option is written after `--`, and the options before it (`dimvexa calc --var h="3 m" -- -h`;
+  after `--` everything is the expression, so `--var` and `--pretty` there are text).
+
+#### Exact, or approximate and labelled
+
+Every step is exact while it can be (this is what `exact` in the JSON says): `sqrt(9 m2)` is `3 m`, `8^(1/3)` is `2`, `sin(30 deg)` is
+`0.5`, `log10(1000)` is `3`, `ln(1)` is `0`, `max(10, sqrt(2))` is exactly `10`. When the
+mathematics is not exact (`sqrt(2)`, `sin(1 rad)`), the result is an `f64` with `≈` in front, and
+so is everything computed from it afterwards; an exact step that fails (an overflow) is never
+answered with an approximate number.
+
+* An **exact** result is shown as the `f64` nearest to its exact value (rounded once), and
+  `…` follows the number when that is not the exact value: `1 m / 3` is
+  `0.3333333333333333… m`, `0.1 + 0.2` is `0.3`. `--exact` adds the fraction, and `rounded` in
+  the JSON says the same. An exact value beyond the range of `f64` is printed from the exact
+  value (`1e300 m * 1e300` is `1e600 m`, `value` is `null`, `fraction` is `10^600`).
+* An **approximate** result (`≈`) is computed in `f64`: the function results are within an ulp
+  or two of the true value, and each following step can add to that (`sqrt(2)^2` is
+  `2.0000000000000004`). `sin`, `cos` and `tan` of an angle in degrees, gon or turns reduce the
+  exact angle to within 45 degrees of a quarter turn before the one rounding, so
+  `sin(179.9999999 deg)` keeps all its digits; an angle given in `rad` as a plain number has no
+  exact multiple of pi to reduce by, so near a multiple of pi its digits are limited by the `f64`
+  of the angle. It is not the nearest `f64` and carries no error bound (KL-33).
+  A result outside the range of `f64` is an `overflow` error, never infinity; so is an
+  approximate result that would become `0` or a subnormal number although the mathematics is not
+  zero (`exp(-746)`, `sqrt(2) * 1e-200 * 1e-200`), because it would have lost its digits
+  (`sqrt(2) - sqrt(2)` is a true `≈ 0`).
+
+#### Limitations
+
+* **Digit width (KL-31).** Exact arithmetic holds numbers of about 38 digits. Equations that
+  need more, such as `(1 ly)^3` or a product of the SI constants entered as numbers
+  (`boltzmann_constant^4 / (planck_constant^3 * speed_of_light^2)`), fail with `overflow`. Powers of ten
+  do not count against this (a number may be written from `1e-10000` to `1e10000`, and a result
+  beyond the range of `f64` is printed from its exact value: `10^-400` is `1e-400`).
+* **Roots need whole exponents of units (KL-32):** `sqrt(4 m)` is refused, `sqrt(4 m2)` is `2 m`.
+  A root is shown in SI base units.
+* **No error bound (KL-33):** an approximate result is the `f64` nearest to the computed value;
+  how far that is from the true value is not stated.
+* **Ambiguous:** `log(x)` alone is refused (natural or decimal?): write
+  `ln`, `lg` or `log10`, `lb` or `log2`, or `log(x, base)`.
+* **Result units are merged and cancelled, never renamed:** `1 m * 1 m` is `1 m^2`,
+  `10 kWh/100km * 250 km` is `25 kWh` and `8.314 J/(mol*K) * 300 K * 1 mol / 1 m3` is
+  `2494.2 J/m^3`. A different symbol stays as it is: `1 J / 1 N` is `J/N`, `km * m` stays
+  `km.m`, and `planck_constant * speed_of_light / 500 nm` keeps `J.m/nm`. Give `--to` (`--to J`, `--to Pa`) for the unit you
+  want; a wrong dimension is an error.
+* **Conversion:** `x.to(UNIT)` converts a value to another unit inside the equation, so you
+  decide where the conversion happens and the units are checked against it: `20 degC.to(K)` is
+  `293.15 K`, `3 m.to(ft)`, `(10 kW * 2 h).to(kW*h)`, `(a + b).to(cm)`; a wrong dimension is an
+  error (`5 m.to(K)`). It binds tighter than `*` and `/`, so `n * molar_gas_constant * T.to(K) / V`
+  is `p V = n R T` with `T` in degrees Celsius. `--to UNIT` does the same for the whole result.
+* **Temperatures:** a point (`20 degC`, `-40 degC`) can be compared and shifted by a difference,
+  not multiplied or divided. Its sign and magnitude keep the scale (`-(40 degC)` is `-40 degC`, `abs(-40 degC)` is `40 degC`). A sum of points in two scales has no clear unit and is refused (`20 degC + 41 degF`); `(20 degC + 41 degF).to(degC)` converts both to the unit first and gives `25 degC`, and a difference of two scales is fine (`100 degF - 20 degC` is `32 delta_degF`); `degC + degC` is `20 degC + 30 degC` = `50 degC` (the second point is read as a rise, ADR-027) while
+  `degC - degC` is a difference (`delta_degC`) and a point minus a kelvin is refused (ADR-027).
+  A computed temperature (`p * V / (n * R)`, dimension K) converts to `K`, `degC` and `degF`, also
+  with `--to`. A kelvin value scales (`2 * 20 degC.to(K)` is `586.3 K`); a Celsius or Fahrenheit
+  point does not (`2 * 20 degC` is refused). A temperature difference is not a temperature
+  (`5 delta_K.to(K)` is refused). A point divided by something that is not a number is a rate of
+  the interval: `20 degC / 2 s` is `10 delta_degC/s` (`--to K/s` for kelvin per second). In a
+  product or a denominator a point is ambiguous (the temperature or a difference?) and refused:
+  `R * 27 degC` and `Ea / (R * 27 degC)` need `27 degC.to(K)`, a heat `cp * m * 20 delta_degC` the
+  `delta_degC`; `20 degC / 300 K` is refused (the temperature, `20 degC.to(K)`, or a difference, `20 delta_degC`?); `(20 degC)^2` is refused too (known limitation KL-35: a decision to keep a silent
+  wrong result out, which may be too strict or wrongly implemented; write `(20 delta_degC)^2`,
+  `20 degC.to(K)^2` or the number alone, `20^2`).
+* **Not units of every trade:** names that mean different things (`ton`, `mt`, `cal`) are
+  `ambiguous_symbol` errors until a config chooses (`--config us-customary`, or your own), and
+  after a number such a name is refused as a variable (`2 ton --var ton=3`); written alone
+  (`ton * 2`) it is reported as an ambiguous unit symbol unless defined with `--var`. `gpm`, `mph` and `rpm` are no units unless a config defines
+  them (see `examples/configs/engineering.toml`). A space between two units is not a product: write
+  `N*m` or `N·m`, not `N m`.
+* **Size:** an equation has at most 4096 characters, 64 levels of parentheses and 512 `--var` definitions.
+
+#### In Python, JavaScript and Excel
+
+The same calculation, the same fields as `--json` and the same text:
+
+```python
+dimvexa.calc("sqrt(2 * dp / rho)", vars={"dp": "50 kPa", "rho": "998 kg/m3"}, to="m/s")
+# {'value': 10.01001502504383, 'unit': 'm/s', 'exact': False, 'rounded': False, 'fraction': None,
+#  'dimension': [0, 1, -1, 0, 0, 0, 0], 'kind': 'plain', 'text': '≈ 10.01001502504383 m/s'}
+dimvexa.calc("1500 m", autoprefix=True)["text"]   # '1.5 km'
+```
+
+```js
+calc("sqrt(2 * dp / rho)", ["dp=50 kPa", "rho=998 kg/m3"], "m/s", "", []);  // an object, same fields
+calc("1500 m", [], "", "", [], { autoprefix: true }).text;                  // "1.5 km"
+```
+
+The options of the command line are the keyword arguments of Python (`exact`, `sci` as `True` or
+1 to 17 digits, `autoprefix`) and the optional `options` object of JavaScript. They change `text`
+(and, for `autoprefix`, the unit and value), never the type of the number. `dimension` is the
+exponents of kg, m, s, A, K, mol, cd. In Excel, `DIMVEXA.CALC(expression, to, [variables],
+[config])` returns the number in the unit you give and `DIMVEXA.CALCTEXT(...)` the text (`excel.md`).
+
 ### Constants: `dimvexa constants`
 
 A **constant** is a named, exact value of a unit with its conditions and its source (ADR-018).
-The built-in ones are the mathematical constant `pi` and the SI defining constants `h_P`, `e`,
-`k_B` and `N_A`; since 2019 their values are exact by definition:
+The built-in ones are the mathematical constant `pi`, the SI defining constants `planck_constant`,
+`elementary_charge`, `boltzmann_constant`, `avogadro_constant` and `speed_of_light`, and the
+`molar_gas_constant` (their product `avogadro_constant * boltzmann_constant`); since 2019 their
+values are exact by definition:
 
 ```console
-$ dimvexa constants k_B
+$ dimvexa constants boltzmann_constant
 # columns: id, name, value, unit, exactness, conditions, source, origin
-k_B	Boltzmann constant	1.380649e-23	J/K	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): k = 1.380 649e-23 J/K	built-in
+boltzmann_constant	Boltzmann constant	1.380649e-23	J/K	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): k = 1.380 649e-23 J/K	built-in
 # exact by the 2019 SI redefinition
 ```
 
@@ -335,7 +540,7 @@ redefined: a user-defined `pi` would silently change every angle. A constant is 
 silently; today `--const` is the only way to use one, and only a constant of a density unit (a
 density) works there: it is the one constant that bridges mass and volume. Constants inside a
 value (`2 pi rad`) work for the dimensionless constants (`pi`), see "Angles and pi"; a constant
-that has a unit (`h_P`) cannot be written in a value.
+that has a unit (`planck_constant`) cannot be written in a value.
 
 ### Example: a unit of your own
 
@@ -390,6 +595,10 @@ Rules for your units:
 - A `[[unit]]` has an `id` (the name you type), an optional `symbol` (printed by `dimvexa units`
   and also accepted when typed) and an optional full `name`, like a shipped unit (ADR-025). Before
   that the key `symbol` was the id: rename it to `id`, an old file is refused with that hint.
+- `autoprefix_below = "g"` (optional) makes `--autoprefix` read a value below 1 of this unit in
+  another unit of the same dimension and its prefixes (`0.5 t` is `500 kg`); the tonne has it.
+  The target must be the unprefixed symbol of a unit with the same dimension that takes SI
+  prefixes (`g`, not `kg`), and the unit itself needs `prefixes = "si"`.
 - A unit may carry an `offset` of its own (ADR-022), see the next example. It needs a plain
   base and `prefixes = "none"`, and it cannot be part of a compound unit.
 - If the base is `measured`, so is the new unit, whatever you state.
@@ -465,13 +674,13 @@ What to know:
    to `deg`, `100 grad` to `deg` and `180 deg` to `rad` carry no error. The decimal is rounded
    once, at the end, to the nearest `f64`. These units are `defined` in `dimvexa units deg`.
 2. **Addition is not defined for values with different exponents.** Combining `pi` with a plain
-   number in a sum (`1 + pi`) is refused with `unrepresentable` (not `overflow`: no integer bound is involved), never approximated. A conversion only
-   multiplies, so this shows up only through the library (`Ratio::checked_add`). The one conversion that adds is a temperature scale with an offset, so `dimvexa convert pi degC degF` is refused (`refused`): use a decimal.
+   number in a sum (`1 + pi`) has no exact value. `dimvexa calc` then gives an approximate value (`≈ 4.14159...`); with `--exact` (or `exact=True`) and in the library it is refused with `unrepresentable` (not `overflow`: no integer bound is involved), never approximated. A conversion only
+   multiplies, so this shows up in `dimvexa calc --exact` (`1 + pi`, `2 * pi * 1 m + 3 m`) and in the library (`Ratio::checked_add`). The one conversion that adds is a temperature scale with an offset, so `dimvexa convert pi degC degF` is refused (`refused`): use a decimal.
 3. **A value may contain `pi`** (ADR-018, step 3). `4pi`, `4π`, `4 pi`, `pi/2`, `1/2*pi`,
    `2*pi^2` and `1/(2*pi)` are all values; so are `4 pi rad deg` and `2 * pi rad deg` written
    with spaces. A value may use `*`, `/`, an integer power `^`, a leading sign and parentheses.
    There is no addition and no other function, and only a constant without a unit (`pi`) can be
-   written in a value: `2*h_P` is refused (`refused`), an unknown name such as `tau` is
+   written in a value: `2*planck_constant` is refused (`refused`), an unknown name such as `tau` is
    `invalid_number`. A constant right after a quotient (`1/2 pi`, `1/2pi`) is
    `ambiguous_expression`: it could be `pi/2` or `1/(2 pi)`, so write `pi/2` or `1/(2*pi)`. Pi stays symbolic, so nothing is rounded on the way in:
 

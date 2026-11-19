@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "dimvexa"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "dimvexa-core",
  "dimvexa-data",
@@ -12,15 +12,7 @@ dependencies = [
 
 [[package]]
 name = "dimvexa-calc"
-version = "0.10.0"
-dependencies = [
- "dimvexa",
- "dimvexa-core",
-]
-
-[[package]]
-name = "dimvexa-cli"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "dimvexa",
  "dimvexa-config",
@@ -29,26 +21,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "dimvexa-cli"
+version = "0.11.0"
+dependencies = [
+ "dimvexa",
+ "dimvexa-calc",
+ "dimvexa-config",
+ "dimvexa-core",
+ "dimvexa-data",
+]
+
+[[package]]
 name = "dimvexa-config"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "dimvexa-core",
 ]
 
 [[package]]
 name = "dimvexa-core"
-version = "0.10.0"
+version = "0.11.0"
 
 [[package]]
 name = "dimvexa-data"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "dimvexa-core",
 ]
 
 [[package]]
 name = "dimvexa-testkit"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "dimvexa",
  "dimvexa-calc",
@@ -59,7 +62,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "dimvexa-core",
 ]

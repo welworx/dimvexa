@@ -19,6 +19,8 @@
 
 **Exact factors. Loud failures. Zero guessing.**
 
+Website: [dimvexa.com](https://dimvexa.com). Documentation: the [user guide](docs/guide.md).
+
 Dimvexa converts units. Every factor is an exact fraction with a cited source, and anything
 ambiguous is an error instead of a guess. It is a Rust library with a command-line tool and
 Python and JavaScript (WASM) bindings.
@@ -47,7 +49,8 @@ error[ambiguous_symbol]: 'ton' is ambiguous: use ton_short or ton_long or tonne,
   units, and mixing them is an error that names the right one.
 - **Fast and precise.** A prepared conversion is a multiply (and an add for temperature scales):
   about 0.5 ns each in a loop, within 1 ulp of the exact answer (2 ulp for temperature scales);
-  see [precision](docs/precision.md) and [benchmarks](docs/benchmarks/history/M0.md).
+  see [precision](docs/precision.md), [how the numbers work](docs/how-numbers-work.md) and
+  [benchmarks](docs/benchmarks/history/M0.md).
 - **Extensible by data.** About 100 units (SI with prefixes, US customary, imperial, pressure,
   energy, power, temperature) in cited tables. Your own names, units and densities go in a
   small config file.
@@ -90,6 +93,29 @@ $ dimvexa convert 1 L kg --const 998.2067kg/m3
 0.9982067 kg
 note: used density --const (998.2067 kg/m3; supplied by the caller on the command line; the conditions are not known; source: none: supplied by the caller; --const)
 ```
+
+## Equations with units: `dimvexa calc`
+
+`dimvexa calc` evaluates an equation with units, exact where the mathematics is exact, and says
+so when it is not (`≈`). The unit of the result follows the arithmetic (`--to` converts it):
+
+```console
+$ dimvexa calc "2 kip/ft * (20 ft)^2 / 8" --to kN*m
+135.58179483314004 kN.m
+$ dimvexa calc "sqrt(9 m2)"
+3 m
+$ dimvexa calc "sqrt(2 m2)"
+≈ 1.4142135623730951 m
+```
+
+Write the values in the equation or name them with `--var`; `x^0.5`, `x^(1/2)` and `sqrt(x)`
+are the same. `sqrt`, `cbrt`, `ln`, `exp`, `log10`, `log2`, `sin`, `cos`, `tan`, `asin`, `atan2`,
+`min`, `max`, `abs` and more work, the SI constants (`planck_constant`, `boltzmann_constant`, `avogadro_constant`, `speed_of_light`, `molar_gas_constant`, `elementary_charge`, `pi`) are built-in
+names, and `--sci` writes the number in scientific notation. The same
+calculation is
+`dimvexa.calc(...)` in Python and `calc(...)` in JavaScript. Convert inside an equation with
+`.to`: `n * molar_gas_constant * T.to(K) / V` with `T` in degrees Celsius (`20 degC.to(K)` is `293.15 K`). What it supports, and its limits, is
+in the [user guide](docs/guide.md#equations-dimvexa-calc).
 
 The [user guide](docs/guide.md) has the full unit list, configs and densities, units of your
 own, the angle limitations and self-update. The Python and WASM bindings have their own

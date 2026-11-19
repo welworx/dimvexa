@@ -1,6 +1,8 @@
 # columns: id, name, value, unit, exactness, conditions, source, origin
 pi	Pi	pi	1	defined	none (defined)	ISO 80000-2:2019, mathematical constants (pi, the ratio of the circumference of a circle to its diameter)	built-in
-h_P	Planck constant	6.62607015e-34	J.s	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): h = 6.626 070 15e-34 J s	built-in
-e	Elementary charge	1.602176634e-19	C	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): e = 1.602 176 634e-19 C	built-in
-k_B	Boltzmann constant	1.380649e-23	J/K	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): k = 1.380 649e-23 J/K	built-in
-N_A	Avogadro constant	6.02214076e23	1/mol	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): N_A = 6.022 140 76e23 1/mol	built-in
+planck_constant	Planck constant	6.62607015e-34	J.s	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): h = 6.626 070 15e-34 J s	built-in
+elementary_charge	Elementary charge	1.602176634e-19	C	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): e = 1.602 176 634e-19 C	built-in
+boltzmann_constant	Boltzmann constant	1.380649e-23	J/K	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): k = 1.380 649e-23 J/K	built-in
+avogadro_constant	Avogadro constant	6.02214076e23	1/mol	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): avogadro_constant = 6.022 140 76e23 1/mol	built-in
+speed_of_light	Speed of light in vacuum	299792458	m/s	defined	none (defined)	BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1 (defining constants): c = 299 792 458 m s^-1	built-in
+molar_gas_constant	Molar gas constant	8.31446261815324	J/(mol.K)	defined	none (defined)	R = avogadro_constant boltzmann_constant, the product of two defining constants (BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 1): 6.022 140 76e23 1/mol x 1.380 649e-23 J/K = 8.314 462 618 153 24 J/(mol K)	built-in

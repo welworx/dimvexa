@@ -1,6 +1,6 @@
 {
- "corpus_id": "abf0a7cc771b2ed4",
- "date_utc": "2026-11-12T09:58:26Z",
+ "corpus_id": "69bf1471279e6d39",
+ "date_utc": "2026-11-18T17:08:11Z",
  "fixture": false,
  "kind": "library",
  "library": {
@@ -9,11 +9,11 @@
  },
  "lockfile": "pinned",
  "machine": {
-  "arch": "x86_64",
-  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "arch": "aarch64",
+  "cpu_model": "Apple M2",
   "governor": null,
-  "logical_cores": 4,
-  "os": "Linux 6.18.44-fc-v378"
+  "logical_cores": 8,
+  "os": "Darwin 25.5.0"
  },
  "modes": {
   "typed": {
@@ -36,49 +36,49 @@
    "affine_temperature": {
     "batch": {
      "1000": {
-      "mad": 0.020999999999999908,
-      "max": 2.096,
-      "median": 1.491,
-      "min": 1.443,
-      "raw": [2.096, 1.61, 1.476, 1.512, 1.483, 1.489, 1.468, 1.501, 1.537, 1.466, 1.491, 1.443, 1.507, 1.496, 1.462],
+      "mad": 0,
+      "max": 0.167,
+      "median": 0.125,
+      "min": 0.083,
+      "raw": [0.125, 0.125, 0.167, 0.084, 0.125, 0.125, 0.125, 0.084, 0.125, 0.125, 0.083, 0.125, 0.125, 0.083, 0.125],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 0.03499999999999992,
-      "max": 1.2028,
-      "median": 1.04186,
-      "min": 0.96121,
-      "raw": [1.20012, 1.06618, 1.02868, 0.98104, 1.01965, 0.96121, 1.2028, 1.0507, 1.04186, 1.00686, 1.15117, 1.04918, 1.0781, 0.9768, 1.02105],
+      "mad": 0,
+      "max": 0.1575,
+      "median": 0.15667,
+      "min": 0.15666,
+      "raw": [0.15708, 0.15667, 0.15708, 0.15667, 0.15709, 0.15667, 0.15667, 0.15667, 0.1575, 0.15667, 0.15666, 0.15667, 0.15667, 0.15666, 0.15667],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 0.029676000000000036,
-      "max": 0.79365,
-      "median": 0.738279,
-      "min": 0.708603,
-      "raw": [0.708603, 0.738279, 0.79365, 0.769854, 0.721767],
+      "mad": 0.0008330000000000004,
+      "max": 0.165291,
+      "median": 0.16425,
+      "min": 0.159833,
+      "raw": [0.16425, 0.165291, 0.159833, 0.165083, 0.163417],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.04759882017970085,
-     "max": 0.6187995858490467,
-     "median": 0.41486507281661034,
-     "min": 0.35112908482551575,
-     "raw": [0.4055602662265301, 0.4150005429983139, 0.40498053282499313, 0.39698056876659393, 0.35112908482551575, 0.3672662526369095, 0.5941143445670605, 0.5039135739207268, 0.38069506734609604, 0.3979462869465351, 0.41486507281661034, 0.6187995858490467, 0.49077505618333817, 0.5620950870215893, 0.5660219490528107],
+     "mad": 0.0004434660077095032,
+     "max": 0.32960375025868416,
+     "median": 0.2953754737973213,
+     "min": 0.2940394915640354,
+     "raw": [0.2958189398050308, 0.29646480828523636, 0.29583151265978813, 0.2956010103225708, 0.2953754737973213, 0.2952897921204567, 0.2951732203364372, 0.29500356689095497, 0.2954254560172558, 0.29484011605381966, 0.32960375025868416, 0.2966400533914566, 0.2951671667397022, 0.2940394915640354, 0.29463398456573486],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "scalar": {
-     "mad": 0.060136422514915466,
-     "max": 0.9951883554458618,
-     "median": 0.7209805995225906,
-     "min": 0.6382186710834503,
-     "raw": [0.9951883554458618, 0.7209805995225906, 0.6953867971897125, 0.8188493847846985, 0.6892725825309753, 0.7957914620637894, 0.6849451810121536, 0.6809263974428177, 0.6608441770076752, 0.789252370595932, 0.6382186710834503, 0.6758610606193542, 0.7529083788394928, 0.944194495677948, 0.8142987191677094],
+     "mad": 0.0009800642728805542,
+     "max": 0.4811553880572319,
+     "median": 0.4581284373998642,
+     "min": 0.4567441865801811,
+     "raw": [0.45766929537057877, 0.4589942619204521, 0.4706379622220993, 0.45771928131580353, 0.45714837312698364, 0.4567441865801811, 0.46351707726716995, 0.4581284373998642, 0.46105217188596725, 0.45771803706884384, 0.45699626207351685, 0.4582001492381096, 0.4628986716270447, 0.45759230852127075, 0.4811553880572319],
      "samples": 15,
      "unit": "ns"
     }
@@ -90,49 +90,49 @@
    "linear_pressure": {
     "batch": {
      "1000": {
-      "mad": 0.0010000000000000009,
-      "max": 0.736,
-      "median": 0.702,
-      "min": 0.698,
-      "raw": [0.736, 0.717, 0.701, 0.702, 0.702, 0.701, 0.703, 0.701, 0.704, 0.703, 0.701, 0.701, 0.703, 0.698, 0.698],
+      "mad": 0,
+      "max": 0.167,
+      "median": 0.125,
+      "min": 0.125,
+      "raw": [0.125, 0.167, 0.167, 0.166, 0.125, 0.125, 0.167, 0.167, 0.125, 0.125, 0.125, 0.167, 0.167, 0.125, 0.125],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 0.0013400000000000079,
-      "max": 0.95672,
-      "median": 0.71492,
-      "min": 0.71321,
-      "raw": [0.95672, 0.71431, 0.71321, 0.71327, 0.85247, 0.71434, 0.71326, 0.71492, 0.71589, 0.756, 0.71432, 0.71358, 0.71496, 0.71515, 0.71705],
+      "mad": 0.002909999999999996,
+      "max": 0.18583,
+      "median": 0.17958,
+      "min": 0.17375,
+      "raw": [0.18167, 0.17667, 0.17708, 0.17958, 0.18583, 0.18084, 0.17375, 0.1775, 0.18042, 0.1825, 0.17958, 0.17458, 0.175, 0.175, 0.1825],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 0.0008520000000000749,
-      "max": 0.699486,
-      "median": 0.683537,
-      "min": 0.677464,
-      "raw": [0.683537, 0.677464, 0.683116, 0.684389, 0.699486],
+      "mad": 0.0007500000000000007,
+      "max": 0.173167,
+      "median": 0.172417,
+      "min": 0.170542,
+      "raw": [0.171542, 0.173166, 0.170542, 0.173167, 0.172417],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.03325186297297478,
-     "max": 0.5201203152537346,
-     "median": 0.3718561641871929,
-     "min": 0.3382824622094631,
-     "raw": [0.352176945656538, 0.33976442366838455, 0.33860430121421814, 0.3382824622094631, 0.3696770928800106, 0.39142101630568504, 0.48920873925089836, 0.5201203152537346, 0.5032673329114914, 0.4591623581945896, 0.43348677083849907, 0.4148455746471882, 0.3718561641871929, 0.3559381477534771, 0.36047542095184326],
+     "mad": 0.0007393136620521545,
+     "max": 0.4536346532404423,
+     "median": 0.29567722231149673,
+     "min": 0.2945302985608578,
+     "raw": [0.3093656450510025, 0.3021441698074341, 0.29540713876485825, 0.29567722231149673, 0.29507651925086975, 0.29951753094792366, 0.29595863446593285, 0.29655173420906067, 0.4536346532404423, 0.29587342217564583, 0.2945302985608578, 0.2952038012444973, 0.2949379086494446, 0.29498354345560074, 0.2948998808860779],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "scalar": {
-     "mad": 0.01435069739818573,
-     "max": 1.40926893055439,
-     "median": 1.3863495588302612,
-     "min": 1.349411204457283,
-     "raw": [1.3686930686235428, 1.4024894833564758, 1.378339171409607, 1.3873941749334335, 1.3949345797300339, 1.3943628072738647, 1.3662045150995255, 1.400700256228447, 1.4064885824918747, 1.3812457621097565, 1.3863495588302612, 1.3638194352388382, 1.40926893055439, 1.3820544630289078, 1.349411204457283],
+     "mad": 0.2311725839972496,
+     "max": 1.795968346297741,
+     "median": 0.9646083563566208,
+     "min": 0.4883725196123123,
+     "raw": [0.8629312068223953, 1.7018547877669334, 1.795968346297741, 0.936616525053978, 0.9646083563566208, 1.5976152643561363, 1.149590127170086, 1.0011214762926102, 0.7334357723593712, 1.0159704834222794, 0.4939644858241081, 0.5436244755983353, 1.7049874439835548, 0.4883725196123123, 0.8720910847187042],
      "samples": 15,
      "unit": "ns"
     }
@@ -140,49 +140,49 @@
    "linear_speed": {
     "batch": {
      "1000": {
-      "mad": 0.0009999999999999731,
-      "max": 0.28,
-      "median": 0.204,
-      "min": 0.202,
-      "raw": [0.28, 0.253, 0.204, 0.202, 0.205, 0.204, 0.204, 0.205, 0.203, 0.202, 0.203, 0.204, 0.204, 0.205, 0.203],
+      "mad": 0,
+      "max": 0.125,
+      "median": 0.125,
+      "min": 0.083,
+      "raw": [0.125, 0.083, 0.125, 0.125, 0.125, 0.083, 0.125, 0.125, 0.083, 0.083, 0.125, 0.125, 0.084, 0.084, 0.125],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 0.002270000000000022,
-      "max": 1.6276,
-      "median": 0.20533,
-      "min": 0.20144,
-      "raw": [0.25316, 0.20144, 0.20453, 0.20392, 0.205, 0.20306, 0.20533, 0.20589, 0.20798, 1.6276, 0.34421, 0.22268, 0.20626, 0.20521, 0.20301],
+      "mad": 0.0004200000000000037,
+      "max": 0.15792,
+      "median": 0.15625,
+      "min": 0.15542,
+      "raw": [0.15792, 0.15625, 0.15583, 0.15667, 0.15584, 0.15667, 0.15708, 0.15583, 0.15667, 0.15667, 0.15666, 0.15542, 0.15625, 0.15625, 0.15625],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 0.03091299999999997,
-      "max": 0.655295,
-      "median": 0.624382,
-      "min": 0.567994,
-      "raw": [0.568887, 0.624382, 0.624419, 0.567994, 0.655295],
+      "mad": 0.0006249999999999867,
+      "max": 0.159333,
+      "median": 0.157125,
+      "min": 0.1565,
+      "raw": [0.159333, 0.157792, 0.157125, 0.156833, 0.1565],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.05930783227086067,
-     "max": 0.5157627537846565,
-     "median": 0.42628030106425285,
-     "min": 0.3491603918373585,
-     "raw": [0.4012908637523651, 0.42628030106425285, 0.3669724687933922, 0.3667023368179798, 0.5157627537846565, 0.3491603918373585, 0.4602743685245514, 0.49257251620292664, 0.5124082900583744, 0.5021127872169018, 0.44289908185601234, 0.38410238176584244, 0.491853728890419, 0.39410869404673576, 0.37320202216506004],
+     "mad": 0.0006797127425670624,
+     "max": 0.4041600041091442,
+     "median": 0.29591595381498337,
+     "min": 0.295104306191206,
+     "raw": [0.30817433074116707, 0.2958085387945175, 0.30282434448599815, 0.29591595381498337, 0.295104306191206, 0.2954048104584217, 0.2952362410724163, 0.29533651471138, 0.3038705326616764, 0.31225600466132164, 0.4041600041091442, 0.30512377992272377, 0.2960090823471546, 0.29590337723493576, 0.295435544103384],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "scalar": {
-     "mad": 0.12425091862678528,
-     "max": 0.7213183790445328,
-     "median": 0.5970674604177475,
-     "min": 0.4293733388185501,
-     "raw": [0.7213183790445328, 0.6970803812146187, 0.6762619316577911, 0.6862614378333092, 0.6780014187097549, 0.6812428385019302, 0.6805352568626404, 0.461560882627964, 0.43103834986686707, 0.4340709000825882, 0.4317006319761276, 0.4293733388185501, 0.4396081417798996, 0.43911195546388626, 0.5970674604177475],
+     "mad": 0.15474452823400497,
+     "max": 1.0341666638851166,
+     "median": 0.5696667358279228,
+     "min": 0.39260275661945343,
+     "raw": [0.41492220759391785, 0.5508981049060822, 0.39260275661945343, 0.42797159403562546, 0.4585546776652336, 0.5696667358279228, 0.9243950843811035, 0.9839522391557693, 0.7402288466691971, 0.6989690810441971, 0.47406957298517227, 1.0341666638851166, 0.8684390559792519, 0.7620627731084824, 0.4365658387541771],
      "samples": 15,
      "unit": "ns"
     }
@@ -200,12 +200,12 @@
    "accuracy": {
     "answered": 33,
     "bit_identical": 14,
-    "cases": 245,
+    "cases": 302,
     "max_ulp": 4409024035195715600,
     "median_ulp": 4,
     "over_1_ulp": 18,
     "tolerance_ulp": 4,
-    "unsupported": 212,
+    "unsupported": 269,
     "worst": [],
     "wrong": 15
    },
@@ -946,15 +946,357 @@
       "outcome": "unsupported"
      },
      {
-      "category": "compound",
+      "category": "dimvexa_vector",
       "detail": "no typed unit pair compiled for this request",
       "id": "dv-common-069",
       "outcome": "unsupported"
      },
      {
-      "category": "compound",
+      "category": "dimvexa_vector",
       "detail": "no typed unit pair compiled for this request",
       "id": "dv-common-070",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-071",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-072",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-073",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-074",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-075",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-076",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-077",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-078",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-079",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-080",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-081",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-082",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-083",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-084",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-085",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-086",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-087",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-088",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-089",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-090",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-091",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-092",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-093",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-094",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-095",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-096",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-097",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-098",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-099",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-100",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-101",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-102",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-103",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-104",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-105",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-106",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-107",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-108",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-109",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-110",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-111",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-112",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-113",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-114",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-115",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-116",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-117",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-119",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-120",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-121",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-122",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-123",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-124",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-125",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-126",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-127",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "no typed unit pair compiled for this request",
+      "id": "dv-common-128",
       "outcome": "unsupported"
      },
      {
@@ -1939,8 +2281,8 @@
     },
     "dimvexa_seed_table": {
      "known": 10,
-     "total": 107,
-     "unknown": ["g", "s", "A", "mol", "cd", "Hz", "N", "J", "W", "C", "V", "ohm", "F", "S", "Wb", "T", "H", "min", "h", "d", "L", "tonne", "Wh", "delta_K", "delta_degC", "ar", "ha", "au", "angstrom", "Bq", "Gy", "Sv", "lm", "lx", "kat", "rad", "deg", "arcmin", "arcsec", "eV", "Da", "bar", "atm", "g_n", "lbf", "mmHg", "torr", "cal_th", "cal_IT", "Btu_IT", "Btu_th", "hp_mech", "hp_metric", "yd", "nmi", "ft_us_survey", "mi_us_survey", "oz_av", "oz_troy", "ton_short", "ton_long", "gal_us", "gal_imp", "pt_us", "pt_imp", "lbmol", "degR", "delta_degF", "delta_degR", "week", "yr_common", "yr_julian", "ly", "acre_int", "acre_us_survey", "kn", "fl_oz_us", "cup_us", "qt_us", "tbsp_us", "tsp_us", "fl_oz_imp", "qt_imp", "grain", "carat", "erg", "dyn", "kgf", "grad", "P", "St", "bbl", "psig", "barg", "Pag", "Nm3", "scf"]
+     "total": 165,
+     "unknown": ["g", "s", "A", "mol", "cd", "Hz", "N", "J", "W", "C", "V", "ohm", "F", "S", "Wb", "T", "H", "min", "h", "d", "L", "tonne", "Wh", "delta_K", "delta_degC", "ar", "ha", "au", "angstrom", "Bq", "Gy", "Sv", "lm", "lx", "kat", "rad", "deg", "arcmin", "arcsec", "eV", "Da", "bar", "atm", "g_n", "lbf", "mmHg", "torr", "cal_th", "cal_IT", "Btu_IT", "Btu_th", "hp_mech", "hp_metric", "yd", "nmi", "ft_us_survey", "mi_us_survey", "oz_av", "oz_troy", "ton_short", "ton_long", "gal_us", "gal_imp", "pt_us", "pt_imp", "lbmol", "degR", "delta_degF", "delta_degR", "week", "yr_common", "yr_julian", "ly", "acre_int", "acre_us_survey", "kn", "fl_oz_us", "cup_us", "qt_us", "tbsp_us", "tsp_us", "fl_oz_imp", "qt_imp", "grain", "carat", "erg", "dyn", "kgf", "grad", "P", "St", "bbl", "twip", "thou", "barleycorn", "hand", "link_int", "rod_int", "chain_int", "furlong_int", "league_int", "fathom_ft", "fathom_nmi", "cable_int", "perch_sq", "rood", "gill_imp", "peck_imp", "bushel_imp", "quarter_vol_imp", "minim_imp", "scruple_fl_imp", "drachm_fl_imp", "dram_av", "stone", "quarter_mass_imp", "cwt_long", "slug", "mil", "link_us_survey", "rod_us_survey", "chain_us_survey", "furlong_us_survey", "minim_us", "fl_dr_us", "gill_us", "bu_us", "pk_us", "qt_us_dry", "pt_us_dry", "acre_ft_us_survey", "cord", "cwt_short", "dwt", "lb_troy", "scruple_ap", "dram_ap", "ozf", "kip", "pdl", "board_ft", "bbl_us_dry", "fathom_us_survey", "cable_us_survey", "ton_refrigeration", "inHg", "cmHg", "ftHg", "cmWC", "inWC", "ftWC", "bbl_beer_us", "section_us_survey", "township_us_survey", "cable_ft"]
     },
     "imperial_us": {
      "known": 4,
@@ -1977,8 +2319,8 @@
     "by_category": {
     },
     "correct": 18,
-    "total": 245,
-    "unsupported": 212,
+    "total": 302,
+    "unsupported": 269,
     "wrong_value": 15
    },
    "must_refuse": {
@@ -1993,7 +2335,7 @@
  },
  "startup": {
   "import_ms": null,
-  "package_bytes": 3826392,
-  "peak_rss_kb": 19404
+  "package_bytes": 697776,
+  "peak_rss_kb": null
  }
 }

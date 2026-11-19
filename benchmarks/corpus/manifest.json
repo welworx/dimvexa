@@ -1,20 +1,20 @@
 {
- "corpus_id": "abf0a7cc771b2ed4",
+ "corpus_id": "69bf1471279e6d39",
  "counts": {
   "coverage_lists": 8,
-  "coverage_units": 221,
-  "dimvexa_vectors_cross_checked_by_oracle": 69,
+  "coverage_units": 279,
+  "dimvexa_vectors_cross_checked_by_oracle": 66,
   "dimvexa_vectors_skipped_irrational": 2,
-  "must_convert": 245,
-  "must_convert_approximate": 2,
+  "must_convert": 302,
+  "must_convert_approximate": 3,
   "must_convert_independent": 40,
   "must_refuse": 30
  },
- "dimvexa_data_hash": "fnv1a64:4650355d84607807",
- "dimvexa_data_version": 19,
+ "dimvexa_data_hash": "fnv1a64:0d2268d44330c306",
+ "dimvexa_data_version": 32,
  "files": {
-  "coverage.json": "149774c2afa5b067b505f82432280bd59ff48261dd1026139416776c6527eb2c",
-  "must_convert.json": "010dd39d819f644ebb22bca6a0f66f53deb7f08c6a2c53f2e24ecda5df9d0ad1",
+  "coverage.json": "8cf2cf5be718a4c936007af6db6d50a8821674b625285d3913a7a8fa698505a3",
+  "must_convert.json": "c0d2c993bc1658ecb1b6217de1c22209e5f59f83eeba73b5f02e7e3a3cd4131f",
   "must_refuse.json": "c18a7a82fc969245a65bea752f9c12510ccc3930f6d98d93fe0aa7c899c23eac",
   "perf.json": "704e7b31b05011a7fa086f664933800d184dfb07df9ee511451017781e1e777c"
  },

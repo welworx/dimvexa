@@ -16,13 +16,17 @@ const d = require('@dimvexa/wasm');   // after `npm install @dimvexa/wasm`; loca
 d.convert(212, 'degF', 'degC');            // 100  (fast path, f64)
 d.convertExact('98.6', 'degF', 'degC');    // 37   (exact rational, rounded once)
 d.convertQuantity('5 ft', 'm');            // "1.524 m"
+// An equation with units (ADR-030): exact when the mathematics is, `≈` when it is not
+d.calc('sqrt(9 m2)', [], '', '', []);       // { value: 3, unit: 'm', exact: true, text: '3 m' }
+d.calc('Cd * A * sqrt(2 * dp / rho)', ['Cd=0.61', 'A=10 cm2', 'dp=50 kPa', 'rho=998 kg/m3'], 'L/s', '', []).text; // "≈ 6.106109165276735 L/s"
+d.calc('1500 m', [], '', '', [], { autoprefix: true }).text;  // "1.5 km"; options: sci (true or 1..17), exact, autoprefix
 d.convertExactWith('4pi', 'rad', 'deg', '', '', []); // 720, with density/config/config texts
 d.convertExact('4pi', 'rad', 'deg');      // 720   (pi stays exact; also 'pi/2', '2*pi^2')
 d.convertWith(1, 'ton', 'kg', '', 'us', []);   // 907.18474 (a shipped config resolves the ambiguous name)
 d.convertWith(1, 'L', 'kg', '998.2067kg/m3', '', []);  // 0.9982067 (your own density; never assumed)
 d.convertWith(1, 'L', 'kg', 'water_25C', 'water', []); // a density from a loaded config
 d.convertWith(1, 'L', 'kg', 'rho', '', [tomlText]);   // your own config file, passed as TOML text
-d.constants('water', [tomlText]);  // built-in constants (pi, h_P, e, k_B, N_A), then the configs'
+d.constants('water', [tomlText]);  // built-in constants (pi, planck_constant, elementary_charge, boltzmann_constant, avogadro_constant, speed_of_light, molar_gas_constant), then the configs'
 
 const c = new d.DimvexaConversion('m/s', 'km/h');   // parse and compose once
 c.apply(10);                               // 36

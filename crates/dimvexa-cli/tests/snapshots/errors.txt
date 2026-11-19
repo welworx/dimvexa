@@ -47,9 +47,9 @@ $ dimvexa convert 5 K delta_degF --json
 --- stderr
 
 $ dimvexa convert 1 degC/s K/s --json
-[exit 1]
+[exit 0]
 --- stdout
-{"schema":"dimvexa.convert/3","ok":false,"error":{"code":"refused","message":"refused: 'degC' has an offset (temperature scale) and cannot be part of a compound unit; use the difference unit delta_degC for a temperature difference","suggestions":["delta_degC"]}}
+{"schema":"dimvexa.convert/3","ok":true,"input":{"value":"1","unit":"delta_degC/s"},"output":{"value":"1","unit":"K/s","f64":1,"truncated":false},"exact":{"value":"1/1","decimal":"1","factor":"1/1","offset":"0/1"},"exactness":"defined","dimension":[0,0,-1,0,1,0,0],"kind":"linear","quantity_kind":"plain","packs":["base","common"],"data_version":"v32+fnv1a64:0d2268d44330c306","sources":["BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 4, note (f) (degree Celsius, temperature intervals)","BIPM SI Brochure, 9th ed. (2019), ch. 2, Table 2 (SI base units)"],"config":[],"density":null,"warnings":[]}
 --- stderr
 
 $ dimvexa convert 1 ppm 1
@@ -66,6 +66,7 @@ error[usage]: expected VALUE FROM TO, got 2 argument(s); try 'dimvexa --help'
 
 Usage:
   dimvexa [convert] VALUE FROM TO [OPTIONS]
+  dimvexa calc EXPRESSION [--var NAME=VALUE]... [--to UNIT] [OPTIONS]
   dimvexa units [--groups | GROUP | UNIT] [--json]
   dimvexa configs [NAME_OR_PATH] [--json]
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json]

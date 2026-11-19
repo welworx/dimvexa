@@ -34,7 +34,7 @@ impl Ratio {
     /// # Errors
     ///
     /// [`Error::InvalidNumber`] for anything that is not a value, including an unknown name;
-    /// [`Error::Refused`] for a constant that has a unit (`h_P`), since a value is a number;
+    /// [`Error::Refused`] for a constant that has a unit (`planck_constant`), since a value is a number;
     /// [`Error::DivisionByZero`] and [`Error::Overflow`] from the arithmetic.
     ///
     /// # Examples
@@ -323,7 +323,10 @@ mod tests {
     }
 
     fn table() -> Vec<ConstantDef> {
-        vec![def("pi", "1", (0, 1)), def("h_P", "J.s", (-34, 0))]
+        vec![
+            def("pi", "1", (0, 1)),
+            def("planck_constant", "J.s", (-34, 0)),
+        ]
     }
 
     fn val(s: &str) -> Result<Ratio> {
@@ -404,12 +407,15 @@ mod tests {
         }
         assert_eq!(val("1/0"), Err(Error::DivisionByZero));
         assert_eq!(val("pi/0"), Err(Error::DivisionByZero));
-        assert!(matches!(val("2*h_P"), Err(Error::Refused { .. })));
+        assert!(matches!(
+            val("2*planck_constant"),
+            Err(Error::Refused { .. })
+        ));
         assert!(matches!(val("0^0"), Err(Error::Refused { .. })));
         assert_eq!(val("0^2").unwrap(), Ratio::ZERO);
         assert_eq!(val("2^0").unwrap(), Ratio::ONE);
         // a constant with a unit never continues a value by juxtaposition: `2e` is a typo
-        for text in ["2 h_P", "2e", "2 e"] {
+        for text in ["2 planck_constant", "2e", "2 e"] {
             assert!(
                 matches!(val(text), Err(Error::InvalidNumber { .. })),
                 "{text:?}"

@@ -724,7 +724,7 @@ fn a_constant_is_a_density_only_if_its_unit_is_one() {
 #[test]
 fn a_config_cannot_redefine_a_built_in_constant() {
     let builtin: Vec<&str> = dimvexa_data::CONSTANTS.iter().map(|c| c.id).collect();
-    assert!(builtin.contains(&"pi") && builtin.contains(&"N_A"));
+    assert!(builtin.contains(&"pi") && builtin.contains(&"avogadro_constant"));
     for name in &builtin {
         let c = cfg(&WATER.replace("water_20C", name), "mine.toml");
         let err = dimvexa_config::reject_builtin_constants(&c, &builtin).unwrap_err();
@@ -743,7 +743,19 @@ fn load_builds_the_constants_and_densities_in_one_place() {
     let reg = registry().unwrap();
     let loaded = dimvexa_config::load(reg.clone(), &[cfg(WATER, "w.toml")], builtin).unwrap();
     let names: Vec<&str> = loaded.constants.iter().map(|c| c.id.as_str()).collect();
-    assert_eq!(names, ["pi", "h_P", "e", "k_B", "N_A", "water_20C"]);
+    assert_eq!(
+        names,
+        [
+            "pi",
+            "planck_constant",
+            "elementary_charge",
+            "boltzmann_constant",
+            "avogadro_constant",
+            "speed_of_light",
+            "molar_gas_constant",
+            "water_20C"
+        ]
+    );
     assert_eq!(loaded.densities.len(), 1);
     // A named density, a literal, and the two refusals.
     assert_eq!(
@@ -883,4 +895,40 @@ fn a_config_unit_may_have_a_printed_symbol_and_a_name() {
         .unwrap_err()
         .to_string();
     assert!(err.contains("'m' already means a unit"), "{err}");
+}
+
+/// ADR-028 / review F1: a `[[constant]]` whose value has a far power of ten keeps it. The
+/// symbolic parser used to replace the exponent of the decimal with the written factor, so
+/// `6.62607015e-34` loaded as the number 662607015.
+#[test]
+fn a_constant_with_a_far_decimal_exponent_keeps_its_value() {
+    let constant = |value: &str| {
+        cfg(
+            &format!(
+                "[[constant]]\nid = \"h2\"\nname = \"h2\"\nvalue = \"{value}\"\nunit = \"J.s\"\n\
+                 exactness = \"defined\"\nconditions = \"none\"\nsource = \"test\"\n"
+            ),
+            "h2.toml",
+        )
+        .constants()[0]
+            .clone()
+    };
+    let planck = Ratio::parse_symbolic("6.62607015 10^-34").unwrap();
+    for text in [
+        "6.62607015e-34",
+        "6.62607015 10^-34",
+        "662607015 10^-42",
+        "6.62607015e-34 10^0",
+    ] {
+        let c = constant(text);
+        assert!(c.value.checked_eq(planck).unwrap(), "{text}: {:?}", c.value);
+    }
+    assert_eq!(constant("6.62607015e-34").value_text(), "6.62607015e-34");
+    // a far coefficient and an explicit factor add up
+    let c = constant("1e-50 10^7");
+    assert!(
+        c.value
+            .checked_eq(Ratio::parse_symbolic("1 10^-43").unwrap())
+            .unwrap()
+    );
 }

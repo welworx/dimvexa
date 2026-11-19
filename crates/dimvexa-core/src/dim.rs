@@ -108,11 +108,16 @@ impl Dim {
     ///
     /// # Errors
     ///
-    /// [`Error::Overflow`] if an exponent leaves the `i8` range.
+    /// [`Error::Overflow`] if an exponent leaves the `i8` range (a dimensionless value has no
+    /// exponents to scale, so any `n` is fine for it).
     pub fn checked_scale(self, n: i32) -> Result<Self> {
         let overflow = || Error::Overflow {
             operation: "dimension scale",
         };
+        if self.is_dimensionless() {
+            // a plain number to any power (`1.05^360`) has no exponents to keep in the `i8`s
+            return Ok(self);
+        }
         let n = i8::try_from(n).map_err(|_| overflow())?;
         let [a0, a1, a2, a3, a4, a5, a6] = self.0;
         let m = |a: i8| a.checked_mul(n);

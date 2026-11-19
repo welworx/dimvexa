@@ -6,4 +6,5 @@
 dimvexa = { path = "../../crates/dimvexa" }
 dimvexa-core = { path = "../../crates/dimvexa-core" }
 dimvexa-data = { path = "../../crates/dimvexa-data" }
+dimvexa-calc = { path = "../../crates/dimvexa-calc" }
 dimvexa-config = { path = "../../crates/dimvexa-config" }

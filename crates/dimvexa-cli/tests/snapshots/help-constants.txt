@@ -4,14 +4,15 @@ Usage:
   dimvexa constants [NAME] [--config NAME_OR_PATH]... [--json | --pretty]
 
 A constant is an exact value of a unit with its conditions and source; nothing
-is rounded and nothing is applied unless you ask. The built-in ones (pi, h_P,
-e, k_B, N_A) cannot be redefined by a config. A config adds its own with
-[[constant]]; a constant of a density unit is what --const uses for mass <->
-volume.
+is rounded and nothing is applied unless you ask. The built-in ones (pi,
+planck_constant, elementary_charge, boltzmann_constant, avogadro_constant,
+speed_of_light, molar_gas_constant) cannot be redefined by a config. A config
+adds its own with [[constant]]; a constant of a density unit is what --const
+uses for mass <-> volume.
 
 Examples:
   dimvexa constants
-  dimvexa constants k_B
+  dimvexa constants boltzmann_constant
   dimvexa constants --config water --json
 
 Forms:

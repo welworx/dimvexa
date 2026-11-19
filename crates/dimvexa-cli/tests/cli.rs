@@ -204,9 +204,17 @@ fn every_error_code_has_a_cli_test() {
             "ambiguous_expression",
             1,
         ),
-        (&["convert", "1", "degC/s", "K/s"], "refused", 1),
-        (&["convert", "1", "Qm2", "qm2"], "overflow", 1),
+        (&["convert", "1", "psig", "psi"], "refused", 1),
+        (&["convert", "1", "ly3", "m3"], "overflow", 1),
         (&["convert", "1", "m"], "usage", 2),
+        // `calc` reaches the codes of a sum and a quotient (ADR-030)
+        (&["calc", "1 + pi", "--exact"], "unrepresentable", 1),
+        (&["calc", "1 m / 0 s"], "division_by_zero", 1),
+        (&["calc", "1 m + 1 s"], "dimension_mismatch", 1),
+        (&["calc", "1 +"], "parse_error", 1),
+        (&["calc", "(1 ly)^3"], "overflow", 1),
+        (&["calc", "log(100)"], "refused", 1),
+        (&["calc"], "usage", 2),
     ];
     for (args, code, exit) in cases {
         // text mode: message on stderr, nothing on stdout
@@ -244,15 +252,11 @@ fn every_error_code_has_a_cli_test() {
             "ambiguous_expression",
             "refused",
             "overflow",
+            "division_by_zero",
+            "unrepresentable",
         ];
         // Codes that need a malformed registry or internal state cannot be triggered from the CLI.
-        let not_reachable = [
-            "division_by_zero",
-            "length_mismatch",
-            "unrepresentable", // only a sum or an order of unlike exponents, never from the CLI
-            "invalid_definition",
-            "duplicate_symbol",
-        ];
+        let not_reachable = ["length_mismatch", "invalid_definition", "duplicate_symbol"];
         assert!(
             covered.contains(code) || not_reachable.contains(code),
             "uncovered error code {code}"
@@ -288,10 +292,39 @@ fn error_snapshots() {
     snapshot("errors.txt", &text);
 }
 
+/// A command line split into words like a shell does: on spaces, with `"` quoting a part of a
+/// word (`--var dp="50 kPa"` is two words). Enough for the examples of the help pages.
+fn shell_words(line: &str) -> Vec<String> {
+    let (mut words, mut word, mut quoted, mut started) = (Vec::new(), String::new(), false, false);
+    for c in line.chars() {
+        match c {
+            '"' => {
+                quoted = !quoted;
+                started = true;
+            }
+            c if c.is_whitespace() && !quoted => {
+                if started {
+                    words.push(std::mem::take(&mut word));
+                    started = false;
+                }
+            }
+            c => {
+                word.push(c);
+                started = true;
+            }
+        }
+    }
+    if started {
+        words.push(word);
+    }
+    words
+}
+
 /// The help pages: the overview and one per command, by every spelling that reaches them.
-const HELP_PAGES: [&[&str]; 6] = [
+const HELP_PAGES: [&[&str]; 7] = [
     &["--help"],
     &["convert", "--help"],
+    &["calc", "--help"],
     &["units", "--help"],
     &["configs", "--help"],
     &["constants", "--help"],
@@ -323,7 +356,7 @@ fn help_examples_run_from_an_empty_directory() {
             if line.starts_with("  dimvexa update") {
                 continue;
             }
-            let args: Vec<&str> = line.split_whitespace().skip(1).collect();
+            let args: Vec<String> = shell_words(line).into_iter().skip(1).collect();
             let out = Command::new(env!("CARGO_BIN_EXE_dimvexa"))
                 .args(&args)
                 .current_dir(&dir)
@@ -349,7 +382,7 @@ fn help_examples_run_from_an_empty_directory() {
 #[test]
 fn per_command_help() {
     let overview = dimvexa(&["--help"]).stdout;
-    for cmd in ["convert", "units", "configs", "constants", "update"] {
+    for cmd in ["convert", "calc", "units", "configs", "constants", "update"] {
         let page = dimvexa(&[cmd, "--help"]);
         assert_eq!(page.code, 0, "{cmd}");
         assert!(
@@ -730,7 +763,8 @@ fn readme_console_examples_are_real() {
                 continue;
             };
             let cmd = cmd.split(" #").next().unwrap().trim_end();
-            let args: Vec<&str> = cmd.split_whitespace().collect();
+            let words = shell_words(cmd);
+            let args: Vec<&str> = words.iter().map(String::as_str).collect();
             let r = dimvexa_at_root(&args);
             let mut shown = String::new();
             while let Some(out) = lines.next_if(|l| !l.starts_with('$')) {
@@ -1941,11 +1975,12 @@ fn outputs_validate_against_the_schema_files() {
         json::parse(&std::fs::read_to_string(repo_root().join("docs/schemas").join(name)).unwrap())
             .unwrap()
     };
-    let (convert, units, configs, constants) = (
+    let (convert, units, configs, constants, calc) = (
         schema("dimvexa.convert-3.schema.json"),
         schema("dimvexa.units-5.schema.json"),
         schema("dimvexa.configs-3.schema.json"),
         schema("dimvexa.constants-1.schema.json"),
+        schema("dimvexa.calc-1.schema.json"),
     );
     let cfg = config_file("schema_check.toml", TRADE);
     let w = ["--config", WATER_CFG, "--const", "water_20C"];
@@ -2048,10 +2083,43 @@ fn outputs_validate_against_the_schema_files() {
         (&configs, vec!["configs", "nope", "--json"]),
         (&configs, vec!["configs", "a", "b", "--json"]),
         (&constants, vec!["constants", "--json"]),
-        (&constants, vec!["constants", "h_P", "--json"]),
+        (&constants, vec!["constants", "planck_constant", "--json"]),
         (&constants, vec!["constants", "--json", "--config", "water"]),
         (&constants, vec!["constants", "nope", "--json"]),
         (&constants, vec!["constants", "a", "b", "--json"]),
+        // `calc`: exact, approximate, with names, with a config, and every kind of failure
+        (&calc, vec!["calc", "2 m * 3 m", "--json"]),
+        (&calc, vec!["calc", "sqrt(2 m2)", "--to", "cm", "--json"]),
+        (
+            &calc,
+            vec![
+                "calc",
+                "a * sqrt(2 * dp / rho)",
+                "--var",
+                "a=10 cm2",
+                "--var",
+                "dp=50 kPa",
+                "--var",
+                "rho=998 kg/m3",
+                "--to",
+                "L/s",
+                "--json",
+            ],
+        ),
+        (
+            &calc,
+            vec![
+                "calc",
+                "1 ton * 1 g_n",
+                "--json",
+                "--config",
+                "us-customary",
+            ],
+        ),
+        (&calc, vec!["calc", "1 m + 1 s", "--json"]),
+        (&calc, vec!["calc", "1 +", "--json"]),
+        (&calc, vec!["calc", "--json"]),
+        (&calc, vec!["calc", "1 m", "--var", "bad", "--json"]),
     ];
     for (schema, args) in cases {
         let r = dimvexa_at_root(&args);
@@ -2124,12 +2192,18 @@ fn known_limitation_kl_17_a_unit_named_like_a_group_is_shadowed_by_the_group() {
     );
 }
 
-/// KL-18: `--` is not supported, and an unknown short option is read as a value.
+/// KL-18: `--` ends the options (fixed with `calc`, so an expression may be `-h`), but an
+/// unknown short option is still read as a value.
 #[test]
 fn known_limitation_kl_18_end_of_options_and_short_options() {
-    let r = dimvexa(&["convert", "1", "m", "km", "--"]);
-    assert_eq!(r.code, 2, "KL-18 fixed? then `--` ends the options");
-    assert!(r.stderr.contains("unknown option '--'"));
+    assert_eq!(
+        dimvexa(&["convert", "1", "m", "km", "--"]).stdout,
+        "0.001 km\n"
+    );
+    assert_eq!(
+        dimvexa(&["convert", "--", "-40", "degC", "degF"]).stdout,
+        "-40 degF\n"
+    );
     let r = dimvexa(&["-x", "m", "km"]);
     assert_eq!(
         (r.code, r.stderr.starts_with("error[invalid_number]")),
@@ -2389,11 +2463,11 @@ fn a_value_with_a_bad_constant_or_operator_is_loud() {
         ("pi/", "invalid_number"),
         ("(pi", "invalid_number"),
         ("pi/0", "division_by_zero"),
-        ("2*h_P", "refused"),
+        ("2*planck_constant", "refused"),
         ("1/2pi", "ambiguous_expression"),
         ("1/2 pi", "ambiguous_expression"),
         ("2e", "invalid_number"),
-        ("2*k_B", "refused"),
+        ("2*boltzmann_constant", "refused"),
     ] {
         let r = dimvexa(&["convert", value, "rad", "deg"]);
         assert_eq!(r.code, 1, "{value}");
@@ -2919,22 +2993,33 @@ fn constants_lists_the_built_in_table_with_exact_values_units_and_sources() {
         .map(|l| l.split('\t').collect())
         .collect();
     let names: Vec<&str> = rows.iter().map(|c| c[0]).collect();
-    assert_eq!(names, ["pi", "h_P", "e", "k_B", "N_A"]);
+    assert_eq!(
+        names,
+        [
+            "pi",
+            "planck_constant",
+            "elementary_charge",
+            "boltzmann_constant",
+            "avogadro_constant",
+            "speed_of_light",
+            "molar_gas_constant"
+        ]
+    );
     snapshot("constants.txt", &r.stdout);
     snapshot("constants.json", &dimvexa(&["constants", "--json"]).stdout);
     let get = |n: &str| rows.iter().find(|c| c[0] == n).unwrap().clone();
     // id, name, value, unit, exactness, conditions, source, origin
     assert_eq!(get("pi")[1..5], ["Pi", "pi", "1", "defined"]);
     assert_eq!(
-        get("h_P")[1..5],
+        get("planck_constant")[1..5],
         ["Planck constant", "6.62607015e-34", "J.s", "defined"]
     );
-    assert_eq!(get("e")[2..4], ["1.602176634e-19", "C"]);
+    assert_eq!(get("elementary_charge")[2..4], ["1.602176634e-19", "C"]);
     assert_eq!(
-        get("k_B")[1..4],
+        get("boltzmann_constant")[1..4],
         ["Boltzmann constant", "1.380649e-23", "J/K"]
     );
-    assert_eq!(get("N_A")[2..4], ["6.02214076e23", "1/mol"]);
+    assert_eq!(get("avogadro_constant")[2..4], ["6.02214076e23", "1/mol"]);
     for c in &rows {
         assert_eq!(c.len(), 8, "{c:?}");
         assert_eq!(c[5], "none (defined)", "{}", c[0]);
@@ -2950,11 +3035,11 @@ fn constants_lists_the_built_in_table_with_exact_values_units_and_sources() {
 
 #[test]
 fn constants_shows_one_constant_with_its_note_and_refuses_an_unknown_name() {
-    let r = dimvexa(&["constants", "h_P"]);
+    let r = dimvexa(&["constants", "planck_constant"]);
     assert_eq!(r.code, 0);
     assert!(
         r.stdout
-            .contains("h_P\tPlanck constant\t6.62607015e-34\tJ.s"),
+            .contains("planck_constant\tPlanck constant\t6.62607015e-34\tJ.s"),
         "{}",
         r.stdout
     );
@@ -2963,12 +3048,12 @@ fn constants_shows_one_constant_with_its_note_and_refuses_an_unknown_name() {
         "{}",
         r.stdout
     );
-    assert!(!r.stdout.contains("k_B"), "{}", r.stdout);
+    assert!(!r.stdout.contains("boltzmann_constant"), "{}", r.stdout);
     let r = dimvexa(&["constants", "nope"]);
     assert_eq!(r.code, 2);
     assert!(
         r.stderr
-            .contains("no constant named 'nope'; known: pi, h_P, e, k_B, N_A"),
+            .contains("no constant named 'nope'; known: pi, planck_constant, elementary_charge, boltzmann_constant, avogadro_constant, speed_of_light, molar_gas_constant"),
         "{}",
         r.stderr
     );
@@ -2979,7 +3064,7 @@ fn constants_shows_one_constant_with_its_note_and_refuses_an_unknown_name() {
 
 #[test]
 fn constants_json_carries_the_exact_value_as_a_string() {
-    let r = dimvexa(&["constants", "h_P", "--json"]);
+    let r = dimvexa(&["constants", "planck_constant", "--json"]);
     let v = json::parse(&r.stdout).unwrap();
     assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.constants/1");
     let c = &v.get("constants").unwrap().as_array()[0];
@@ -3003,10 +3088,12 @@ fn constants_lists_those_of_a_config_after_the_built_in_ones() {
         names,
         [
             "pi",
-            "h_P",
-            "e",
-            "k_B",
-            "N_A",
+            "planck_constant",
+            "elementary_charge",
+            "boltzmann_constant",
+            "avogadro_constant",
+            "speed_of_light",
+            "molar_gas_constant",
             "water_25C",
             "water_max_density"
         ]
@@ -3022,7 +3109,15 @@ fn constants_lists_those_of_a_config_after_the_built_in_ones() {
 /// `pi` cannot be redefined by a config: a user-defined pi would silently change every angle.
 #[test]
 fn a_config_cannot_redefine_a_built_in_constant() {
-    for name in ["pi", "h_P", "e", "k_B", "N_A"] {
+    for name in [
+        "pi",
+        "planck_constant",
+        "elementary_charge",
+        "boltzmann_constant",
+        "avogadro_constant",
+        "speed_of_light",
+        "molar_gas_constant",
+    ] {
         let cfg = config_file(
             &format!("redefine_{name}.toml"),
             &format!(
@@ -3075,7 +3170,7 @@ fn a_config_constant_of_any_unit_is_listed_but_only_a_density_feeds_const() {
         r.stdout
     );
     // --const supplies a density; a constant of another dimension is refused, not guessed.
-    for name in ["gas_R", "h_P"] {
+    for name in ["gas_R", "planck_constant"] {
         let r = dimvexa(&["convert", "1", "L", "kg", "--config", &cfg, "--const", name]);
         assert_eq!(r.code, 2, "{name}");
         assert!(r.stderr.contains("not a density"), "{name}: {}", r.stderr);
@@ -3203,4 +3298,1480 @@ fn json_output_lists_what_a_later_config_replaced() {
             .len(),
         0
     );
+}
+
+// ----- dimvexa calc (ADR-030) ---------------------------------------------------------------
+
+fn calc(args: &[&str]) -> Run {
+    let mut all = vec!["calc"];
+    all.extend_from_slice(args);
+    dimvexa(&all)
+}
+
+/// The result of an equation, exact when the mathematics is exact, with the unit asked for.
+#[test]
+fn calc_prints_an_exact_result_like_convert_and_an_approximate_one_with_a_sign() {
+    let r = calc(&["2 kip/ft * (20 ft)^2 / 8", "--to", "kN*m"]);
+    assert_eq!(
+        (r.code, r.stdout.as_str(), r.stderr.as_str()),
+        (0, "135.58179483314004 kN.m\n", "")
+    );
+    assert_eq!(calc(&["sqrt(9 m2)"]).stdout, "3 m\n");
+    assert_eq!(
+        calc(&["100 kg * 1 g_n * sin(30 deg)", "--to", "N"]).stdout,
+        "490.3325 N\n"
+    );
+    // not a fraction: approximate, and labelled
+    let r = calc(&["sqrt(2 m2)"]);
+    assert_eq!(r.stdout, "≈ 1.4142135623730951 m\n");
+    // a plain number has no unit to print
+    assert_eq!(calc(&["3 m / 2 m"]).stdout, "1.5\n");
+    assert_eq!(calc(&["20 degC + 5 K"]).stdout, "25 degC\n");
+    assert_eq!(calc(&["2 * pi * 1 rad", "--to", "deg"]).stdout, "360 deg\n");
+}
+
+/// Quantities written in the equation and the same equation over `--var` names agree, and
+/// several words are one expression.
+#[test]
+fn calc_inline_quantities_and_named_values_give_the_same_result() {
+    let inline = calc(&[
+        "0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)",
+        "--to",
+        "L/s",
+    ]);
+    let named = calc(&[
+        "Cd * A * sqrt(2 * dp / rho)",
+        "--var",
+        "Cd=0.61",
+        "--var",
+        "A=10 cm2",
+        "--var",
+        "dp=50 kPa",
+        "--var",
+        "rho=998 kg/m3",
+        "--to",
+        "L/s",
+    ]);
+    assert_eq!(inline.code, 0, "{}", inline.stderr);
+    assert_eq!(inline.stdout, "≈ 6.106109165276735 L/s\n");
+    assert_eq!(named.stdout, inline.stdout);
+    // `--var=NAME=VALUE`, a name used twice (the later wins) and a mix of both styles
+    let mixed = calc(&[
+        "Cd * 10 cm2 * sqrt(2 * dp / 998 kg/m3)",
+        "--var=Cd=0.61",
+        "--var",
+        "dp=1 kPa",
+        "--var",
+        "dp=50 kPa",
+        "--to",
+        "L/s",
+    ]);
+    assert_eq!(mixed.stdout, inline.stdout);
+    // words that the shell split are joined with spaces
+    assert_eq!(
+        dimvexa(&["calc", "2", "m", "*", "3", "m", "--to", "cm2"]).stdout,
+        "60000 cm^2\n"
+    );
+}
+
+#[test]
+fn calc_x_to_the_one_half_is_the_square_root() {
+    for expr in ["x^0.5", "x^(1/2)", "sqrt(x)"] {
+        let r = calc(&[expr, "--var", "x=9 m2"]);
+        assert_eq!(r.stdout, "3 m\n", "{expr}");
+    }
+    assert_eq!(calc(&["y^(1/3)", "--var", "y=8"]).stdout, "2\n");
+    assert_eq!(calc(&["y^(2/3)", "--var", "y=8"]).stdout, "4\n");
+}
+
+#[test]
+fn calc_exact_adds_the_fraction_of_an_exact_result() {
+    assert_eq!(
+        calc(&["1 m / 3", "--exact"]).stdout,
+        "1/3 = 0.3333333333333333… m\n"
+    );
+    assert_eq!(calc(&["3 m / 3", "--exact"]).stdout, "1 m\n");
+    // an approximate result has no fraction
+    assert_eq!(
+        calc(&["sqrt(2 m2)", "--exact"]).stdout,
+        "≈ 1.4142135623730951 m\n"
+    );
+}
+
+#[test]
+fn calc_json_has_the_documented_fields() {
+    let v = json::parse(&calc(&["sqrt(8 m2)", "--to", "cm", "--json"]).stdout).unwrap();
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.calc/1");
+    assert!(v.get("ok").unwrap().as_bool());
+    let result = v.get("result").unwrap();
+    assert!(!result.get("exact").unwrap().as_bool());
+    assert_eq!(result.get("fraction").unwrap(), &json::V::Null);
+    assert_eq!(result.get("unit").unwrap().as_str(), "cm");
+    assert_eq!(result.get("kind").unwrap().as_str(), "plain");
+    assert_eq!(result.get("dimension").unwrap().as_array().len(), 7);
+    // an exact result carries its fraction
+    let v = json::parse(&calc(&["1 m / 3", "--json"]).stdout).unwrap();
+    let result = v.get("result").unwrap();
+    assert!(result.get("exact").unwrap().as_bool());
+    assert_eq!(result.get("fraction").unwrap().as_str(), "1/3");
+    // the names are listed in the order given
+    let v = json::parse(&calc(&["a + b", "--var", "a=1 m", "--var", "b=2 m", "--json"]).stdout)
+        .unwrap();
+    let vars = v.get("variables").unwrap().as_array();
+    assert_eq!(vars.len(), 2);
+    assert_eq!(vars[0].get("name").unwrap().as_str(), "a");
+    assert_eq!(vars[1].get("value").unwrap().as_str(), "2 m");
+    assert_eq!(
+        v.get("result").unwrap().get("value").unwrap(),
+        &json::V::Num(3.0)
+    );
+    // --pretty is the same document, indented
+    let pretty = calc(&["1 m + 1 m", "--pretty"]);
+    assert_eq!(pretty.code, 0);
+    assert!(pretty.stdout.lines().count() > 5, "{}", pretty.stdout);
+}
+
+#[test]
+fn calc_failures_use_the_library_codes_and_exit_1() {
+    for (expr, code, needle) in [
+        ("1 m + 1 s", "dimension_mismatch", "cannot be converted"),
+        ("5 PSI", "parse_error", "did you mean the unit psi?"),
+        ("5 foo", "parse_error", "not a unit and not a variable"),
+        ("nothing * 2", "parse_error", "'nothing' is not a variable"),
+        ("1 +", "parse_error", "a value is expected"),
+        ("(1 ly)^3", "overflow", "overflow"),
+        ("1 m / 0 s", "division_by_zero", "division by zero"),
+        ("log(100)", "refused", "ambiguous"),
+        ("sqrt(4 m)", "refused", "KL-32"),
+        ("frobnicate(1)", "refused", "unknown function"),
+    ] {
+        let r = calc(&[expr]);
+        assert_eq!((r.code, r.stdout.as_str()), (1, ""), "{expr}");
+        assert!(
+            r.stderr.starts_with(&format!("error[{code}]: ")),
+            "{expr}: {}",
+            r.stderr
+        );
+        assert!(r.stderr.contains(needle), "{expr}: {}", r.stderr);
+    }
+    // a wrong unit for --to, and a wrong value for --var, say which option
+    let r = calc(&["1 m", "--to", "s"]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.contains("--to s: "), "{}", r.stderr);
+    let r = calc(&["1 m", "--var", "a=5 foo"]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.contains("--var a: "), "{}", r.stderr);
+}
+
+#[test]
+fn calc_usage_errors_exit_2() {
+    for (args, needle) in [
+        (vec!["calc"], "needs an EXPRESSION"),
+        (vec!["calc", "1 m", "--var"], "'--var' needs a value"),
+        (vec!["calc", "1 m", "--var", "novalue"], "takes NAME=VALUE"),
+        (vec!["calc", "1 m", "--var", "=5 m"], "takes NAME=VALUE"),
+        (vec!["calc", "1 m", "--var", "a="], "takes NAME=VALUE"),
+        (
+            vec!["calc", "1 m", "--to", "m", "--to", "cm"],
+            "given twice",
+        ),
+        (vec!["calc", "1 m", "--const", "x"], "takes only EXPRESSION"),
+        (vec!["calc", "1 m", "--groups"], "takes only EXPRESSION"),
+        (
+            vec!["convert", "1", "m", "km", "--var", "a=1 m"],
+            "only apply to 'calc'",
+        ),
+        (vec!["units", "--to", "m"], "only apply to 'calc'"),
+    ] {
+        let r = dimvexa(&args);
+        assert_eq!((r.code, r.stdout.as_str()), (2, ""), "{args:?}");
+        assert!(
+            r.stderr.starts_with("error[usage]: "),
+            "{args:?}: {}",
+            r.stderr
+        );
+        assert!(r.stderr.contains(needle), "{args:?}: {}", r.stderr);
+    }
+    // in JSON a usage error has the schema of the command
+    let v = json::parse(&dimvexa(&["calc", "--json"]).stdout).unwrap();
+    assert_eq!(v.get("schema").unwrap().as_str(), "dimvexa.calc/1");
+    assert_eq!(
+        v.get("error").unwrap().get("code").unwrap().as_str(),
+        "usage"
+    );
+}
+
+/// A config adds the user's names and units to an equation, as for `convert`.
+#[test]
+fn calc_uses_the_configs_of_convert() {
+    // `ton` is ambiguous without a config
+    let r = calc(&["1 ton * 1 g_n", "--to", "N"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr.starts_with("error[ambiguous_symbol]"),
+        "{}",
+        r.stderr
+    );
+    let r = calc(&["1 ton * 1 g_n", "--to", "N", "--config", "us-customary"]);
+    assert_eq!(
+        (r.code, r.stdout.as_str()),
+        (0, "8896.443230521 N\n"),
+        "{}",
+        r.stderr
+    );
+    // a config file: the names of a design office
+    let r = dimvexa_at_root(&[
+        "calc",
+        "60 mph + 10 kph",
+        "--to",
+        "km/h",
+        "--config",
+        "examples/configs/engineering.toml",
+    ]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert_eq!(r.stdout, "106.56064 km/h\n", "{}", r.stdout);
+}
+
+/// Hostile text is an error, never a panic or a hang.
+#[test]
+fn calc_hostile_expressions_are_errors() {
+    let deep = format!("{}1{}", "(".repeat(5000), ")".repeat(5000));
+    let long = "1 + ".repeat(2000);
+    for expr in [
+        deep.as_str(),
+        long.as_str(),
+        "1e999999999 m",
+        "1 @ 2",
+        "sqrt(",
+        "((",
+        "))",
+    ] {
+        let r = calc(&[expr]);
+        assert_eq!(r.code, 1, "{}", &expr[..expr.len().min(20)]);
+        assert!(r.stderr.starts_with("error["), "{}", r.stderr);
+        assert!(!r.stderr.contains("panicked"), "{}", r.stderr);
+    }
+}
+
+/// The examples of the guide's `dimvexa calc` section print exactly what it says.
+#[test]
+fn guide_calc_examples_are_what_the_cli_prints() {
+    let section = readme_section(&guide(), "### Equations: `dimvexa calc`");
+    for (expr, args, out) in [
+        (
+            "2 kip/ft * (20 ft)^2 / 8",
+            vec!["--to", "kN*m"],
+            "135.58179483314004 kN.m",
+        ),
+        ("sqrt(9 m2)", vec![], "3 m"),
+        (
+            "100 kg * 1 g_n * sin(30 deg)",
+            vec!["--to", "N"],
+            "490.3325 N",
+        ),
+        ("sqrt(2 m2)", vec![], "≈ 1.4142135623730951 m"),
+    ] {
+        assert!(section.contains(&format!("{out}\n")), "{out}");
+        let mut a = vec![expr];
+        a.extend(args);
+        assert_eq!(calc(&a).stdout, format!("{out}\n"), "{expr}");
+    }
+}
+
+/// `--` ends the options, so an expression may look like one.
+#[test]
+fn calc_double_dash_lets_an_expression_start_like_an_option() {
+    let r = dimvexa(&["calc", "--var", "h=3 m", "--", "-h"]);
+    assert_eq!((r.code, r.stdout.as_str()), (0, "-3 m\n"), "{}", r.stderr);
+    assert_eq!(
+        dimvexa(&["calc", "--", "-y + 4 m", "--var", "y=3 m"]).code,
+        1
+    );
+    assert_eq!(
+        dimvexa(&["calc", "--var", "y=3 m", "--", "-y + 4 m"]).stdout,
+        "1 m\n"
+    );
+    // an empty unit is a usage error, as is a name that is not an identifier
+    let r = dimvexa(&["calc", "1 m", "--to", ""]);
+    assert_eq!(r.code, 2, "{}", r.stderr);
+}
+
+/// The README's `dimvexa calc` examples print what it says.
+#[test]
+fn readme_calc_examples_are_what_the_cli_prints() {
+    let readme =
+        std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../README.md"))
+            .unwrap();
+    for expr in [
+        "2 kip/ft * (20 ft)^2 / 8 --to kN*m",
+        "sqrt(9 m2)",
+        "sqrt(2 m2)",
+    ] {
+        let (e, to) = expr
+            .split_once(" --to ")
+            .map_or((expr, None), |(e, t)| (e, Some(t)));
+        let mut args = vec!["calc", e];
+        if let Some(t) = to {
+            args.extend(["--to", t]);
+        }
+        let r = dimvexa(&args);
+        assert_eq!(r.code, 0, "{expr}: {}", r.stderr);
+        assert!(
+            readme.contains(&format!("{}\n", r.stdout.trim_end())),
+            "{expr}"
+        );
+        assert!(
+            readme.contains(&format!("$ dimvexa calc \"{e}\"")),
+            "{expr}"
+        );
+    }
+}
+
+/// An exact result that the printed number does not equal is marked with `…`; one that it
+/// equals is not; an exact value beyond `f64` is printed from the exact value.
+#[test]
+fn calc_marks_rounded_exact_results_and_prints_values_beyond_f64() {
+    for (expr, text) in [
+        ("1 m / 3", "0.3333333333333333… m"),
+        ("1 ft + 1 m", "4.2808398950131235… ft"),
+        ("0.1 + 0.2", "0.3"),
+        ("1 m / 8", "0.125 m"),
+        ("3 m / 3", "1 m"),
+        ("1e300 * 1e300 m", "1e600 m"),
+        ("1e-400 m", "1e-400 m"),
+        ("1e300 m * 1e300", "1e600 m"),
+        ("sqrt(2 m2)", "≈ 1.4142135623730951 m"),
+    ] {
+        let r = calc(&[expr]);
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, format!("{text}\n").as_str()),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+    let v = json::parse(&calc(&["1 m / 3", "--json"]).stdout).unwrap();
+    assert!(v.get("result").unwrap().get("rounded").unwrap().as_bool());
+    let v = json::parse(&calc(&["1e300 * 1e300 m", "--json"]).stdout).unwrap();
+    let result = v.get("result").unwrap();
+    assert_eq!(result.get("value").unwrap(), &json::V::Null);
+    assert_eq!(result.get("fraction").unwrap().as_str(), "10^600");
+    // the stated range of an approximate result is still an error, with a clear message
+    let r = calc(&["exp(1000)"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr.contains("outside the range of an f64"),
+        "{}",
+        r.stderr
+    );
+}
+
+/// `sin` and `cos` take one angle unit: not `deg*deg`, not `1/rad`.
+#[test]
+fn calc_trig_needs_one_angle_unit() {
+    for expr in ["sin(30 deg * 30 deg)", "sin(1 / (1 rad))", "cos(30)"] {
+        let r = calc(&[expr]);
+        assert!(
+            r.stderr.starts_with("error[refused]"),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+    assert_eq!(calc(&["sin(pi/6 * 1 rad)"]).stdout, "0.5\n");
+    // plain numbers over `6 rad` give the angle of the whole term
+    assert_eq!(calc(&["sin(pi/6 rad)"]).stdout, "0.5\n");
+    assert_eq!(calc(&["sin(30 deg)"]).stdout, "0.5\n");
+    assert_eq!(calc(&["cos(2 * 30 deg)"]).stdout, "0.5\n");
+}
+
+/// A name that is also a unit written in the equation is refused, not guessed.
+#[test]
+fn calc_refuses_a_name_that_is_also_a_unit_in_the_equation() {
+    for (expr, var) in [
+        ("0.5 h", "h=3 m"),
+        ("2 m", "m=3 kg"),
+        ("2 m3", "m=3 kg"),
+        ("1 kg/m", "m=3 kg"),
+    ] {
+        let r = calc(&[expr, "--var", var]);
+        assert_eq!(r.code, 1, "{expr}");
+        assert!(
+            r.stderr.starts_with("error[invalid_definition]: "),
+            "{expr}: {}",
+            r.stderr
+        );
+        assert!(r.stderr.contains("is also a unit"), "{}", r.stderr);
+    }
+    // standing alone, or as a different symbol, the name is the value
+    assert_eq!(calc(&["h * 2", "--var", "h=3 m"]).stdout, "6 m\n");
+    assert_eq!(calc(&["m * 2 cm", "--var", "m=3"]).stdout, "6 cm\n");
+    assert_eq!(calc(&["0.5 h + hh", "--var", "hh=3 h"]).stdout, "3.5 h\n");
+}
+
+/// The SI constants are names in every equation; a `--var` that replaces one is warned about.
+#[test]
+fn calc_knows_the_si_constants_and_warns_when_a_name_replaces_one() {
+    assert_eq!(
+        calc(&["boltzmann_constant * 300 K"]).stdout,
+        "4.141947e-21 J\n"
+    );
+    assert_eq!(
+        calc(&["planck_constant * speed_of_light / 500 nm", "--to", "J"]).stdout,
+        "3.972891714297857e-19… J\n",
+    );
+    assert_eq!(
+        calc(&["molar_gas_constant", "--to", "J/(mol*K)"]).stdout,
+        "8.31446261815324 J/(mol.K)\n"
+    );
+    let r = calc(&["elementary_charge * 2", "--var", "elementary_charge=3 C"]);
+    assert_eq!((r.code, r.stdout.as_str()), (0, "6 C\n"));
+    assert_eq!(
+        r.stderr,
+        "warning: the name 'elementary_charge' replaces the constant elementary_charge; the value you gave is used\n"
+    );
+    let r = calc(&["x", "--var", "x=1 m", "--var", "x=2 m"]);
+    assert_eq!(r.stdout, "2 m\n");
+    assert!(r.stderr.contains("'x' is given twice"), "{}", r.stderr);
+    let v = json::parse(
+        &calc(&[
+            "elementary_charge",
+            "--var",
+            "elementary_charge=3 C",
+            "--json",
+        ])
+        .stdout,
+    )
+    .unwrap();
+    assert_eq!(v.get("warnings").unwrap().as_array().len(), 1);
+    // pi cannot be replaced
+    assert_eq!(calc(&["pi", "--var", "pi=3"]).code, 1);
+}
+
+/// `tan` and the inverse functions: exact at the special values, approximate otherwise.
+#[test]
+fn calc_inverse_trigonometry_returns_an_angle() {
+    assert_eq!(calc(&["tan(45 deg)"]).stdout, "1\n");
+    assert_eq!(
+        calc(&["atan2(1 m, 100 cm)", "--to", "deg"]).stdout,
+        "45 deg\n"
+    );
+    assert_eq!(calc(&["acos(0.5)", "--to", "deg"]).stdout, "60 deg\n");
+    assert_eq!(
+        calc(&["asin(0.5)", "--exact"]).stdout,
+        "1/6 pi = 0.5235987755982989… rad\n"
+    );
+    // the platform's libm decides the last digit (Linux 63.434948822922, macOS
+    // 63.43494882292202): compare the number, not the text
+    let out = calc(&["atan(2)", "--to", "deg"]).stdout;
+    let number: f64 = out
+        .strip_prefix("≈ ")
+        .and_then(|rest| rest.strip_suffix(" deg\n"))
+        .and_then(|digits| digits.parse().ok())
+        .unwrap_or(f64::NAN);
+    assert!((number - 63.434_948_822_922_01).abs() < 1e-12, "{out}");
+    for expr in [
+        "tan(90 deg)",
+        "asin(2)",
+        "atan2(1 m, 1 s)",
+        "atan2(0 m, 0 m)",
+        "tan(1)",
+    ] {
+        let r = calc(&[expr]);
+        assert!(
+            r.stderr.starts_with("error[refused]"),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+}
+
+/// Units are merged and cancelled, never renamed.
+#[test]
+fn calc_merges_and_cancels_the_unit_but_never_renames_it() {
+    for (expr, text) in [
+        ("1 m * 1 m", "1 m^2"),
+        ("10 kWh/100km * 250 km", "25 kWh"),
+        ("8.314 J/(mol*K) * 300 K * 1 mol / 1 m3", "2494.2 J/m^3"),
+        ("1 J / 1 N", "1 J/N"),
+        ("2 km * 3 m", "6 km.m"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, format!("{text}\n"), "{expr}");
+    }
+}
+
+/// `molar_gas_constant` is exactly `avogadro_constant * boltzmann_constant`, and the ideal gas law reads as written.
+#[test]
+fn calc_ideal_gas_constant_is_n_a_times_k_b_and_runs_the_gas_law() {
+    assert_eq!(
+        calc(&[
+            "avogadro_constant * boltzmann_constant - molar_gas_constant",
+            "--to",
+            "J/(mol*K)"
+        ])
+        .stdout,
+        "0 J/(mol.K)\n"
+    );
+    // p = n R T / V: 1 mol at 273.15 K in 22.414 L
+    let r = calc(&[
+        "1 mol * molar_gas_constant * 273.15 K / 22.414 L",
+        "--to",
+        "kPa",
+    ]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(r.stdout.starts_with("101.32"), "{}", r.stdout);
+    // a radius called R replaces the constant, with a warning
+    let r = calc(&["2 * molar_gas_constant", "--var", "molar_gas_constant=3 m"]);
+    assert_eq!(r.stdout, "6 m\n");
+    assert!(
+        r.stderr
+            .contains("replaces the constant molar_gas_constant"),
+        "{}",
+        r.stderr
+    );
+}
+
+#[test]
+fn calc_c_is_the_speed_of_light() {
+    assert_eq!(
+        calc(&["speed_of_light", "--to", "km/s"]).stdout,
+        "299792.458 km/s\n"
+    );
+    // E = m c^2 is exact (89875517873681764 J); the f64 shown is marked as rounded
+    let r = calc(&["1 kg * speed_of_light^2", "--to", "J", "--exact"]);
+    assert_eq!(r.stdout, "89875517873681764 J\n");
+    assert_eq!(
+        calc(&["1 kg * speed_of_light^2", "--to", "J"]).stdout,
+        "8.987551787368176e16… J\n"
+    );
+}
+
+/// Config constants are names in equations; `x.to(UNIT)` converts inside an equation; `2 pi r`, `x^n`
+/// and the engineer's notation are read.
+#[test]
+fn calc_reads_config_constants_to_pi_names_exponents_and_notation() {
+    let r = calc(&["1 L * water_25C", "--config", "water", "--to", "kg"]);
+    assert_eq!(
+        (r.code, r.stdout.as_str()),
+        (0, "0.99704702 kg\n"),
+        "{}",
+        r.stderr
+    );
+    // without the config the name does not exist
+    assert_eq!(calc(&["water_25C"]).code, 1);
+    // pV = nRT with T in degrees Celsius
+    let r = calc(&[
+        "n * molar_gas_constant * T.to(K) / V",
+        "--var",
+        "n=2 mol",
+        "--var",
+        "T=20 degC",
+        "--var",
+        "V=50 L",
+        "--to",
+        "kPa",
+    ]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(r.stdout.starts_with("97.4953886604649"), "{}", r.stdout);
+    assert_eq!(calc(&["68 degF.to(K)"]).stdout, "293.15 K\n");
+    assert_eq!(calc(&["5 m.to(K)"]).code, 1);
+    // pi after a number and before a name
+    assert_eq!(
+        calc(&["2 pi r", "--var", "r=3 m"]).stdout,
+        "18.84955592153876… m\n"
+    );
+    assert_eq!(calc(&["2 pi"]).stdout, "6.283185307179586…\n");
+    // exponents are exact expressions
+    assert_eq!(calc(&["2^3^2"]).stdout, "512\n");
+    assert_eq!(
+        calc(&["x^n", "--var", "x=9 m2", "--var", "n=0.5"]).stdout,
+        "3 m\n"
+    );
+    assert_eq!(calc(&["2^sqrt(2)"]).code, 1);
+    // superscripts, dots, crosses, any whitespace
+    assert_eq!(calc(&["10 m² · 3 m"]).stdout, "30 m^3\n");
+    assert_eq!(calc(&["1 kg·m/s²"]).stdout, "1 kg.m/s^2\n");
+    assert_eq!(calc(&["3 × 4 m"]).stdout, "12 m\n");
+    assert_eq!(calc(&["2 m\t*\n3 m"]).stdout, "6 m^2\n");
+}
+
+/// A number before a variable that is not a unit multiplies (`2 r`); before a name that is also
+/// a unit (`0.5 h`) it is refused, and the error only says "unit" when the name is one.
+#[test]
+fn calc_a_number_before_a_variable_multiplies_unless_the_name_is_a_unit() {
+    assert_eq!(calc(&["2 r", "--var", "r=3 m"]).stdout, "6 m\n");
+    // `r2` is a name, not `r^2`: the square is written with ^
+    assert_eq!(calc(&["2 r^2", "--var", "r=3 m"]).stdout, "18 m^2\n");
+    let r = calc(&["2 r2", "--var", "r=3 m"]);
+    assert!(
+        r.stderr
+            .contains("'r2' in '2 r2' is not a unit and not a variable"),
+        "{}",
+        r.stderr
+    );
+    // after a division `2 r` has two readings: the user writes the operator or parentheses
+    let r = calc(&["10 m / 2 r", "--var", "r=3 s"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr.contains("can be read (a / 2) * r or a / (2 * r)"),
+        "{}",
+        r.stderr
+    );
+    assert_eq!(
+        calc(&["10 m / (2 r)", "--var", "r=3 s"]).stdout,
+        "1.6666666666666667… m/s\n"
+    );
+    assert_eq!(calc(&["10 m / 2 * r", "--var", "r=3 s"]).stdout, "15 m.s\n");
+    assert_eq!(calc(&["10 m * 2 r", "--var", "r=3 s"]).stdout, "60 m.s\n");
+
+    // no variable: an unknown unit, never a claim about a variable
+    let r = calc(&["2 r"]);
+    assert!(r.stderr.starts_with("error[parse_error]"), "{}", r.stderr);
+    assert!(
+        r.stderr.contains("not a unit and not a variable"),
+        "{}",
+        r.stderr
+    );
+    // a name that is also a unit is refused, and says so
+    let r = calc(&["0.5 h", "--var", "h=3 m"]);
+    assert!(
+        r.stderr.contains("the name 'h' is also a unit"),
+        "{}",
+        r.stderr
+    );
+    assert!(
+        !calc(&["2 r", "--var", "r=3 m"])
+            .stderr
+            .contains("not a unit")
+    );
+}
+
+/// `r` and `r2` are two names: `2 r2` is the number times the variable `r2`, and the square of
+/// `r` is written `r^2`.
+#[test]
+fn calc_r_and_r2_are_different_names() {
+    for order in [["r=3 m", "r2=5 m"], ["r2=5 m", "r=3 m"]] {
+        let r = calc(&["2 r2 + r", "--var", order[0], "--var", order[1]]);
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, "13 m\n"),
+            "{order:?}: {}",
+            r.stderr
+        );
+        // the square of r is written with ^: 2 * 9 m2 / 5 m
+        assert_eq!(
+            calc(&["2 r^2 / r2", "--var", order[0], "--var", order[1]]).stdout,
+            "3.6 m\n"
+        );
+    }
+    // a variable that the equation does not read is an error, not ignored
+    let r = calc(&["2 r2", "--var", "r=3 m", "--var", "r2=5 m"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr
+            .contains("the variable 'r' is not used in the equation '2 r2'"),
+        "{}",
+        r.stderr
+    );
+    assert_eq!(calc(&["2 r2", "--var", "r2=5 m"]).stdout, "10 m\n");
+    assert_eq!(
+        calc(&["v1 + v10", "--var", "v1=1 m", "--var", "v10=2 m"]).stdout,
+        "3 m\n"
+    );
+    // a name is letters, digits and underscores
+    for bad in ["r-2=1 m", "r.2=1 m", "r 2=1 m", "2x=1 m"] {
+        let r = calc(&["1 m", "--var", bad]);
+        assert!(
+            r.stderr.starts_with("error[invalid_definition]"),
+            "{bad}: {}",
+            r.stderr
+        );
+    }
+}
+
+/// Review round 3: a name after `^`, negative temperature points, exact quarter-turn reduction,
+/// roots beyond f64, large plain powers, `--pretty` with `--`.
+#[test]
+fn calc_review_round_three_regressions() {
+    // `x^2 n` must not silently read `2 n` as the exponent
+    let r = calc(&["x^2 n", "--var", "x=10 m", "--var", "n=2"]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.contains("after '^' is ambiguous"), "{}", r.stderr);
+    assert_eq!(
+        calc(&["x^2 * n", "--var", "x=10 m", "--var", "n=2"]).stdout,
+        "200 m^2\n"
+    );
+    assert_eq!(
+        calc(&["x^(2 n)", "--var", "x=10 m", "--var", "n=2"]).stdout,
+        "10000 m^4\n"
+    );
+    // a negative temperature point
+    assert_eq!(calc(&["-40 degC"]).stdout, "-40 degC\n");
+    assert_eq!(calc(&["-40 degF", "--to", "degC"]).stdout, "-40 degC\n");
+    assert_eq!(calc(&["-40 degC + 10 delta_degC"]).stdout, "-30 degC\n");
+    assert_eq!(calc(&["-3 m"]).stdout, "-3 m\n");
+    // degree trigonometry keeps its digits near the quarter turns (exact angle reduction)
+    for (expr, want) in [
+        ("sin(179.9999999 deg)", 1.745_329_251_994_329_6e-9),
+        ("sin(359.99999999 deg)", -1.745_329_251_994_329_6e-10),
+        ("cos(90.0000001 deg)", -1.745_329_251_994_329_6e-9),
+        ("tan(89.9999999 deg)", 572_957_795.130_823_2),
+    ] {
+        let out = calc(&[expr]).stdout;
+        let got: f64 = out.trim().trim_start_matches("≈ ").parse().unwrap();
+        assert!(((got - want) / want).abs() < 1e-15, "{expr}: {out}");
+    }
+    // roots of values beyond f64, and plain numbers to large powers
+    let out = calc(&["hypot(1e200, 1e200)"]).stdout;
+    let got: f64 = out.trim().trim_start_matches("≈ ").parse().unwrap();
+    assert!(
+        ((got / 1.414_213_562_373_095e200) - 1.0).abs() < 1e-15,
+        "{out}"
+    );
+    assert_eq!(calc(&["1^128"]).stdout, "1\n");
+    assert_eq!(calc(&["10^-400"]).stdout, "1e-400\n");
+    assert_eq!(calc(&["-2.5e-400"]).stdout, "-25e-401\n");
+    // --pretty with --, and options only before it
+    let r = calc(&["--pretty", "--", "1 m / 3"]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(r.stdout.lines().count() > 5, "{}", r.stdout);
+    // a defined variable swallowed by a unit says so
+    let r = calc(&["2 m/r", "--var", "r=3 s"]);
+    assert!(
+        r.stderr.contains("'r' is a variable, not part of the unit"),
+        "{}",
+        r.stderr
+    );
+    assert!(r.stderr.contains("as in '2 m / r'"), "{}", r.stderr);
+    // an unknown name with a close unit still says it may be a variable
+    let r = calc(&["2 v"]);
+    assert!(
+        r.stderr
+            .contains("not a unit and not a variable (did you mean the unit V?)"),
+        "{}",
+        r.stderr
+    );
+}
+
+/// `a / 2 pi` and `a / pi r^2` are refused (two readings); with parentheses or an operator they
+/// are fine, and so is a product that is not after a division.
+#[test]
+fn calc_a_division_before_an_implicit_pi_product_is_refused() {
+    for expr in ["10 m / 2 pi", "10 m / pi r^2"] {
+        let r = calc(&[expr, "--var", "r=2 m"]);
+        assert_eq!(r.code, 1, "{expr}");
+        assert!(
+            r.stderr
+                .contains("can be read (a / 2) * pi or a / (2 * pi)"),
+            "{}",
+            r.stderr
+        );
+    }
+    assert_eq!(calc(&["10 m / (2 pi)"]).stdout, "1.5915494309189533… m\n");
+    assert_eq!(calc(&["10 m / 2 * pi"]).stdout, "15.707963267948966… m\n");
+    assert_eq!(calc(&["10 m * 2 pi"]).stdout, "62.83185307179586… m\n");
+    assert_eq!(
+        calc(&["2 pi r", "--var", "r=3 m"]).stdout,
+        "18.84955592153876… m\n"
+    );
+}
+
+/// A kelvin value scales by a plain number (both orders); a Celsius point does not; a spaced
+/// superscript belongs to the unit before it.
+#[test]
+fn calc_a_converted_temperature_scales_and_a_spaced_superscript_is_part_of_the_unit() {
+    assert_eq!(calc(&["2 * 20 degC.to(K)"]).stdout, "586.3 K\n");
+    assert_eq!(calc(&["20 degC.to(K) * 2"]).stdout, "586.3 K\n");
+    assert_eq!(calc(&["20 degC.to(K) / 2"]).stdout, "146.575 K\n");
+    assert_eq!(
+        calc(&["molar_gas_constant * 20 degC.to(K) * 2"]).stdout,
+        "4874.769433023244… J/mol\n"
+    );
+    assert_eq!(calc(&["2 * 300 K"]).stdout, "600 K\n");
+    assert_eq!(calc(&["2 * 20 degC"]).code, 1);
+    // 2 m ², 2 m² and 2m2 are one quantity
+    for expr in ["2 m ²", "2 m²", "2m2", "2 m^2"] {
+        assert_eq!(calc(&[expr]).stdout, "2 m^2\n", "{expr}");
+    }
+}
+
+/// `x.to(UNIT)` converts inside an equation; the dimension must match, and a computed
+/// temperature converts to K and degC, also with `--to`.
+#[test]
+fn calc_dot_to_converts_inside_an_equation_and_checks_the_dimension() {
+    for (expr, text) in [
+        ("20 degC.to(K)", "293.15 K\n"),
+        ("(20 degC).to(K)", "293.15 K\n"),
+        ("(5 m + 3 ft).to(cm)", "591.44 cm\n"),
+        ("-40 degC.to(K)", "233.15 K\n"),
+        ("20 degC.to(K).to(degF)", "68 degF\n"),
+        ("5 N.m.to(J)", "5 J\n"),
+        ("20 °C.to(K)", "293.15 K\n"),
+        ("68 degF.to(degC)", "20 degC\n"),
+        ("3 m.to(ft)", "9.84251968503937… ft\n"),
+        ("(10 kW * 2 h).to(kW*h)", "20 kW.h\n"),
+        ("1000 kg/m3.to(g/cm3)", "1 g/cm^3\n"),
+        ("(2 pi * 1 rad).to(deg)", "360 deg\n"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, text, "{expr}");
+    }
+    // a computed temperature converts directly, with --to and with to()
+    let gas = "1 atm * 22.414 L / (1 mol * molar_gas_constant)";
+    assert_eq!(calc(&[gas, "--to", "K"]).stdout, "273.1503711426203… K\n");
+    assert_eq!(
+        calc(&[&format!("({gas}).to(degC)")]).stdout,
+        calc(&[gas, "--to", "degC"]).stdout
+    );
+    // the units are checked against what the user wrote
+    for (expr, code) in [
+        ("5 m.to(K)", "dimension_mismatch"),
+        ("5 delta_K.to(K)", "kind_mismatch"),
+        ("3 m.to(foo)", "unknown_unit"),
+    ] {
+        let r = calc(&[expr]);
+        assert!(
+            r.stderr.starts_with(&format!("error[{code}]")),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+    for expr in ["3 m.to()", "3 m.to( )"] {
+        let r = calc(&[expr]);
+        assert!(
+            r.stderr.starts_with("error[parse_error]"),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+    // there is no function `to`: a conversion is written `x.to(UNIT)`
+    let r = calc(&["to(3 m, ft)"]);
+    assert!(
+        r.stderr
+            .starts_with("error[refused]: refused: unknown function 'to'"),
+        "{}",
+        r.stderr
+    );
+}
+
+/// `2^3 m` is `(2^3) m`: the exponent is the number, the unit multiplies the power.
+#[test]
+fn calc_a_unit_after_an_exponent_multiplies_the_power() {
+    for (expr, text) in [
+        ("2^3 m", "8 m\n"),
+        ("2^3 m^2", "8 m^2\n"),
+        ("2^-1 m", "0.5 m\n"),
+        ("2^3^2 m", "512 m\n"),
+        ("-2^3 m", "-8 m\n"),
+        ("10 m / 2^3 m", "1.25\n"),
+        ("2^3 * 4 m", "32 m\n"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, text, "{expr}");
+    }
+    assert_eq!(calc(&["x^2 m", "--var", "x=3"]).stdout, "9 m\n");
+    // a name could be the exponent (`x^(2 n)`), so it stays refused
+    let r = calc(&["x^2 n", "--var", "x=3", "--var", "n=2 m"]);
+    assert!(r.stderr.contains("after '^' is ambiguous"), "{}", r.stderr);
+}
+
+/// The short constant symbols of `examples/configs/engineering.toml` equal the built-in constants
+/// exactly, and the equation reads as an engineer writes it.
+#[test]
+fn engineering_config_short_symbols_equal_the_built_in_constants() {
+    let config = ["--config", "examples/configs/engineering.toml"];
+    for (short, long) in [
+        ("R", "molar_gas_constant"),
+        ("c", "speed_of_light"),
+        ("k_B", "boltzmann_constant"),
+        ("N_A", "avogadro_constant"),
+        ("h_P", "planck_constant"),
+        ("q_e", "elementary_charge"),
+    ] {
+        let mut a = vec!["--exact", short];
+        let mut b = vec!["--exact", long];
+        a.splice(0..0, ["calc"]);
+        b.splice(0..0, ["calc"]);
+        a.extend(config);
+        b.extend(config);
+        // the same exact value and unit, character for character
+        let (x, y) = (dimvexa_at_root(&a), dimvexa_at_root(&b));
+        assert_eq!((x.code, y.code), (0, 0), "{short}: {}", x.stderr);
+        assert_eq!(x.stdout, y.stdout, "{short} vs {long}");
+    }
+    let r = dimvexa_at_root(&[
+        "calc",
+        "n * R * T.to(K) / V",
+        "--var",
+        "n=2 mol",
+        "--var",
+        "T=20 degC",
+        "--var",
+        "V=50 L",
+        "--to",
+        "kPa",
+        "--config",
+        "examples/configs/engineering.toml",
+    ]);
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(r.stdout.starts_with("97.4953886604649"), "{}", r.stdout);
+}
+
+/// Small leftovers: trailing zeros of a value beyond f64 belong to the power of ten, one over
+/// kelvin works, a temperature scale in a compound unit is the interval.
+#[test]
+fn calc_small_leftovers() {
+    assert_eq!(calc(&["1e308 * 10"]).stdout, "1e309\n");
+    assert_eq!(calc(&["2 / (300 K)"]).stdout, "0.006666666666666667… 1/K\n");
+    assert_eq!(
+        calc(&["alpha * 100 K", "--var", "alpha=1.2e-5 1/K"]).stdout,
+        "0.0012\n"
+    );
+    assert_eq!(calc(&["2 / 0 K"]).code, 1);
+    // a specific heat per degree Celsius
+    let r = calc(&[
+        "cp * m * dT",
+        "--var",
+        "cp=4.186 kJ/(kg*degC)",
+        "--var",
+        "m=2 kg",
+        "--var",
+        "dT=10 delta_degC",
+        "--to",
+        "kJ",
+    ]);
+    assert_eq!(
+        (r.code, r.stdout.as_str()),
+        (0, "83.72 kJ\n"),
+        "{}",
+        r.stderr
+    );
+    assert_eq!(
+        dimvexa(&["convert", "4.186", "kJ/(kg*degC)", "J/(kg*K)"]).stdout,
+        "4186 J/(kg.K)\n"
+    );
+}
+
+/// `--sci` writes the number as `1.5e3`; `--sci=N` gives N significant digits; the unit, the
+/// `≈` and the exact fraction stay; only calc takes it.
+#[test]
+fn calc_sci_writes_the_number_in_scientific_notation() {
+    for (args, text) in [
+        (vec!["1500 m", "--sci"], "1.5e3 m\n"),
+        (vec!["1500 m", "--sci=3"], "1.50e3 m\n"),
+        (vec!["1 m / 3", "--sci"], "3.333333333333333e-1… m\n"),
+        (vec!["1 m / 3", "--sci=4"], "3.333e-1 m\n"),
+        (vec!["1 m / 3", "--sci=4", "--exact"], "1/3 = 3.333e-1 m\n"),
+        (vec!["sqrt(2 m2)", "--sci=5"], "≈ 1.4142e0 m\n"),
+        (vec!["3 m / 2 m", "--sci"], "1.5e0\n"),
+        (vec!["1e300 m * 1e300", "--sci"], "1e600 m\n"),
+        (vec!["2.5e-400", "--sci"], "2.5e-400\n"),
+        (vec!["-0.00025 m", "--sci"], "-2.5e-4 m\n"),
+    ] {
+        let r = calc(&args);
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, text),
+            "{args:?}: {}",
+            r.stderr
+        );
+    }
+    // JSON keeps the number as a number
+    let v = json::parse(&calc(&["1500 m", "--sci", "--json"]).stdout).unwrap();
+    assert_eq!(
+        v.get("result").unwrap().get("value").unwrap(),
+        &json::V::Num(1500.0)
+    );
+    for bad in ["--sci=0", "--sci=18", "--sci=x", "--sci="] {
+        let r = calc(&["1 m", bad]);
+        assert_eq!(r.code, 2, "{bad}");
+        assert!(
+            r.stderr.contains("'--sci=N' takes 1 to 17"),
+            "{bad}: {}",
+            r.stderr
+        );
+    }
+    let r = dimvexa(&["convert", "1", "m", "cm", "--sci"]);
+    assert_eq!(r.code, 2);
+    assert!(r.stderr.contains("only apply to 'calc'"), "{}", r.stderr);
+}
+
+/// `--autoprefix` picks the SI prefix (a power of 1000) that puts the number between 1 and 1000.
+#[test]
+fn calc_autoprefix_chooses_the_si_prefix() {
+    for (expr, text) in [
+        ("1500 m", "1.5 km\n"),
+        ("0.0025 m", "2.5 mm\n"),
+        ("-1500 m", "-1.5 km\n"),
+        ("2500000 m2", "2.5 km^2\n"),
+        ("2500 m2", "2500 m^2\n"),
+        ("1e-9 s", "1 ns\n"),
+        ("1e9 Pa", "1 GPa\n"),
+        ("2000 kPa", "2 MPa\n"),
+        ("1500 W", "1.5 kW\n"),
+        ("2e9 Hz", "2 GHz\n"),
+        ("0.001 rad", "1 mrad\n"),
+        ("0.5 L", "500 mL\n"),
+        ("1500 mg", "1.5 g\n"),
+        ("0.0015 kg", "1.5 g\n"),
+        ("1 m / 3", "333.3333333333333… mm\n"),
+        ("0 m", "0 m\n"),
+        // unchanged: compound units, units without prefixes, temperatures, the kilogram
+        ("3 m/s", "3 m/s\n"),
+        ("5000 ft", "5000 ft\n"),
+        ("5 min", "5 min\n"),
+        ("20 degC", "20 degC\n"),
+        ("300 K", "300 K\n"),
+        ("1500 kg", "1500 kg\n"),
+        ("1500 g", "1.5 kg\n"),
+        ("0.5 t", "500 kg\n"),
+        ("0.0005 t", "500 g\n"),
+        ("1500 t", "1.5 kt\n"),
+    ] {
+        let r = calc(&[expr, "--autoprefix"]);
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, text),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+    // with --sci, and the JSON carries the prefixed unit and value
+    assert_eq!(
+        calc(&["1500 m", "--autoprefix", "--sci"]).stdout,
+        "1.5 km\n"
+    );
+    let v = json::parse(&calc(&["1500 m", "--autoprefix", "--json"]).stdout).unwrap();
+    let result = v.get("result").unwrap();
+    assert_eq!(result.get("unit").unwrap().as_str(), "km");
+    assert_eq!(result.get("value").unwrap(), &json::V::Num(1.5));
+    // --autoprefix chooses the unit, so --to is refused (the code Python and WebAssembly give
+    // too); only calc takes the option
+    let r = calc(&["1500 m", "--autoprefix", "--to", "cm"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr.starts_with("error[refused]: --autoprefix: "),
+        "{}",
+        r.stderr
+    );
+    assert_eq!(
+        dimvexa(&["convert", "1", "m", "cm", "--autoprefix"]).code,
+        2
+    );
+}
+
+/// Found while testing `--autoprefix`: an approximate number scaled a Celsius point silently
+/// (`sqrt(2) * 20 degC`), and an approximate kelvin value could not be converted.
+#[test]
+fn calc_approximate_temperatures_follow_the_exact_rules() {
+    for expr in [
+        "sqrt(2) * 20 degC",
+        "20 degC / sqrt(2)",
+        "sqrt(2) * 68 degF",
+    ] {
+        let r = calc(&[expr]);
+        assert!(
+            r.stderr.starts_with("error[refused]"),
+            "{expr}: {}",
+            r.stderr
+        );
+        assert!(
+            r.stderr.contains("cannot be scaled by a plain number"),
+            "{}",
+            r.stderr
+        );
+    }
+    // a kelvin value scales and converts, approximate or not
+    assert_eq!(
+        calc(&["sqrt(2) * 300 K", "--to", "K"]).stdout,
+        "≈ 424.26406871192853 K\n"
+    );
+    assert_eq!(
+        calc(&["(sqrt(2) * 300 K).to(mK)"]).stdout,
+        "≈ 424264.06871192856 mK\n"
+    );
+    assert!(
+        calc(&["sqrt(2) * 20 degC.to(K)", "--to", "degC"])
+            .stdout
+            .starts_with("≈ 141.4267")
+    );
+    assert_eq!(calc(&["sqrt(2) * 20 delta_degC"]).code, 0);
+}
+
+/// Review round 4: `^(n)` after a unit, autoprefix on the tonne, `--sci=N` from the exact value,
+/// loud underflow, a temperature rate, clearer messages, more superscripts.
+#[test]
+fn calc_review_round_four_regressions() {
+    // a power in parentheses belongs to the unit (it used to raise the whole quantity)
+    for (expr, text) in [
+        ("2 m^(2)", "2 m^2\n"),
+        ("2 m^(-1)", "2 m^-1\n"),
+        ("2 kg/m^(3)", "2 kg/m^3\n"),
+        ("2 m^(2).to(cm2)", "20000 cm^2\n"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, text, "{expr}");
+    }
+    assert_eq!(calc(&["2 r^(2)", "--var", "r=3 m"]).stdout, "18 m^2\n");
+    // autoprefix never turns a valid result into an error: the unit stays when the prefix
+    // would read as another unit (`mt`, `ft`, `pt`); a tonne below 1 t reads in kg and g
+    for (expr, text) in [
+        ("0.5 t", "500 kg\n"),
+        ("1e-12 t", "1 \u{b5}g\n"),
+        ("1e-15 t", "1 ng\n"),
+        ("1500 t", "1.5 kt\n"),
+    ] {
+        let r = calc(&[expr, "--autoprefix"]);
+        assert_eq!(
+            (r.code, r.stdout.as_str()),
+            (0, text),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+    // --sci=N rounds the exact value, halves away from zero, as round() does
+    for (args, text) in [
+        (vec!["9.995", "--sci=3"], "1.00e1\n"),
+        (vec!["0.15", "--sci=1"], "2e-1\n"),
+        (vec!["2.5", "--sci=1"], "3e0\n"),
+        (vec!["-2.5", "--sci=1"], "-3e0\n"),
+        (vec!["0.1 + 0.2", "--sci=17"], "3.0000000000000000e-1\n"),
+        (vec!["999.5", "--sci=3"], "1.00e3\n"),
+        (vec!["1e600 m", "--sci=3"], "1.00e600 m\n"),
+        (vec!["0", "--sci=3"], "0.00e0\n"),
+        (vec!["-0.0001235", "--sci=3"], "-1.24e-4\n"),
+    ] {
+        assert_eq!(calc(&args).stdout, text, "{args:?}");
+    }
+    assert_eq!(calc(&["round(2.5)"]).stdout, "3\n");
+    // an approximate result that would become 0 or a subnormal is an overflow, as loud as a huge one
+    for expr in [
+        "exp(-746)",
+        "exp(710)",
+        "sqrt(2) * 1e-200 * 1e-200",
+        "sqrt(2) / 1e300 / 1e300",
+        "(sqrt(2) * 1e-200)^2",
+    ] {
+        let r = calc(&[expr]);
+        assert!(
+            r.stderr.starts_with("error[overflow]"),
+            "{expr}: {}",
+            r.stderr
+        );
+    }
+    assert_eq!(calc(&["sqrt(2) - sqrt(2)"]).stdout, "≈ 0\n");
+    assert_eq!(calc(&["exp(-700)"]).code, 0);
+    // a point divided by something that is not a number is a rate; in a product or a
+    // denominator it is ambiguous and refused
+    assert_eq!(calc(&["20 degC / 2 s"]).stdout, "10 delta_degC/s\n");
+    assert_eq!(calc(&["20 degC / 2 s", "--to", "K/s"]).stdout, "10 K/s\n");
+    assert_eq!(calc(&["20 degC / 5 m", "--to", "K/m"]).stdout, "4 K/m\n");
+    for expr in [
+        "R * 27 degC",
+        "2 kg * 20 degF",
+        "1 J / 20 degC",
+        "20 degC * 3 m",
+    ] {
+        let r = calc(&[expr, "--var", "R=8.314 J/(mol*K)"]);
+        assert!(r.stderr.contains("is ambiguous"), "{expr}: {}", r.stderr);
+    }
+    let r = calc(&["(20 degC)^2"]);
+    assert!(
+        r.stderr.contains("cannot be raised to a power"),
+        "{}",
+        r.stderr
+    );
+    // clearer messages
+    let r = calc(&["2 sin(30 deg)"]);
+    assert!(
+        r.stderr.contains("needs an operator: write 2 * sin(...)"),
+        "{}",
+        r.stderr
+    );
+    let r = calc(&["1 m.TO(ft)"]);
+    assert!(r.stderr.contains("in lower case"), "{}", r.stderr);
+    // superscripts of any size
+    assert_eq!(calc(&["1 m⁴"]).stdout, "1 m^4\n");
+    assert_eq!(calc(&["5 s⁻²"]).stdout, "5 s^-2\n");
+    assert_eq!(calc(&["3 m¹⁰"]).stdout, "3 m^10\n");
+    // the usage line lists the options; warnings are not lost in a JSON error
+    let r = calc(&["--json"]);
+    assert!(r.stdout.contains("\"ok\":false"), "{}", r.stdout);
+    let r = calc(&[
+        "molar_gas_constant + 1",
+        "--var",
+        "molar_gas_constant=1 m",
+        "--json",
+    ]);
+    assert!(
+        r.stderr
+            .contains("warning: the name 'molar_gas_constant' replaces the constant"),
+        "{}",
+        r.stderr
+    );
+}
+
+/// `2 r r` is two names in a row: the error says to write the product with `*`.
+#[test]
+fn calc_two_names_in_a_row_need_an_operator() {
+    let r = calc(&["2 r r", "--var", "r=3 m"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr
+            .contains("two names or values in a row need an operator"),
+        "{}",
+        r.stderr
+    );
+    assert_eq!(calc(&["2 r * r", "--var", "r=3 m"]).stdout, "18 m^2\n");
+}
+
+/// A variable may not take the name of an ambiguous unit symbol either (`ton`).
+#[test]
+fn calc_a_variable_named_like_an_ambiguous_unit_is_refused() {
+    let r = calc(&["2 ton", "--var", "ton=3"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr.starts_with("error[invalid_definition]: "),
+        "{}",
+        r.stderr
+    );
+    assert!(r.stderr.contains("'ton' is also a unit"), "{}", r.stderr);
+}
+
+/// A warning is shown when the calculation fails too, in text as in JSON.
+#[test]
+fn calc_warnings_are_not_lost_when_the_calculation_fails() {
+    for json in [false, true] {
+        let mut args = vec!["speed_of_light * 1 s", "--to", "m"];
+        args.extend(["--var", "speed_of_light=3"]);
+        if json {
+            args.push("--json");
+        }
+        let r = calc(&args);
+        assert_eq!(r.code, 1);
+        assert!(
+            r.stderr
+                .contains("warning: the name 'speed_of_light' replaces"),
+            "json={json}: {}",
+            r.stderr
+        );
+    }
+}
+
+/// `--autoprefix` reads a repeated unit as its power: `0.5 m * 1 m` is `0.5 m2`.
+#[test]
+fn calc_autoprefix_prefixes_a_power_that_comes_from_a_product() {
+    for (expr, text) in [
+        ("0.5 m * 1 m", "500000 mm^2\n"),
+        ("0.5 t * 1 t", "500000 kg^2\n"),
+        ("1 m * 1 m * 1 m * 0.001", "1000000 mm^3\n"),
+        ("3 m * 2 s", "6 m.s\n"),
+    ] {
+        assert_eq!(calc(&[expr, "--autoprefix"]).stdout, text, "{expr}");
+    }
+}
+
+/// Errors about a number or a name quote the equation and say what is wrong.
+#[test]
+fn calc_syntax_errors_quote_the_equation_and_name_the_problem() {
+    for (expr, needle) in [
+        ("1..5", "cannot parse '1..5' at position 0"),
+        ("1.2.3 m", "cannot parse '1.2.3 m' at position 0"),
+        ("5. m", "cannot parse '5. m' at position 0"),
+        ("x", "'x' is not a variable of this equation"),
+        ("1 m/s / s", "'s' is a unit, and a unit needs a number"),
+        ("2 x y", "unexpected 'y'"),
+    ] {
+        let r = if expr == "2 x y" {
+            calc(&[expr, "--var", "x=3", "--var", "y=4"])
+        } else {
+            calc(&[expr])
+        };
+        assert_eq!(r.code, 1, "{expr}");
+        assert!(r.stderr.contains(needle), "{expr}: {}", r.stderr);
+    }
+}
+
+/// A sum with different powers of pi is approximate (`≈`), and refused when `--exact` is given.
+#[test]
+fn calc_a_sum_with_pi_is_approximate_unless_exact_is_asked() {
+    assert_eq!(calc(&["1 + pi"]).stdout, "≈ 4.141592653589793\n");
+    assert_eq!(
+        calc(&["2 * pi * 1 m + 3 m"]).stdout,
+        "≈ 9.283185307179586 m\n"
+    );
+    let r = calc(&["1 + pi", "--exact"]);
+    assert_eq!(r.code, 1);
+    assert!(
+        r.stderr.starts_with("error[unrepresentable]"),
+        "{}",
+        r.stderr
+    );
+}
+
+/// `--sci` with `--autoprefix` needs no exponent, and the prefix comes from the rounded number.
+#[test]
+fn calc_sci_with_autoprefix_writes_no_exponent() {
+    for (expr, option, text) in [
+        ("1500 m", "--sci", "1.5 km\n"),
+        ("1500 m", "--sci=3", "1.50 km\n"),
+        ("999.9996 m", "--sci=3", "1.00 km\n"),
+        ("0.9999996 mm", "--sci=3", "1.00 mm\n"),
+        ("15 m", "--sci=3", "15.0 m\n"),
+        ("-1500 m", "--sci=2", "-1.5 km\n"),
+        ("2500000 m2", "--sci=3", "2.50 km^2\n"),
+    ] {
+        assert_eq!(calc(&[expr, "--autoprefix", option]).stdout, text, "{expr}");
+    }
+    // without --autoprefix the exponent stays
+    assert_eq!(calc(&["1500 m", "--sci"]).stdout, "1.5e3 m\n");
+}
+
+/// A term of plain numbers over `N unit` has the unit as a whole; a unit after any other
+/// value belongs to its own number and divides.
+#[test]
+fn calc_the_unit_after_a_division_follows_one_rule() {
+    // plain numbers (and pi) before the `/`: the unit is the unit of the term
+    for (expr, text) in [
+        ("10/2 s", "5 s\n"),
+        ("1/2 kg", "0.5 kg\n"),
+        ("-1 / 2 s", "-0.5 s\n"),
+        ("5 * 1 / 2 s", "2.5 s\n"),
+        ("3 * 10/2 s", "15 s\n"),
+        ("1 / -2 s", "-0.5 s\n"),
+        ("2 / 3 / 4 s", "0.16666666666666666… s\n"),
+        ("(2 / 3) / 4 s", "0.16666666666666666… s\n"),
+        ("2^3 / 4 s", "2 s\n"),
+        ("1/2 m^2", "0.5 m^2\n"),
+        ("(1/2 s)", "0.5 s\n"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, text, "{expr}");
+    }
+    // anything else divides by the quantity
+    for (expr, text) in [
+        ("10 m / 2 s", "5 m/s\n"),
+        ("6 m / 3 / 2 s", "1 m/s\n"),
+        ("10/(2 s)", "5 1/s\n"),
+        ("10/2 1/s", "5 1/s\n"),
+        ("10/2 s^-1", "5 s^-1\n"),
+        ("20/100 1/s", "0.2 1/s\n"),
+        ("5 1/s", "5 1/s\n"),
+        ("60 1/min", "60 1/min\n"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, text, "{expr}");
+    }
+    // a name or a function is not a plain number
+    assert_eq!(calc(&["x / 2 s", "--var", "x=4 m"]).stdout, "2 m/s\n");
+    assert_eq!(calc(&["a / 2 s", "--var", "a=1"]).stdout, "0.5 1/s\n");
+}
+
+/// A temperature point over a temperature is refused (the temperature or a difference?).
+#[test]
+fn calc_a_point_over_a_temperature_is_refused() {
+    let r = calc(&["1 - 20 degC / 300 K"]);
+    assert_eq!((r.code, r.stdout.as_str()), (1, ""));
+    assert!(r.stderr.starts_with("error[refused]"), "{}", r.stderr);
+    assert!(r.stderr.contains("20 degC.to(K)"), "{}", r.stderr);
+    assert_eq!(calc(&["1 - 20 degC.to(K) / 300 K"]).code, 0);
+    // over something that is not a temperature it is the rate of the interval
+    assert_eq!(calc(&["20 degC / 2 s"]).stdout, "10 delta_degC/s\n");
+}
+
+/// Cases of the last review: `.to` after a fraction, `^` after `2 x`, min/max with pi, the
+/// digits of `--sci` when no prefix is chosen, the tonne with digits, and wording.
+#[test]
+fn calc_final_review_regressions() {
+    // a point never moves to the result: it divides, and that is refused
+    for expr in ["1/2 degC", "10/2 degF", "1 / 20 degC"] {
+        let r = calc(&[expr]);
+        assert_eq!(r.code, 1, "{expr}");
+        assert!(r.stderr.contains("ambiguous"), "{expr}: {}", r.stderr);
+    }
+    assert_eq!(calc(&["1/2 km.to(m)"]).stdout, "500 m\n");
+    let r = calc(&["2 * 20 degC"]);
+    assert!(r.stderr.starts_with("error[refused]"), "{}", r.stderr);
+    // `2 x ^ 2` is ambiguous, `2 x^2` and `2 * x ^ 2` are not
+    let with_x = |e: &str| calc(&[e, "--var", "x=3"]);
+    assert_eq!(with_x("2 x ^ 2").code, 1);
+    assert!(with_x("2 x ^ 2").stderr.contains("ambiguous"));
+    assert_eq!(with_x("2 x^2").stdout, "18\n");
+    assert_eq!(with_x("2 * x ^ 2").stdout, "18\n");
+    // min and max with different powers of pi compare the numbers and keep the winner
+    assert_eq!(calc(&["max(1, pi)"]).stdout, "3.141592653589793…\n");
+    assert_eq!(
+        calc(&["min(10 m, pi * 1 m)"]).stdout,
+        "3.141592653589793… m\n"
+    );
+    assert_eq!(calc(&["max(1, pi)", "--exact"]).code, 1);
+    // --sci keeps its exponent when the prefix did not take it
+    for (expr, text) in [
+        ("1234567 kg", "1.23e6 kg\n"),
+        ("123456789 ft", "1.23e8 ft\n"),
+        ("1e30 g", "1.00e27 kg\n"),
+        ("1500 kg", "1.50e3 kg\n"),
+        ("0.99996 t", "1.00 t\n"),
+        ("0.5 t", "500. kg\n"),
+    ] {
+        let r = calc(&[expr, "--autoprefix", "--sci=3"]);
+        assert_eq!(
+            r.stdout,
+            if expr == "0.5 t" { "500 kg\n" } else { text },
+            "{expr}"
+        );
+    }
+    // a name that is an ambiguous unit symbol says so
+    let r = calc(&["2 * cal"]);
+    assert!(r.stderr.contains("ambiguous unit symbol"), "{}", r.stderr);
+    // plain numbers in a term after `,` or in a sum
+    assert_eq!(calc(&["(10+20)/1 s"]).stdout, "30 s\n");
+    assert_eq!(calc(&["max(1/2 kg, 400 g)"]).stdout, "0.5 kg\n");
+    assert_eq!(calc(&["pi/2 rad"]).stdout, "1.5707963267948966… rad\n");
+    assert_eq!(calc(&["1 + 1/2 kg"]).code, 1);
+}
+
+/// Compound units take the prefix on their one numerator unit; the others stay.
+#[test]
+fn calc_autoprefix_prefixes_the_numerator_of_a_compound_unit() {
+    for (expr, text) in [
+        ("1500 m/s", "1.5 km/s\n"),
+        ("0.0025 m/s", "2.5 mm/s\n"),
+        ("3 m/s", "3 m/s\n"),
+        ("2500 J/(kg*K)", "2.5 kJ/(kg.K)\n"),
+        ("2500000 m2/s", "2.5 km^2/s\n"),
+        ("0.5 t/h", "500 kg/h\n"),
+        ("0.5 mol/L", "500 mmol/L\n"),
+        ("1500 kg*m", "1500 kg.m\n"),
+        ("1500 1/s", "1500 1/s\n"),
+        ("1500 degC/s", "1500 delta_degC/s\n"),
+    ] {
+        assert_eq!(calc(&[expr, "--autoprefix"]).stdout, text, "{expr}");
+    }
+    assert_eq!(
+        calc(&["1500 m/s", "--autoprefix", "--sci=3"]).stdout,
+        "1.50 km/s\n"
+    );
+}
+
+/// The options behave the same in every front end: a repeated `--sci` is an error like `--to`.
+#[test]
+fn calc_a_repeated_sci_is_a_usage_error() {
+    let r = calc(&["1 m", "--sci=3", "--sci=4"]);
+    assert_eq!(r.code, 2);
+    assert!(r.stderr.contains("'--sci' is given twice"), "{}", r.stderr);
+}
+
+/// Temperature points: the sign and the magnitude keep the scale; a sum of points in two scales
+/// needs `.to(UNIT)` around it, which converts both first.
+#[test]
+fn calc_temperature_points_negate_abs_and_sum_with_a_target_scale() {
+    for (expr, text) in [
+        ("-(40 degC)", "-40 degC\n"),
+        ("abs(-40 degC)", "40 degC\n"),
+        ("abs(-(40 degC))", "40 degC\n"),
+        ("(20 degC + 41 degF).to(degC)", "25 degC\n"),
+        ("(20 degC + 41 degF).to(degF)", "109 degF\n"),
+        ("(20 degC + 30 degC)", "50 degC\n"),
+    ] {
+        assert_eq!(calc(&[expr]).stdout, text, "{expr}");
+    }
+    let r = calc(&["20 degC + 41 degF"]);
+    assert_eq!(r.code, 1);
+    assert!(r.stderr.starts_with("error[refused]"), "{}", r.stderr);
+    assert!(r.stderr.contains(".to(degC)"), "{}", r.stderr);
 }

@@ -9,7 +9,7 @@ The numbers are enforced by tests that fail the build (see "How this is checked"
 | Path | API | What you get | Cost |
 |---|---|---|---|
 | Fast | `Conversion::apply`, `apply_slice`, `apply_in_place`, `apply_vec` | `f64` result from a multiply (linear) or add-add-multiply (affine) | about 0.5 ns per value |
-| Exact | `Conversion::apply_exact` (rational in, rational out), `Conversion::apply_exact_f64` (`f64` in, `f64` out), `Quantity::to_unit` | the exact rational result, or the **correctly rounded** `f64` of it | 50 ns (`apply_exact`) to about 300 ns (`apply_exact_f64`) per value |
+| Exact | `Conversion::apply_exact` (rational in, rational out), `Conversion::apply_exact_f64` (`f64` in, `f64` out), `Quantity::to_unit` | the exact rational result, or the **correctly rounded** `f64` of it | 50 ns (`apply_exact`) to about 300 ns (`apply_exact_f64`) per value; 30 to 55 ns to round one `Ratio` to `f64`, with or without a power of ten or pi |
 
 The factors themselves are exact (ADR-002): a fraction, which may carry a power of ten and a
 power of pi next to it (ADR-018, for example `deg` is `1/180 pi`). The fast path only has `f64`
@@ -21,15 +21,22 @@ does not depend on how the factor is stored.
 
 A number is `num/den * 10^k * pi^m` (ADR-018). Rounding it to `f64` is correct, never guessed:
 
-* A power of ten that fits `i128` is multiplied into the fraction first, and the fraction is
-  rounded as always (`Ratio::to_f64`, the same code as for a plain fraction).
-* Otherwise, and for every power of pi, the value is bracketed between a lower and an upper bound
-  with 128-bit mantissas and directed rounding (every product and quotient rounds down for the
-  lower bound and up for the upper one; pi is `floor(pi * 2^126)` and the next unit). Rounding to
-  nearest is monotone, so when both bounds round to the same `f64` that `f64` is the correctly
-  rounded value. When they differ (the value is within about 2^-120 of a rounding boundary) or
-  the value is outside the normal `f64` range, the result is an `overflow` error. It is never
-  an unproven number.
+* The value is bracketed between a lower and an upper bound with 128-bit mantissas and directed
+  rounding (every product and quotient rounds down for the lower bound and up for the upper
+  one; the powers of ten come from a table of bounds, the division takes two 64-bit digits, pi
+  is `floor(pi * 2^126)` and the next unit). Rounding to nearest is monotone, so when both
+  bounds round to the same `f64` that `f64` is the correctly rounded value. This is tried
+  first (about 50 ns, ADR-028; [how it works](how-numbers-work.md)).
+* When the bounds cannot decide (the value is within about 2^-120 of a rounding boundary), a
+  power of ten that fits `i128` is multiplied into the fraction and the fraction is rounded as
+  always (`Ratio::to_f64`, the same code as for a plain fraction). If that does not decide
+  either, or the value is outside the normal `f64` range, the result is an `overflow` error. It
+  is never an unproven number.
+* A decimal whose power of ten does not fit beside its digits (`6.62607015e-34`) is stored with
+  the power of ten in the exponent (ADR-028), so it can be entered and multiplied exactly, and
+  it is rounded by the bounds above. This is tested against `str::parse::<f64>`, which is
+  correctly rounded, on random decimals (`decimals_with_a_far_exponent_round_like_the_standard_library`
+  in `exact_f64.rs`).
 * An accuracy claim for such a value therefore has the same meaning as for a fraction: the linear
   bound of 1 ulp holds, `apply_exact_f64` is the nearest `f64`. This is tested against an
   independent oracle (`factors_with_pi_or_a_power_of_ten_are_correctly_rounded` in

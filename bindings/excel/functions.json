@@ -5,46 +5,221 @@
       "id": "CONVERT",
       "name": "CONVERT",
       "description": "Converts a number between units with an exact factor. A unit that is unknown or ambiguous is an error, never a guess.",
-      "result": { "type": "number", "dimensionality": "scalar" },
+      "result": {
+        "type": "number",
+        "dimensionality": "scalar"
+      },
       "parameters": [
-        { "name": "value", "description": "The number to convert.", "type": "number", "dimensionality": "scalar" },
-        { "name": "from", "description": "Unit to convert from, for example km/h.", "type": "string", "dimensionality": "scalar" },
-        { "name": "to", "description": "Unit to convert to, for example m/s.", "type": "string", "dimensionality": "scalar" },
-        { "name": "density", "description": "Optional, only for mass to volume (or back): your own density, for example 998.2067kg/m3, or the name of a density in a loaded config such as water_25C (needs config water). Ignored when no density is needed. Nothing is assumed when it is left out.", "type": "string", "dimensionality": "scalar", "optional": true },
-        { "name": "config", "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us-customary (ton, mile, gal), us-survey, imperial, metric-trade, year-julian, year-civil, or water for its densities. Several: us-customary,water.", "type": "string", "dimensionality": "scalar", "optional": true }
+        {
+          "name": "value",
+          "description": "The number to convert.",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "from",
+          "description": "Unit to convert from, for example km/h.",
+          "type": "string",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "to",
+          "description": "Unit to convert to, for example m/s.",
+          "type": "string",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "density",
+          "description": "Optional, only for mass to volume (or back): your own density, for example 998.2067kg/m3, or the name of a density in a loaded config such as water_25C (needs config water). Ignored when no density is needed. Nothing is assumed when it is left out.",
+          "type": "string",
+          "dimensionality": "scalar",
+          "optional": true
+        },
+        {
+          "name": "config",
+          "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us-customary (ton, mile, gal), us-survey, imperial, metric-trade, year-julian, year-civil, or water for its densities. Several: us-customary,water.",
+          "type": "string",
+          "dimensionality": "scalar",
+          "optional": true
+        }
       ]
     },
     {
       "id": "CONVERTEXACT",
       "name": "CONVERTEXACT",
       "description": "Like CONVERT, but the value may be text with pi, kept exact: \"4pi\", \"pi/2\", \"2*pi^2\", or a decimal such as \"0.1\". Allows * / ^ and parentheses, no addition. Rounded once at the end. A unit or expression that is unknown or ambiguous is an error, never a guess.",
-      "result": { "type": "number", "dimensionality": "scalar" },
+      "result": {
+        "type": "number",
+        "dimensionality": "scalar"
+      },
       "parameters": [
-        { "name": "value", "description": "The value to convert: a number, or text such as \"4pi\" or \"pi/2\". Write 1/(2*pi), not 1/2pi (ambiguous, refused).", "type": "any", "dimensionality": "scalar" },
-        { "name": "from", "description": "Unit to convert from, for example rad.", "type": "string", "dimensionality": "scalar" },
-        { "name": "to", "description": "Unit to convert to, for example deg.", "type": "string", "dimensionality": "scalar" },
-        { "name": "density", "description": "Optional, only for mass to volume (or back): your own density, for example 998.2067kg/m3, or the name of a density in a loaded config such as water_25C (needs config water). Ignored when no density is needed. Nothing is assumed when it is left out.", "type": "string", "dimensionality": "scalar", "optional": true },
-        { "name": "config", "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us-customary (ton, mile, gal), us-survey, imperial, metric-trade, year-julian, year-civil, or water for its densities. Several: us-customary,water.", "type": "string", "dimensionality": "scalar", "optional": true }
+        {
+          "name": "value",
+          "description": "The value to convert: a number, or text such as \"4pi\" or \"pi/2\". Write 1/(2*pi), not 1/2pi (ambiguous, refused).",
+          "type": "any",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "from",
+          "description": "Unit to convert from, for example rad.",
+          "type": "string",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "to",
+          "description": "Unit to convert to, for example deg.",
+          "type": "string",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "density",
+          "description": "Optional, only for mass to volume (or back): your own density, for example 998.2067kg/m3, or the name of a density in a loaded config such as water_25C (needs config water). Ignored when no density is needed. Nothing is assumed when it is left out.",
+          "type": "string",
+          "dimensionality": "scalar",
+          "optional": true
+        },
+        {
+          "name": "config",
+          "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us-customary (ton, mile, gal), us-survey, imperial, metric-trade, year-julian, year-civil, or water for its densities. Several: us-customary,water.",
+          "type": "string",
+          "dimensionality": "scalar",
+          "optional": true
+        }
       ]
     },
     {
       "id": "CONVERTRANGE",
       "name": "CONVERTRANGE",
       "description": "Converts every number in a range between units with one exact factor, and spills the results. Blank cells stay blank; a cell with text is an error that names its position. A unit that is unknown or ambiguous is an error, never a guess.",
-      "result": { "type": "any", "dimensionality": "matrix" },
+      "result": {
+        "type": "any",
+        "dimensionality": "matrix"
+      },
       "parameters": [
-        { "name": "values", "description": "The range of numbers to convert. Blank cells (or cells with only spaces) stay blank.", "type": "any", "dimensionality": "matrix" },
-        { "name": "from", "description": "Unit to convert from, for example km/h.", "type": "string", "dimensionality": "scalar" },
-        { "name": "to", "description": "Unit to convert to, for example m/s.", "type": "string", "dimensionality": "scalar" },
-        { "name": "density", "description": "Optional, only for mass to volume (or back): your own density, for example 998.2067kg/m3, or the name of a density in a loaded config such as water_25C (needs config water). Ignored when no density is needed. Nothing is assumed when it is left out.", "type": "string", "dimensionality": "scalar", "optional": true },
-        { "name": "config", "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us-customary (ton, mile, gal), us-survey, imperial, metric-trade, year-julian, year-civil, or water for its densities. Several: us-customary,water.", "type": "string", "dimensionality": "scalar", "optional": true }
+        {
+          "name": "values",
+          "description": "The range of numbers to convert. Blank cells (or cells with only spaces) stay blank.",
+          "type": "any",
+          "dimensionality": "matrix"
+        },
+        {
+          "name": "from",
+          "description": "Unit to convert from, for example km/h.",
+          "type": "string",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "to",
+          "description": "Unit to convert to, for example m/s.",
+          "type": "string",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "density",
+          "description": "Optional, only for mass to volume (or back): your own density, for example 998.2067kg/m3, or the name of a density in a loaded config such as water_25C (needs config water). Ignored when no density is needed. Nothing is assumed when it is left out.",
+          "type": "string",
+          "dimensionality": "scalar",
+          "optional": true
+        },
+        {
+          "name": "config",
+          "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us-customary (ton, mile, gal), us-survey, imperial, metric-trade, year-julian, year-civil, or water for its densities. Several: us-customary,water.",
+          "type": "string",
+          "dimensionality": "scalar",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "CALC",
+      "name": "CALC",
+      "description": "Evaluates an equation with units and returns the number in the unit you ask for. Exact where the mathematics is exact. The unit is required and checked: a result of another dimension is an error, never a guess.",
+      "result": {
+        "type": "number",
+        "dimensionality": "scalar"
+      },
+      "parameters": [
+        {
+          "name": "expression",
+          "description": "The equation, for example sqrt(2 * dp / rho) or 2 kip/ft * (20 ft)^2 / 8. Put a space on both sides of an operator between quantities.",
+          "type": "string",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "to",
+          "description": "The unit of the result, for example m/s or kN*m.",
+          "type": "string",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "variables",
+          "description": "Optional: values for names in the equation as name=value entries separated by ;, for example dp=50 kPa; rho=998 kg/m3. Build them from cells with &.",
+          "type": "string",
+          "dimensionality": "scalar",
+          "optional": true
+        },
+        {
+          "name": "config",
+          "description": "Optional: a shipped config that resolves names which are otherwise refused as ambiguous, for example us-customary.",
+          "type": "string",
+          "dimensionality": "scalar",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "CALCTEXT",
+      "name": "CALCTEXT",
+      "description": "Evaluates an equation with units and returns the result as text with its unit, for example 1.5 km. An approximate result starts with ≈ and a rounded exact result ends with …. The unit is the one the arithmetic gave unless you give one.",
+      "result": {
+        "type": "string",
+        "dimensionality": "scalar"
+      },
+      "parameters": [
+        {
+          "name": "expression",
+          "description": "The equation, for example sqrt(2 m2) or n * molar_gas_constant * T.to(K) / V.",
+          "type": "string",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "to",
+          "description": "Optional: the unit of the result. Leave it out to keep the unit the arithmetic gave.",
+          "type": "string",
+          "dimensionality": "scalar",
+          "optional": true
+        },
+        {
+          "name": "variables",
+          "description": "Optional: values for names as name=value entries separated by ;.",
+          "type": "string",
+          "dimensionality": "scalar",
+          "optional": true
+        },
+        {
+          "name": "config",
+          "description": "Optional: a shipped config, for example us-customary.",
+          "type": "string",
+          "dimensionality": "scalar",
+          "optional": true
+        },
+        {
+          "name": "format",
+          "description": "Optional words separated by spaces: sci (scientific notation), sci=4 (4 significant digits), autoprefix (the SI prefix that suits the number, 1500 m is 1.5 km, not with a unit), exact (add the exact fraction).",
+          "type": "string",
+          "dimensionality": "scalar",
+          "optional": true
+        }
       ]
     },
     {
       "id": "VERSION",
       "name": "VERSION",
       "description": "The unit table version and the number of units.",
-      "result": { "type": "string", "dimensionality": "scalar" },
+      "result": {
+        "type": "string",
+        "dimensionality": "scalar"
+      },
       "parameters": []
     }
   ]

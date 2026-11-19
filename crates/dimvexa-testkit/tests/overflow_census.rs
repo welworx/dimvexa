@@ -223,12 +223,22 @@ fn census() {
         comp_over, 0,
         "no pair of seed units may overflow when composed"
     );
-    // Overflow is reported as an error, never wrapped (checked in the property tests); the
-    // extreme prefix combinations are expected to overflow cleanly.
-    assert!(pp_over > 0, "10^60 must overflow i128");
-    for r in &realistic_report[..realistic_report.len() - 1] {
+    // Overflow is reported as an error, never wrapped (checked in the property tests). A power
+    // of ten never overflows the fraction (ADR-028): even the most extreme prefix pair, Qm to
+    // qm (10^60), is exact, plain, squared and cubed. What still overflows is digit width
+    // (powers of a big unit, section E).
+    assert_eq!(
+        (pp_over, pp2_over, pp3_over),
+        (0, 0, 0),
+        "a power of ten must stay in the exponent, not overflow the fraction"
+    );
+    for r in &realistic_report {
         assert!(r.contains(": ok"), "{r}");
     }
-    assert!(realistic_report.last().unwrap().contains("overflow"));
+    assert!(realistic_report.last().unwrap().contains("10^60"));
+    assert!(
+        pw_over > 0,
+        "the digits of a big unit still overflow in a power"
+    );
     let _ = (Dim::NONE, Expr::One, Ratio::ONE);
 }

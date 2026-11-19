@@ -16,6 +16,8 @@ All functions live in the `DIMVEXA` namespace. Excel ignores letter case, so
 | `DIMVEXA.CONVERT(value, from, to, [density], [config])` | one number |
 | `DIMVEXA.CONVERTEXACT(value, from, to, [density], [config])` | one number; the value may be text with pi, kept exact (`"4pi"`, `"pi/2"`) |
 | `DIMVEXA.CONVERTRANGE(range, from, to, [density], [config])` | a range of numbers, spilled below and beside the formula |
+| `DIMVEXA.CALC(expression, to, [variables], [config])` | one number: an equation with units in the unit you ask for (the unit is required and checked; `"1"` asks for a dimensionless result) |
+| `DIMVEXA.CALCTEXT(expression, [to], [variables], [config], [format])` | text with the unit: `1.5 km`, `≈ 1.4142135623730951 m` |
 | `DIMVEXA.VERSION()` | text, the unit table version and the number of units |
 
 ```
@@ -27,7 +29,18 @@ All functions live in the `DIMVEXA` namespace. Excel ignores letter case, so
 =DIMVEXA.CONVERT(1,"ton","kg",,"us-customary")               907.18474 (the config us-customary picks the short ton)
 =DIMVEXA.CONVERT(1,"L","kg","998.2067kg/m3")       0.9982067 (your own density)
 =DIMVEXA.CONVERT(1,"L","kg","water_25C","water")  0.99704702 (a density from a loaded config)
+=DIMVEXA.CALC("sqrt(2 * dp / rho)","m/s","dp=50 kPa; rho=998 kg/m3")   10.01001502504383
+=DIMVEXA.CALC("sqrt(2 * dp / rho)","m/s","dp="&B1&" kPa; rho=998 kg/m3")   values from cells
+=DIMVEXA.CALCTEXT("1500 m",,,,"autoprefix")           1.5 km
+=DIMVEXA.CALCTEXT("1 m / 3",,,,"sci=4 exact")          1/3 = 3.333e-1 m
 ```
+
+`CALC` and `CALCTEXT` evaluate an equation with units as `dimvexa calc` does (guide, section
+"Equations"): exact where the mathematics is exact. The values of names are `name=value` entries
+separated by `;`. `CALC` returns a number and requires the unit, so a number never loses its unit
+and a result of another dimension is an error; a result beyond the range of a number is an error.
+`CALCTEXT` returns the text; its `format` is words separated by spaces: `sci`, `sci=4`,
+`autoprefix`, `exact`.
 
 ### Arguments
 
@@ -248,6 +261,8 @@ If a spilled result shows `#SPILL!` (German `#ÜBERLAUF!`), a cell in the way is
   conversions, [`precision.md`](precision.md)).
 
 ## Status
+
+`DIMVEXA.CALC` and `DIMVEXA.CALCTEXT` (equations, ADR-030) are tested with the mocked runtime like the other functions; they are not tested in real Excel yet.
 
 | Check | Result |
 |---|---|

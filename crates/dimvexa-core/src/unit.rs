@@ -44,6 +44,8 @@ pub struct UnitDef {
     pub status: Status,
     /// Accepted prefixes.
     pub prefixes: PrefixMode,
+    /// The unit `--autoprefix` switches to below one of this unit (empty for none).
+    pub autoprefix_below: &'static str,
     /// Namespace, `si` or `std` for the core table.
     pub namespace: &'static str,
     /// Citation of the primary definition.
@@ -81,6 +83,7 @@ pub struct Unit {
     exactness: Exactness,
     status: Status,
     prefixes: PrefixMode,
+    autoprefix_below: String,
     namespace: String,
     source: String,
     note: String,
@@ -147,6 +150,7 @@ impl Unit {
             exactness: Exactness::Defined,
             status: Status::Current,
             prefixes: PrefixMode::None,
+            autoprefix_below: String::new(),
             namespace: "std".to_string(),
             source: String::new(),
             note: String::new(),
@@ -195,6 +199,7 @@ impl Unit {
         unit.exactness = def.exactness;
         unit.status = def.status;
         unit.prefixes = def.prefixes;
+        unit.autoprefix_below = def.autoprefix_below.to_string();
         unit.namespace = def.namespace.to_string();
         unit.source = def.source.to_string();
         unit.note = def.note.to_string();
@@ -250,6 +255,14 @@ impl Unit {
         if self.offset.is_zero() {
             self.prefixes = prefixes;
         }
+        self
+    }
+
+    /// Sets the unit `--autoprefix` switches to below one of this unit (a tonne below 1 t reads in
+    /// grams and kilograms). Empty for none.
+    #[must_use]
+    pub fn with_autoprefix_below(mut self, symbol: &str) -> Self {
+        self.autoprefix_below = symbol.to_string();
         self
     }
 
@@ -345,6 +358,12 @@ impl Unit {
     #[must_use]
     pub const fn prefixes(&self) -> PrefixMode {
         self.prefixes
+    }
+
+    /// The unit `--autoprefix` switches to below one of this unit, or empty.
+    #[must_use]
+    pub fn autoprefix_below(&self) -> &str {
+        &self.autoprefix_below
     }
 
     /// Namespace.
@@ -641,6 +660,10 @@ impl UnitExpr {
             return Ok(self.clone());
         }
         self.refuse_affine(&Self::unity())?;
+        if exp == 0 || self.is_unity() {
+            // anything to the power 0, and 1 to any power, is the plain number 1 (not `m^0`)
+            return Ok(Self::unity());
+        }
         let kind_exp = self.kind_exp.checked_mul(exp).ok_or(Error::Overflow {
             operation: "kind power",
         })?;
@@ -734,6 +757,7 @@ mod tests {
             exactness: Exactness::Defined,
             status: Status::Current,
             prefixes: PrefixMode::Si,
+            autoprefix_below: "",
             namespace: "std",
             source: "test",
             note: "",

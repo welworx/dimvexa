@@ -256,6 +256,14 @@ def cpu_model():
                 return line.split(":", 1)[1].strip()
     except OSError:
         pass
+    if platform.system() == "Darwin":
+        try:
+            out = subprocess.run(["sysctl", "-n", "machdep.cpu.brand_string"], capture_output=True,
+                                 text=True, check=True).stdout.strip()
+            if out:
+                return out
+        except (OSError, subprocess.CalledProcessError):
+            pass
     return platform.processor() or "unknown"
 
 
@@ -274,7 +282,8 @@ def machine_info():
 def peak_rss_kb():
     try:
         import resource
-        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss  # kB on Linux
+        rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss  # kB on Linux, bytes on macOS
+        return rss // 1024 if platform.system() == "Darwin" else rss
     except Exception:
         return None
 

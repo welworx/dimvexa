@@ -118,7 +118,7 @@ def test_density_and_configs_like_the_cli() -> None:
     with pytest.raises(dimvexa.DimvexaError) as err:
         dimvexa.convert(1.0, "L", "kg")
     assert err.value.code == "dimension_mismatch"
-    for bad in ("nope", "h_P"):  # unknown, and a constant that is not a density
+    for bad in ("nope", "planck_constant"):  # unknown, and a constant that is not a density
         with pytest.raises(dimvexa.DimvexaError):
             dimvexa.convert(1.0, "L", "kg", density=bad)
     with pytest.raises(dimvexa.DimvexaError):
@@ -127,7 +127,15 @@ def test_density_and_configs_like_the_cli() -> None:
 
 def test_constants_table() -> None:
     names = [c["id"] for c in dimvexa.constants()]
-    assert names == ["pi", "h_P", "e", "k_B", "N_A"]
+    assert names == [
+        "pi",
+        "planck_constant",
+        "elementary_charge",
+        "boltzmann_constant",
+        "avogadro_constant",
+        "speed_of_light",
+        "molar_gas_constant",
+    ]
     h = dimvexa.constants()[1]
     assert h["name"] == "Planck constant"
     assert (h["value"], h["value_text"], h["unit"]) == ("662607015 10^-42", "6.62607015e-34", "J.s")
@@ -152,7 +160,9 @@ def test_a_config_cannot_redefine_a_builtin_constant() -> None:
 
 def test_replacing_an_entry_of_an_earlier_config_warns() -> None:
     mine = WATER_TEXT.replace("rho", "water_25C")
-    with pytest.warns(UserWarning, match="constant 'water_25C'.*replaces the one from bundled:water"):
+    with pytest.warns(
+        UserWarning, match="constant 'water_25C'.*replaces the one from bundled:water"
+    ):
         dimvexa.constants(configs=["water"], config_texts=[mine])
 
 
@@ -163,9 +173,7 @@ def test_config_files_must_be_regular_files_and_an_empty_density_is_none(tmp_pat
     assert dimvexa.convert(1.0, "m", "km", density="") == 0.001
 
 
-UNIT_TEXT = (
-    '[[unit]]\nid = "blob"\nbase = "g"\nfactor = "7"\nexactness = "defined"\nsource = "s"\n'
-)
+UNIT_TEXT = '[[unit]]\nid = "blob"\nbase = "g"\nfactor = "7"\nexactness = "defined"\nsource = "s"\n'
 
 
 def test_quantity_takes_configs_and_density() -> None:
@@ -221,7 +229,7 @@ def test_a_string_value_may_contain_pi_and_stays_exact() -> None:
     ("value", "code"),
     [
         ("1/2pi", "ambiguous_expression"),
-        ("2*h_P", "refused"),
+        ("2*planck_constant", "refused"),
         ("tau", "invalid_number"),
         ("1/0", "division_by_zero"),
     ],
@@ -236,3 +244,255 @@ def test_pi_into_an_offset_unit_is_refused() -> None:
     with pytest.raises(dimvexa.DimvexaError) as e:
         dimvexa.convert("pi", "degC", "degF")
     assert e.value.code == "refused"
+
+
+def test_calc_is_exact_when_the_mathematics_is() -> None:
+    r = dimvexa.calc("sqrt(9 m2)")
+    assert r == {
+        "value": 3.0,
+        "unit": "m",
+        "exact": True,
+        "rounded": False,
+        "fraction": "3/1",
+        "dimension": [0, 1, 0, 0, 0, 0, 0],
+        "kind": "plain",
+        "text": "3 m",
+    }
+    assert dimvexa.calc("100 kg * 1 g_n * sin(30 deg)", to="N")["text"] == "490.3325 N"
+    # a plain number has no unit
+    plain = dimvexa.calc("3 m / 2 m")
+    assert (plain["value"], plain["unit"], plain["fraction"], plain["text"]) == (
+        1.5,
+        "",
+        "3/2",
+        "1.5",
+    )
+    assert plain["dimension"] == [0] * 7
+
+
+def test_calc_approximate_results_say_so() -> None:
+    r = dimvexa.calc("sqrt(2 m2)")
+    assert r["exact"] is False
+    assert r["fraction"] is None
+    assert r["text"] == "≈ 1.4142135623730951 m"
+
+
+def test_calc_named_values_equal_inline_quantities() -> None:
+    inline = dimvexa.calc("0.61 * 10 cm2 * sqrt(2 * 50 kPa / 998 kg/m3)", to="L/s")
+    named = dimvexa.calc(
+        "Cd * A * sqrt(2 * dp / rho)",
+        vars={"Cd": "0.61", "A": "10 cm2", "dp": "50 kPa", "rho": "998 kg/m3"},
+        to="L/s",
+    )
+    assert inline == named
+    assert inline["text"] == "≈ 6.106109165276735 L/s"
+    # x^0.5, y^(1/2) and sqrt(x) agree
+    for e in ("x^0.5", "x^(1/2)", "sqrt(x)"):
+        assert dimvexa.calc(e, vars={"x": "9 m2"})["text"] == "3 m"
+
+
+def test_calc_min_max_need_one_dimension_and_keep_the_winners_unit() -> None:
+    assert dimvexa.calc("min(3 ft, 4 m)")["text"] == "3 ft"
+    assert dimvexa.calc("max(4 m, 4 km)")["text"] == "4 km"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("min(4 m, 3 L)")
+    assert e.value.code == "dimension_mismatch"
+
+
+def test_calc_errors_carry_codes_and_configs_apply() -> None:
+    for expr, code in [
+        ("1 m + 1 s", "dimension_mismatch"),
+        ("log(100)", "refused"),
+        ("log(100)", "refused"),
+        ("1 +", "parse_error"),
+    ]:
+        with pytest.raises(dimvexa.DimvexaError) as e:
+            dimvexa.calc(expr)
+        assert e.value.code == code, expr
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("1 m", to="s")
+    assert e.value.code == "dimension_mismatch"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("1 ton * 1 g_n", to="N")
+    assert e.value.code == "ambiguous_symbol"
+    r = dimvexa.calc("1 ton * 1 g_n", to="N", configs=["us-customary"])
+    assert r["text"] == "8896.443230521 N"
+
+
+def test_calc_refuses_bad_names_and_pi() -> None:
+    for name in ("d p", " x ", "1x", "pi"):
+        with pytest.raises(dimvexa.DimvexaError) as e:
+            dimvexa.calc("1 m", vars={name: "3 m"})
+        assert e.value.code == "invalid_definition", name
+
+
+def test_calc_number_text_is_the_text_of_the_command_line() -> None:
+    # the same forms as format_f64 in dimvexa-calc, which the CLI prints too
+    for expr, text in [
+        ("1 m / 3", "0.3333333333333333… m"),
+        ("1e15 m", "1000000000000000 m"),
+        ("1e16 m", "1e16 m"),
+        ("0.0001 m", "0.0001 m"),
+        ("0.00001 m", "1e-5 m"),
+        ("2 m - 2 m", "0 m"),
+        ("-0.5 m", "-0.5 m"),
+        ("sqrt(1e40 m2)", "1e20 m"),
+        ("sqrt(2e-10 m2)", "≈ 1.4142135623730951e-5 m"),
+    ]:
+        assert dimvexa.calc(expr)["text"] == text, expr
+    t = dimvexa.calc("20 degC + 5 K")
+    assert (t["text"], t["kind"]) == ("25 degC", "absolute_temperature")
+
+
+def test_calc_marks_rounding_prints_beyond_f64_and_refuses_ambiguous_names() -> None:
+    third = dimvexa.calc("1 m / 3")
+    assert (third["rounded"], third["exact"], third["fraction"]) == (True, True, "1/3")
+    assert dimvexa.calc("0.1 + 0.2")["rounded"] is False
+    huge = dimvexa.calc("1e300 * 1e300 m")
+    assert (huge["value"], huge["text"], huge["fraction"]) == (None, "1e600 m", "10^600")
+    # a name that is also a unit in the equation is refused, not guessed
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("0.5 h", vars={"h": "3 m"})
+    assert e.value.code == "invalid_definition"
+    assert dimvexa.calc("h * 2", vars={"h": "3 m"})["text"] == "6 m"
+    for bad in ("sin(30 deg * 30 deg)", "sin(1 / (1 rad))"):
+        with pytest.raises(dimvexa.DimvexaError) as e:
+            dimvexa.calc(bad)
+        assert e.value.code == "refused", bad
+
+
+def test_calc_knows_the_constants_tan_atan2_and_merges_units() -> None:
+    assert dimvexa.calc("boltzmann_constant * 300 K")["text"] == "4.141947e-21 J"
+    assert dimvexa.calc("tan(45 deg)")["text"] == "1"
+    assert dimvexa.calc("atan2(1 m, 100 cm)", to="deg")["text"] == "45 deg"
+    assert dimvexa.calc("1 m * 1 m")["unit"] == "m^2"
+    with pytest.warns(UserWarning, match="replaces the constant"):
+        assert (
+            dimvexa.calc("elementary_charge * 2", vars={"elementary_charge": "3 C"})["text"]
+            == "6 C"
+        )
+
+
+def test_calc_config_constants_to_pi_names_and_notation() -> None:
+    r = dimvexa.calc("1 L * water_25C", to="kg", configs=["water"])
+    assert r["text"] == "0.99704702 kg"
+    gas = dimvexa.calc(
+        "n * molar_gas_constant * T.to(K) / V",
+        vars={"n": "2 mol", "T": "20 degC", "V": "50 L"},
+        to="kPa",
+    )
+    assert gas["text"].startswith("97.4953886604649")
+    assert dimvexa.calc("2 pi r", vars={"r": "3 m"})["text"] == "18.84955592153876… m"
+    assert dimvexa.calc("x^n", vars={"x": "9 m2", "n": "0.5"})["text"] == "3 m"
+    assert dimvexa.calc("10 m² · 3 m")["text"] == "30 m^3"
+
+
+def test_calc_r_and_r2_are_two_names_and_an_unknown_name_is_said_so() -> None:
+    both = {"r": "3 m", "r2": "5 m"}
+    assert dimvexa.calc("2 r2 + r", vars=both)["text"] == "13 m"
+    assert dimvexa.calc("2 r^2 / r2", vars=both)["text"] == "3.6 m"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("2 r2", vars=both)  # r is not used
+    assert e.value.code == "invalid_definition"
+    assert "the variable 'r' is not used" in str(e.value)
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("2 r")
+    assert e.value.code == "parse_error"
+    assert "not a unit and not a variable" in str(e.value)
+    assert dimvexa.calc("2 r", vars={"r": "3 m"})["text"] == "6 m"
+
+
+def test_calc_review_round_three_cases() -> None:
+    assert dimvexa.calc("-40 degC")["text"] == "-40 degC"
+    assert dimvexa.calc("10^-400")["text"] == "1e-400"
+    assert dimvexa.calc("1^128")["text"] == "1"
+    assert dimvexa.calc("sin(179.9999999 deg)")["text"] == "≈ 1.7453292519943295e-9"
+    for expr in ("x^2 n",):
+        with pytest.raises(dimvexa.DimvexaError) as e:
+            dimvexa.calc(expr, vars={"x": "10 m", "n": "2"})
+        assert e.value.code == "parse_error"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("1 m", vars={"2x": "1 m"})
+    assert e.value.code == "invalid_definition"
+
+
+def test_calc_pow_floor_ceil_round() -> None:
+    assert dimvexa.calc("floor(7.8 m)")["text"] == "7 m"
+    assert dimvexa.calc("ceil(7.2 m)")["text"] == "8 m"
+    assert dimvexa.calc("round(-2.5 m)")["text"] == "-3 m"
+    assert dimvexa.calc("pow(2, 10)")["text"] == "1024"
+    assert dimvexa.calc("pow(9 m2, 0.5)")["text"] == "3 m"
+    assert dimvexa.calc("floor(sqrt(2) * 10 m)")["exact"] is False
+
+
+def test_calc_sci_autoprefix_and_exact_options() -> None:
+    assert dimvexa.calc("1500 m", sci=True)["text"] == "1.5e3 m"
+    assert dimvexa.calc("1500 m", sci=3)["text"] == "1.50e3 m"
+    assert dimvexa.calc("1500 m", sci=False)["text"] == "1500 m"
+    assert dimvexa.calc("1500 m", sci=None)["text"] == "1500 m"
+    assert dimvexa.calc("1 m / 3", sci=4, exact=True)["text"] == "1/3 = 3.333e-1 m"
+    assert dimvexa.calc("1 m / 3", exact=True)["text"] == "1/3 = 0.3333333333333333… m"
+    r = dimvexa.calc("1500 m", autoprefix=True)
+    assert (r["text"], r["unit"], r["value"]) == ("1.5 km", "km", 1.5)
+    assert dimvexa.calc("0.0025 m", autoprefix=True)["text"] == "2.5 mm"
+    assert dimvexa.calc("3 m/s", autoprefix=True)["text"] == "3 m/s"
+    assert dimvexa.calc("1500 m", autoprefix=True, sci=True)["text"] == "1.5 km"
+    # the number in the dict stays a number; only text follows sci
+    assert dimvexa.calc("1500 m", sci=3)["value"] == 1500.0
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("1500 m", autoprefix=True, to="cm")
+    assert e.value.code == "refused"
+    for bad in (0, 18, -1, "x", 2.5):
+        with pytest.raises(ValueError, match="significant digits"):
+            dimvexa.calc("1 m", sci=bad)  # type: ignore[arg-type]
+
+
+def test_calc_review_round_four_cases() -> None:
+    assert dimvexa.calc("2 m^(2)")["text"] == "2 m^2"
+    assert dimvexa.calc("9.995", sci=3)["text"] == "1.00e1"
+    assert dimvexa.calc("2.5", sci=1)["text"] == "3e0"
+    assert dimvexa.calc("0.5 t", autoprefix=True)["text"] == "500 kg"
+    assert dimvexa.calc("20 degC / 2 s")["text"] == "10 delta_degC/s"
+    assert dimvexa.calc("5 s⁻²")["text"] == "5 s^-2"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("exp(-746)")
+    assert e.value.code == "overflow"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("2 * 27 degC")
+    assert e.value.code == "refused"
+
+
+def test_calc_reading_rules_pi_sums_and_sci_with_prefix() -> None:
+    assert dimvexa.calc("10/2 s")["text"] == "5 s"
+    assert dimvexa.calc("10/(2 s)")["text"] == "5 1/s"
+    assert dimvexa.calc("1 + pi")["text"] == "≈ 4.141592653589793"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("1 + pi", exact=True)
+    assert e.value.code == "unrepresentable"
+    assert dimvexa.calc("999.9996 m", autoprefix=True, sci=3)["text"] == "1.00 km"
+    with pytest.raises(dimvexa.DimvexaError, match="20 degC.to"):
+        dimvexa.calc("1 - 20 degC / 300 K")
+
+
+def test_calc_warnings_are_not_lost_when_the_calculation_fails() -> None:
+    with pytest.warns(UserWarning, match="replaces the constant"):
+        with pytest.raises(dimvexa.DimvexaError) as e:
+            dimvexa.calc("speed_of_light / 0", vars={"speed_of_light": "3"})
+    assert e.value.code == "division_by_zero"
+
+
+def test_calc_compound_prefix_temperature_points_and_options_match_the_cli() -> None:
+    assert dimvexa.calc("1500 m/s", autoprefix=True)["text"] == "1.5 km/s"
+    assert dimvexa.calc("1500 m/s", autoprefix=True, sci=3)["text"] == "1.50 km/s"
+    assert dimvexa.calc("-(40 degC)")["text"] == "-40 degC"
+    assert dimvexa.calc("abs(-40 degC)")["text"] == "40 degC"
+    assert dimvexa.calc("(20 degC + 41 degF).to(degC)")["text"] == "25 degC"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("20 degC + 41 degF")
+    assert e.value.code == "refused"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("1500 m", to="cm", autoprefix=True)
+    assert e.value.code == "refused"
+    with pytest.raises(dimvexa.DimvexaError) as e:
+        dimvexa.calc("x", vars={"x ": "3 m"})
+    assert e.value.code == "invalid_definition"

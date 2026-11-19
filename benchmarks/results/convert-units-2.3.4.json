@@ -1,6 +1,6 @@
 {
- "corpus_id": "abf0a7cc771b2ed4",
- "date_utc": "2026-11-12T10:14:19Z",
+ "corpus_id": "69bf1471279e6d39",
+ "date_utc": "2026-11-18T17:18:24Z",
  "fixture": false,
  "kind": "library",
  "library": {
@@ -9,11 +9,11 @@
  },
  "lockfile": "pinned",
  "machine": {
-  "arch": "x64",
-  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "arch": "arm64",
+  "cpu_model": "Apple M2",
   "governor": null,
-  "logical_cores": 4,
-  "os": "Linux 6.18.44-fc-v378"
+  "logical_cores": 8,
+  "os": "Darwin 25.5.0"
  },
  "modes": {
   "plain": {
@@ -40,158 +40,158 @@
    "affine_temperature": {
     "batch": {
      "1000": {
-      "mad": 91.65999999999985,
-      "max": 7868.479,
-      "median": 6599.347,
-      "min": 6138.878,
+      "mad": 80.79199999999992,
+      "max": 2830.041,
+      "median": 2468.458,
+      "min": 2379.459,
       "raw": [
-       6507.687,
-       6599.347,
-       6424.476,
-       6663.806,
-       7868.479,
-       7499.739,
-       6466.48,
-       6406.64,
-       6601.407,
-       6675.839,
-       6595.103,
-       6655.99,
-       6643.811,
-       6138.878,
-       6490.391
+       2625.292,
+       2640.458,
+       2462.083,
+       2453.458,
+       2724.25,
+       2468.458,
+       2549.25,
+       2830.041,
+       2657.833,
+       2597.042,
+       2379.459,
+       2454.209,
+       2441.583,
+       2431.917,
+       2407.25
       ],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 601.7897800000001,
-      "max": 6573.56916,
-      "median": 5508.77154,
-      "min": 3719.57434,
+      "mad": 25.59333000000015,
+      "max": 2794.10833,
+      "median": 2432.065,
+      "min": 2373.1,
       "raw": [
-       6573.56916,
-       6535.58042,
-       5696.37446,
-       4664.57868,
-       5604.57924,
-       4241.4499,
-       5527.48213,
-       4305.56105,
-       4906.98176,
-       5772.99415,
-       3719.57434,
-       5501.66085,
-       4272.64859,
-       5508.77154,
-       5656.80624
+       2469.04208,
+       2428.91958,
+       2434.00291,
+       2405.20333,
+       2452.53333,
+       2439.70333,
+       2381.71625,
+       2794.10833,
+       2457.65833,
+       2375.85417,
+       2432.065,
+       2519.34166,
+       2425.7425,
+       2373.1,
+       2421.28417
       ],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 422.99441300000035,
-      "max": 6664.374617,
-      "median": 5308.429604,
-      "min": 4845.584553,
+      "mad": 51.51862600000004,
+      "max": 2630.531167,
+      "median": 2579.012541,
+      "min": 2450.289958,
       "raw": [
-       5308.429604,
-       5731.424017,
-       5072.34396,
-       4845.584553,
-       6664.374617
+       2450.289958,
+       2579.012541,
+       2617.553084,
+       2630.531167,
+       2506.583042
       ],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.030908524990081787,
-     "max": 5.976346492767334,
-     "median": 5.909571468830109,
-     "min": 5.862252712249756,
+     "mad": 0.025714457035064697,
+     "max": 4.141129553318024,
+     "median": 3.7689954042434692,
+     "min": 3.7432809472084045,
      "raw": [
-      5.8939273953437805,
-      5.8839510679244995,
-      5.976346492767334,
-      5.918513655662537,
-      5.871732473373413,
-      5.878662943840027,
-      5.952629268169403,
-      5.887773096561432,
-      5.909571468830109,
-      5.862252712249756,
-      5.949974358081818,
-      5.938072085380554,
-      5.947395443916321,
-      5.959923565387726,
-      5.894900023937225
+      4.126096785068512,
+      4.141129553318024,
+      3.75182181596756,
+      3.7528425455093384,
+      3.8444747924804688,
+      4.073297023773193,
+      3.7534112334251404,
+      3.744197368621826,
+      3.7653719782829285,
+      3.7432809472084045,
+      3.7689954042434692,
+      3.7457098364830017,
+      3.999414563179016,
+      3.9439101815223694,
+      3.8492009043693542
      ],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "prepare_cold": {
-     "mad": 1422,
-     "max": 35040,
-     "median": 6956,
-     "min": 5534,
+     "mad": 83,
+     "max": 8250,
+     "median": 2833,
+     "min": 2750,
      "raw": [
-      35040,
-      13626,
-      6956,
-      6821,
-      5534
+      8250,
+      3292,
+      2833,
+      2792,
+      2750
      ],
      "samples": 5,
      "unit": "ns"
     },
     "prepare_warm": {
-     "mad": 109.767822265625,
-     "max": 6764.9102783203125,
-     "median": 6591.4447021484375,
-     "min": 4026.122314453125,
+     "mad": 91.5133056640625,
+     "max": 3290.2247314453125,
+     "median": 2554.6709594726562,
+     "min": 2439.403533935547,
      "raw": [
-      6635.6962890625,
-      6591.4447021484375,
-      6649.810302734375,
-      6643.6376953125,
-      6583.54150390625,
-      6701.2125244140625,
-      6764.9102783203125,
-      6676.61376953125,
-      6643.7354736328125,
-      6104.5115966796875,
-      4385.3885498046875,
-      4215.2164306640625,
-      4095.107421875,
-      4026.122314453125,
-      4150.6884765625
+      2449.329376220703,
+      2623.1142578125,
+      2577.123016357422,
+      2615.5255737304688,
+      2608.4569396972656,
+      2446.002960205078,
+      2440.8505859375,
+      2497.046142578125,
+      3290.2247314453125,
+      2463.1576538085938,
+      2462.3031616210938,
+      2565.7068786621094,
+      2554.6709594726562,
+      2671.0497436523438,
+      2439.403533935547
      ],
      "samples": 15,
      "unit": "ns"
     },
     "scalar": {
-     "mad": 51.8275146484375,
-     "max": 6589.8724365234375,
-     "median": 6445.216552734375,
-     "min": 6307.9456787109375,
+     "mad": 95.83792114257812,
+     "max": 3616.9471740722656,
+     "median": 2482.0404052734375,
+     "min": 2382.6929626464844,
      "raw": [
-      6589.8724365234375,
-      6307.9456787109375,
-      6330.9044189453125,
-      6488.204833984375,
-      6445.216552734375,
-      6485.33935546875,
-      6388.727294921875,
-      6439.8795166015625,
-      6497.0440673828125,
-      6581.3212890625,
-      6585.8280029296875,
-      6478.8687744140625,
-      6421.3388671875,
-      6393.684814453125,
-      6328.983154296875
+      2394.756317138672,
+      2611.479461669922,
+      2731.897979736328,
+      2607.207000732422,
+      2575.9620666503906,
+      2400.438934326172,
+      2388.5167236328125,
+      2382.6929626464844,
+      2386.2024841308594,
+      2387.9916076660156,
+      2413.6326904296875,
+      2482.0404052734375,
+      3616.9471740722656,
+      2792.939483642578,
+      2648.785919189453
      ],
      "samples": 15,
      "unit": "ns"
@@ -204,158 +204,158 @@
    "linear_pressure": {
     "batch": {
      "1000": {
-      "mad": 125.22599999999875,
-      "max": 11701.013,
-      "median": 11410.441,
-      "min": 11156.52,
+      "mad": 189.625,
+      "max": 5159,
+      "median": 4639.083,
+      "min": 4322.25,
       "raw": [
-       11284.057,
-       11250.017,
-       11156.52,
-       11490.87,
-       11293.486,
-       11419.878,
-       11484.59,
-       11342.935,
-       11535.667,
-       11701.013,
-       11539.695,
-       11389.919,
-       11226.489,
-       11410.441,
-       11600.272
+       4844.209,
+       4510.875,
+       4506.125,
+       4639.083,
+       4597.75,
+       4322.25,
+       4761.833,
+       4973.375,
+       4697.375,
+       4535.541,
+       4828.708,
+       4849.167,
+       5159,
+       4397.209,
+       4372.75
       ],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 1355.39091,
-      "max": 11549.24856,
-      "median": 9898.04575,
-      "min": 6557.26663,
+      "mad": 140.0050000000001,
+      "max": 5084.32417,
+      "median": 4585.16792,
+      "min": 4364.375,
       "raw": [
-       10246.46771,
-       10173.12079,
-       6557.26663,
-       8634.32116,
-       11413.23695,
-       11355.44755,
-       10614.00855,
-       8914.3094,
-       9230.34003,
-       11516.03524,
-       11549.24856,
-       9898.04575,
-       8542.65484,
-       6646.27345,
-       7170.32312
+       4445.16292,
+       4603.89583,
+       4402.37291,
+       5084.32417,
+       4364.375,
+       4869.50375,
+       4843.16375,
+       4937.01292,
+       4531.60417,
+       4381.58084,
+       4633.55667,
+       4719.79666,
+       4585.16792,
+       4472.30666,
+       4487.39208
       ],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 673.3924609999995,
-      "max": 9213.230641,
-      "median": 8459.248908,
-      "min": 7228.484306,
+      "mad": 26.63495899999998,
+      "max": 4697.220875,
+      "median": 4630.833334,
+      "min": 4581.315084,
       "raw": [
-       7785.856447,
-       9213.230641,
-       8672.004487,
-       7228.484306,
-       8459.248908
+       4581.315084,
+       4644.609583,
+       4604.198375,
+       4697.220875,
+       4630.833334
       ],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.04542803764343262,
-     "max": 6.319483995437622,
-     "median": 5.929876208305359,
-     "min": 5.7852479219436646,
+     "mad": 0.021619081497192383,
+     "max": 4.170902073383331,
+     "median": 3.766559064388275,
+     "min": 3.7449399828910828,
      "raw": [
-      6.083869457244873,
-      5.904337048530579,
-      5.911642551422119,
-      5.952902555465698,
-      5.963877558708191,
-      5.849066376686096,
-      5.7852479219436646,
-      5.884448170661926,
-      5.929876208305359,
-      5.947359085083008,
-      5.826691746711731,
-      6.184654235839844,
-      5.982769846916199,
-      6.319483995437622,
-      5.898104667663574
+      3.7527108788490295,
+      3.8846805691719055,
+      4.1686917543411255,
+      4.167949199676514,
+      4.170902073383331,
+      3.907717764377594,
+      3.7889729142189026,
+      3.7449399828910828,
+      3.7462313771247864,
+      3.7520030736923218,
+      3.7617633938789368,
+      3.7513375282287598,
+      3.7661070823669434,
+      3.766559064388275,
+      3.866990387439728
      ],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "prepare_cold": {
-     "mad": 1328,
-     "max": 30632,
-     "median": 7818,
-     "min": 6490,
+     "mad": 750,
+     "max": 18959,
+     "median": 5750,
+     "min": 5000,
      "raw": [
-      16860,
-      7818,
-      7178,
-      6490,
-      30632
+      18959,
+      5750,
+      5000,
+      6833,
+      5416
      ],
      "samples": 5,
      "unit": "ns"
     },
     "prepare_warm": {
-     "mad": 773.8785400390625,
-     "max": 12505.11865234375,
-     "median": 6829.9388427734375,
-     "min": 5985.3314208984375,
+     "mad": 107.22607421875,
+     "max": 5710.680603027344,
+     "median": 4627.2913818359375,
+     "min": 4312.3575439453125,
      "raw": [
-      6600.6290283203125,
-      8059.46044921875,
-      6604.6297607421875,
-      6829.9388427734375,
-      6734.4759521484375,
-      6278.224853515625,
-      5985.3314208984375,
-      11310.180419921875,
-      12346.120849609375,
-      12505.11865234375,
-      11652.179321289062,
-      6659.3304443359375,
-      6674.3822021484375,
-      7740.593017578125,
-      7603.8173828125
+      4600.270568847656,
+      4627.2913818359375,
+      4520.0653076171875,
+      4645.3984375,
+      4826.7796630859375,
+      4744.450866699219,
+      5710.680603027344,
+      4357.533752441406,
+      4315.1881103515625,
+      4532.414733886719,
+      4654.3604736328125,
+      4682.9808349609375,
+      4631.121337890625,
+      4329.355895996094,
+      4312.3575439453125
      ],
      "samples": 15,
      "unit": "ns"
     },
     "scalar": {
-     "mad": 515.008056640625,
-     "max": 13038.694702148438,
-     "median": 11411.118408203125,
-     "min": 9991.004028320312,
+     "mad": 86.73345947265625,
+     "max": 6628.34423828125,
+     "median": 4387.959777832031,
+     "min": 4288.749694824219,
      "raw": [
-      12818.902465820312,
-      13038.694702148438,
-      9991.004028320312,
-      12694.540405273438,
-      11499.331298828125,
-      10845.963256835938,
-      12098.713134765625,
-      10896.1103515625,
-      10631.737548828125,
-      11472.877563476562,
-      11132.9755859375,
-      11304.686889648438,
-      11648.6787109375,
-      11411.118408203125,
-      11227.630981445312
+      5537.2568359375,
+      4916.290283203125,
+      4387.959777832031,
+      4322.430908203125,
+      4387.413024902344,
+      4459.508239746094,
+      4306.0277099609375,
+      4305.0511474609375,
+      4301.226318359375,
+      4288.749694824219,
+      4332.7000732421875,
+      4518.470764160156,
+      6628.34423828125,
+      4879.4530029296875,
+      4616.424560546875
      ],
      "samples": 15,
      "unit": "ns"
@@ -364,158 +364,158 @@
    "linear_speed": {
     "batch": {
      "1000": {
-      "mad": 244.26900000000023,
-      "max": 6678.84,
-      "median": 5757.289,
-      "min": 5237.538,
+      "mad": 138.00099999999975,
+      "max": 4409.208,
+      "median": 4016.958,
+      "min": 3799.292,
       "raw": [
-       5659.302,
-       5757.289,
-       5237.538,
-       5451.019,
-       5526.066,
-       6329.123,
-       5576.666,
-       5815.83,
-       6001.558,
-       6678.84,
-       6227.532,
-       5932.472,
-       5610.047,
-       5372.306,
-       6118.956
+       3840.042,
+       3823.583,
+       3799.292,
+       3947.708,
+       4154.959,
+       4294.833,
+       4409.208,
+       4020.166,
+       3888.125,
+       3957.75,
+       4225.042,
+       4178.833,
+       4016.958,
+       4010.208,
+       4106.834
       ],
       "samples": 15,
       "unit": "ns"
      },
      "100000": {
-      "mad": 951.1004599999997,
-      "max": 10000.44526,
-      "median": 8735.36684,
-      "min": 5190.43863,
+      "mad": 74.87708999999995,
+      "max": 4203.36125,
+      "median": 3937.13875,
+      "min": 3831.34125,
       "raw": [
-       9127.28925,
-       9050.73183,
-       8934.35539,
-       9686.4673,
-       8735.36684,
-       7337.88306,
-       8870.58357,
-       9391.22508,
-       10000.44526,
-       6369.39795,
-       6224.15908,
-       8049.87338,
-       7228.74202,
-       5217.5394,
-       5190.43863
+       3862.26166,
+       3992.53417,
+       4049.33291,
+       3886.86875,
+       4203.36125,
+       3850.71334,
+       3982.82625,
+       3904.52958,
+       3937.13875,
+       4117.34958,
+       3984.9025,
+       3837.4525,
+       4046.05334,
+       3877.51834,
+       3831.34125
       ],
       "samples": 15,
       "unit": "ns"
      },
      "1000000": {
-      "mad": 485.1162800000002,
-      "max": 7110.995493,
-      "median": 6548.600506,
-      "min": 6013.24371,
+      "mad": 28.22466600000007,
+      "max": 4064.584,
+      "median": 3967.340375,
+      "min": 3939.115709,
       "raw": [
-       6810.768616,
-       6063.484226,
-       7110.995493,
-       6013.24371,
-       6548.600506
+       4064.584,
+       3939.846458,
+       3967.340375,
+       3939.115709,
+       4028.918292
       ],
       "samples": 5,
       "unit": "ns"
      }
     },
     "loop_overhead": {
-     "mad": 0.19075989723205566,
-     "max": 4.143656134605408,
-     "median": 3.681585907936096,
-     "min": 3.386391758918762,
+     "mad": 0.030659198760986328,
+     "max": 4.242551803588867,
+     "median": 3.783168911933899,
+     "min": 3.751695156097412,
      "raw": [
-      3.5620612502098083,
-      3.429292917251587,
-      3.905754506587982,
-      3.782359480857849,
-      3.386391758918762,
-      3.7357154488563538,
-      4.101318895816803,
-      4.143656134605408,
-      3.98889422416687,
-      3.769943654537201,
-      3.486744463443756,
-      3.4908260107040405,
-      3.5356810688972473,
-      3.6094223856925964,
-      3.681585907936096
+      3.7830869555473328,
+      3.783168911933899,
+      3.8934597969055176,
+      4.071595788002014,
+      4.126752436161041,
+      4.242551803588867,
+      3.9314801692962646,
+      4.197545349597931,
+      3.783355176448822,
+      3.7638644576072693,
+      3.765617847442627,
+      3.752929449081421,
+      3.7722637057304382,
+      3.7525097131729126,
+      3.751695156097412
      ],
      "samples": 15,
      "unit": "ns"
     },
     "oneshot": null,
     "prepare_cold": {
-     "mad": 8368,
-     "max": 171756,
-     "median": 42279,
-     "min": 33911,
+     "mad": 14709,
+     "max": 158542,
+     "median": 33459,
+     "min": 18750,
      "raw": [
-      171756,
-      51546,
-      34570,
-      33911,
-      42279
+      33459,
+      158542,
+      101667,
+      19875,
+      18750
      ],
      "samples": 5,
      "unit": "ns"
     },
     "prepare_warm": {
-     "mad": 1521.7314453125,
-     "max": 11815.804931640625,
-     "median": 8530.758666992188,
-     "min": 6556.68505859375,
+     "mad": 55.4910888671875,
+     "max": 6875.114440917969,
+     "median": 4561.518310546875,
+     "min": 4449.87744140625,
      "raw": [
-      8998.836547851562,
-      7309.683837890625,
-      8530.758666992188,
-      9118.909301757812,
-      9202.699462890625,
-      9622.361694335938,
-      6774.260009765625,
-      6739.54052734375,
-      11815.804931640625,
-      9952.897827148438,
-      6810.4571533203125,
-      6718.2391357421875,
-      6556.68505859375,
-      7009.0272216796875,
-      11256.311401367188
+      4801.780700683594,
+      4588.457702636719,
+      4597.791015625,
+      4512.825012207031,
+      4506.0272216796875,
+      4460.1414794921875,
+      4449.87744140625,
+      4507.486999511719,
+      6875.114440917969,
+      4973.787902832031,
+      4678.530334472656,
+      4561.518310546875,
+      4479.4031982421875,
+      4590.354919433594,
+      4536.1124267578125
      ],
      "samples": 15,
      "unit": "ns"
     },
     "scalar": {
-     "mad": 124.7445068359375,
-     "max": 9680.734375,
-     "median": 5590.010498046875,
-     "min": 5369.8380126953125,
+     "mad": 66.15447998046875,
+     "max": 4412.9969482421875,
+     "median": 3927.6199340820312,
+     "min": 3804.2831420898438,
      "raw": [
-      9680.734375,
-      6449.5299072265625,
-      6341.9222412109375,
-      8556.369140625,
-      5593.69580078125,
-      5514.8775634765625,
-      5465.2659912109375,
-      5540.731201171875,
-      5369.8380126953125,
-      5640.5452880859375,
-      5586.3026123046875,
-      5424.7386474609375,
-      5423.438232421875,
-      5631.83203125,
-      5590.010498046875
+      4242.179870605469,
+      4412.9969482421875,
+      4139.945983886719,
+      3927.6199340820312,
+      3937.2177124023438,
+      3903.0355224609375,
+      3888.409912109375,
+      3917.0430908203125,
+      3861.4654541015625,
+      3804.2831420898438,
+      3836.7970581054688,
+      3913.37841796875,
+      3990.910888671875,
+      4010.1572265625,
+      4135.8743896484375
      ],
      "samples": 15,
      "unit": "ns"
@@ -526,7 +526,7 @@
  "runtime": {
   "language": "javascript",
   "name": "node",
-  "version": "v22.23.4"
+  "version": "v20.19.3"
  },
  "schema": "dimvexa.bench.result/1",
  "semantics": {
@@ -534,12 +534,12 @@
    "accuracy": {
     "answered": 83,
     "bit_identical": 56,
-    "cases": 245,
+    "cases": 302,
     "max_ulp": 4409024035195715600,
     "median_ulp": 0,
     "over_1_ulp": 27,
     "tolerance_ulp": 4,
-    "unsupported": 162,
+    "unsupported": 219,
     "worst": [
      {
       "got": "5.684341886080802e-14",
@@ -1373,32 +1373,374 @@
      },
      {
       "category": "dimvexa_vector",
-      "detail": "Error: Unsupported unit psig, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "detail": "Error: Unsupported unit twip, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
       "id": "dv-common-066",
       "outcome": "unsupported"
      },
      {
       "category": "dimvexa_vector",
-      "detail": "Error: Unsupported unit barg, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "detail": "Error: Unsupported unit thou, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
       "id": "dv-common-067",
       "outcome": "unsupported"
      },
      {
       "category": "dimvexa_vector",
-      "detail": "Error: Unsupported unit kPag, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "detail": "Error: Unsupported unit barleycorn, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
       "id": "dv-common-068",
       "outcome": "unsupported"
      },
      {
-      "category": "compound",
-      "detail": "Error: Unsupported unit Nm^3/h, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, ",
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit hand, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
       "id": "dv-common-069",
       "outcome": "unsupported"
      },
      {
-      "category": "compound",
-      "detail": "Error: Unsupported unit scf/min, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit link_int, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
       "id": "dv-common-070",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit rod_int, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "dv-common-071",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit chain_int, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "dv-common-072",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit furlong_int, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb",
+      "id": "dv-common-073",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit league_int, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "dv-common-074",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit fathom_ft, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "dv-common-075",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit cable_int, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "dv-common-076",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit perch_sq, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
+      "id": "dv-common-077",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit rood, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "dv-common-078",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit gill_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
+      "id": "dv-common-079",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit peck_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
+      "id": "dv-common-080",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit bushel_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "dv-common-081",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit quarter_vol_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz",
+      "id": "dv-common-082",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit minim_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "dv-common-083",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit scruple_fl_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz,",
+      "id": "dv-common-084",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit drachm_fl_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, ",
+      "id": "dv-common-085",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit dram_av, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "dv-common-086",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit stone, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, m",
+      "id": "dv-common-087",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit quarter_mass_imp, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, o",
+      "id": "dv-common-088",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit cwt_long, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
+      "id": "dv-common-089",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "compound",
+      "detail": "Error: Unsupported unit slug*ft/s^2, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb",
+      "id": "dv-common-090",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit fathom_nmi, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "dv-common-091",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit mil, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-common-092",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit link_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz,",
+      "id": "dv-common-093",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit rod_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, ",
+      "id": "dv-common-094",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit chain_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz",
+      "id": "dv-common-095",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit furlong_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, ",
+      "id": "dv-common-096",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit minim_us, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
+      "id": "dv-common-097",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit fl_dr_us, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
+      "id": "dv-common-098",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit gill_us, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "dv-common-099",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit bu_us, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, m",
+      "id": "dv-common-100",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit pk_us, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, m",
+      "id": "dv-common-101",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit qt_us_dry, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "dv-common-102",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit pt_us_dry, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "dv-common-103",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit acre_ft_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, ",
+      "id": "dv-common-104",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit cord, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "dv-common-105",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit cwt_short, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, ",
+      "id": "dv-common-106",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit dwt, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-common-107",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit lb_troy, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "dv-common-108",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit scruple_ap, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "dv-common-109",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit dram_ap, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t,",
+      "id": "dv-common-110",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit ozf, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-common-111",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit kip, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-common-112",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit pdl, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm3",
+      "id": "dv-common-113",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit board_ft, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
+      "id": "dv-common-114",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit bbl_us_dry, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb,",
+      "id": "dv-common-115",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit fathom_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, o",
+      "id": "dv-common-116",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit cable_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz",
+      "id": "dv-common-117",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit inHg, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "dv-common-119",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit cmHg, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "dv-common-120",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit ftHg, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "dv-common-121",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit cmWC, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "dv-common-122",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit inWC, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "dv-common-123",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit ftWC, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t, mm",
+      "id": "dv-common-124",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit bbl_beer_us, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb",
+      "id": "dv-common-125",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit section_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, ",
+      "id": "dv-common-126",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit township_us_survey, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt,",
+      "id": "dv-common-127",
+      "outcome": "unsupported"
+     },
+     {
+      "category": "dimvexa_vector",
+      "detail": "Error: Unsupported unit cable_ft, use one of: mm, cm, m, km, in, yd, ft-us, ft, mi, mm2, cm2, m2, ha, km2, in2, yd2, ft2, ac, mi2, mcg, mg, g, kg, mt, oz, lb, t",
+      "id": "dv-common-128",
       "outcome": "unsupported"
      },
      {
@@ -2526,7 +2868,7 @@
     },
     "dimvexa_seed_table": {
      "known": 40,
-     "total": 107,
+     "total": 165,
      "unknown": [
       "mol",
       "cd",
@@ -2590,11 +2932,69 @@
       "P",
       "St",
       "bbl",
-      "psig",
-      "barg",
-      "Pag",
-      "Nm3",
-      "scf"
+      "twip",
+      "thou",
+      "barleycorn",
+      "hand",
+      "link_int",
+      "rod_int",
+      "chain_int",
+      "furlong_int",
+      "league_int",
+      "fathom_ft",
+      "fathom_nmi",
+      "cable_int",
+      "perch_sq",
+      "rood",
+      "gill_imp",
+      "peck_imp",
+      "bushel_imp",
+      "quarter_vol_imp",
+      "minim_imp",
+      "scruple_fl_imp",
+      "drachm_fl_imp",
+      "dram_av",
+      "stone",
+      "quarter_mass_imp",
+      "cwt_long",
+      "slug",
+      "mil",
+      "link_us_survey",
+      "rod_us_survey",
+      "chain_us_survey",
+      "furlong_us_survey",
+      "minim_us",
+      "fl_dr_us",
+      "gill_us",
+      "bu_us",
+      "pk_us",
+      "qt_us_dry",
+      "pt_us_dry",
+      "acre_ft_us_survey",
+      "cord",
+      "cwt_short",
+      "dwt",
+      "lb_troy",
+      "scruple_ap",
+      "dram_ap",
+      "ozf",
+      "kip",
+      "pdl",
+      "board_ft",
+      "bbl_us_dry",
+      "fathom_us_survey",
+      "cable_us_survey",
+      "ton_refrigeration",
+      "inHg",
+      "cmHg",
+      "ftHg",
+      "cmWC",
+      "inWC",
+      "ftWC",
+      "bbl_beer_us",
+      "section_us_survey",
+      "township_us_survey",
+      "cable_ft"
      ]
     },
     "imperial_us": {
@@ -2699,14 +3099,14 @@
     "by_category": {
      "compound": {
       "correct": 2,
-      "total": 18,
-      "unsupported": 15,
+      "total": 17,
+      "unsupported": 14,
       "wrong_value": 1
      },
      "dimvexa_vector": {
       "correct": 19,
-      "total": 104,
-      "unsupported": 80,
+      "total": 162,
+      "unsupported": 138,
       "wrong_value": 5
      },
      "imperial_us": {
@@ -2747,8 +3147,8 @@
      }
     },
     "correct": 56,
-    "total": 245,
-    "unsupported": 162,
+    "total": 302,
+    "unsupported": 219,
     "wrong_value": 27
    },
    "must_refuse": {
@@ -2801,22 +3201,22 @@
  },
  "startup": {
   "import_ms": {
-   "interpreter_baseline_ms": 34.410298,
-   "mad": 1.5345340000000007,
-   "max": 16.731499,
-   "median": 7.464150000000004,
-   "min": 5.929616000000003,
+   "interpreter_baseline_ms": 31.535583,
+   "mad": 1.762083000000004,
+   "max": 17.637125,
+   "median": 6.822958000000003,
+   "min": 5.060874999999999,
    "raw": [
-    6.134393000000003,
-    7.464150000000004,
-    16.731499,
-    13.375015000000005,
-    5.929616000000003
+    17.637125,
+    5.060874999999999,
+    12.359834000000003,
+    6.822958000000003,
+    5.952000000000002
    ],
    "samples": 5,
    "unit": "ms"
   },
   "package_bytes": 108230,
-  "peak_rss_kb": 119288
+  "peak_rss_kb": 88624
  }
 }

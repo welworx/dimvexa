@@ -7,12 +7,12 @@ description: Use when changing a public item, an error code, the CLI output or t
 
 * Semver: the crate is 0.x, but treat breaking changes as such. Enums that may grow are
   `#[non_exhaustive]`. Removing or renaming an error code or a JSON field is breaking;
-  adding a JSON field is allowed within the current schema version (`dimvexa.convert/3`, `dimvexa.units/5`, `dimvexa.configs/3`, `dimvexa.constants/1`, `docs/schemas/`); removing or renaming one needs a new version and a new schema file. Error codes live
+  adding a JSON field is allowed within the current schema version (`dimvexa.convert/3`, `dimvexa.calc/1`, `dimvexa.units/5`, `dimvexa.configs/3`, `dimvexa.constants/1`, `docs/schemas/`); removing or renaming one needs a new version and a new schema file. Error codes live
   in `Error::ALL_CODES` and are tested in `crates/dimvexa-cli/tests/cli.rs`.
 * Every public item has rustdoc (`missing_docs` is denied) and a compiling example; a public
   conversion API states its accuracy guarantee (`docs/precision.md`). Enforced by
   `cargo xtask ci docs doctest`.
-* The CLI holds no conversion logic: it calls the library (`crates/dimvexa-cli/src/lib.rs`).
+* The CLI holds no conversion logic: it calls the library (`crates/dimvexa-cli/src/`, one module per command).
   Update the snapshots deliberately (see the `tests` skill).
 * Update the CLI help in the same change: the overview and the page of the command concerned
   (`HELP`, `HELP_CONVERT`, `HELP_UNITS`, `HELP_CONFIGS`, `HELP_CONSTANTS`, `HELP_UPDATE`), with working examples, in
@@ -22,7 +22,7 @@ description: Use when changing a public item, an error code, the CLI output or t
   the public items by hand.
 * A change of policy (ambiguity, exactness, scope) needs an ADR (`adr` skill).
 * Renaming or removing a JSON field means a new schema version in the same change: bump
-  `schema_id` in `crates/dimvexa-cli/src/lib.rs`, add `docs/schemas/dimvexa.<cmd>-N.schema.json`
+  `schema_id` in `crates/dimvexa-cli/src/json.rs`, add `docs/schemas/dimvexa.<cmd>-N.schema.json`
   (keep the old file), update the `--help` text, the version strings in `AGENTS.md` and this
   skill, `crates/dimvexa-cli/tests/support/json.rs` and `cli.rs`, regenerate the snapshots
   (`DIMVEXA_UPDATE_SNAPSHOTS=1 cargo test -p dimvexa-cli`, then read the diff) and the guide's
